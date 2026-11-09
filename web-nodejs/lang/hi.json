@@ -1926,7 +1926,9 @@
         "count_filtered": "{count} में से {shown} उपयोगकर्ता",
         "no_match": "\"{query}\" से कोई उपयोगकर्ता मेल नहीं खाता।",
         "clear_search": "खोज साफ़ करें",
-        "group_actions_for": "{name} के लिए और कार्रवाइयाँ"
+        "group_actions_for": "{name} के लिए और कार्रवाइयाँ",
+        "sheet_add_desc": "इस कंसोल के लिए एक खाता। भूमिका तय करती है कि व्यक्ति क्या कर सकता है।",
+        "org_member_of": "इनका सदस्य"
     },
     "folders": {
         "title": "फ़ोल्डर",
@@ -2728,7 +2730,11 @@
         "overdue_note": "समय सीमा पार हो चुकी है और अभी हल नहीं हुए। सबसे ज़्यादा देर वाले पहले।",
         "overdue_none": "कोई भी टिकट अपनी समय सीमा से आगे नहीं है।",
         "overdue_row": "#{id}, {priority}, समय सीमा {time}",
-        "summary_failed": "सारांश लोड नहीं हो सका।"
+        "summary_failed": "सारांश लोड नहीं हो सका।",
+        "status_actions": "स्थिति और ज़िम्मेदार व्यक्ति",
+        "title_hint": "एक छोटा सारांश, जिसे दूसरे सूची में पहचान सकें।",
+        "section_sorting": "विवरण",
+        "saving": "सहेजा जा रहा है…"
     },
     "activity": {
         "title": "गतिविधि की निगरानी",
@@ -2809,7 +2815,8 @@
         "top_apps_all_empty": "इन तारीखों में किसी ऐप का उपयोग नहीं हुआ।",
         "top_apps_all_failed": "ऐप उपयोग लोड नहीं हो सका।",
         "top_apps_all_devices": "{count} डिवाइस पर उपयोग",
-        "top_apps_all_one_device": "1 डिवाइस पर उपयोग"
+        "top_apps_all_one_device": "1 डिवाइस पर उपयोग",
+        "detail_desc": "पेज पर चुनी गई तारीखों के लिए हर ऐप का समय और हाल के सत्र।"
     },
     "automation": {
         "title": "स्वचालन एवं अलर्ट",
@@ -2951,7 +2958,11 @@
         "rules_not_checked": "सर्वर अभी चेतावनी नियमों की जाँच नहीं करता। आप यहाँ नियम बना और रख सकते हैं, लेकिन जब तक कोई सर्वर अपडेट यह जाँच नहीं जोड़ता, वे कोई चेतावनी नहीं देंगे।",
         "no_alerts_not_checked": "कोई चेतावनी नहीं। सर्वर अभी नियमों की जाँच नहीं करता, इसलिए कोई चेतावनी नहीं बनती।",
         "unit_percent": "%",
-        "unit_seconds": "सेकंड"
+        "unit_seconds": "सेकंड",
+        "rule_sheet_desc": "जब कोई डिवाइस आपकी तय सीमा से आगे का मान बताता है, तो अलर्ट बनाता है।",
+        "section_condition": "यह किस पर नज़र रखता है",
+        "section_alert": "अलर्ट",
+        "saving": "सहेजा जा रहा है…"
     },
     "file_transfer": {
         "title": "दस्तावेज हस्तांतरण",
@@ -3137,7 +3148,11 @@
         "rtt_target": "लक्ष्य",
         "rtt_label": "{name} का प्रतिक्रिया समय",
         "rtt_summary": "{since} से {count} जाँच, {down} का कोई जवाब नहीं। जवाब आने में {min} से {max} ms लगे।",
-        "rtt_summary_none": "{since} से {count} जाँच, किसी का जवाब नहीं आया।"
+        "rtt_summary_none": "{since} से {count} जाँच, किसी का जवाब नहीं आया।",
+        "section_check": "पता और जाँच",
+        "section_schedule": "शेड्यूल",
+        "target_sheet_desc": "सर्वर इस पते को तय समय पर जाँचता है और दर्ज करता है कि वह जवाब देता है या नहीं।",
+        "history_sheet_desc": "{host} की जाँचें, सबसे नई पहले।"
     },
     "dataguard": {
         "title": "DataGuard â€” DLP",
@@ -3257,7 +3272,10 @@
         "legend_blocked": "रोके गए",
         "legend_logged": "लॉग किए गए",
         "legend_allowed": "अनुमत",
-        "advanced": "उन्नत विकल्प"
+        "advanced": "उन्नत विकल्प",
+        "section_covers": "यह किस पर लागू होती है",
+        "policy_sheet_desc": "नीति किन ट्रांसफ़र पर लागू होती है और डिवाइस उन्हें रोकते, दर्ज करते या अनुमति देते हैं।",
+        "saving": "सहेजा जा रहा है…"
     },
     "reports": {
         "title": "रिपोर्ट",

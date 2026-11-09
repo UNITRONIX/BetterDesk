@@ -212,98 +212,119 @@
         await loadTargets();
     }
 
-    // ---- Add / edit dialog ----
+    // ---- Add / edit sheet ----
 
     function formHtml(t) {
         const type = t ? t.check_type : 'ping';
         const seconds = t ? intervalSeconds(t) : 60;
         const options = INTERVALS.includes(seconds) ? INTERVALS : INTERVALS.concat(seconds).sort((a, b) => a - b);
         return `
-            <form class="target-form" id="target-form" novalidate>
+            <form class="target-form form-stack" id="target-form" novalidate>
                 <div class="form-group">
                     <label class="form-label" for="target-name">${esc(_('network.name'))}</label>
-                    <input type="text" id="target-name" class="form-input" maxlength="120" value="${esc(t ? t.name : '')}" required>
-                    <p class="form-hint">${esc(_('network.name_hint'))}</p>
+                    <input type="text" id="target-name" class="form-input is-host" maxlength="120" value="${esc(t ? t.name : '')}" required aria-describedby="target-name-hint">
+                    <p class="form-hint" id="target-name-hint">${esc(_('network.name_hint'))}</p>
                 </div>
-                <div class="form-group">
-                    <label class="form-label" for="target-type">${esc(_('network.check_type'))}</label>
-                    <select id="target-type" class="form-select is-medium">
-                        <option value="ping"${type === 'ping' ? ' selected' : ''}>${esc(_('network.type_ping_long'))}</option>
-                        <option value="tcp"${type === 'tcp' ? ' selected' : ''}>${esc(_('network.type_tcp_long'))}</option>
-                        <option value="http"${type === 'http' ? ' selected' : ''}>${esc(_('network.type_http_long'))}</option>
-                        <option value="https"${type === 'https' ? ' selected' : ''}>${esc(_('network.type_https_long'))}</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="target-host">${esc(_('network.host'))}</label>
-                    <input type="text" id="target-host" class="form-input mono-input" value="${esc(t ? t.host : '')}"
-                        autocapitalize="off" autocomplete="off" spellcheck="false" required>
-                    <p class="form-hint">${esc(_('network.host_hint'))}</p>
-                </div>
-                <div class="form-group" id="target-port-group">
-                    <label class="form-label" for="target-port">${esc(_('network.port'))}</label>
-                    <input type="number" id="target-port" class="form-input is-short" min="1" max="65535" value="${esc(t && t.port ? t.port : '')}">
-                    <p class="form-hint" id="target-port-hint"></p>
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="target-interval">${esc(_('network.interval_label'))}</label>
-                    <select id="target-interval" class="form-select is-medium">
-                        ${options.map((s) => `<option value="${s}"${s === seconds ? ' selected' : ''}>${esc(intervalLabel(s))}</option>`).join('')}
-                    </select>
-                    <p class="form-hint">${esc(_('network.interval_hint'))}</p>
-                </div>
-                <label class="check-field">
-                    <input type="checkbox" id="target-enabled"${!t || Number(t.enabled) ? ' checked' : ''}>
-                    <span class="check-label">${esc(_('network.enabled_label'))}</span>
-                    <span class="form-hint">${esc(_('network.enabled_hint'))}</span>
-                </label>
-                <p class="form-status" id="target-form-status" role="alert"></p>
+                <section class="form-section" aria-labelledby="target-sec-check">
+                    <h3 class="form-section-title" id="target-sec-check">${esc(_('network.section_check'))}</h3>
+                    <div class="form-group">
+                        <label class="form-label" for="target-host">${esc(_('network.host'))}</label>
+                        <input type="text" id="target-host" class="form-input is-host mono-input" value="${esc(t ? t.host : '')}"
+                            autocapitalize="off" autocomplete="off" spellcheck="false" required aria-describedby="target-host-hint">
+                        <p class="form-hint" id="target-host-hint">${esc(_('network.host_hint'))}</p>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="target-type">${esc(_('network.check_type'))}</label>
+                        <select id="target-type" class="form-select is-host" aria-controls="target-port-group">
+                            <option value="ping"${type === 'ping' ? ' selected' : ''}>${esc(_('network.type_ping_long'))}</option>
+                            <option value="tcp"${type === 'tcp' ? ' selected' : ''}>${esc(_('network.type_tcp_long'))}</option>
+                            <option value="http"${type === 'http' ? ' selected' : ''}>${esc(_('network.type_http_long'))}</option>
+                            <option value="https"${type === 'https' ? ' selected' : ''}>${esc(_('network.type_https_long'))}</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="target-port-group"${type === 'ping' ? ' hidden' : ''}>
+                        <label class="form-label" for="target-port">${esc(_('network.port'))}</label>
+                        <input type="number" id="target-port" class="form-input is-short" inputmode="numeric" min="1" max="65535" value="${esc(t && t.port ? t.port : '')}" aria-describedby="target-port-hint">
+                        <p class="form-hint" id="target-port-hint"></p>
+                    </div>
+                </section>
+                <section class="form-section" aria-labelledby="target-sec-schedule">
+                    <h3 class="form-section-title" id="target-sec-schedule">${esc(_('network.section_schedule'))}</h3>
+                    <div class="form-group">
+                        <label class="form-label" for="target-interval">${esc(_('network.interval_label'))}</label>
+                        <select id="target-interval" class="form-select is-medium" aria-describedby="target-interval-hint">
+                            ${options.map((s) => `<option value="${s}"${s === seconds ? ' selected' : ''}>${esc(intervalLabel(s))}</option>`).join('')}
+                        </select>
+                        <p class="form-hint" id="target-interval-hint">${esc(_('network.interval_hint'))}</p>
+                    </div>
+                    <label class="check-field">
+                        <input type="checkbox" id="target-enabled"${!t || Number(t.enabled) ? ' checked' : ''}>
+                        <span class="check-label">${esc(_('network.enabled_label'))}</span>
+                        <span class="form-hint">${esc(_('network.enabled_hint'))}</span>
+                    </label>
+                </section>
+                <button type="submit" hidden tabindex="-1" aria-hidden="true"></button>
             </form>`;
     }
 
+    // The port only for port and web checks, right under the choice that shows it
     function updatePortField() {
         const type = document.getElementById('target-type').value;
         const group = document.getElementById('target-port-group');
         const hint = document.getElementById('target-port-hint');
         group.hidden = type === 'ping';
         const defaults = { tcp: '80', http: '80', https: '443' };
-        document.getElementById('target-port').placeholder = defaults[type] || '';
         hint.textContent = type === 'tcp' ? _('network.port_hint_tcp') : _('network.port_hint_web', { port: defaults[type] || '' });
     }
 
     function openTargetDialog(t) {
-        Modal.show({
+        Modal.sheet({
             title: t ? _('network.edit_target_title', { name: t.name }) : _('network.add_target'),
+            subtitle: _('network.target_sheet_desc'),
             content: formHtml(t),
+            status: true,
             buttons: [
-                { label: _('actions.cancel'), class: 'btn', onClick: () => Modal.close() },
+                { label: _('actions.cancel'), class: 'btn-secondary', start: true, onClick: () => Modal.close() },
                 { label: t ? _('network.save_target') : _('network.add_target'), class: 'btn-primary', onClick: () => saveTarget(t) },
             ],
         });
+        const form = document.getElementById('target-form');
         document.getElementById('target-type').addEventListener('change', updatePortField);
-        document.getElementById('target-form').addEventListener('submit', (e) => { e.preventDefault(); saveTarget(t); });
+        // Enter in a field saves
+        form.addEventListener('submit', (e) => { e.preventDefault(); saveTarget(t); });
+        // A refusal belongs to the values it was about
+        form.addEventListener('input', (e) => {
+            e.target.removeAttribute('aria-invalid');
+            if (form.dataset.busy !== 'true') Modal.setStatus('');
+        });
         updatePortField();
     }
 
     async function saveTarget(t) {
-        const status = document.getElementById('target-form-status');
+        const form = document.getElementById('target-form');
+        if (!form || form.dataset.busy === 'true') return;
         const nameEl = document.getElementById('target-name');
         const hostEl = document.getElementById('target-host');
+        const portEl = document.getElementById('target-port');
         const type = document.getElementById('target-type').value;
-        const portRaw = document.getElementById('target-port').value.trim();
+        const portRaw = portEl.value.trim();
         const seconds = parseInt(document.getElementById('target-interval').value, 10) || 60;
         const name = nameEl.value.trim();
         const host = hostEl.value.trim().replace(/^[a-z]+:\/\//i, '').replace(/\/.*$/, '');
 
-        status.className = 'form-status is-error';
-        if (!name) { status.textContent = _('network.name_required'); nameEl.focus(); return; }
-        if (!host) { status.textContent = _('network.host_required'); hostEl.focus(); return; }
+        // What the server would refuse, said in the sheet's status line
+        const refuse = (el, message) => {
+            el.setAttribute('aria-invalid', 'true');
+            el.focus();
+            Modal.setStatus(message, 'error');
+        };
+        if (!name) { refuse(nameEl, _('network.name_required')); return; }
+        if (!host) { refuse(hostEl, _('network.host_required')); return; }
         let port = null;
         if (type !== 'ping') {
             port = portRaw ? parseInt(portRaw, 10) : (type === 'https' ? 443 : 80);
             if (!Number.isInteger(port) || port < 1 || port > 65535) {
-                status.textContent = _('network.port_invalid');
-                document.getElementById('target-port').focus();
+                refuse(portEl, _('network.port_invalid'));
                 return;
             }
         }
@@ -316,10 +337,10 @@
             interval_ms: seconds * 1000,
             enabled: document.getElementById('target-enabled').checked,
         };
-        const buttons = document.querySelectorAll('.modal-footer .btn');
+        const buttons = form.closest('[role="dialog"]').querySelectorAll('.modal-footer .btn');
         buttons.forEach((b) => { b.disabled = true; });
-        status.className = 'form-status';
-        status.textContent = _('network.saving');
+        form.dataset.busy = 'true';
+        Modal.setStatus(_('network.saving'));
         try {
             if (t) {
                 await Utils.api(`/api/network/targets/${encodeURIComponent(t.id)}`, { method: 'PATCH', body });
@@ -331,8 +352,9 @@
             loadTargets();
         } catch (err) {
             buttons.forEach((b) => { b.disabled = false; });
-            status.className = 'form-status is-error';
-            status.textContent = _('network.save_failed', { reason: errorText(err) });
+            Modal.setStatus(_('network.save_failed', { reason: errorText(err) }), 'error');
+        } finally {
+            delete form.dataset.busy;
         }
     }
 
@@ -355,15 +377,16 @@
         loadTargets();
     }
 
-    // ---- History dialog ----
+    // ---- History sheet: the last 100 checks of one target ----
 
     async function showHistory(id) {
         const t = findTarget(id);
-        Modal.show({
+        Modal.sheet({
             title: _('network.history_title', { name: t ? t.name : '' }),
-            size: 'large',
+            subtitle: t ? _('network.history_sheet_desc', { host: t.port ? `${t.host}:${t.port}` : t.host }) : '',
+            wide: true,
             content: `<div id="history-body"><p class="state">${esc(_('network.loading_history'))}</p></div>`,
-            buttons: [{ label: _('actions.close'), class: 'btn', onClick: () => Modal.close() }],
+            buttons: [{ label: _('actions.close'), class: 'btn-secondary', onClick: () => Modal.close() }],
         });
         const body = document.getElementById('history-body');
         try {
@@ -377,7 +400,7 @@
             const down = entries.filter((e) => e.status !== 'up').length;
             body.innerHTML = `
                 <p class="count-line">${esc(_('network.history_count', { count: entries.length, down }))}</p>
-                <div class="table-scroll"><table class="data-table history-table">
+                <div class="table-scroll" tabindex="0" role="region" aria-label="${esc(_('network.history_title', { name: t ? t.name : '' }))}"><table class="data-table history-table">
                     <thead><tr><th>${esc(_('network.history_time'))}</th><th>${esc(_('network.status'))}</th><th class="is-num">${esc(_('network.col_response'))}</th><th>${esc(_('network.history_detail'))}</th></tr></thead>
                     <tbody>${entries.map((e) => {
                         const date = Utils.parseDate(e.checked_at);

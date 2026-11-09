@@ -1942,7 +1942,9 @@
         "count_filtered": "{count} 位使用者中的 {shown} 位",
         "no_match": "沒有符合「{query}」的使用者。",
         "clear_search": "清除搜尋",
-        "group_actions_for": "{name} 的更多動作"
+        "group_actions_for": "{name} 的更多動作",
+        "sheet_add_desc": "此主控台的帳戶。角色決定此人可以做什麼。",
+        "org_member_of": "所屬組織"
     },
     "folders": {
         "title": "資料夾",
@@ -2744,7 +2746,11 @@
         "overdue_note": "已過期限且尚未解決。逾期最久的在前。",
         "overdue_none": "沒有逾期的工單。",
         "overdue_row": "#{id}，{priority}，期限 {time}",
-        "summary_failed": "無法載入概覽。"
+        "summary_failed": "無法載入概覽。",
+        "status_actions": "狀態和負責人",
+        "title_hint": "簡短摘要，方便其他人在清單中辨認。",
+        "section_sorting": "詳細資料",
+        "saving": "正在儲存…"
     },
     "activity": {
         "title": "活動監控",
@@ -2825,7 +2831,8 @@
         "top_apps_all_empty": "這些日期沒有應用程式使用紀錄。",
         "top_apps_all_failed": "無法載入應用程式使用紀錄。",
         "top_apps_all_devices": "在 {count} 部裝置上使用",
-        "top_apps_all_one_device": "在 1 部裝置上使用"
+        "top_apps_all_one_device": "在 1 部裝置上使用",
+        "detail_desc": "頁面上所選日期內各應用程式的時間和最近的工作階段。"
     },
     "automation": {
         "title": "自動化與告警",
@@ -2967,7 +2974,11 @@
         "rules_not_checked": "伺服器尚未檢查告警規則。您可以在這裡建立並保留規則，但在伺服器更新加入檢查前，規則不會產生告警。",
         "no_alerts_not_checked": "沒有告警。伺服器尚未檢查規則，因此不會產生告警。",
         "unit_percent": "%",
-        "unit_seconds": "秒"
+        "unit_seconds": "秒",
+        "rule_sheet_desc": "當裝置回報超過您設定上限的值時發出警示。",
+        "section_condition": "監看內容",
+        "section_alert": "警示",
+        "saving": "正在儲存…"
     },
     "file_transfer": {
         "title": "文件傳輸",
@@ -3153,7 +3164,11 @@
         "rtt_target": "目標",
         "rtt_label": "{name} 的回應時間",
         "rtt_summary": "自 {since} 起檢查 {count} 次，{down} 次無回應。回應用時 {min} 到 {max} ms。",
-        "rtt_summary_none": "自 {since} 起檢查 {count} 次，皆無回應。"
+        "rtt_summary_none": "自 {since} 起檢查 {count} 次，皆無回應。",
+        "section_check": "位址和檢查",
+        "section_schedule": "排程",
+        "target_sheet_desc": "伺服器會依排程檢查此位址，並記錄它是否回應。",
+        "history_sheet_desc": "{host} 的檢查記錄，最新的在前。"
     },
     "dataguard": {
         "title": "數據防護 — DLP",
@@ -3273,7 +3288,10 @@
         "legend_blocked": "已阻止",
         "legend_logged": "已記錄",
         "legend_allowed": "已允許",
-        "advanced": "進階選項"
+        "advanced": "進階選項",
+        "section_covers": "涵蓋範圍",
+        "policy_sheet_desc": "策略涵蓋哪些傳輸，以及裝置要封鎖、記錄還是允許。",
+        "saving": "正在儲存…"
     },
     "reports": {
         "title": "報表",

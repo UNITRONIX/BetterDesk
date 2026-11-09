@@ -1927,7 +1927,9 @@
         "count_filtered": "{shown} من {count} مستخدم",
         "no_match": "لا يوجد مستخدم يطابق \"{query}\".",
         "clear_search": "مسح البحث",
-        "group_actions_for": "مزيد من الإجراءات لـ {name}"
+        "group_actions_for": "مزيد من الإجراءات لـ {name}",
+        "sheet_add_desc": "حساب للوحة التحكم هذه. يحدد الدور ما يمكن للشخص فعله.",
+        "org_member_of": "عضو في"
     },
     "folders": {
         "title": "المجلدات",
@@ -2729,7 +2731,11 @@
         "overdue_note": "تجاوزت موعدها ولم تُحل بعد. الأكثر تأخرًا أولًا.",
         "overdue_none": "لا توجد تذكرة تجاوزت موعدها.",
         "overdue_row": "#{id}، {priority}، الموعد {time}",
-        "summary_failed": "تعذّر تحميل الملخص."
+        "summary_failed": "تعذّر تحميل الملخص.",
+        "status_actions": "الحالة والمسؤول",
+        "title_hint": "ملخص قصير يتعرّف عليه الآخرون في القائمة.",
+        "section_sorting": "التفاصيل",
+        "saving": "جارٍ الحفظ…"
     },
     "activity": {
         "title": "مراقبة النشاط",
@@ -2810,7 +2816,8 @@
         "top_apps_all_empty": "لا يوجد استخدام للتطبيقات في هذه التواريخ.",
         "top_apps_all_failed": "تعذّر تحميل استخدام التطبيقات.",
         "top_apps_all_devices": "مستخدم على {count} أجهزة",
-        "top_apps_all_one_device": "مستخدم على جهاز واحد"
+        "top_apps_all_one_device": "مستخدم على جهاز واحد",
+        "detail_desc": "الوقت لكل تطبيق وأحدث الجلسات، للتواريخ المختارة في الصفحة."
     },
     "automation": {
         "title": "الأتمتة والتنبيهات",
@@ -2952,7 +2959,11 @@
         "rules_not_checked": "لا يتحقق الخادم من قواعد التنبيه بعد. يمكنك إنشاء القواعد والاحتفاظ بها هنا، لكنها لن تطلق أي تنبيه حتى يضيف تحديث للخادم هذا التحقق.",
         "no_alerts_not_checked": "لا توجد تنبيهات. لا يتحقق الخادم من قواعد التنبيه بعد، لذلك لا يُطلق أي تنبيه.",
         "unit_percent": "%",
-        "unit_seconds": "ثوانٍ"
+        "unit_seconds": "ثوانٍ",
+        "rule_sheet_desc": "ينشئ تنبيهًا عندما يبلغ جهاز عن قيمة تتجاوز الحد الذي تحدده.",
+        "section_condition": "ما الذي تراقبه",
+        "section_alert": "التنبيه",
+        "saving": "جارٍ الحفظ…"
     },
     "file_transfer": {
         "title": "نقل الملفات",
@@ -3138,7 +3149,11 @@
         "rtt_target": "الهدف",
         "rtt_label": "زمن استجابة {name}",
         "rtt_summary": "{count} فحصًا منذ {since}، منها {down} دون رد. استغرقت الردود من {min} إلى {max} مللي ثانية.",
-        "rtt_summary_none": "{count} فحصًا منذ {since}، ولم يحصل أي منها على رد."
+        "rtt_summary_none": "{count} فحصًا منذ {since}، ولم يحصل أي منها على رد.",
+        "section_check": "العنوان والفحص",
+        "section_schedule": "الجدول",
+        "target_sheet_desc": "يفحص الخادم هذا العنوان وفق جدول ويسجّل ما إذا كان يستجيب.",
+        "history_sheet_desc": "فحوصات {host}، الأحدث أولًا."
     },
     "dataguard": {
         "title": "DataGuard â€” DLP",
@@ -3258,7 +3273,10 @@
         "legend_blocked": "محظورة",
         "legend_logged": "مسجّلة",
         "legend_allowed": "مسموح بها",
-        "advanced": "خيارات متقدمة"
+        "advanced": "خيارات متقدمة",
+        "section_covers": "ما الذي تشمله",
+        "policy_sheet_desc": "أي عمليات النقل تشملها السياسة، وهل تحظرها الأجهزة أم تسجلها أم تسمح بها.",
+        "saving": "جارٍ الحفظ…"
     },
     "reports": {
         "title": "التقارير",

@@ -2,8 +2,9 @@
  * BetterDesk Console - Tickets Page Script
  *
  * The list is a table with a toolbar (search, status, priority). A ticket
- * opens in a dialog with its facts, status actions and comments; create
- * and edit use a second dialog. Dialogs come from Modal (modal.js).
+ * opens in a wide side sheet with its facts, status actions and comments;
+ * create and edit use a second sheet. Sheets and the delete confirm come
+ * from Modal (modal.js).
  */
 
 (function () {
@@ -318,10 +319,23 @@
 
     // ---- Detail ----
 
+    // The ticket opens in a wide side sheet: facts, status actions, description,
+    // attachments and the comment thread scroll in the body; the comment field
+    // stays pinned between the body and the footer.
+    function detailOverlay() {
+        return detailModalId ? document.getElementById(detailModalId) : null;
+    }
+
     function detailBody() {
-        if (!detailModalId) return null;
-        const overlay = document.getElementById(detailModalId);
+        const overlay = detailOverlay();
         return overlay ? overlay.querySelector('.modal-body') : null;
+    }
+
+    function closeDetail() {
+        if (!detailModalId) return;
+        const id = detailModalId;
+        detailModalId = null;
+        Modal.close(id);
     }
 
     function openDetail(id) {
@@ -329,23 +343,50 @@
         const title = ticket ? `#${ticket.id} ${ticket.title}` : `#${id}`;
         const buttons = [];
         if (canEdit) {
+            // The confirm sits on top of the sheet: Cancel leaves the ticket open as it was
             buttons.push({
                 label: _('tickets.delete'),
                 class: 'btn-danger-quiet',
-                onClick: async () => { if (!(await deleteTicket(id))) openDetail(id); },
+                start: true,
+                onClick: async () => { if (await deleteTicket(id)) closeDetail(); },
             });
-            buttons.push({ label: _('tickets.edit'), class: '', onClick: () => openEdit(id) });
+            buttons.push({ label: _('tickets.edit'), class: 'btn-secondary', onClick: () => openEdit(id) });
         }
-        buttons.push({ label: _('actions.close'), class: '', onClick: () => Modal.close() });
+        buttons.push({ label: _('actions.close'), class: 'btn-secondary', onClick: () => closeDetail() });
 
-        detailModalId = Modal.show({
+        detailModalId = Modal.sheet({
             title,
-            size: 'large',
+            wide: true,
+            status: true,
+            className: 'ticket-sheet',
             content: `<p class="state">${escapeHtml(_('common.loading'))}</p>`,
             buttons,
             onClose: () => { detailModalId = null; },
         });
+        mountComposer(id);
+        // Nothing to type in until the ticket is there: start on the sheet, not on Delete
+        detailOverlay()?.querySelector('.sheet')?.focus();
         refreshDetail(id);
+    }
+
+    // The comment field: built once per sheet, so a half-written comment
+    // survives status changes and re-renders of the body
+    function mountComposer(id) {
+        const overlay = detailOverlay();
+        const footer = overlay && overlay.querySelector('.sheet-footer');
+        if (!footer) return;
+        const box = document.createElement('div');
+        box.className = 'ticket-composer add-comment-form';
+        box.hidden = true;
+        box.innerHTML = `
+            <label class="form-label" for="new-comment">${escapeHtml(_('tickets.comment_label'))}</label>
+            <textarea class="form-input" id="new-comment" rows="2" maxlength="2000"></textarea>
+            <div class="ticket-composer-row">
+                ${canEdit ? `<label class="checkbox-row"><input type="checkbox" id="new-comment-internal">
+                    <span>${escapeHtml(_('tickets.internal_note'))}</span></label>` : ''}
+                <button type="button" class="btn btn-primary" data-ticket-detail-action="add-comment" data-id="${Number(id)}">${escapeHtml(_('tickets.add_comment'))}</button>
+            </div>`;
+        footer.before(box);
     }
 
     async function refreshDetail(id, afterRender) {
@@ -358,9 +399,13 @@
             const titleEl = document.getElementById(`${detailModalId}-title`);
             if (titleEl) titleEl.textContent = `#${t.id} ${t.title}`;
             target.innerHTML = renderDetail(t);
+            const composer = detailOverlay()?.querySelector('.ticket-composer');
+            if (composer) composer.hidden = false;
             if (afterRender) afterRender(target);
         } catch (err) {
             const target = detailBody();
+            const composer = detailOverlay()?.querySelector('.ticket-composer');
+            if (composer) composer.hidden = true;
             if (target) {
                 target.innerHTML = `<p class="state is-error">${escapeHtml(_('tickets.load_detail_failed'))} ${escapeHtml(err.message)}
                     <button type="button" class="btn btn-sm" data-ticket-detail-action="reload" data-id="${Number(id)}">${escapeHtml(_('actions.retry'))}</button></p>`;
@@ -406,8 +451,7 @@
                 actions.push(`<button type="button" class="btn btn-sm" data-ticket-detail-action="unassign" data-id="${id}">${escapeHtml(_('tickets.unassign'))}</button>`);
             }
             if (actions.length) {
-                html += `<div class="ticket-actions">${actions.join('')}
-                    <span class="form-status" data-ticket-status-msg aria-live="polite"></span></div>`;
+                html += `<div class="ticket-actions" role="group" aria-label="${escapeHtml(_('tickets.status_actions'))}">${actions.join('')}</div>`;
             }
         }
 
@@ -449,17 +493,8 @@
         } else {
             html += `<p class="state">${escapeHtml(_('tickets.no_comments'))}</p>`;
         }
-        html += `<div class="add-comment-form">
-                <label class="form-label" for="new-comment">${escapeHtml(_('tickets.comment_label'))}</label>
-                <textarea class="form-input" id="new-comment" rows="3" maxlength="2000"></textarea>
-                ${canEdit ? `<label class="checkbox-row"><input type="checkbox" id="new-comment-internal">
-                    <span>${escapeHtml(_('tickets.internal_note'))}</span></label>` : ''}
-                <div class="form-actions">
-                    <button type="button" class="btn btn-primary" data-ticket-detail-action="add-comment" data-id="${id}">${escapeHtml(_('tickets.add_comment'))}</button>
-                    <span class="form-status" data-comment-status aria-live="polite"></span>
-                </div>
-            </div>
-        </section>`;
+        // The field for a new comment is pinned under the body (mountComposer)
+        html += `</section>`;
 
         return html;
     }
@@ -468,63 +503,68 @@
 
     function formHtml() {
         const opt = (value, key) => `<option value="${value}">${escapeHtml(_(key))}</option>`;
-        return `<form id="ticket-form" novalidate>
+        return `<form id="ticket-form" class="form-stack" novalidate>
             <input type="hidden" id="ticket-id">
             <div class="form-group">
                 <label class="form-label" for="ticket-title">${escapeHtml(_('tickets.ticket_title'))}</label>
-                <input type="text" class="form-input" id="ticket-title" required maxlength="200">
+                <input type="text" class="form-input" id="ticket-title" required maxlength="200" aria-describedby="ticket-title-hint">
+                <p class="form-hint" id="ticket-title-hint">${escapeHtml(_('tickets.title_hint'))}</p>
             </div>
             <div class="form-group">
                 <label class="form-label" for="ticket-desc">${escapeHtml(_('tickets.description'))}</label>
-                <textarea class="form-input" id="ticket-desc" rows="4" maxlength="5000"></textarea>
+                <textarea class="form-input" id="ticket-desc" rows="5" maxlength="5000"></textarea>
             </div>
-            <div class="form-group">
-                <label class="form-label" for="ticket-priority">${escapeHtml(_('tickets.priority'))}</label>
-                <select class="form-select" id="ticket-priority">
-                    ${opt('low', 'tickets.priority_low')}
-                    ${opt('medium', 'tickets.priority_medium')}
-                    ${opt('high', 'tickets.priority_high')}
-                    ${opt('critical', 'tickets.priority_critical')}
-                </select>
-                <p class="form-hint">${escapeHtml(_('tickets.priority_hint'))}</p>
-            </div>
-            <div class="form-group">
-                <label class="form-label" for="ticket-category">${escapeHtml(_('tickets.category'))}</label>
-                <select class="form-select" id="ticket-category">
-                    ${opt('general', 'tickets.category_general')}
-                    ${opt('hardware', 'tickets.category_hardware')}
-                    ${opt('software', 'tickets.category_software')}
-                    ${opt('network', 'tickets.category_network')}
-                    ${opt('access', 'tickets.category_access')}
-                    ${opt('other', 'tickets.category_other')}
-                </select>
-            </div>
-            <div class="form-group">
-                <label class="form-label" for="ticket-device">${escapeHtml(_('tickets.device'))}</label>
-                <input type="text" class="form-input is-medium mono" id="ticket-device" maxlength="64">
-                <p class="form-hint" id="ticket-device-hint">${escapeHtml(_('tickets.device_hint'))}</p>
-            </div>
-            <p class="form-status is-error" id="ticket-form-status" aria-live="polite"></p>
+            <section class="form-section" aria-labelledby="ticket-sec-sort">
+                <h3 class="form-section-title" id="ticket-sec-sort">${escapeHtml(_('tickets.section_sorting'))}</h3>
+                <div class="form-group">
+                    <label class="form-label" for="ticket-priority">${escapeHtml(_('tickets.priority'))}</label>
+                    <select class="form-select is-medium" id="ticket-priority" aria-describedby="ticket-priority-hint">
+                        ${opt('low', 'tickets.priority_low')}
+                        ${opt('medium', 'tickets.priority_medium')}
+                        ${opt('high', 'tickets.priority_high')}
+                        ${opt('critical', 'tickets.priority_critical')}
+                    </select>
+                    <p class="form-hint" id="ticket-priority-hint">${escapeHtml(_('tickets.priority_hint'))}</p>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="ticket-category">${escapeHtml(_('tickets.category'))}</label>
+                    <select class="form-select is-medium" id="ticket-category">
+                        ${opt('general', 'tickets.category_general')}
+                        ${opt('hardware', 'tickets.category_hardware')}
+                        ${opt('software', 'tickets.category_software')}
+                        ${opt('network', 'tickets.category_network')}
+                        ${opt('access', 'tickets.category_access')}
+                        ${opt('other', 'tickets.category_other')}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="ticket-device">${escapeHtml(_('tickets.device'))}</label>
+                    <input type="text" class="form-input is-medium mono" id="ticket-device" maxlength="64" autocomplete="off" spellcheck="false" aria-describedby="ticket-device-hint">
+                    <p class="form-hint" id="ticket-device-hint">${escapeHtml(_('tickets.device_hint'))}</p>
+                </div>
+            </section>
+            <button type="submit" hidden tabindex="-1" aria-hidden="true"></button>
         </form>`;
     }
 
     function showForm(title, saveLabel) {
-        Modal.show({
+        Modal.sheet({
             title,
-            size: 'large',
             content: formHtml(),
+            status: true,
             buttons: [
-                { label: _('actions.cancel'), class: '', onClick: () => Modal.close() },
+                { label: _('actions.cancel'), class: 'btn-secondary', start: true, onClick: () => Modal.close() },
                 { label: saveLabel, class: 'btn-primary', onClick: saveTicket },
             ],
             onClose: () => { detailModalId = null; },
         });
         const form = document.getElementById('ticket-form');
         if (form) {
+            // Enter in a field saves (the hidden submit button)
             form.addEventListener('submit', (e) => { e.preventDefault(); saveTicket(); });
-            const title = document.getElementById('ticket-title');
-            title.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') { e.preventDefault(); saveTicket(); }
+            form.addEventListener('input', (e) => {
+                if (e.target.id === 'ticket-title') e.target.removeAttribute('aria-invalid');
+                if (!saving) Modal.setStatus('');
             });
         }
     }
@@ -539,7 +579,6 @@
     async function openEdit(id) {
         detailModalId = null;
         showForm(_('tickets.edit'), _('actions.save'));
-        const status = document.getElementById('ticket-form-status');
         try {
             const t = await apiFetch(`/api/tickets/${encodeURIComponent(id)}`);
             if (!document.getElementById('ticket-form')) return;
@@ -554,14 +593,13 @@
             device.disabled = true;
             document.getElementById('ticket-device-hint').textContent = _('tickets.device_fixed_hint');
         } catch (err) {
-            if (status) status.textContent = `${_('tickets.load_detail_failed')} ${err.message}`;
+            if (document.getElementById('ticket-form')) Modal.setStatus(`${_('tickets.load_detail_failed')} ${err.message}`, 'error');
         }
     }
 
     let saving = false;
     async function saveTicket() {
-        if (saving) return;
-        const status = document.getElementById('ticket-form-status');
+        if (saving || !document.getElementById('ticket-form')) return;
         const id = document.getElementById('ticket-id').value;
         const body = {
             title: document.getElementById('ticket-title').value.trim(),
@@ -572,13 +610,15 @@
         };
 
         if (!body.title) {
-            status.textContent = _('tickets.title_required');
-            document.getElementById('ticket-title').focus();
+            const titleInput = document.getElementById('ticket-title');
+            titleInput.setAttribute('aria-invalid', 'true');
+            titleInput.focus();
+            Modal.setStatus(_('tickets.title_required'), 'error');
             return;
         }
 
         saving = true;
-        status.textContent = '';
+        Modal.setStatus(_('tickets.saving'));
         try {
             const url = id ? `/api/tickets/${encodeURIComponent(id)}` : '/api/tickets';
             const method = id ? 'PATCH' : 'POST';
@@ -588,7 +628,7 @@
             loadTickets();
             loadStats();
         } catch (err) {
-            status.textContent = err.message;
+            Modal.setStatus(err.message, 'error');
         } finally {
             saving = false;
         }
@@ -618,13 +658,14 @@
         }
     }
 
-    function setDetailMessage(selector, text, isError) {
-        const body = detailBody();
-        const el = body && body.querySelector(selector);
-        if (!el) { if (text) notify(text, isError ? 'error' : 'success'); return; }
-        el.textContent = text;
-        el.classList.toggle('is-error', !!isError);
-        el.classList.toggle('is-ok', !isError && !!text);
+    // Results of status changes and comments go in the sheet's status line;
+    // when the sheet is gone (or a dialog sits on it), in a toast
+    function setDetailMessage(text, isError) {
+        const overlay = detailOverlay();
+        const el = overlay && overlay.querySelector('[data-modal-status]');
+        const open = overlay ? overlay.parentElement.querySelectorAll(':scope > .modal-overlay.open') : [];
+        if (!el || open[open.length - 1] !== overlay) { if (text) notify(text, isError ? 'error' : 'success'); return; }
+        Modal.setStatus(text, isError ? 'error' : 'ok');
     }
 
     async function patchTicket(id, changes) {
@@ -634,42 +675,52 @@
                 body: JSON.stringify(changes),
             });
             refreshDetail(id, (el) => {
-                setDetailMessage('[data-ticket-status-msg]', _('tickets.updated_success'));
-                // The pressed button is gone after the re-render; keep focus in the dialog
-                const next = el.querySelector('.ticket-actions .btn') || el.querySelector('#new-comment');
+                setDetailMessage(_('tickets.updated_success'));
+                // The pressed button is gone after the re-render; keep focus in the sheet
+                const next = el.querySelector('.ticket-actions .btn') || document.getElementById('new-comment');
                 if (next) next.focus();
             });
             loadTickets();
             loadStats();
         } catch (err) {
-            setDetailMessage('[data-ticket-status-msg]', err.message, true);
+            setDetailMessage(err.message, true);
         }
     }
 
     async function addComment(ticketId) {
-        const body = detailBody();
-        const textarea = body && body.querySelector('#new-comment');
+        const overlay = detailOverlay();
+        const textarea = overlay && overlay.querySelector('#new-comment');
         if (!textarea) return;
         const text = textarea.value.trim();
+        textarea.removeAttribute('aria-invalid');
         if (!text) {
-            setDetailMessage('[data-comment-status]', _('tickets.comment_required'), true);
+            textarea.setAttribute('aria-invalid', 'true');
+            setDetailMessage(_('tickets.comment_required'), true);
             textarea.focus();
             return;
         }
-        const internal = body.querySelector('#new-comment-internal');
+        const internal = overlay.querySelector('#new-comment-internal');
+        const button = overlay.querySelector('[data-ticket-detail-action="add-comment"]');
+        if (button) button.disabled = true;
 
         try {
             await apiFetch(`/api/tickets/${encodeURIComponent(ticketId)}/comments`, {
                 method: 'POST',
                 body: JSON.stringify({ body: text, is_internal: !!(internal && internal.checked) }),
             });
+            // The field stays across re-renders: empty it for the next comment
+            textarea.value = '';
+            if (internal) internal.checked = false;
             refreshDetail(ticketId, (el) => {
-                setDetailMessage('[data-comment-status]', _('tickets.comment_added'));
-                const area = el.querySelector('#new-comment');
-                if (area) area.focus();
+                setDetailMessage(_('tickets.comment_added'));
+                // Show the new comment at the end of the thread
+                el.querySelector('.ticket-comments > li:last-child')?.scrollIntoView({ block: 'nearest' });
+                textarea.focus();
             });
         } catch (err) {
-            setDetailMessage('[data-comment-status]', err.message, true);
+            setDetailMessage(err.message, true);
+        } finally {
+            if (button) button.disabled = false;
         }
     }
 
@@ -753,15 +804,19 @@
         else openDetail(id);
     });
 
-    // A device in the table or the detail dialog: the panel opens above the page, so the dialog closes first
+    // A device in the table or the ticket sheet opens the device panel. Both
+    // are sheets on the same side, so the ticket sheet closes first (focus goes
+    // back to the ticket in the list) and the panel takes its place; closing the
+    // panel returns to the list.
     document.addEventListener('click', (e) => {
         const dev = e.target.closest('[data-open-device]');
         if (!dev || !window.DeviceDetail) return;
-        if (dev.closest('.modal-overlay')) Modal.close();
+        if (detailModalId && dev.closest(`#${CSS.escape(detailModalId)}`)) closeDetail();
+        else if (dev.closest('.modal-overlay')) Modal.close();
         DeviceDetail.open(dev.dataset.openDevice);
     });
 
-    // Actions inside the detail dialog (it lives in #modal-container)
+    // Actions inside the ticket sheet (it lives in #modal-container)
     document.addEventListener('click', (e) => {
         const actionBtn = e.target.closest('[data-ticket-detail-action]');
         if (!actionBtn) return;

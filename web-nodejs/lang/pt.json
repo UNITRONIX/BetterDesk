@@ -1920,7 +1920,9 @@
         "count_filtered": "{shown} de {count} utilizadores",
         "no_match": "Nenhum utilizador corresponde a \"{query}\".",
         "clear_search": "Limpar pesquisa",
-        "group_actions_for": "Mais ações para {name}"
+        "group_actions_for": "Mais ações para {name}",
+        "sheet_add_desc": "Uma conta para esta consola. A função define o que a pessoa pode fazer.",
+        "org_member_of": "Membro de"
     },
     "folders": {
         "title": "Pastas",
@@ -2722,7 +2724,11 @@
         "overdue_note": "Prazo ultrapassado e ainda não resolvidos. Os mais atrasados primeiro.",
         "overdue_none": "Nenhum ticket ultrapassou o prazo.",
         "overdue_row": "n.º {id}, {priority}, prazo {time}",
-        "summary_failed": "Não foi possível carregar o resumo."
+        "summary_failed": "Não foi possível carregar o resumo.",
+        "status_actions": "Status e responsável",
+        "title_hint": "Um resumo curto que outras pessoas reconheçam na lista.",
+        "section_sorting": "Detalhes",
+        "saving": "A guardar…"
     },
     "activity": {
         "title": "Monitorização de atividade",
@@ -2803,7 +2809,8 @@
         "top_apps_all_empty": "Sem utilização de aplicações nestas datas.",
         "top_apps_all_failed": "Não foi possível carregar a utilização das aplicações.",
         "top_apps_all_devices": "Usada em {count} dispositivos",
-        "top_apps_all_one_device": "Usada em 1 dispositivo"
+        "top_apps_all_one_device": "Usada em 1 dispositivo",
+        "detail_desc": "Tempo por app e as sessões mais recentes, para as datas escolhidas na página."
     },
     "automation": {
         "title": "Automação e alertas",
@@ -2945,7 +2952,11 @@
         "rules_not_checked": "O servidor ainda não verifica as regras de alerta. Pode criar e manter regras aqui, mas não geram alertas até que uma atualização do servidor adicione a verificação.",
         "no_alerts_not_checked": "Sem alertas. O servidor ainda não verifica as regras, por isso nenhum é gerado.",
         "unit_percent": "%",
-        "unit_seconds": "segundos"
+        "unit_seconds": "segundos",
+        "rule_sheet_desc": "Gera um alerta quando um dispositivo comunica um valor acima do limite que definir.",
+        "section_condition": "O que vigia",
+        "section_alert": "Alerta",
+        "saving": "A guardar…"
     },
     "file_transfer": {
         "title": "Transferência de ficheiros",
@@ -3131,7 +3142,11 @@
         "rtt_target": "Destino",
         "rtt_label": "Tempo de resposta de {name}",
         "rtt_summary": "{count} verificações desde {since}, {down} sem resposta. As respostas levaram de {min} a {max} ms.",
-        "rtt_summary_none": "{count} verificações desde {since}, nenhuma teve resposta."
+        "rtt_summary_none": "{count} verificações desde {since}, nenhuma teve resposta.",
+        "section_check": "Endereço e verificação",
+        "section_schedule": "Agendamento",
+        "target_sheet_desc": "O servidor verifica este endereço periodicamente e regista se responde.",
+        "history_sheet_desc": "Verificações de {host}, as mais recentes primeiro."
     },
     "dataguard": {
         "title": "DataGuard",
@@ -3251,7 +3266,10 @@
         "legend_blocked": "bloqueados",
         "legend_logged": "registados",
         "legend_allowed": "permitidos",
-        "advanced": "Opções avançadas"
+        "advanced": "Opções avançadas",
+        "section_covers": "O que abrange",
+        "policy_sheet_desc": "Quais transferências a política abrange e se os dispositivos as bloqueiam, registam ou permitem.",
+        "saving": "A guardar…"
     },
     "reports": {
         "title": "Relatórios",

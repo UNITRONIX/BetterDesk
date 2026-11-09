@@ -1920,7 +1920,9 @@
         "count_filtered": "{shown} van {count} gebruikers",
         "no_match": "Geen gebruiker komt overeen met \"{query}\".",
         "clear_search": "Zoekopdracht wissen",
-        "group_actions_for": "Meer acties voor {name}"
+        "group_actions_for": "Meer acties voor {name}",
+        "sheet_add_desc": "Een account voor deze console. De rol bepaalt wat de persoon kan doen.",
+        "org_member_of": "Lid van"
     },
     "folders": {
         "title": "Mappen",
@@ -2722,7 +2724,11 @@
         "overdue_note": "Na hun deadline en nog niet opgelost. Langst te laat eerst.",
         "overdue_none": "Geen enkel ticket is te laat.",
         "overdue_row": "#{id}, {priority}, deadline {time}",
-        "summary_failed": "Het overzicht kon niet worden geladen."
+        "summary_failed": "Het overzicht kon niet worden geladen.",
+        "status_actions": "Status en behandelaar",
+        "title_hint": "Een korte samenvatting die anderen in de lijst herkennen.",
+        "section_sorting": "Details",
+        "saving": "Opslaan…"
     },
     "activity": {
         "title": "Activiteitsmonitoring",
@@ -2803,7 +2809,8 @@
         "top_apps_all_empty": "Geen appgebruik op deze data.",
         "top_apps_all_failed": "Kan het appgebruik niet laden.",
         "top_apps_all_devices": "Gebruikt op {count} apparaten",
-        "top_apps_all_one_device": "Gebruikt op 1 apparaat"
+        "top_apps_all_one_device": "Gebruikt op 1 apparaat",
+        "detail_desc": "Tijd per app en de laatste sessies, voor de datums die op de pagina zijn gekozen."
     },
     "automation": {
         "title": "Automatisering en waarschuwingen",
@@ -2945,7 +2952,11 @@
         "rules_not_checked": "De server controleert waarschuwingsregels nog niet. U kunt hier regels maken en bewaren, maar ze geven geen waarschuwingen tot een serverupdate de controle toevoegt.",
         "no_alerts_not_checked": "Geen waarschuwingen. De server controleert de regels nog niet, dus er worden er geen gegeven.",
         "unit_percent": "%",
-        "unit_seconds": "seconden"
+        "unit_seconds": "seconden",
+        "rule_sheet_desc": "Geeft een melding wanneer een apparaat een waarde voorbij de ingestelde grens meldt.",
+        "section_condition": "Wat de regel bewaakt",
+        "section_alert": "Melding",
+        "saving": "Opslaan…"
     },
     "file_transfer": {
         "title": "Bestandsoverdracht",
@@ -3131,7 +3142,11 @@
         "rtt_target": "Doel",
         "rtt_label": "Reactietijd van {name}",
         "rtt_summary": "{count} controles sinds {since}, {down} zonder antwoord. Antwoorden duurden {min} tot {max} ms.",
-        "rtt_summary_none": "{count} controles sinds {since}, geen enkele kreeg antwoord."
+        "rtt_summary_none": "{count} controles sinds {since}, geen enkele kreeg antwoord.",
+        "section_check": "Adres en controle",
+        "section_schedule": "Planning",
+        "target_sheet_desc": "De server controleert dit adres volgens een schema en legt vast of het antwoordt.",
+        "history_sheet_desc": "Controles van {host}, nieuwste eerst."
     },
     "dataguard": {
         "title": "DataGuard",
@@ -3251,7 +3266,10 @@
         "legend_blocked": "geblokkeerd",
         "legend_logged": "gelogd",
         "legend_allowed": "toegestaan",
-        "advanced": "Geavanceerde opties"
+        "advanced": "Geavanceerde opties",
+        "section_covers": "Waar het voor geldt",
+        "policy_sheet_desc": "Welke overdrachten het beleid dekt en of apparaten ze blokkeren, vastleggen of toestaan.",
+        "saving": "Opslaan…"
     },
     "reports": {
         "title": "Rapporten",

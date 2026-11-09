@@ -1926,7 +1926,9 @@
         "count_filtered": "{count} kullanıcıdan {shown}",
         "no_match": "\"{query}\" ile eşleşen kullanıcı yok.",
         "clear_search": "Aramayı temizle",
-        "group_actions_for": "{name} için diğer işlemler"
+        "group_actions_for": "{name} için diğer işlemler",
+        "sheet_add_desc": "Bu konsol için bir hesap. Rol, kişinin neler yapabileceğini belirler.",
+        "org_member_of": "Üye olduğu"
     },
     "folders": {
         "title": "Klasörler",
@@ -2728,7 +2730,11 @@
         "overdue_note": "Süresi geçmiş ve henüz çözülmemiş. En çok gecikenler önce.",
         "overdue_none": "Süresi geçmiş ticket yok.",
         "overdue_row": "#{id}, {priority}, son tarih {time}",
-        "summary_failed": "Özet yüklenemedi."
+        "summary_failed": "Özet yüklenemedi.",
+        "status_actions": "Durum ve atanan kişi",
+        "title_hint": "Başkalarının listede tanıyabileceği kısa bir özet.",
+        "section_sorting": "Ayrıntılar",
+        "saving": "Kaydediliyor…"
     },
     "activity": {
         "title": "Etkinlik İzleme",
@@ -2809,7 +2815,8 @@
         "top_apps_all_empty": "Bu tarihlerde uygulama kullanımı yok.",
         "top_apps_all_failed": "Uygulama kullanımı yüklenemedi.",
         "top_apps_all_devices": "{count} cihazda kullanılıyor",
-        "top_apps_all_one_device": "1 cihazda kullanılıyor"
+        "top_apps_all_one_device": "1 cihazda kullanılıyor",
+        "detail_desc": "Sayfada seçilen tarihler için uygulama başına süre ve son oturumlar."
     },
     "automation": {
         "title": "Otomasyon ve Uyarılar",
@@ -2951,7 +2958,11 @@
         "rules_not_checked": "Sunucu uyarı kurallarını henüz denetlemiyor. Kuralları burada oluşturup saklayabilirsiniz, ancak bir sunucu güncellemesi denetimi ekleyene kadar uyarı üretmezler.",
         "no_alerts_not_checked": "Uyarı yok. Sunucu kuralları henüz denetlemediği için uyarı üretilmiyor.",
         "unit_percent": "%",
-        "unit_seconds": "saniye"
+        "unit_seconds": "saniye",
+        "rule_sheet_desc": "Bir cihaz belirlediğiniz sınırı aşan bir değer bildirdiğinde uyarı oluşturur.",
+        "section_condition": "Neyi izler",
+        "section_alert": "Uyarı",
+        "saving": "Kaydediliyor…"
     },
     "file_transfer": {
         "title": "Dosya Aktarımı",
@@ -3137,7 +3148,11 @@
         "rtt_target": "Hedef",
         "rtt_label": "{name} yanıt süresi",
         "rtt_summary": "{since} tarihinden beri {count} denetim, {down} tanesi yanıtsız. Yanıtlar {min} ile {max} ms arasında sürdü.",
-        "rtt_summary_none": "{since} tarihinden beri {count} denetim, hiçbiri yanıt almadı."
+        "rtt_summary_none": "{since} tarihinden beri {count} denetim, hiçbiri yanıt almadı.",
+        "section_check": "Adres ve denetim",
+        "section_schedule": "Zamanlama",
+        "target_sheet_desc": "Sunucu bu adresi belirli aralıklarla denetler ve yanıt verip vermediğini kaydeder.",
+        "history_sheet_desc": "{host} denetimleri, en yenisi önce."
     },
     "dataguard": {
         "title": "DataGuard â€” DLP",
@@ -3257,7 +3272,10 @@
         "legend_blocked": "engellendi",
         "legend_logged": "kaydedildi",
         "legend_allowed": "izin verildi",
-        "advanced": "Gelişmiş seçenekler"
+        "advanced": "Gelişmiş seçenekler",
+        "section_covers": "Neleri kapsar",
+        "policy_sheet_desc": "Politikanın hangi aktarımları kapsadığı ve cihazların bunları engelleyip kaydedip izin verip vermediği.",
+        "saving": "Kaydediliyor…"
     },
     "reports": {
         "title": "Raporlar",

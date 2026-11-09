@@ -1926,7 +1926,9 @@
         "count_filtered": "{shown} din {count} utilizatori",
         "no_match": "Niciun utilizator nu corespunde cu \"{query}\".",
         "clear_search": "Șterge căutarea",
-        "group_actions_for": "Mai multe acțiuni pentru {name}"
+        "group_actions_for": "Mai multe acțiuni pentru {name}",
+        "sheet_add_desc": "Un cont pentru această consolă. Rolul stabilește ce poate face persoana.",
+        "org_member_of": "Membru în"
     },
     "folders": {
         "title": "Foldere",
@@ -2728,7 +2730,11 @@
         "overdue_note": "Termenul a trecut și încă nu sunt rezolvate. Cele mai întârziate primele.",
         "overdue_none": "Niciun tichet nu a depășit termenul.",
         "overdue_row": "#{id}, {priority}, termen {time}",
-        "summary_failed": "Rezumatul nu a putut fi încărcat."
+        "summary_failed": "Rezumatul nu a putut fi încărcat.",
+        "status_actions": "Stare și responsabil",
+        "title_hint": "Un rezumat scurt pe care alții îl recunosc în listă.",
+        "section_sorting": "Detalii",
+        "saving": "Se salvează…"
     },
     "activity": {
         "title": "Monitorizarea activității",
@@ -2809,7 +2815,8 @@
         "top_apps_all_empty": "Nicio utilizare de aplicații în aceste date.",
         "top_apps_all_failed": "Utilizarea aplicațiilor nu a putut fi încărcată.",
         "top_apps_all_devices": "Folosită pe {count} dispozitive",
-        "top_apps_all_one_device": "Folosită pe 1 dispozitiv"
+        "top_apps_all_one_device": "Folosită pe 1 dispozitiv",
+        "detail_desc": "Timpul pe aplicație și ultimele sesiuni, pentru datele alese pe pagină."
     },
     "automation": {
         "title": "Automatizare și alerte",
@@ -2951,7 +2958,11 @@
         "rules_not_checked": "Serverul nu verifică încă regulile de alertă. Puteți crea și păstra reguli aici, dar nu declanșează alerte până când o actualizare a serverului nu adaugă verificarea.",
         "no_alerts_not_checked": "Nicio alertă. Serverul nu verifică încă regulile, așa că nu se declanșează niciuna.",
         "unit_percent": "%",
-        "unit_seconds": "secunde"
+        "unit_seconds": "secunde",
+        "rule_sheet_desc": "Generează o alertă când un dispozitiv raportează o valoare peste limita setată.",
+        "section_condition": "Ce urmărește",
+        "section_alert": "Alertă",
+        "saving": "Se salvează…"
     },
     "file_transfer": {
         "title": "Transfer de fișiere",
@@ -3137,7 +3148,11 @@
         "rtt_target": "Țintă",
         "rtt_label": "Timpul de răspuns pentru {name}",
         "rtt_summary": "{count} verificări din {since}, {down} fără răspuns. Răspunsurile au durat între {min} și {max} ms.",
-        "rtt_summary_none": "{count} verificări din {since}, niciuna nu a primit răspuns."
+        "rtt_summary_none": "{count} verificări din {since}, niciuna nu a primit răspuns.",
+        "section_check": "Adresă și verificare",
+        "section_schedule": "Program",
+        "target_sheet_desc": "Serverul verifică periodic această adresă și înregistrează dacă răspunde.",
+        "history_sheet_desc": "Verificările pentru {host}, cele mai noi primele."
     },
     "dataguard": {
         "title": "DataGuard â€” DLP",
@@ -3257,7 +3272,10 @@
         "legend_blocked": "blocate",
         "legend_logged": "înregistrate",
         "legend_allowed": "permise",
-        "advanced": "Opțiuni avansate"
+        "advanced": "Opțiuni avansate",
+        "section_covers": "Ce acoperă",
+        "policy_sheet_desc": "Ce transferuri acoperă politica și dacă dispozitivele le blochează, le înregistrează sau le permit.",
+        "saving": "Se salvează…"
     },
     "reports": {
         "title": "Rapoarte",

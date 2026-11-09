@@ -3,8 +3,8 @@
  *
  * Two views: the policy table (create, edit, enable/disable, delete) and
  * the event table (what devices reported). Counts sit in a line above
- * each table. The policy editor is a Modal.show() dialog built from the
- * #policy-form-template in the view.
+ * each table. The policy editor is a side sheet (Modal.sheet) built from
+ * the #policy-form-template in the view.
  */
 
 (function () {
@@ -227,13 +227,15 @@
     }
 
     function openPolicyModal(p) {
-        Modal.show({
+        Modal.sheet({
             title: p ? t('edit_policy') : t('create_policy'),
+            subtitle: t('policy_sheet_desc'),
             content: formTemplate.innerHTML,
+            status: true,
             buttons: [
-                // Delete sits apart on the start side of the footer
+                { label: tr('common.cancel'), class: 'btn-secondary', start: true, onClick: () => Modal.close() },
+                // Delete asks first; the confirm sits on top of the sheet
                 ...(p ? [{ label: t('delete_policy'), class: 'btn-danger-quiet del-btn', onClick: () => deletePolicy(p) }] : []),
-                { label: tr('common.cancel'), class: 'btn-secondary', onClick: () => Modal.close() },
                 { label: p ? t('save_policy') : t('create_policy'), class: 'btn-primary', onClick: () => savePolicy() },
             ],
         });
@@ -249,7 +251,14 @@
         document.getElementById('policy-rules').value = rulesText(p);
         document.getElementById('policy-advanced').open = !!rulesText(p);
         document.getElementById('policy-enabled').checked = p ? isEnabled(p) : true;
-        document.getElementById('policy-form').addEventListener('submit', (e) => { e.preventDefault(); savePolicy(); });
+        const form = document.getElementById('policy-form');
+        // Enter in a field saves (the hidden submit button)
+        form.addEventListener('submit', (e) => { e.preventDefault(); savePolicy(); });
+        // A refusal belongs to the values it was about
+        form.addEventListener('input', (e) => {
+            e.target.removeAttribute('aria-invalid');
+            if (!saving) Modal.setStatus('');
+        });
         document.getElementById('policy-name').focus();
     }
 
@@ -262,9 +271,9 @@
         }
     }
 
+    // Refusals and errors go in the policy sheet's status line
     function formError(message, field) {
-        const status = document.getElementById('policy-form-status');
-        if (status) status.textContent = message;
+        Modal.setStatus(message, message ? 'error' : '');
         if (field) {
             field.setAttribute('aria-invalid', 'true');
             field.focus();
@@ -307,6 +316,7 @@
         if (!body.name) { formError(t('name_required'), nameEl); return; }
 
         saving = true;
+        Modal.setStatus(t('saving'));
         try {
             const url = id ? `/api/dataguard/policies/${encodeURIComponent(id)}` : '/api/dataguard/policies';
             await apiFetch(url, { method: id ? 'PATCH' : 'POST', body: JSON.stringify(body) });
@@ -320,7 +330,8 @@
         }
     }
 
-    // Called from the edit dialog. Cancelling the confirmation goes back to the dialog.
+    // Called from the edit sheet. The confirm stacks on the sheet, so
+    // cancelling it leaves the sheet as it was, unsaved edits included.
     async function deletePolicy(p) {
         const ok = await Modal.confirm({
             title: t('delete_policy'),
@@ -328,18 +339,16 @@
             confirmLabel: t('delete_policy'),
             danger: true,
         });
-        if (!ok) {
-            openPolicyModal(p);
-            return;
-        }
+        if (!ok) return;
         try {
             await apiFetch(`/api/dataguard/policies/${encodeURIComponent(p.id)}`, { method: 'DELETE' });
+            Modal.close();
             toast(t('policy_deleted', { name: p.name }), 'success');
-            // The row and its dialog are gone; keep focus on the page
+            // The row and its sheet are gone; keep focus on the page
             createBtn.focus();
             loadPolicies();
         } catch (err) {
-            toast(`${t('delete_failed')} ${err.message}`, 'error');
+            formError(`${t('delete_failed')} ${err.message}`);
         }
     }
 

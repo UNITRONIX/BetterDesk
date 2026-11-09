@@ -487,19 +487,18 @@
         const folderSel = new Set((user?.folder_ids || []).map(String));
         const peers = Array.isArray(user?.peer_grants) ? user.peer_grants.join(', ') : '';
         const strategy = String(user?.strategy_guid || '');
-        const limited = groupSel.size + folderSel.size > 0 || peers || strategy;
         return `
-            <details class="disclosure user-access"${limited ? ' open' : ''}>
-                <summary><h3>${esc(_('users.device_access'))}</h3></summary>
-                <p class="form-hint user-access-note">${esc(_('users.scope_hint'))}</p>
+            <section class="form-section user-access" aria-labelledby="user-sec-access" aria-describedby="user-access-note">
+                <h3 class="form-section-title" id="user-sec-access">${esc(_('users.device_access'))}</h3>
+                <p class="form-hint user-access-note" id="user-access-note">${esc(_('users.scope_hint'))}</p>
                 <fieldset class="form-group">
                     <legend class="form-label">${esc(_('users.user_groups'))}</legend>
                     ${checkListHtml('user-group', userGroups.map(g => ({ value: g.guid, label: g.name || g.guid })), groupSel, _('users.no_user_groups'))}
                 </fieldset>
-                <fieldset class="form-group">
+                <fieldset class="form-group" aria-describedby="user-folders-hint">
                     <legend class="form-label">${esc(_('users.user_folders'))}</legend>
                     ${checkListHtml('user-folder', folders.map(f => ({ value: f.id, label: f.name || f.id })), folderSel, _('users.no_folders'))}
-                    <p class="form-hint">${esc(_('users.user_folders_hint'))}</p>
+                    <p class="form-hint" id="user-folders-hint">${esc(_('users.user_folders_hint'))}</p>
                 </fieldset>
                 <div class="form-group">
                     <label class="form-label" for="user-direct-devices">${esc(_('users.user_direct_devices'))}</label>
@@ -515,7 +514,7 @@
                     </select>
                     <p class="form-hint" id="user-strategy-hint">${esc(_('users.pro_strategy_hint'))}</p>
                 </div>
-            </details>`;
+            </section>`;
     }
 
     async function showUserModal(user) {
@@ -549,10 +548,11 @@
                 ${passwordFieldHtml('user-password', _('users.password'), _('users.password_hint'))}`;
         }
 
-        Modal.show({
+        Modal.sheet({
             title: editing ? _('users.edit_user_named', { username: user.username }) : _('users.add_user'),
+            subtitle: editing ? '' : _('users.sheet_add_desc'),
             content: `
-                <form id="user-form" class="user-form" novalidate>
+                <form id="user-form" class="user-form form-stack" novalidate>
                     ${accountHtml}
                     <div class="form-group">
                         <label class="form-label" for="user-email">${esc(_('users.email'))}</label>
@@ -560,25 +560,30 @@
                                value="${esc(editing ? user.email || '' : '')}" aria-describedby="user-email-hint">
                         <p class="form-hint" id="user-email-hint">${esc(_('users.email_hint'))}</p>
                     </div>
-                    <fieldset class="form-group">
-                        <legend class="form-label">${esc(_('users.role'))}</legend>
-                        <div role="radiogroup" aria-label="${esc(_('users.role'))}"><ul class="choice-list">${roleChoicesHtml(user)}</ul></div>
-                        <p class="form-hint">${esc(_('users.role_note'))}</p>
-                    </fieldset>
+                    <section class="form-section" aria-labelledby="user-sec-role">
+                        <h3 class="form-section-title" id="user-sec-role">${esc(_('users.role'))}</h3>
+                        <div role="radiogroup" aria-labelledby="user-sec-role" aria-describedby="user-role-note"><ul class="choice-list">${roleChoicesHtml(user)}</ul></div>
+                        <p class="form-hint" id="user-role-note">${esc(_('users.role_note'))}</p>
+                    </section>
                     ${deviceAccessHtml(user)}
-                    <p class="form-status is-error" id="user-form-status" role="alert"></p>
-                    <button type="submit" hidden></button>
+                    <button type="submit" hidden tabindex="-1" aria-hidden="true"></button>
                 </form>`,
-            size: 'medium',
+            status: true,
             buttons: [
-                { label: _('actions.cancel'), class: 'btn-secondary', onClick: () => Modal.close() },
+                { label: _('actions.cancel'), class: 'btn-secondary', start: true, onClick: () => Modal.close() },
                 { label: editing ? _('actions.save') : _('users.create'), class: 'btn-primary', onClick: () => submitUserForm(user) }
             ],
             onOpen: () => {
                 wirePasswordField('user-password');
-                document.getElementById('user-form')?.addEventListener('submit', (event) => {
+                const form = document.getElementById('user-form');
+                form?.addEventListener('submit', (event) => {
                     event.preventDefault();
                     submitUserForm(user);
+                });
+                // A refusal belongs to the values it was about
+                form?.addEventListener('input', (event) => {
+                    event.target.removeAttribute?.('aria-invalid');
+                    if (form.dataset.busy !== 'true') Modal.setStatus('');
                 });
                 (document.getElementById('user-username') || document.getElementById('user-email'))?.focus();
             }
@@ -587,8 +592,7 @@
 
     async function submitUserForm(user) {
         const form = document.getElementById('user-form');
-        const status = document.getElementById('user-form-status');
-        if (!form) return;
+        if (!form || form.dataset.busy === 'true') return;
         const editing = !!user;
         const provider = editing ? providerOf(user) : 'local';
 
@@ -603,20 +607,29 @@
         const peerIds = (document.getElementById('user-direct-devices')?.value || '')
             .split(/[,;\s]+/).map(v => v.trim()).filter(Boolean);
 
-        // Check what the server would refuse, and say so here
+        // Check what the server would refuse, and say so in the sheet's status line
         let problem = '';
-        if (!editing && !username) problem = _('users.username_required');
-        else if (!editing && !/^[a-zA-Z0-9_]{3,32}$/.test(username)) problem = _('users.invalid_username');
-        else if (!editing && !password) problem = _('users.password_required');
+        let field = null;
+        if (!editing && !username) { problem = _('users.username_required'); field = 'user-username'; }
+        else if (!editing && !/^[a-zA-Z0-9_]{3,32}$/.test(username)) { problem = _('users.invalid_username'); field = 'user-username'; }
+        else if (!editing && !password) { problem = _('users.password_required'); field = 'user-password'; }
         if (!problem && password) {
             if (password.length < 8) problem = _('users.password_too_short');
             else if (passwordStrength(password) === 'weak') problem = _('users.password_weak_hint');
+            if (problem) field = 'user-password';
         }
+        form.querySelectorAll('[aria-invalid]').forEach(el => el.removeAttribute('aria-invalid'));
         if (problem) {
-            setStatus(status, problem, false);
+            const input = field && document.getElementById(field);
+            if (input) {
+                input.setAttribute('aria-invalid', 'true');
+                input.focus();
+            }
+            Modal.setStatus(problem, 'error');
             return;
         }
-        setStatus(status, _('users.saving'), true);
+        Modal.setStatus(_('users.saving'));
+        form.dataset.busy = 'true';
 
         try {
             if (editing) {
@@ -638,7 +651,9 @@
             loadUsers();
             loadUserGroups();
         } catch (error) {
-            setStatus(status, errorText(error), false);
+            Modal.setStatus(errorText(error), 'error');
+        } finally {
+            delete form.dataset.busy;
         }
     }
 
@@ -741,21 +756,23 @@
             }
         }
 
-        Modal.show({
+        Modal.sheet({
             title: _('users.user_organizations', { username: user.username }),
+            subtitle: _('users.org_membership_hint'),
             content: `
-                <div class="user-orgs-dialog">
-                    <p class="form-hint">${esc(_('users.org_membership_hint'))}</p>
-                    <ul class="list" id="user-orgs-list"></ul>
-                    <div id="user-orgs-add"></div>
-                    <p class="form-status" id="user-orgs-status" role="status" aria-live="polite"></p>
+                <div class="user-orgs-dialog form-stack">
+                    <section class="form-section" aria-labelledby="user-orgs-member-title">
+                        <h3 class="form-section-title" id="user-orgs-member-title">${esc(_('users.org_member_of'))}</h3>
+                        <ul class="list" id="user-orgs-list"></ul>
+                    </section>
+                    <section id="user-orgs-add" class="form-section" aria-labelledby="user-orgs-add-title" hidden></section>
                 </div>`,
-            size: 'medium',
+            status: true,
             buttons: [
                 { label: _('actions.close'), class: 'btn-secondary', onClick: () => Modal.close() }
-            ],
-            onOpen: () => renderOrgsDialog()
+            ]
         });
+        renderOrgsDialog();
 
         function orgRoleLabel(role) {
             const key = 'organizations.role_' + role;
@@ -781,29 +798,32 @@
 
             const memberIds = new Set(userOrgs.map(o => o.id));
             const available = allOrgs.filter(o => !memberIds.has(String(o.id)));
+            // The add part is a section of its own, under the list; without the right to manage it is left out
+            const addTitle = `<h3 class="form-section-title" id="user-orgs-add-title">${esc(_('users.add_to_org'))}</h3>`;
+            add.hidden = !canManageOrgs;
             if (!canManageOrgs) {
                 add.innerHTML = '';
             } else if (allOrgsFailed) {
-                add.innerHTML = `<p class="notice error">${esc(_('errors.load_orgs_failed'))}</p>`;
+                add.innerHTML = `${addTitle}<p class="notice error">${esc(_('errors.load_orgs_failed'))}</p>`;
             } else if (!available.length) {
-                add.innerHTML = `<p class="form-hint">${esc(allOrgs.length ? _('users.all_orgs_assigned') : _('users.no_orgs_exist'))}</p>`;
+                add.innerHTML = `${addTitle}<p class="form-hint">${esc(allOrgs.length ? _('users.all_orgs_assigned') : _('users.no_orgs_exist'))}</p>`;
             } else {
                 add.innerHTML = `
-                    <form class="user-orgs-add-form" id="user-orgs-add-form" novalidate>
-                        <h3>${esc(_('users.add_to_org'))}</h3>
+                    ${addTitle}
+                    <form class="user-orgs-add-form form-stack" id="user-orgs-add-form" aria-labelledby="user-orgs-add-title" novalidate>
                         <div class="form-group">
                             <label class="form-label" for="add-org-select">${esc(_('users.organization'))}</label>
-                            <select id="add-org-select" class="form-select">
+                            <select id="add-org-select" class="form-select is-host">
                                 ${available.map(o => `<option value="${esc(o.id)}">${esc(o.name)}</option>`).join('')}
                             </select>
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="add-org-role">${esc(_('organizations.org_role'))}</label>
-                            <select id="add-org-role" class="form-select">
+                            <select id="add-org-role" class="form-select is-medium">
                                 ${['user', 'operator', 'admin', 'owner'].map(r => `<option value="${r}">${esc(orgRoleLabel(r))}</option>`).join('')}
                             </select>
                         </div>
-                        <button type="submit" class="btn" id="add-org-btn">${Utils.icon('add')}${esc(_('users.add_to_org_button'))}</button>
+                        <div><button type="submit" class="btn" id="add-org-btn">${esc(_('users.add_to_org_button'))}</button></div>
                     </form>`;
                 document.getElementById('user-orgs-add-form')?.addEventListener('submit', (event) => {
                     event.preventDefault();
@@ -827,7 +847,6 @@
         }
 
         async function addOrg() {
-            const status = document.getElementById('user-orgs-status');
             const select = document.getElementById('add-org-select');
             const orgId = select?.value;
             const role = document.getElementById('add-org-role')?.value || 'user';
@@ -842,10 +861,10 @@
                 });
                 await refreshAfterChange();
                 renderOrgsDialog('#add-org-select');
-                setStatus(document.getElementById('user-orgs-status'), _('users.org_added_named', { org: name }), true);
+                Modal.setStatus(_('users.org_added_named', { org: name }), 'ok');
             } catch (error) {
                 if (btn) btn.disabled = false;
-                setStatus(status, errorText(error), false);
+                Modal.setStatus(errorText(error), 'error');
             }
         }
 
@@ -856,9 +875,9 @@
                 await Utils.api(`/api/panel/org/${encodeURIComponent(orgId)}/members/${encodeURIComponent(user.id)}`, { method: 'DELETE' });
                 await refreshAfterChange();
                 renderOrgsDialog('#add-org-select');
-                setStatus(document.getElementById('user-orgs-status'), _('users.org_removed_named', { org: name }), true);
+                Modal.setStatus(_('users.org_removed_named', { org: name }), 'ok');
             } catch (error) {
-                setStatus(document.getElementById('user-orgs-status'), errorText(error), false);
+                Modal.setStatus(errorText(error), 'error');
             }
         }
     }

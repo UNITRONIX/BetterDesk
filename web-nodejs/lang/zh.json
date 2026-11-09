@@ -1920,7 +1920,9 @@
         "count_filtered": "{count} 个用户中的 {shown} 个",
         "no_match": "没有与“{query}”匹配的用户。",
         "clear_search": "清除搜索",
-        "group_actions_for": "{name} 的更多操作"
+        "group_actions_for": "{name} 的更多操作",
+        "sheet_add_desc": "此控制台的账户。角色决定此人可以做什么。",
+        "org_member_of": "所属组织"
     },
     "folders": {
         "title": "文件夹",
@@ -2722,7 +2724,11 @@
         "overdue_note": "已过期限且尚未解决。逾期最久的在前。",
         "overdue_none": "没有逾期的工单。",
         "overdue_row": "#{id}，{priority}，期限 {time}",
-        "summary_failed": "无法加载概览。"
+        "summary_failed": "无法加载概览。",
+        "status_actions": "状态和负责人",
+        "title_hint": "简短摘要，方便其他人在列表中识别。",
+        "section_sorting": "详细信息",
+        "saving": "正在保存…"
     },
     "activity": {
         "title": "活动监控",
@@ -2803,7 +2809,8 @@
         "top_apps_all_empty": "这些日期没有应用使用记录。",
         "top_apps_all_failed": "无法加载应用使用记录。",
         "top_apps_all_devices": "在 {count} 台设备上使用",
-        "top_apps_all_one_device": "在 1 台设备上使用"
+        "top_apps_all_one_device": "在 1 台设备上使用",
+        "detail_desc": "页面上所选日期内每个应用的时间和最近的会话。"
     },
     "automation": {
         "title": "自动化与告警",
@@ -2945,7 +2952,11 @@
         "rules_not_checked": "服务器还不会检查告警规则。您可以在这里创建并保留规则，但在服务器更新加入检查之前，规则不会产生告警。",
         "no_alerts_not_checked": "没有告警。服务器还不会检查规则，因此不会产生告警。",
         "unit_percent": "%",
-        "unit_seconds": "秒"
+        "unit_seconds": "秒",
+        "rule_sheet_desc": "当设备报告超过您设定限值的数值时发出警报。",
+        "section_condition": "监视内容",
+        "section_alert": "警报",
+        "saving": "正在保存…"
     },
     "file_transfer": {
         "title": "文件传输",
@@ -3131,7 +3142,11 @@
         "rtt_target": "目标",
         "rtt_label": "{name} 的响应时间",
         "rtt_summary": "自 {since} 起检查 {count} 次，{down} 次无应答。应答用时 {min} 到 {max} ms。",
-        "rtt_summary_none": "自 {since} 起检查 {count} 次，均无应答。"
+        "rtt_summary_none": "自 {since} 起检查 {count} 次，均无应答。",
+        "section_check": "地址和检查",
+        "section_schedule": "计划",
+        "target_sheet_desc": "服务器按计划检查此地址，并记录它是否响应。",
+        "history_sheet_desc": "{host} 的检查记录，最新的在前。"
     },
     "dataguard": {
         "title": "数据防护 — DLP",
@@ -3251,7 +3266,10 @@
         "legend_blocked": "已阻止",
         "legend_logged": "已记录",
         "legend_allowed": "已允许",
-        "advanced": "高级选项"
+        "advanced": "高级选项",
+        "section_covers": "适用范围",
+        "policy_sheet_desc": "策略涵盖哪些传输，以及设备是阻止、记录还是允许。",
+        "saving": "正在保存…"
     },
     "reports": {
         "title": "报表",

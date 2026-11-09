@@ -1920,7 +1920,9 @@
         "count_filtered": "사용자 {count}명 중 {shown}명",
         "no_match": "\"{query}\"와 일치하는 사용자가 없습니다.",
         "clear_search": "검색 지우기",
-        "group_actions_for": "{name}에 대한 추가 작업"
+        "group_actions_for": "{name}에 대한 추가 작업",
+        "sheet_add_desc": "이 콘솔의 계정입니다. 역할에 따라 할 수 있는 작업이 정해집니다.",
+        "org_member_of": "소속 조직"
     },
     "folders": {
         "title": "폴더",
@@ -2722,7 +2724,11 @@
         "overdue_note": "기한이 지났지만 아직 해결되지 않은 티켓. 가장 오래 초과된 순.",
         "overdue_none": "기한이 지난 티켓이 없습니다.",
         "overdue_row": "#{id}, {priority}, 기한 {time}",
-        "summary_failed": "요약을 불러올 수 없습니다."
+        "summary_failed": "요약을 불러올 수 없습니다.",
+        "status_actions": "상태 및 담당자",
+        "title_hint": "목록에서 다른 사람이 알아볼 수 있는 짧은 요약입니다.",
+        "section_sorting": "세부 정보",
+        "saving": "저장 중…"
     },
     "activity": {
         "title": "활동 모니터링",
@@ -2803,7 +2809,8 @@
         "top_apps_all_empty": "이 기간에는 앱 사용 기록이 없습니다.",
         "top_apps_all_failed": "앱 사용 기록을 불러오지 못했습니다.",
         "top_apps_all_devices": "기기 {count}대에서 사용",
-        "top_apps_all_one_device": "기기 1대에서 사용"
+        "top_apps_all_one_device": "기기 1대에서 사용",
+        "detail_desc": "페이지에서 선택한 날짜의 앱별 시간과 최근 세션입니다."
     },
     "automation": {
         "title": "자동화 및 경고",
@@ -2945,7 +2952,11 @@
         "rules_not_checked": "서버는 아직 경고 규칙을 확인하지 않습니다. 여기에서 규칙을 만들고 보관할 수 있지만, 서버 업데이트로 확인 기능이 추가될 때까지 경고는 발생하지 않습니다.",
         "no_alerts_not_checked": "경고가 없습니다. 서버가 아직 규칙을 확인하지 않으므로 경고가 발생하지 않습니다.",
         "unit_percent": "%",
-        "unit_seconds": "초"
+        "unit_seconds": "초",
+        "rule_sheet_desc": "장치가 설정한 한도를 넘는 값을 보고하면 알림을 발생시킵니다.",
+        "section_condition": "감시 대상",
+        "section_alert": "알림",
+        "saving": "저장 중…"
     },
     "file_transfer": {
         "title": "파일 전송",
@@ -3131,7 +3142,11 @@
         "rtt_target": "대상",
         "rtt_label": "{name} 응답 시간",
         "rtt_summary": "{since} 이후 {count}회 확인, 응답 없음 {down}회. 응답에 {min}~{max} ms가 걸렸습니다.",
-        "rtt_summary_none": "{since} 이후 {count}회 확인, 응답을 받은 적이 없습니다."
+        "rtt_summary_none": "{since} 이후 {count}회 확인, 응답을 받은 적이 없습니다.",
+        "section_check": "주소 및 확인",
+        "section_schedule": "일정",
+        "target_sheet_desc": "서버가 이 주소를 정해진 간격으로 확인하고 응답 여부를 기록합니다.",
+        "history_sheet_desc": "{host} 확인 기록입니다. 최신 항목이 먼저 표시됩니다."
     },
     "dataguard": {
         "title": "데이터 보호",
@@ -3251,7 +3266,10 @@
         "legend_blocked": "차단됨",
         "legend_logged": "기록됨",
         "legend_allowed": "허용됨",
-        "advanced": "고급 옵션"
+        "advanced": "고급 옵션",
+        "section_covers": "적용 대상",
+        "policy_sheet_desc": "정책이 적용되는 전송과 장치가 이를 차단, 기록, 허용 중 무엇으로 처리할지 정합니다.",
+        "saving": "저장 중…"
     },
     "reports": {
         "title": "보고서",

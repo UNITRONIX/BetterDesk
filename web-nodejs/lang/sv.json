@@ -1926,7 +1926,9 @@
         "count_filtered": "{shown} av {count} användare",
         "no_match": "Ingen användare matchar \"{query}\".",
         "clear_search": "Rensa sökning",
-        "group_actions_for": "Fler åtgärder för {name}"
+        "group_actions_for": "Fler åtgärder för {name}",
+        "sheet_add_desc": "Ett konto för den här konsolen. Rollen avgör vad personen kan göra.",
+        "org_member_of": "Medlem i"
     },
     "folders": {
         "title": "Mappar",
@@ -2728,7 +2730,11 @@
         "overdue_note": "Efter sin tidsgräns och ännu inte lösta. Mest försenade först.",
         "overdue_none": "Inget ärende är försenat.",
         "overdue_row": "#{id}, {priority}, tidsgräns {time}",
-        "summary_failed": "Översikten kunde inte läsas in."
+        "summary_failed": "Översikten kunde inte läsas in.",
+        "status_actions": "Status och ansvarig",
+        "title_hint": "En kort sammanfattning som andra känner igen i listan.",
+        "section_sorting": "Detaljer",
+        "saving": "Sparar…"
     },
     "activity": {
         "title": "Aktivitetsövervakning",
@@ -2809,7 +2815,8 @@
         "top_apps_all_empty": "Ingen appanvändning för de här datumen.",
         "top_apps_all_failed": "Det gick inte att läsa in appanvändningen.",
         "top_apps_all_devices": "Används på {count} enheter",
-        "top_apps_all_one_device": "Används på 1 enhet"
+        "top_apps_all_one_device": "Används på 1 enhet",
+        "detail_desc": "Tid per app och de senaste sessionerna, för datumen som valts på sidan."
     },
     "automation": {
         "title": "Automatisering",
@@ -2951,7 +2958,11 @@
         "rules_not_checked": "Servern kontrollerar ännu inte varningsregler. Du kan skapa och behålla regler här, men de ger inga varningar förrän en serveruppdatering lägger till kontrollen.",
         "no_alerts_not_checked": "Inga varningar. Servern kontrollerar ännu inte reglerna, så inga varningar ges.",
         "unit_percent": "%",
-        "unit_seconds": "sekunder"
+        "unit_seconds": "sekunder",
+        "rule_sheet_desc": "Ger en varning när en enhet rapporterar ett värde bortom gränsen du anger.",
+        "section_condition": "Vad den bevakar",
+        "section_alert": "Varning",
+        "saving": "Sparar…"
     },
     "file_transfer": {
         "title": "Filöverföring",
@@ -3137,7 +3148,11 @@
         "rtt_target": "Mål",
         "rtt_label": "Svarstid för {name}",
         "rtt_summary": "{count} kontroller sedan {since}, {down} utan svar. Svaren tog {min} till {max} ms.",
-        "rtt_summary_none": "{count} kontroller sedan {since}, ingen fick svar."
+        "rtt_summary_none": "{count} kontroller sedan {since}, ingen fick svar.",
+        "section_check": "Adress och kontroll",
+        "section_schedule": "Schema",
+        "target_sheet_desc": "Servern kontrollerar adressen enligt ett schema och registrerar om den svarar.",
+        "history_sheet_desc": "Kontroller av {host}, nyaste först."
     },
     "dataguard": {
         "title": "DataGuard â€” DLP",
@@ -3257,7 +3272,10 @@
         "legend_blocked": "blockerade",
         "legend_logged": "loggade",
         "legend_allowed": "tillåtna",
-        "advanced": "Avancerade alternativ"
+        "advanced": "Avancerade alternativ",
+        "section_covers": "Vad den gäller",
+        "policy_sheet_desc": "Vilka överföringar policyn gäller och om enheterna blockerar, loggar eller tillåter dem.",
+        "saving": "Sparar…"
     },
     "reports": {
         "title": "Rapporter",

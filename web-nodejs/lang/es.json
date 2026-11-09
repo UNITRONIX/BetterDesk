@@ -1920,7 +1920,9 @@
         "count_filtered": "{shown} de {count} usuarios",
         "no_match": "Ningún usuario coincide con \"{query}\".",
         "clear_search": "Borrar búsqueda",
-        "group_actions_for": "Más acciones para {name}"
+        "group_actions_for": "Más acciones para {name}",
+        "sheet_add_desc": "Una cuenta para esta consola. El rol decide qué puede hacer la persona.",
+        "org_member_of": "Miembro de"
     },
     "folders": {
         "title": "Carpetas",
@@ -2722,7 +2724,11 @@
         "overdue_note": "Pasada la fecha límite y aún sin resolver. Los más atrasados primero.",
         "overdue_none": "Ningún ticket ha pasado su fecha límite.",
         "overdue_row": "n.º {id}, {priority}, vencía {time}",
-        "summary_failed": "No se pudo cargar el resumen."
+        "summary_failed": "No se pudo cargar el resumen.",
+        "status_actions": "Estado y responsable",
+        "title_hint": "Un resumen breve que otros puedan reconocer en la lista.",
+        "section_sorting": "Detalles",
+        "saving": "Guardando…"
     },
     "activity": {
         "title": "Panel",
@@ -2803,7 +2809,8 @@
         "top_apps_all_empty": "No hay uso de aplicaciones en estas fechas.",
         "top_apps_all_failed": "No se pudo cargar el uso de aplicaciones.",
         "top_apps_all_devices": "Usada en {count} dispositivos",
-        "top_apps_all_one_device": "Usada en 1 dispositivo"
+        "top_apps_all_one_device": "Usada en 1 dispositivo",
+        "detail_desc": "Tiempo por app y las últimas sesiones, para las fechas elegidas en la página."
     },
     "automation": {
         "title": "Panel",
@@ -2945,7 +2952,11 @@
         "rules_not_checked": "El servidor todavía no comprueba las reglas de alerta. Puedes crear y guardar reglas aquí, pero no generarán alertas hasta que una actualización del servidor añada la comprobación.",
         "no_alerts_not_checked": "No hay alertas. El servidor todavía no comprueba las reglas, así que no se genera ninguna.",
         "unit_percent": "%",
-        "unit_seconds": "segundos"
+        "unit_seconds": "segundos",
+        "rule_sheet_desc": "Genera una alerta cuando un dispositivo informa un valor que supera el límite que usted fija.",
+        "section_condition": "Qué vigila",
+        "section_alert": "Alerta",
+        "saving": "Guardando…"
     },
     "file_transfer": {
         "title": "Panel",
@@ -3131,7 +3142,11 @@
         "rtt_target": "Destino",
         "rtt_label": "Tiempo de respuesta de {name}",
         "rtt_summary": "{count} comprobaciones desde {since}, {down} sin respuesta. Las respuestas tardaron entre {min} y {max} ms.",
-        "rtt_summary_none": "{count} comprobaciones desde {since}, ninguna obtuvo respuesta."
+        "rtt_summary_none": "{count} comprobaciones desde {since}, ninguna obtuvo respuesta.",
+        "section_check": "Dirección y comprobación",
+        "section_schedule": "Programación",
+        "target_sheet_desc": "El servidor comprueba esta dirección de forma periódica y registra si responde.",
+        "history_sheet_desc": "Comprobaciones de {host}, las más recientes primero."
     },
     "dataguard": {
         "title": "Panel",
@@ -3251,7 +3266,10 @@
         "legend_blocked": "bloqueados",
         "legend_logged": "registrados",
         "legend_allowed": "permitidos",
-        "advanced": "Opciones avanzadas"
+        "advanced": "Opciones avanzadas",
+        "section_covers": "Qué cubre",
+        "policy_sheet_desc": "Qué transferencias cubre la política y si los dispositivos las bloquean, registran o permiten.",
+        "saving": "Guardando…"
     },
     "reports": {
         "title": "Informes",

@@ -85,59 +85,67 @@
         </div>
 
         <template id="policy-form-template">
-            <form class="dg-form" id="policy-form" novalidate>
+            <!-- Opens as a side sheet (Modal.sheet in dataguard.js); errors go in its status line -->
+            <form class="dg-form form-stack" id="policy-form" novalidate>
                 <input type="hidden" id="policy-id">
                 <div class="form-group">
                     <label class="form-label" for="policy-name">${_('dataguard.policy_name')}</label>
-                    <input type="text" id="policy-name" class="form-input" required autocomplete="off">
+                    <input type="text" id="policy-name" class="form-input is-host" required autocomplete="off">
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="policy-desc">${_('dataguard.policy_desc')}</label>
-                    <textarea id="policy-desc" class="form-input" rows="2"></textarea>
-                    <p class="form-hint">${_('dataguard.desc_hint')}</p>
+                    <textarea id="policy-desc" class="form-input" rows="2" aria-describedby="policy-desc-hint"></textarea>
+                    <p class="form-hint" id="policy-desc-hint">${_('dataguard.desc_hint')}</p>
                 </div>
-                <div class="form-group">
-                    <label class="form-label" for="policy-type">${_('dataguard.transfer_type')}</label>
-                    <select id="policy-type" class="form-select">
-                        <option value="usb">${_('dataguard.type_usb')}</option>
-                        <option value="file_type">${_('dataguard.type_file_type')}</option>
-                        <option value="clipboard">${_('dataguard.type_clipboard')}</option>
-                        <option value="screen_share">${_('dataguard.type_screen_share')}</option>
-                        <option value="file_transfer">${_('dataguard.type_file_transfer')}</option>
-                    </select>
-                    <p class="form-hint">${_('dataguard.type_hint')}</p>
-                </div>
-                <fieldset class="form-group dg-fieldset">
-                    <legend class="form-label">${_('dataguard.action')}</legend>
-                    <ul class="choice-list" id="policy-action">
-                        <li><label class="choice"><input type="radio" name="policy-action" value="block"><span class="choice-title">${_('dataguard.action_block')}</span>
-                            <span class="choice-desc">${_('dataguard.action_block_desc')}</span></label></li>
-                        <li><label class="choice"><input type="radio" name="policy-action" value="log"><span class="choice-title">${_('dataguard.action_log')}</span>
-                            <span class="choice-desc">${_('dataguard.action_log_desc')}</span></label></li>
-                        <li><label class="choice"><input type="radio" name="policy-action" value="allow"><span class="choice-title">${_('dataguard.action_allow')}</span>
-                            <span class="choice-desc">${_('dataguard.action_allow_desc')}</span></label></li>
-                    </ul>
-                </fieldset>
-                <div class="form-group">
-                    <label class="form-label" for="policy-scope">${_('dataguard.scope')}</label>
-                    <input type="text" id="policy-scope" class="form-input" autocomplete="off" aria-describedby="policy-scope-hint">
-                    <p class="form-hint" id="policy-scope-hint">${_('dataguard.scope_help')}</p>
-                </div>
-                <!-- Matching rules are rarely needed: closed unless the policy has some -->
-                <details class="disclosure dg-advanced" id="policy-advanced">
-                    <summary>${_('dataguard.advanced')}</summary>
+                <section class="form-section" aria-labelledby="policy-sec-covers">
+                    <h3 class="form-section-title" id="policy-sec-covers">${_('dataguard.section_covers')}</h3>
                     <div class="form-group">
-                        <label class="form-label" for="policy-rules">${_('dataguard.rules')}</label>
-                        <textarea id="policy-rules" class="form-input dg-rules" rows="4" spellcheck="false" dir="ltr" aria-describedby="policy-rules-hint"></textarea>
-                        <p class="form-hint" id="policy-rules-hint">${_('dataguard.rules_hint')}</p>
+                        <label class="form-label" for="policy-type">${_('dataguard.transfer_type')}</label>
+                        <select id="policy-type" class="form-select is-host" aria-describedby="policy-type-hint">
+                            <option value="usb">${_('dataguard.type_usb')}</option>
+                            <option value="file_type">${_('dataguard.type_file_type')}</option>
+                            <option value="clipboard">${_('dataguard.type_clipboard')}</option>
+                            <option value="screen_share">${_('dataguard.type_screen_share')}</option>
+                            <option value="file_transfer">${_('dataguard.type_file_transfer')}</option>
+                        </select>
+                        <p class="form-hint" id="policy-type-hint">${_('dataguard.type_hint')}</p>
                     </div>
-                </details>
-                <label class="check-field">
-                    <input type="checkbox" id="policy-enabled" checked>
-                    <span class="check-label">${_('dataguard.enabled')}</span>
-                    <span class="field-effect">${_('dataguard.enabled_effect')}</span>
-                </label>
-                <p class="form-status is-error" id="policy-form-status" role="alert"></p>
+                    <div class="form-group">
+                        <label class="form-label" for="policy-scope">${_('dataguard.scope')}</label>
+                        <input type="text" id="policy-scope" class="form-input mono" autocomplete="off" spellcheck="false" aria-describedby="policy-scope-hint">
+                        <p class="form-hint" id="policy-scope-hint">${_('dataguard.scope_help')}</p>
+                    </div>
+                    <!-- Matching rules are rarely needed: closed unless the policy has some -->
+                    <details class="disclosure dg-advanced" id="policy-advanced">
+                        <summary>${_('dataguard.advanced')}</summary>
+                        <div class="form-group">
+                            <label class="form-label" for="policy-rules">${_('dataguard.rules')}</label>
+                            <textarea id="policy-rules" class="form-input dg-rules" rows="4" spellcheck="false" dir="ltr" aria-describedby="policy-rules-hint"></textarea>
+                            <p class="form-hint" id="policy-rules-hint">${_('dataguard.rules_hint')}</p>
+                        </div>
+                    </details>
+                </section>
+                <section class="form-section" aria-labelledby="policy-sec-action">
+                    <h3 class="form-section-title" id="policy-sec-action">${_('dataguard.action')}</h3>
+                    <div role="radiogroup" aria-labelledby="policy-sec-action">
+                        <ul class="choice-list" id="policy-action">
+                            <li><label class="choice"><input type="radio" name="policy-action" value="block"><span class="choice-title">${_('dataguard.action_block')}</span>
+                                <span class="choice-desc">${_('dataguard.action_block_desc')}</span></label></li>
+                            <li><label class="choice"><input type="radio" name="policy-action" value="log"><span class="choice-title">${_('dataguard.action_log')}</span>
+                                <span class="choice-desc">${_('dataguard.action_log_desc')}</span></label></li>
+                            <li><label class="choice"><input type="radio" name="policy-action" value="allow"><span class="choice-title">${_('dataguard.action_allow')}</span>
+                                <span class="choice-desc">${_('dataguard.action_allow_desc')}</span></label></li>
+                        </ul>
+                    </div>
+                </section>
+                <div class="form-section">
+                    <label class="check-field">
+                        <input type="checkbox" id="policy-enabled" checked>
+                        <span class="check-label">${_('dataguard.enabled')}</span>
+                        <span class="field-effect">${_('dataguard.enabled_effect')}</span>
+                    </label>
+                </div>
+                <button type="submit" hidden tabindex="-1" aria-hidden="true"></button>
             </form>
         </template>
     </div>

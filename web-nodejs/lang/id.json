@@ -1926,7 +1926,9 @@
         "count_filtered": "{shown} dari {count} pengguna",
         "no_match": "Tidak ada pengguna yang cocok dengan \"{query}\".",
         "clear_search": "Hapus pencarian",
-        "group_actions_for": "Tindakan lain untuk {name}"
+        "group_actions_for": "Tindakan lain untuk {name}",
+        "sheet_add_desc": "Akun untuk konsol ini. Peran menentukan apa yang dapat dilakukan orang tersebut.",
+        "org_member_of": "Anggota dari"
     },
     "folders": {
         "title": "Folder",
@@ -2728,7 +2730,11 @@
         "overdue_note": "Lewat batas waktu dan belum selesai. Yang paling lama terlambat lebih dulu.",
         "overdue_none": "Tidak ada tiket yang lewat batas waktu.",
         "overdue_row": "#{id}, {priority}, batas waktu {time}",
-        "summary_failed": "Ringkasan tidak dapat dimuat."
+        "summary_failed": "Ringkasan tidak dapat dimuat.",
+        "status_actions": "Status dan penanggung jawab",
+        "title_hint": "Ringkasan singkat yang mudah dikenali orang lain di daftar.",
+        "section_sorting": "Detail",
+        "saving": "Menyimpan…"
     },
     "activity": {
         "title": "Pemantauan Aktivitas",
@@ -2809,7 +2815,8 @@
         "top_apps_all_empty": "Tidak ada penggunaan aplikasi pada tanggal ini.",
         "top_apps_all_failed": "Tidak dapat memuat penggunaan aplikasi.",
         "top_apps_all_devices": "Dipakai di {count} perangkat",
-        "top_apps_all_one_device": "Dipakai di 1 perangkat"
+        "top_apps_all_one_device": "Dipakai di 1 perangkat",
+        "detail_desc": "Waktu per aplikasi dan sesi terbaru, untuk tanggal yang dipilih di halaman."
     },
     "automation": {
         "title": "Otomatisasi & Peringatan",
@@ -2951,7 +2958,11 @@
         "rules_not_checked": "Server belum memeriksa aturan peringatan. Anda bisa membuat dan menyimpan aturan di sini, tetapi aturan tidak memicu peringatan sampai pembaruan server menambahkan pemeriksaannya.",
         "no_alerts_not_checked": "Tidak ada peringatan. Server belum memeriksa aturan, jadi tidak ada peringatan yang muncul.",
         "unit_percent": "%",
-        "unit_seconds": "detik"
+        "unit_seconds": "detik",
+        "rule_sheet_desc": "Memunculkan peringatan saat perangkat melaporkan nilai yang melewati batas yang Anda tetapkan.",
+        "section_condition": "Yang dipantau",
+        "section_alert": "Peringatan",
+        "saving": "Menyimpan…"
     },
     "file_transfer": {
         "title": "Pemindahan Berkas",
@@ -3137,7 +3148,11 @@
         "rtt_target": "Target",
         "rtt_label": "Waktu respons {name}",
         "rtt_summary": "{count} pemeriksaan sejak {since}, {down} tanpa jawaban. Jawaban butuh {min} hingga {max} ms.",
-        "rtt_summary_none": "{count} pemeriksaan sejak {since}, tidak ada yang dijawab."
+        "rtt_summary_none": "{count} pemeriksaan sejak {since}, tidak ada yang dijawab.",
+        "section_check": "Alamat dan pemeriksaan",
+        "section_schedule": "Jadwal",
+        "target_sheet_desc": "Server memeriksa alamat ini sesuai jadwal dan mencatat apakah alamat itu menjawab.",
+        "history_sheet_desc": "Pemeriksaan {host}, terbaru lebih dulu."
     },
     "dataguard": {
         "title": "DataGuard â€” DLP",
@@ -3257,7 +3272,10 @@
         "legend_blocked": "diblokir",
         "legend_logged": "dicatat",
         "legend_allowed": "diizinkan",
-        "advanced": "Opsi lanjutan"
+        "advanced": "Opsi lanjutan",
+        "section_covers": "Yang dicakup",
+        "policy_sheet_desc": "Transfer apa saja yang dicakup kebijakan dan apakah perangkat memblokir, mencatat, atau mengizinkannya.",
+        "saving": "Menyimpan…"
     },
     "reports": {
         "title": "Laporan",

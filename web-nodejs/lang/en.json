@@ -1946,7 +1946,9 @@
         "count_filtered": "{shown} of {count} users",
         "no_match": "No user matches \"{query}\".",
         "clear_search": "Clear search",
-        "group_actions_for": "More actions for {name}"
+        "group_actions_for": "More actions for {name}",
+        "sheet_add_desc": "An account for this console. The role decides what the person can do.",
+        "org_member_of": "Member of"
     },
     "folders": {
         "title": "Folders",
@@ -2801,7 +2803,11 @@
         "overdue_note": "Past their due time and not resolved yet. Most overdue first.",
         "overdue_none": "No ticket is past its due time.",
         "overdue_row": "#{id}, {priority}, due {time}",
-        "summary_failed": "Could not load the summary."
+        "summary_failed": "Could not load the summary.",
+        "status_actions": "Status and assignee",
+        "title_hint": "A short summary others can recognise in the list.",
+        "section_sorting": "Details",
+        "saving": "Saving…"
     },
     "activity": {
         "title": "App usage",
@@ -2882,7 +2888,8 @@
         "top_apps_all_empty": "No app usage for these dates.",
         "top_apps_all_failed": "Could not load app usage.",
         "top_apps_all_devices": "Used on {count} devices",
-        "top_apps_all_one_device": "Used on 1 device"
+        "top_apps_all_one_device": "Used on 1 device",
+        "detail_desc": "Time per app and the latest sessions, for the dates chosen on the page."
     },
     "automation": {
         "title": "Automation & Alerts",
@@ -3024,7 +3031,11 @@
         "rules_not_checked": "The server doesn't check alert rules yet. You can create and keep rules here, but they raise no alerts until a server update adds the checks.",
         "no_alerts_not_checked": "No alerts. The server doesn't check alert rules yet, so none are raised.",
         "unit_percent": "%",
-        "unit_seconds": "seconds"
+        "unit_seconds": "seconds",
+        "rule_sheet_desc": "Raises an alert when a device reports a value past the limit you set.",
+        "section_condition": "What it watches",
+        "section_alert": "Alert",
+        "saving": "Saving…"
     },
     "file_transfer": {
         "title": "File Transfer",
@@ -3210,7 +3221,11 @@
         "rtt_target": "Target",
         "rtt_label": "Response time of {name}",
         "rtt_summary": "{count} checks since {since}, {down} without an answer. Answers took {min} to {max} ms.",
-        "rtt_summary_none": "{count} checks since {since}, none got an answer."
+        "rtt_summary_none": "{count} checks since {since}, none got an answer.",
+        "section_check": "Address and check",
+        "section_schedule": "Schedule",
+        "target_sheet_desc": "The server checks this address on a schedule and records whether it answers.",
+        "history_sheet_desc": "Checks of {host}, newest first."
     },
     "dataguard": {
         "title": "DataGuard — DLP",
@@ -3330,7 +3345,10 @@
         "legend_blocked": "blocked",
         "legend_logged": "logged",
         "legend_allowed": "allowed",
-        "advanced": "Advanced options"
+        "advanced": "Advanced options",
+        "section_covers": "What it covers",
+        "policy_sheet_desc": "Which transfers the policy covers and whether devices block, record or allow them.",
+        "saving": "Saving…"
     },
     "reports": {
         "title": "Reports",

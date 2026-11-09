@@ -1926,7 +1926,9 @@
         "count_filtered": "{shown} av {count} brukere",
         "no_match": "Ingen brukere samsvarer med \"{query}\".",
         "clear_search": "Tøm søk",
-        "group_actions_for": "Flere handlinger for {name}"
+        "group_actions_for": "Flere handlinger for {name}",
+        "sheet_add_desc": "En konto for denne konsollen. Rollen bestemmer hva personen kan gjøre.",
+        "org_member_of": "Medlem av"
     },
     "folders": {
         "title": "Mapper",
@@ -2728,7 +2730,11 @@
         "overdue_note": "Over fristen og ennå ikke løst. Mest forfalte først.",
         "overdue_none": "Ingen saker er over fristen.",
         "overdue_row": "#{id}, {priority}, frist {time}",
-        "summary_failed": "Kunne ikke laste inn oversikten."
+        "summary_failed": "Kunne ikke laste inn oversikten.",
+        "status_actions": "Status og ansvarlig",
+        "title_hint": "Et kort sammendrag som andre kjenner igjen i listen.",
+        "section_sorting": "Detaljer",
+        "saving": "Lagrer…"
     },
     "activity": {
         "title": "Aktivitetsovervåking",
@@ -2809,7 +2815,8 @@
         "top_apps_all_empty": "Ingen appbruk i disse datoene.",
         "top_apps_all_failed": "Kunne ikke laste inn appbruk.",
         "top_apps_all_devices": "Brukt på {count} enheter",
-        "top_apps_all_one_device": "Brukt på 1 enhet"
+        "top_apps_all_one_device": "Brukt på 1 enhet",
+        "detail_desc": "Tid per app og de siste øktene, for datoene som er valgt på siden."
     },
     "automation": {
         "title": "Automatisering og varsler",
@@ -2951,7 +2958,11 @@
         "rules_not_checked": "Serveren sjekker ennå ikke varslingsregler. Du kan opprette og beholde regler her, men de utløser ingen varsler før en serveroppdatering legger til sjekken.",
         "no_alerts_not_checked": "Ingen varsler. Serveren sjekker ennå ikke reglene, så ingen varsler utløses.",
         "unit_percent": "%",
-        "unit_seconds": "sekunder"
+        "unit_seconds": "sekunder",
+        "rule_sheet_desc": "Gir et varsel når en enhet rapporterer en verdi utover grensen du angir.",
+        "section_condition": "Hva den overvåker",
+        "section_alert": "Varsel",
+        "saving": "Lagrer…"
     },
     "file_transfer": {
         "title": "Filoverføring",
@@ -3137,7 +3148,11 @@
         "rtt_target": "Mål",
         "rtt_label": "Svartid for {name}",
         "rtt_summary": "{count} kontroller siden {since}, {down} uten svar. Svarene tok {min} til {max} ms.",
-        "rtt_summary_none": "{count} kontroller siden {since}, ingen fikk svar."
+        "rtt_summary_none": "{count} kontroller siden {since}, ingen fikk svar.",
+        "section_check": "Adresse og kontroll",
+        "section_schedule": "Tidsplan",
+        "target_sheet_desc": "Serveren sjekker adressen etter en tidsplan og registrerer om den svarer.",
+        "history_sheet_desc": "Kontroller av {host}, nyeste først."
     },
     "dataguard": {
         "title": "DataGuard â€” DLP",
@@ -3257,7 +3272,10 @@
         "legend_blocked": "blokkert",
         "legend_logged": "logget",
         "legend_allowed": "tillatt",
-        "advanced": "Avanserte alternativer"
+        "advanced": "Avanserte alternativer",
+        "section_covers": "Hva den gjelder",
+        "policy_sheet_desc": "Hvilke overføringer retningslinjen gjelder, og om enhetene blokkerer, registrerer eller tillater dem.",
+        "saving": "Lagrer…"
     },
     "reports": {
         "title": "Rapporter",

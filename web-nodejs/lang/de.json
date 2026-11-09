@@ -1920,7 +1920,9 @@
         "count_filtered": "{shown} von {count} Benutzern",
         "no_match": "Kein Benutzer passt zu \"{query}\".",
         "clear_search": "Suche löschen",
-        "group_actions_for": "Weitere Aktionen für {name}"
+        "group_actions_for": "Weitere Aktionen für {name}",
+        "sheet_add_desc": "Ein Konto für diese Konsole. Die Rolle legt fest, was die Person tun kann.",
+        "org_member_of": "Mitglied in"
     },
     "folders": {
         "title": "Ordner",
@@ -2722,7 +2724,11 @@
         "overdue_note": "Fälligkeit überschritten und noch nicht gelöst. Die am längsten überfälligen zuerst.",
         "overdue_none": "Kein Ticket ist überfällig.",
         "overdue_row": "#{id}, {priority}, fällig {time}",
-        "summary_failed": "Die Übersicht konnte nicht geladen werden."
+        "summary_failed": "Die Übersicht konnte nicht geladen werden.",
+        "status_actions": "Status und Zuständigkeit",
+        "title_hint": "Eine kurze Zusammenfassung, an der andere das Ticket in der Liste erkennen.",
+        "section_sorting": "Details",
+        "saving": "Wird gespeichert…"
     },
     "activity": {
         "title": "App-Nutzung",
@@ -2803,7 +2809,8 @@
         "top_apps_all_empty": "Keine App-Nutzung in diesem Zeitraum.",
         "top_apps_all_failed": "Die App-Nutzung konnte nicht geladen werden.",
         "top_apps_all_devices": "Auf {count} Geräten genutzt",
-        "top_apps_all_one_device": "Auf 1 Gerät genutzt"
+        "top_apps_all_one_device": "Auf 1 Gerät genutzt",
+        "detail_desc": "Zeit pro App und die letzten Sitzungen, für die auf der Seite gewählten Tage."
     },
     "automation": {
         "title": "Dashboard",
@@ -2945,7 +2952,11 @@
         "rules_not_checked": "Der Server prüft Alarmregeln noch nicht. Sie können hier Regeln anlegen und behalten, aber sie lösen keine Alarme aus, bis ein Server-Update die Prüfung ergänzt.",
         "no_alerts_not_checked": "Keine Alarme. Der Server prüft Alarmregeln noch nicht, daher werden keine ausgelöst.",
         "unit_percent": "%",
-        "unit_seconds": "Sekunden"
+        "unit_seconds": "Sekunden",
+        "rule_sheet_desc": "Löst eine Warnung aus, wenn ein Gerät einen Wert jenseits der von Ihnen gesetzten Grenze meldet.",
+        "section_condition": "Was sie überwacht",
+        "section_alert": "Warnung",
+        "saving": "Wird gespeichert…"
     },
     "file_transfer": {
         "title": "Dashboard",
@@ -3131,7 +3142,11 @@
         "rtt_target": "Ziel",
         "rtt_label": "Antwortzeit von {name}",
         "rtt_summary": "{count} Prüfungen seit {since}, {down} ohne Antwort. Die Antworten dauerten {min} bis {max} ms.",
-        "rtt_summary_none": "{count} Prüfungen seit {since}, keine bekam eine Antwort."
+        "rtt_summary_none": "{count} Prüfungen seit {since}, keine bekam eine Antwort.",
+        "section_check": "Adresse und Prüfung",
+        "section_schedule": "Zeitplan",
+        "target_sheet_desc": "Der Server prüft diese Adresse regelmäßig und zeichnet auf, ob sie antwortet.",
+        "history_sheet_desc": "Prüfungen von {host}, neueste zuerst."
     },
     "dataguard": {
         "title": "Dashboard",
@@ -3251,7 +3266,10 @@
         "legend_blocked": "blockiert",
         "legend_logged": "protokolliert",
         "legend_allowed": "erlaubt",
-        "advanced": "Erweiterte Optionen"
+        "advanced": "Erweiterte Optionen",
+        "section_covers": "Was sie abdeckt",
+        "policy_sheet_desc": "Welche Übertragungen die Richtlinie abdeckt und ob die Geräte sie sperren, protokollieren oder erlauben.",
+        "saving": "Wird gespeichert…"
     },
     "reports": {
         "title": "Berichte",

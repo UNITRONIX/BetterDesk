@@ -1920,7 +1920,9 @@
         "count_filtered": "{count} 人中 {shown} 人",
         "no_match": "\"{query}\" に一致するユーザーはいません。",
         "clear_search": "検索をクリア",
-        "group_actions_for": "{name} のその他の操作"
+        "group_actions_for": "{name} のその他の操作",
+        "sheet_add_desc": "このコンソールのアカウントです。ロールによって、その人ができることが決まります。",
+        "org_member_of": "所属先"
     },
     "folders": {
         "title": "フォルダー",
@@ -2722,7 +2724,11 @@
         "overdue_note": "期限を過ぎてまだ解決していないチケット。超過の長い順。",
         "overdue_none": "期限を過ぎたチケットはありません。",
         "overdue_row": "#{id}、{priority}、期限 {time}",
-        "summary_failed": "概要を読み込めませんでした。"
+        "summary_failed": "概要を読み込めませんでした。",
+        "status_actions": "ステータスと担当者",
+        "title_hint": "一覧でほかの人が見分けられる短い要約です。",
+        "section_sorting": "詳細",
+        "saving": "保存中…"
     },
     "activity": {
         "title": "アクティビティの監視",
@@ -2803,7 +2809,8 @@
         "top_apps_all_empty": "この期間にアプリの使用はありません。",
         "top_apps_all_failed": "アプリの使用状況を読み込めませんでした。",
         "top_apps_all_devices": "{count} 台のデバイスで使用",
-        "top_apps_all_one_device": "1 台のデバイスで使用"
+        "top_apps_all_one_device": "1 台のデバイスで使用",
+        "detail_desc": "ページで選んだ期間の、アプリごとの時間と最近のセッションです。"
     },
     "automation": {
         "title": "自動化とアラート",
@@ -2945,7 +2952,11 @@
         "rules_not_checked": "サーバーはまだアラートルールを評価しません。ここでルールを作成して保存できますが、サーバーの更新で評価が追加されるまでアラートは発生しません。",
         "no_alerts_not_checked": "アラートはありません。サーバーはまだルールを評価しないため、アラートは発生しません。",
         "unit_percent": "%",
-        "unit_seconds": "秒"
+        "unit_seconds": "秒",
+        "rule_sheet_desc": "デバイスが設定した上限を超える値を報告すると、アラートを出します。",
+        "section_condition": "監視する内容",
+        "section_alert": "アラート",
+        "saving": "保存中…"
     },
     "file_transfer": {
         "title": "ファイル転送",
@@ -3131,7 +3142,11 @@
         "rtt_target": "対象",
         "rtt_label": "{name} の応答時間",
         "rtt_summary": "{since} 以降 {count} 回チェック、応答なし {down} 回。応答時間は {min}〜{max} ms でした。",
-        "rtt_summary_none": "{since} 以降 {count} 回チェック、応答は一度もありませんでした。"
+        "rtt_summary_none": "{since} 以降 {count} 回チェック、応答は一度もありませんでした。",
+        "section_check": "アドレスとチェック",
+        "section_schedule": "スケジュール",
+        "target_sheet_desc": "サーバーはこのアドレスを定期的にチェックし、応答があるかを記録します。",
+        "history_sheet_desc": "{host} のチェック結果です。新しい順に表示します。"
     },
     "dataguard": {
         "title": "データガード — DLP",
@@ -3251,7 +3266,10 @@
         "legend_blocked": "ブロック",
         "legend_logged": "記録のみ",
         "legend_allowed": "許可",
-        "advanced": "詳細オプション"
+        "advanced": "詳細オプション",
+        "section_covers": "対象",
+        "policy_sheet_desc": "ポリシーの対象となる転送と、デバイスがそれをブロック、記録、許可のどれにするかを決めます。",
+        "saving": "保存中…"
     },
     "reports": {
         "title": "レポート",

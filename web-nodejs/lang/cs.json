@@ -1920,7 +1920,9 @@
         "count_filtered": "{shown} z {count} uživatelů",
         "no_match": "Hledání \"{query}\" neodpovídá žádný uživatel.",
         "clear_search": "Vymazat hledání",
-        "group_actions_for": "Další akce pro {name}"
+        "group_actions_for": "Další akce pro {name}",
+        "sheet_add_desc": "Účet pro tuto konzoli. Role určuje, co může daná osoba dělat.",
+        "org_member_of": "Členem"
     },
     "folders": {
         "title": "Složky",
@@ -2722,7 +2724,11 @@
         "overdue_note": "Po termínu a dosud nevyřešené. Nejvíce opožděné nahoře.",
         "overdue_none": "Žádný ticket není po termínu.",
         "overdue_row": "#{id}, {priority}, termín {time}",
-        "summary_failed": "Přehled se nepodařilo načíst."
+        "summary_failed": "Přehled se nepodařilo načíst.",
+        "status_actions": "Stav a řešitel",
+        "title_hint": "Krátké shrnutí, podle kterého ho ostatní poznají v seznamu.",
+        "section_sorting": "Podrobnosti",
+        "saving": "Ukládání…"
     },
     "activity": {
         "title": "Monitoring aktivity",
@@ -2803,7 +2809,8 @@
         "top_apps_all_empty": "V těchto dnech není žádné používání aplikací.",
         "top_apps_all_failed": "Používání aplikací se nepodařilo načíst.",
         "top_apps_all_devices": "Používá se na {count} zařízeních",
-        "top_apps_all_one_device": "Používá se na 1 zařízení"
+        "top_apps_all_one_device": "Používá se na 1 zařízení",
+        "detail_desc": "Čas podle aplikací a poslední relace za data zvolená na stránce."
     },
     "automation": {
         "title": "Automatizace a upozornění",
@@ -2945,7 +2952,11 @@
         "rules_not_checked": "Server zatím pravidla upozornění nevyhodnocuje. Pravidla zde můžete vytvářet a uchovávat, ale žádná upozornění nespustí, dokud kontrolu nepřidá aktualizace serveru.",
         "no_alerts_not_checked": "Žádná upozornění. Server zatím pravidla nevyhodnocuje, takže se žádná nespouštějí.",
         "unit_percent": "%",
-        "unit_seconds": "sekund"
+        "unit_seconds": "sekund",
+        "rule_sheet_desc": "Vyvolá upozornění, když zařízení nahlásí hodnotu za nastaveným limitem.",
+        "section_condition": "Co sleduje",
+        "section_alert": "Upozornění",
+        "saving": "Ukládání…"
     },
     "file_transfer": {
         "title": "Přenos souborů",
@@ -3131,7 +3142,11 @@
         "rtt_target": "Cíl",
         "rtt_label": "Doba odezvy: {name}",
         "rtt_summary": "Kontroly od {since}: {count}, bez odpovědi: {down}. Odpovědi trvaly {min} až {max} ms.",
-        "rtt_summary_none": "Kontroly od {since}: {count}, žádná nedostala odpověď."
+        "rtt_summary_none": "Kontroly od {since}: {count}, žádná nedostala odpověď.",
+        "section_check": "Adresa a kontrola",
+        "section_schedule": "Plán",
+        "target_sheet_desc": "Server tuto adresu pravidelně kontroluje a zaznamenává, zda odpovídá.",
+        "history_sheet_desc": "Kontroly {host}, nejnovější první."
     },
     "dataguard": {
         "title": "DataGuard — ochrana DLP",
@@ -3251,7 +3266,10 @@
         "legend_blocked": "zablokováno",
         "legend_logged": "zaznamenáno",
         "legend_allowed": "povoleno",
-        "advanced": "Pokročilé možnosti"
+        "advanced": "Pokročilé možnosti",
+        "section_covers": "Na co se vztahuje",
+        "policy_sheet_desc": "Které přenosy zásada pokrývá a zda je zařízení blokují, zaznamenávají nebo povolují.",
+        "saving": "Ukládání…"
     },
     "reports": {
         "title": "Reporty",

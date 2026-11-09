@@ -45,7 +45,7 @@
     margin-inline-start: var(--space-2);
 }
 
-/* Command details dialog */
+/* Command details sheet */
 .automation-facts {
     margin-bottom: var(--space-4);
 }
@@ -54,7 +54,8 @@
     margin-top: var(--space-3);
 }
 
-.automation-dialog .field-effect {
+/* Send command dialog */
+#cmd-form .field-effect {
     margin-bottom: var(--space-2);
 }
 
@@ -66,9 +67,9 @@
     min-width: 14ch;
 }
 
-/* Rule dialog: comparison and threshold, hidden for custom rules */
-.automation-dialog .rule-limit {
-    margin-bottom: var(--space-4);
+/* Rule sheet: the effect line sits right under the switch it explains */
+#rule-form .field-effect {
+    margin: var(--space-1) 0 0;
 }
 
 .automation-dialog .rule-value-row {

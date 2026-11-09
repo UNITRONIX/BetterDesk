@@ -1926,7 +1926,9 @@
         "count_filtered": "{shown}/{count} käyttäjää",
         "no_match": "Mikään käyttäjä ei vastaa hakua \"{query}\".",
         "clear_search": "Tyhjennä haku",
-        "group_actions_for": "Lisää toimintoja: {name}"
+        "group_actions_for": "Lisää toimintoja: {name}",
+        "sheet_add_desc": "Tili tähän konsoliin. Rooli määrää, mitä henkilö voi tehdä.",
+        "org_member_of": "Jäsenenä"
     },
     "folders": {
         "title": "Kansiot",
@@ -2728,7 +2730,11 @@
         "overdue_note": "Määräaika ylitetty eikä vielä ratkaistu. Eniten myöhässä olevat ensin.",
         "overdue_none": "Yksikään tiketti ei ole myöhässä.",
         "overdue_row": "#{id}, {priority}, määräaika {time}",
-        "summary_failed": "Yhteenvetoa ei voitu ladata."
+        "summary_failed": "Yhteenvetoa ei voitu ladata.",
+        "status_actions": "Tila ja vastuuhenkilö",
+        "title_hint": "Lyhyt yhteenveto, josta muut tunnistavat sen luettelossa.",
+        "section_sorting": "Tiedot",
+        "saving": "Tallennetaan…"
     },
     "activity": {
         "title": "Toiminnan seuranta",
@@ -2809,7 +2815,8 @@
         "top_apps_all_empty": "Ei sovellusten käyttöä näinä päivinä.",
         "top_apps_all_failed": "Sovellusten käyttöä ei voitu ladata.",
         "top_apps_all_devices": "Käytössä {count} laitteella",
-        "top_apps_all_one_device": "Käytössä 1 laitteella"
+        "top_apps_all_one_device": "Käytössä 1 laitteella",
+        "detail_desc": "Aika sovelluksittain ja viimeisimmät istunnot sivulla valituille päiville."
     },
     "automation": {
         "title": "Automaatio ja hälytykset",
@@ -2951,7 +2958,11 @@
         "rules_not_checked": "Palvelin ei vielä tarkista hälytyssääntöjä. Voit luoda ja säilyttää sääntöjä täällä, mutta ne eivät nosta hälytyksiä ennen kuin palvelinpäivitys lisää tarkistuksen.",
         "no_alerts_not_checked": "Ei hälytyksiä. Palvelin ei vielä tarkista sääntöjä, joten hälytyksiä ei nosteta.",
         "unit_percent": "%",
-        "unit_seconds": "sekuntia"
+        "unit_seconds": "sekuntia",
+        "rule_sheet_desc": "Luo hälytyksen, kun laite ilmoittaa asettamasi rajan ylittävän arvon.",
+        "section_condition": "Mitä se valvoo",
+        "section_alert": "Hälytys",
+        "saving": "Tallennetaan…"
     },
     "file_transfer": {
         "title": "Tiedoston siirto",
@@ -3137,7 +3148,11 @@
         "rtt_target": "Kohde",
         "rtt_label": "Kohteen {name} vasteaika",
         "rtt_summary": "{count} tarkistusta {since} alkaen, {down} ilman vastausta. Vastaukset kestivät {min}–{max} ms.",
-        "rtt_summary_none": "{count} tarkistusta {since} alkaen, yksikään ei saanut vastausta."
+        "rtt_summary_none": "{count} tarkistusta {since} alkaen, yksikään ei saanut vastausta.",
+        "section_check": "Osoite ja tarkistus",
+        "section_schedule": "Aikataulu",
+        "target_sheet_desc": "Palvelin tarkistaa osoitteen aikataulun mukaan ja tallentaa, vastaako se.",
+        "history_sheet_desc": "Kohteen {host} tarkistukset, uusin ensin."
     },
     "dataguard": {
         "title": "DataGuard â€” DLP",
@@ -3257,7 +3272,10 @@
         "legend_blocked": "estetty",
         "legend_logged": "kirjattu",
         "legend_allowed": "sallittu",
-        "advanced": "Lisäasetukset"
+        "advanced": "Lisäasetukset",
+        "section_covers": "Mitä se koskee",
+        "policy_sheet_desc": "Mitä siirtoja käytäntö koskee ja estävätkö laitteet ne, kirjaavatko ne vai sallivatko ne.",
+        "saving": "Tallennetaan…"
     },
     "reports": {
         "title": "Raportit",

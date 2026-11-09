@@ -36,7 +36,7 @@
     font-weight: 600;
 }
 
-/* Ticket dialog */
+/* Ticket sheet */
 .ticket-facts {
     grid-template-columns: minmax(110px, 160px) minmax(0, 1fr);
 }
@@ -76,15 +76,41 @@
     font-weight: 600;
 }
 
-.add-comment-form {
+/* The comment field, pinned between the scrolling body and the footer */
+.ticket-composer {
     display: flex;
+    flex: none;
     flex-direction: column;
     gap: var(--space-2);
-    margin-top: var(--space-2);
+    padding: var(--space-3) var(--sheet-pad-x);
+    border-top: 1px solid var(--rule);
+    background: var(--bg-float);
 }
 
-.add-comment-form .form-actions {
-    margin-top: 0;
+.ticket-composer textarea {
+    min-height: calc(2 * var(--control-h));
+    max-height: 30vh;
+    resize: vertical;
+}
+
+.ticket-composer-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-2) var(--space-4);
+}
+
+.ticket-composer-row .checkbox-row {
+    margin-inline-end: auto;
+}
+
+/* On a phone the thread keeps most of the screen */
+@media (max-width: 640px) {
+    .ticket-composer textarea {
+        min-height: calc(1.5 * var(--control-h));
+        max-height: 20vh;
+    }
 }
 
 /* Priority and assignee move under the title on a phone */

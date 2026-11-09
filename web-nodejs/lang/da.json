@@ -1926,7 +1926,9 @@
         "count_filtered": "{shown} af {count} brugere",
         "no_match": "Ingen bruger matcher \"{query}\".",
         "clear_search": "Ryd søgning",
-        "group_actions_for": "Flere handlinger for {name}"
+        "group_actions_for": "Flere handlinger for {name}",
+        "sheet_add_desc": "En konto til denne konsol. Rollen bestemmer, hvad personen kan gøre.",
+        "org_member_of": "Medlem af"
     },
     "folders": {
         "title": "Mapper",
@@ -2728,7 +2730,11 @@
         "overdue_note": "Over deres frist og endnu ikke løst. Mest forfaldne først.",
         "overdue_none": "Ingen sager er over fristen.",
         "overdue_row": "#{id}, {priority}, frist {time}",
-        "summary_failed": "Oversigten kunne ikke indlæses."
+        "summary_failed": "Oversigten kunne ikke indlæses.",
+        "status_actions": "Status og ansvarlig",
+        "title_hint": "Et kort resumé, som andre kan genkende på listen.",
+        "section_sorting": "Detaljer",
+        "saving": "Gemmer…"
     },
     "activity": {
         "title": "Aktivitetsovervågning",
@@ -2809,7 +2815,8 @@
         "top_apps_all_empty": "Ingen app-brug i disse datoer.",
         "top_apps_all_failed": "App-brugen kunne ikke indlæses.",
         "top_apps_all_devices": "Bruges på {count} enheder",
-        "top_apps_all_one_device": "Bruges på 1 enhed"
+        "top_apps_all_one_device": "Bruges på 1 enhed",
+        "detail_desc": "Tid pr. app og de seneste sessioner for de datoer, der er valgt på siden."
     },
     "automation": {
         "title": "Automatisering og advarsler",
@@ -2951,7 +2958,11 @@
         "rules_not_checked": "Serveren kontrollerer endnu ikke alarmregler. Du kan oprette og gemme regler her, men de udløser ingen alarmer, før en serveropdatering tilføjer kontrollen.",
         "no_alerts_not_checked": "Ingen alarmer. Serveren kontrollerer endnu ikke alarmregler, så der udløses ingen.",
         "unit_percent": "%",
-        "unit_seconds": "sekunder"
+        "unit_seconds": "sekunder",
+        "rule_sheet_desc": "Giver en advarsel, når en enhed rapporterer en værdi ud over den grænse, du angiver.",
+        "section_condition": "Hvad den overvåger",
+        "section_alert": "Advarsel",
+        "saving": "Gemmer…"
     },
     "file_transfer": {
         "title": "Filoverførsel",
@@ -3137,7 +3148,11 @@
         "rtt_target": "Mål",
         "rtt_label": "Svartid for {name}",
         "rtt_summary": "{count} kontroller siden {since}, {down} uden svar. Svarene tog {min} til {max} ms.",
-        "rtt_summary_none": "{count} kontroller siden {since}, ingen fik svar."
+        "rtt_summary_none": "{count} kontroller siden {since}, ingen fik svar.",
+        "section_check": "Adresse og kontrol",
+        "section_schedule": "Tidsplan",
+        "target_sheet_desc": "Serveren kontrollerer adressen efter en tidsplan og registrerer, om den svarer.",
+        "history_sheet_desc": "Kontroller af {host}, nyeste først."
     },
     "dataguard": {
         "title": "DataGuard â€” DLP",
@@ -3257,7 +3272,10 @@
         "legend_blocked": "blokeret",
         "legend_logged": "logget",
         "legend_allowed": "tilladt",
-        "advanced": "Avancerede indstillinger"
+        "advanced": "Avancerede indstillinger",
+        "section_covers": "Hvad den dækker",
+        "policy_sheet_desc": "Hvilke overførsler politikken dækker, og om enhederne blokerer, registrerer eller tillader dem.",
+        "saving": "Gemmer…"
     },
     "reports": {
         "title": "Rapporter",

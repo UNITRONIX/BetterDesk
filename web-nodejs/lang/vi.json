@@ -1926,7 +1926,9 @@
         "count_filtered": "{shown} trên {count} người dùng",
         "no_match": "Không có người dùng nào khớp với \"{query}\".",
         "clear_search": "Xóa tìm kiếm",
-        "group_actions_for": "Thêm thao tác cho {name}"
+        "group_actions_for": "Thêm thao tác cho {name}",
+        "sheet_add_desc": "Một tài khoản cho bảng điều khiển này. Vai trò quyết định người đó có thể làm gì.",
+        "org_member_of": "Thành viên của"
     },
     "folders": {
         "title": "Thư mục",
@@ -2728,7 +2730,11 @@
         "overdue_note": "Đã quá hạn và chưa giải quyết. Quá hạn lâu nhất ở trên.",
         "overdue_none": "Không có phiếu nào quá hạn.",
         "overdue_row": "#{id}, {priority}, hạn {time}",
-        "summary_failed": "Không thể tải phần tóm tắt."
+        "summary_failed": "Không thể tải phần tóm tắt.",
+        "status_actions": "Trạng thái và người phụ trách",
+        "title_hint": "Một bản tóm tắt ngắn để người khác nhận ra trong danh sách.",
+        "section_sorting": "Chi tiết",
+        "saving": "Đang lưu…"
     },
     "activity": {
         "title": "Giám sát hoạt động",
@@ -2809,7 +2815,8 @@
         "top_apps_all_empty": "Không có lượt dùng ứng dụng trong các ngày này.",
         "top_apps_all_failed": "Không tải được dữ liệu dùng ứng dụng.",
         "top_apps_all_devices": "Dùng trên {count} thiết bị",
-        "top_apps_all_one_device": "Dùng trên 1 thiết bị"
+        "top_apps_all_one_device": "Dùng trên 1 thiết bị",
+        "detail_desc": "Thời gian theo ứng dụng và các phiên gần nhất, cho những ngày đã chọn trên trang."
     },
     "automation": {
         "title": "Tự động hóa & Cảnh báo",
@@ -2951,7 +2958,11 @@
         "rules_not_checked": "Máy chủ chưa kiểm tra các quy tắc cảnh báo. Bạn có thể tạo và giữ quy tắc ở đây, nhưng chúng sẽ không tạo cảnh báo cho đến khi bản cập nhật máy chủ bổ sung việc kiểm tra.",
         "no_alerts_not_checked": "Không có cảnh báo. Máy chủ chưa kiểm tra các quy tắc nên không có cảnh báo nào.",
         "unit_percent": "%",
-        "unit_seconds": "giây"
+        "unit_seconds": "giây",
+        "rule_sheet_desc": "Tạo cảnh báo khi một thiết bị báo cáo giá trị vượt quá giới hạn bạn đặt.",
+        "section_condition": "Theo dõi gì",
+        "section_alert": "Cảnh báo",
+        "saving": "Đang lưu…"
     },
     "file_transfer": {
         "title": "Truyền tệp",
@@ -3137,7 +3148,11 @@
         "rtt_target": "Mục tiêu",
         "rtt_label": "Thời gian phản hồi của {name}",
         "rtt_summary": "{count} lần kiểm tra từ {since}, {down} lần không phản hồi. Phản hồi mất từ {min} đến {max} ms.",
-        "rtt_summary_none": "{count} lần kiểm tra từ {since}, không lần nào có phản hồi."
+        "rtt_summary_none": "{count} lần kiểm tra từ {since}, không lần nào có phản hồi.",
+        "section_check": "Địa chỉ và kiểm tra",
+        "section_schedule": "Lịch",
+        "target_sheet_desc": "Máy chủ kiểm tra địa chỉ này theo lịch và ghi lại việc nó có phản hồi hay không.",
+        "history_sheet_desc": "Các lần kiểm tra {host}, mới nhất trước."
     },
     "dataguard": {
         "title": "DataGuard â€” DLP",
@@ -3257,7 +3272,10 @@
         "legend_blocked": "đã chặn",
         "legend_logged": "đã ghi lại",
         "legend_allowed": "đã cho phép",
-        "advanced": "Tùy chọn nâng cao"
+        "advanced": "Tùy chọn nâng cao",
+        "section_covers": "Phạm vi áp dụng",
+        "policy_sheet_desc": "Những lần truyền mà chính sách áp dụng và thiết bị sẽ chặn, ghi lại hay cho phép chúng.",
+        "saving": "Đang lưu…"
     },
     "reports": {
         "title": "Báo cáo",

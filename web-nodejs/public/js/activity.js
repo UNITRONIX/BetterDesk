@@ -263,13 +263,14 @@
         appsBox.appendChild(list);
     }
 
-    // ---- Detail dialog ----
+    // ---- Detail sheet: apps and sessions of one device, wide for the two tables ----
     async function showDetail(deviceId, name) {
         const tpl = document.getElementById('activity-detail-tpl');
-        Modal.show({
+        Modal.sheet({
             title: _('activity.detail_title', { name }),
+            subtitle: _('activity.detail_desc'),
             content: tpl.innerHTML,
-            size: 'large',
+            wide: true,
             buttons: [{ label: _('common.close'), class: 'btn-secondary', onClick: () => Modal.close() }]
         });
         const sessionsList = document.getElementById('sessions-list');

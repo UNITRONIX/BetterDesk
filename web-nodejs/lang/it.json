@@ -1920,7 +1920,9 @@
         "count_filtered": "{shown} di {count} utenti",
         "no_match": "Nessun utente corrisponde a \"{query}\".",
         "clear_search": "Cancella ricerca",
-        "group_actions_for": "Altre azioni per {name}"
+        "group_actions_for": "Altre azioni per {name}",
+        "sheet_add_desc": "Un account per questa console. Il ruolo stabilisce cosa può fare la persona.",
+        "org_member_of": "Membro di"
     },
     "folders": {
         "title": "Cartelle",
@@ -2722,7 +2724,11 @@
         "overdue_note": "Scadenza superata e non ancora risolti. Prima i più in ritardo.",
         "overdue_none": "Nessun ticket ha superato la scadenza.",
         "overdue_row": "n. {id}, {priority}, scadenza {time}",
-        "summary_failed": "Impossibile caricare il riepilogo."
+        "summary_failed": "Impossibile caricare il riepilogo.",
+        "status_actions": "Stato e assegnatario",
+        "title_hint": "Un breve riassunto che gli altri possano riconoscere nell’elenco.",
+        "section_sorting": "Dettagli",
+        "saving": "Salvataggio…"
     },
     "activity": {
         "title": "Monitoraggio attività",
@@ -2803,7 +2809,8 @@
         "top_apps_all_empty": "Nessun utilizzo di app in queste date.",
         "top_apps_all_failed": "Impossibile caricare l’utilizzo delle app.",
         "top_apps_all_devices": "Usata su {count} dispositivi",
-        "top_apps_all_one_device": "Usata su 1 dispositivo"
+        "top_apps_all_one_device": "Usata su 1 dispositivo",
+        "detail_desc": "Tempo per app e ultime sessioni, per le date scelte nella pagina."
     },
     "automation": {
         "title": "Automazione e avvisi",
@@ -2945,7 +2952,11 @@
         "rules_not_checked": "Il server non controlla ancora le regole di avviso. Puoi creare e conservare le regole qui, ma non generano avvisi finché un aggiornamento del server non aggiunge il controllo.",
         "no_alerts_not_checked": "Nessun avviso. Il server non controlla ancora le regole, quindi non ne vengono generati.",
         "unit_percent": "%",
-        "unit_seconds": "secondi"
+        "unit_seconds": "secondi",
+        "rule_sheet_desc": "Genera un avviso quando un dispositivo segnala un valore oltre il limite impostato.",
+        "section_condition": "Cosa controlla",
+        "section_alert": "Avviso",
+        "saving": "Salvataggio…"
     },
     "file_transfer": {
         "title": "Trasferimento file",
@@ -3131,7 +3142,11 @@
         "rtt_target": "Destinazione",
         "rtt_label": "Tempo di risposta di {name}",
         "rtt_summary": "{count} controlli da {since}, {down} senza risposta. Le risposte hanno richiesto da {min} a {max} ms.",
-        "rtt_summary_none": "{count} controlli da {since}, nessuno ha ricevuto risposta."
+        "rtt_summary_none": "{count} controlli da {since}, nessuno ha ricevuto risposta.",
+        "section_check": "Indirizzo e controllo",
+        "section_schedule": "Pianificazione",
+        "target_sheet_desc": "Il server controlla questo indirizzo a intervalli regolari e registra se risponde.",
+        "history_sheet_desc": "Controlli di {host}, dal più recente."
     },
     "dataguard": {
         "title": "DataGuard",
@@ -3251,7 +3266,10 @@
         "legend_blocked": "bloccati",
         "legend_logged": "registrati",
         "legend_allowed": "consentiti",
-        "advanced": "Opzioni avanzate"
+        "advanced": "Opzioni avanzate",
+        "section_covers": "Cosa copre",
+        "policy_sheet_desc": "Quali trasferimenti copre il criterio e se i dispositivi li bloccano, li registrano o li consentono.",
+        "saving": "Salvataggio…"
     },
     "reports": {
         "title": "Report",

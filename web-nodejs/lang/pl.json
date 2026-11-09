@@ -1938,7 +1938,9 @@
         "count_filtered": "{shown} z {count} użytkowników",
         "no_match": "Żaden użytkownik nie pasuje do \"{query}\".",
         "clear_search": "Wyczyść wyszukiwanie",
-        "group_actions_for": "Więcej działań dla {name}"
+        "group_actions_for": "Więcej działań dla {name}",
+        "sheet_add_desc": "Konto w tej konsoli. Rola określa, co dana osoba może robić.",
+        "org_member_of": "Członek"
     },
     "folders": {
         "title": "Foldery",
@@ -2740,7 +2742,11 @@
         "overdue_note": "Po terminie i jeszcze nierozwiązane. Najbardziej spóźnione najpierw.",
         "overdue_none": "Żadne zgłoszenie nie jest po terminie.",
         "overdue_row": "#{id}, {priority}, termin {time}",
-        "summary_failed": "Nie udało się wczytać podsumowania."
+        "summary_failed": "Nie udało się wczytać podsumowania.",
+        "status_actions": "Status i osoba przypisana",
+        "title_hint": "Krótkie podsumowanie, po którym inni rozpoznają zgłoszenie na liście.",
+        "section_sorting": "Szczegóły",
+        "saving": "Zapisywanie…"
     },
     "activity": {
         "title": "Monitorowanie aktywności",
@@ -2821,7 +2827,8 @@
         "top_apps_all_empty": "Brak użycia aplikacji w tych dniach.",
         "top_apps_all_failed": "Nie udało się wczytać użycia aplikacji.",
         "top_apps_all_devices": "Używana na {count} urządzeniach",
-        "top_apps_all_one_device": "Używana na 1 urządzeniu"
+        "top_apps_all_one_device": "Używana na 1 urządzeniu",
+        "detail_desc": "Czas na aplikację i ostatnie sesje z dat wybranych na stronie."
     },
     "automation": {
         "title": "Automatyzacja i alerty",
@@ -2963,7 +2970,11 @@
         "rules_not_checked": "Serwer jeszcze nie sprawdza reguł alertów. Możesz tu tworzyć i przechowywać reguły, ale nie wywołają one alertów, dopóki aktualizacja serwera nie doda sprawdzania.",
         "no_alerts_not_checked": "Brak alertów. Serwer jeszcze nie sprawdza reguł, więc żadne alerty nie powstają.",
         "unit_percent": "%",
-        "unit_seconds": "sekund"
+        "unit_seconds": "sekund",
+        "rule_sheet_desc": "Zgłasza alert, gdy urządzenie poda wartość przekraczającą ustawiony limit.",
+        "section_condition": "Co monitoruje",
+        "section_alert": "Alert",
+        "saving": "Zapisywanie…"
     },
     "file_transfer": {
         "title": "Przesyłanie plików",
@@ -3149,7 +3160,11 @@
         "rtt_target": "Cel",
         "rtt_label": "Czas odpowiedzi: {name}",
         "rtt_summary": "Sprawdzenia od {since}: {count}, bez odpowiedzi: {down}. Odpowiedzi trwały od {min} do {max} ms.",
-        "rtt_summary_none": "Sprawdzenia od {since}: {count}, żadne nie dostało odpowiedzi."
+        "rtt_summary_none": "Sprawdzenia od {since}: {count}, żadne nie dostało odpowiedzi.",
+        "section_check": "Adres i sprawdzanie",
+        "section_schedule": "Harmonogram",
+        "target_sheet_desc": "Serwer sprawdza ten adres według harmonogramu i zapisuje, czy odpowiada.",
+        "history_sheet_desc": "Sprawdzenia {host}, od najnowszych."
     },
     "dataguard": {
         "title": "DataGuard — ochrona DLP",
@@ -3269,7 +3284,10 @@
         "legend_blocked": "zablokowane",
         "legend_logged": "zarejestrowane",
         "legend_allowed": "dozwolone",
-        "advanced": "Opcje zaawansowane"
+        "advanced": "Opcje zaawansowane",
+        "section_covers": "Czego dotyczy",
+        "policy_sheet_desc": "Których transferów dotyczy polityka i czy urządzenia je blokują, rejestrują czy zezwalają na nie.",
+        "saving": "Zapisywanie…"
     },
     "reports": {
         "title": "Raporty",

@@ -127,17 +127,9 @@
     }
 }
 
-/* Dialogs */
-.target-form .form-group {
-    margin-bottom: var(--space-4);
-}
-
+/* Target sheet (the sheet's form stack spaces the fields) */
 .target-form .mono-input {
     font-family: var(--mono);
-}
-
-.target-form .form-status:not(:empty) {
-    margin-top: var(--space-3);
 }
 
 .history-table .history-time {

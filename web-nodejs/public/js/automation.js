@@ -3,7 +3,8 @@
  *
  * Three tabs: alert rules (create, edit, enable or disable, delete),
  * alert history (filter by severity, acknowledge) and remote commands
- * (send, view result). Dialogs go through Modal.show / Modal.confirm.
+ * (send, view result). The rule editor and the command details open as
+ * side sheets (Modal.sheet); sending a command and confirms are dialogs.
  */
 
 (function () {
@@ -229,79 +230,89 @@
     function openRuleModal(rule) {
         const editing = !!rule;
         const r = rule || {};
-        Modal.show({
+        Modal.sheet({
             title: editing ? _('automation.edit_rule') : _('automation.create_rule'),
+            subtitle: _('automation.rule_sheet_desc'),
             content: `
-                <form id="rule-form" class="automation-dialog" novalidate>
+                <form id="rule-form" class="automation-dialog form-stack" novalidate>
                     <input type="hidden" id="rule-id" value="${escapeHtml(r.id ?? '')}">
                     <div class="form-group">
                         <label class="form-label" for="rule-name">${escapeHtml(_('automation.rule_name'))}</label>
-                        <input type="text" class="form-input" id="rule-name" required maxlength="100" autocomplete="off" value="${escapeHtml(r.name || '')}">
+                        <input type="text" class="form-input is-host" id="rule-name" required maxlength="100" autocomplete="off" value="${escapeHtml(r.name || '')}">
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="rule-desc">${escapeHtml(_('automation.description'))}</label>
                         <input type="text" class="form-input" id="rule-desc" maxlength="500" autocomplete="off" aria-describedby="rule-desc-hint" value="${escapeHtml(r.description || '')}">
                         <p class="form-hint" id="rule-desc-hint">${escapeHtml(_('automation.description_hint'))}</p>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label" for="rule-condition">${escapeHtml(_('automation.condition_type'))}</label>
-                        <select class="form-input" id="rule-condition" aria-describedby="rule-condition-hint">
-                            ${options(['cpu_usage', 'memory_usage', 'disk_usage', 'offline_duration', 'idle_duration', 'custom'], 'type', r.condition_type || 'cpu_usage')}
-                        </select>
-                        <p class="form-hint" id="rule-condition-hint">${escapeHtml(_('automation.condition_hint'))}</p>
-                    </div>
-                    <!-- A custom rule has no limit: comparison and threshold show for the other kinds only -->
-                    <div class="rule-limit" id="rule-limit">
+                    <section class="form-section" aria-labelledby="rule-sec-condition">
+                        <h3 class="form-section-title" id="rule-sec-condition">${escapeHtml(_('automation.section_condition'))}</h3>
                         <div class="form-group">
-                            <label class="form-label" for="rule-operator">${escapeHtml(_('automation.condition_op'))}</label>
-                            <select class="form-input" id="rule-operator">
-                                ${options(['gt', 'gte', 'lt', 'lte', 'eq', 'neq'], 'op', r.condition_op || 'gt')}
+                            <label class="form-label" for="rule-condition">${escapeHtml(_('automation.condition_type'))}</label>
+                            <select class="form-select is-host" id="rule-condition" aria-describedby="rule-condition-hint" aria-controls="rule-limit">
+                                ${options(['cpu_usage', 'memory_usage', 'disk_usage', 'offline_duration', 'idle_duration', 'custom'], 'type', r.condition_type || 'cpu_usage')}
                             </select>
+                            <p class="form-hint" id="rule-condition-hint">${escapeHtml(_('automation.condition_hint'))}</p>
+                        </div>
+                        <!-- A custom rule has no limit: comparison and threshold show for the other kinds only -->
+                        <div class="rule-limit form-stack" id="rule-limit"${(r.condition_type || 'cpu_usage') === 'custom' ? ' hidden' : ''}>
+                            <div class="form-group">
+                                <label class="form-label" for="rule-operator">${escapeHtml(_('automation.condition_op'))}</label>
+                                <select class="form-select is-medium" id="rule-operator">
+                                    ${options(['gt', 'gte', 'lt', 'lte', 'eq', 'neq'], 'op', r.condition_op || 'gt')}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="rule-value">${escapeHtml(_('automation.condition_value'))}</label>
+                                <span class="rule-value-row">
+                                    <input type="number" class="form-input is-short" id="rule-value" step="any" required aria-describedby="rule-value-unit rule-value-hint" value="${escapeHtml(r.condition_value ?? '')}">
+                                    <span class="rule-value-unit" id="rule-value-unit"></span>
+                                </span>
+                                <p class="form-hint" id="rule-value-hint">${escapeHtml(_('automation.threshold_hint'))}</p>
+                            </div>
                         </div>
                         <div class="form-group">
-                            <label class="form-label" for="rule-value">${escapeHtml(_('automation.condition_value'))}</label>
-                            <span class="rule-value-row">
-                                <input type="number" class="form-input is-short" id="rule-value" step="any" required aria-describedby="rule-value-unit rule-value-hint" value="${escapeHtml(r.condition_value ?? '')}">
-                                <span class="rule-value-unit" id="rule-value-unit"></span>
-                            </span>
-                            <p class="form-hint" id="rule-value-hint">${escapeHtml(_('automation.threshold_hint'))}</p>
+                            <label class="form-label" for="rule-device">${escapeHtml(_('automation.scope_device'))}</label>
+                            <input type="text" class="form-input is-medium mono" id="rule-device" autocomplete="off" spellcheck="false" aria-describedby="rule-device-hint" value="${escapeHtml(r.scope_device_id || '')}">
+                            <p class="form-hint" id="rule-device-hint">${escapeHtml(_('automation.scope_hint'))}</p>
                         </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="rule-severity">${escapeHtml(_('automation.severity'))}</label>
-                        <select class="form-input" id="rule-severity" aria-describedby="rule-severity-hint">
-                            ${options(['info', 'warning', 'critical'], 'severity', r.severity || 'warning')}
-                        </select>
-                        <p class="form-hint" id="rule-severity-hint">${escapeHtml(_('automation.severity_hint'))}</p>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="rule-device">${escapeHtml(_('automation.scope_device'))}</label>
-                        <input type="text" class="form-input is-medium" id="rule-device" autocomplete="off" spellcheck="false" aria-describedby="rule-device-hint" value="${escapeHtml(r.scope_device_id || '')}">
-                        <p class="form-hint" id="rule-device-hint">${escapeHtml(_('automation.scope_hint'))}</p>
-                    </div>
-                    <div class="form-group">
-                        <label class="check-field">
-                            <input type="checkbox" id="rule-enabled"${!editing || r.enabled ? ' checked' : ''}>
-                            <span class="check-label">${escapeHtml(_('automation.enabled'))}</span>
-                            <span class="form-hint">${escapeHtml(_('automation.enabled_hint'))}</span>
-                        </label>
-                    </div>
-                    <p class="field-effect">${escapeHtml(_('automation.rule_effect'))}</p>
-                    <p class="form-status is-error" id="rule-form-status" role="alert"></p>
-                    <button type="submit" hidden></button>
+                    </section>
+                    <section class="form-section" aria-labelledby="rule-sec-alert">
+                        <h3 class="form-section-title" id="rule-sec-alert">${escapeHtml(_('automation.section_alert'))}</h3>
+                        <div class="form-group">
+                            <label class="form-label" for="rule-severity">${escapeHtml(_('automation.severity'))}</label>
+                            <select class="form-select is-medium" id="rule-severity" aria-describedby="rule-severity-hint">
+                                ${options(['info', 'warning', 'critical'], 'severity', r.severity || 'warning')}
+                            </select>
+                            <p class="form-hint" id="rule-severity-hint">${escapeHtml(_('automation.severity_hint'))}</p>
+                        </div>
+                        <div class="form-group">
+                            <label class="check-field">
+                                <input type="checkbox" id="rule-enabled"${!editing || r.enabled ? ' checked' : ''}>
+                                <span class="check-label">${escapeHtml(_('automation.enabled'))}</span>
+                                <span class="form-hint">${escapeHtml(_('automation.enabled_hint'))}</span>
+                            </label>
+                            <p class="field-effect">${escapeHtml(_('automation.rule_effect'))}</p>
+                        </div>
+                    </section>
+                    <button type="submit" hidden tabindex="-1" aria-hidden="true"></button>
                 </form>`,
+            status: true,
             buttons: [
-                { label: _('actions.cancel'), class: 'btn-secondary', onClick: () => Modal.close() },
+                { label: _('actions.cancel'), class: 'btn-secondary', start: true, onClick: () => Modal.close() },
                 { label: editing ? _('actions.save') : _('automation.create_rule'), class: 'btn-primary', onClick: () => saveRule() },
             ],
-            onOpen: () => {
-                document.getElementById('rule-form')?.addEventListener('submit', (e) => { e.preventDefault(); saveRule(); });
-                const cond = document.getElementById('rule-condition');
-                cond?.setAttribute('aria-controls', 'rule-limit');
-                cond?.addEventListener('change', syncRuleLimit);
-                syncRuleLimit();
-            },
         });
+        const form = document.getElementById('rule-form');
+        // Enter in a field saves
+        form?.addEventListener('submit', (e) => { e.preventDefault(); saveRule(); });
+        // A refusal belongs to the values it was about
+        form?.addEventListener('input', (e) => {
+            e.target.removeAttribute('aria-invalid');
+            if (!savingRule) Modal.setStatus('');
+        });
+        document.getElementById('rule-condition')?.addEventListener('change', syncRuleLimit);
+        syncRuleLimit();
     }
 
     // The comparison and threshold only apply to rules that measure something;
@@ -325,10 +336,14 @@
         } catch (err) { showToast(`${_('automation.open_failed')} ${err.message}`, 'error'); }
     }
 
+    // Refusals and save errors go in the rule sheet's status line
     function formError(msg, focusId) {
-        const st = document.getElementById('rule-form-status');
-        if (st) st.textContent = msg;
-        if (focusId) document.getElementById(focusId)?.focus();
+        Modal.setStatus(msg, msg ? 'error' : '');
+        const field = focusId && document.getElementById(focusId);
+        if (field) {
+            field.setAttribute('aria-invalid', 'true');
+            field.focus();
+        }
     }
 
     let savingRule = false;
@@ -354,7 +369,7 @@
         } else if (rawValue === '' || !Number.isFinite(body.condition_value)) { formError(_('automation.threshold_required'), 'rule-value'); return; }
 
         savingRule = true;
-        formError('');
+        Modal.setStatus(_('automation.saving'));
         try {
             const url = id ? `/api/automation/rules/${encodeURIComponent(id)}` : '/api/automation/rules';
             await apiFetch(url, { method: id ? 'PATCH' : 'POST', body: JSON.stringify(body) });
@@ -572,9 +587,10 @@
             showToast(`${_('automation.open_failed')} ${err.message}`, 'error');
             return;
         }
-        Modal.show({
+        // Details of one command: a sheet, wide for the payload and the result
+        Modal.sheet({
             title: _('automation.command_title', { id: cmd.id }),
-            size: 'large',
+            wide: true,
             content: `
                 <dl class="facts automation-facts">
                     <dt>${escapeHtml(_('automation.device'))}</dt><dd>${U() ? U().valueHtml(cmd.device_id, { copy: true }) : escapeHtml(cmd.device_id)}</dd>

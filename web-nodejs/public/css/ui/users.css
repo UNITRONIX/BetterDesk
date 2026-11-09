@@ -30,10 +30,10 @@
     margin-top: var(--space-1);
 }
 
-/* Dialog: fieldsets are plain groups */
+/* User sheet: fieldsets are plain groups; the sheet's form stack spaces them */
 .user-form fieldset {
     min-width: 0;
-    margin: 0 0 var(--space-4);
+    margin: 0;
     padding: 0;
     border: 0;
 }
@@ -45,11 +45,12 @@
 
 .user-form .facts {
     grid-template-columns: minmax(0, 9rem) minmax(0, 1fr);
-    margin-bottom: var(--space-4);
+    margin: 0;
 }
 
-.user-form .user-provider-note {
-    margin-bottom: var(--space-4);
+.user-form .user-provider-note,
+.user-access-note {
+    margin: 0;
 }
 
 .user-form .check-list {
@@ -57,36 +58,10 @@
     flex-direction: column;
 }
 
-.user-access {
-    margin-bottom: var(--space-4);
-}
-
-.user-access > summary h3 {
-    margin: 0;
-    font-size: var(--text-base);
-    font-weight: 600;
-}
-
-.user-access-note {
-    margin-bottom: var(--space-4);
-}
-
-.user-form .form-status:empty,
-.user-orgs-dialog .form-status:empty {
-    display: none;
-}
-
-/* Organizations dialog */
-.user-orgs-dialog {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-4);
-}
-
-.user-orgs-add-form h3 {
-    margin: 0 0 var(--space-3);
-    font-size: var(--text-base);
-    font-weight: 600;
+/* The reveal button fills the field's height, so it is a full touch target */
+:is(.user-form, #reset-password-form) .password-wrapper .password-toggle {
+    top: 0;
+    bottom: 0;
 }
 
 /* When the table is wider than the page (phones, long translations) it

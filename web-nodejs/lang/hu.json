@@ -1926,7 +1926,9 @@
         "count_filtered": "{count} felhasználóból {shown}",
         "no_match": "Egy felhasználó sem felel meg ennek: \"{query}\".",
         "clear_search": "Keresés törlése",
-        "group_actions_for": "További műveletek: {name}"
+        "group_actions_for": "További műveletek: {name}",
+        "sheet_add_desc": "Fiók ehhez a konzolhoz. A szerepkör határozza meg, mit tehet a személy.",
+        "org_member_of": "Tagja ezeknek"
     },
     "folders": {
         "title": "Mappák",
@@ -2728,7 +2730,11 @@
         "overdue_note": "Lejárt a határidejük, és még nincsenek megoldva. A legrégebben lejártak elöl.",
         "overdue_none": "Egyik jegy határideje sem járt le.",
         "overdue_row": "#{id}, {priority}, határidő: {time}",
-        "summary_failed": "Az összegzés nem tölthető be."
+        "summary_failed": "Az összegzés nem tölthető be.",
+        "status_actions": "Állapot és felelős",
+        "title_hint": "Rövid összefoglaló, amelyről mások felismerik a listában.",
+        "section_sorting": "Részletek",
+        "saving": "Mentés…"
     },
     "activity": {
         "title": "Tevékenységfigyelés",
@@ -2809,7 +2815,8 @@
         "top_apps_all_empty": "Ezekben a napokban nem volt alkalmazáshasználat.",
         "top_apps_all_failed": "Nem sikerült betölteni az alkalmazáshasználatot.",
         "top_apps_all_devices": "{count} eszközön használják",
-        "top_apps_all_one_device": "1 eszközön használják"
+        "top_apps_all_one_device": "1 eszközön használják",
+        "detail_desc": "Alkalmazásonkénti idő és a legutóbbi munkamenetek az oldalon választott napokra."
     },
     "automation": {
         "title": "Automatizálás és riasztások",
@@ -2951,7 +2958,11 @@
         "rules_not_checked": "A szerver még nem ellenőrzi a riasztási szabályokat. Itt létrehozhat és megtarthat szabályokat, de nem váltanak ki riasztást, amíg egy szerverfrissítés nem pótolja az ellenőrzést.",
         "no_alerts_not_checked": "Nincs riasztás. A szerver még nem ellenőrzi a szabályokat, ezért nem keletkezik riasztás.",
         "unit_percent": "%",
-        "unit_seconds": "másodperc"
+        "unit_seconds": "másodperc",
+        "rule_sheet_desc": "Riasztást ad, ha egy eszköz az Ön által megadott határon túli értéket jelent.",
+        "section_condition": "Mit figyel",
+        "section_alert": "Riasztás",
+        "saving": "Mentés…"
     },
     "file_transfer": {
         "title": "Fájlátvitel",
@@ -3137,7 +3148,11 @@
         "rtt_target": "Cél",
         "rtt_label": "{name} válaszideje",
         "rtt_summary": "{count} ellenőrzés {since} óta, ebből {down} válasz nélkül. A válaszok {min}–{max} ms alatt érkeztek.",
-        "rtt_summary_none": "{count} ellenőrzés {since} óta, egyik sem kapott választ."
+        "rtt_summary_none": "{count} ellenőrzés {since} óta, egyik sem kapott választ.",
+        "section_check": "Cím és ellenőrzés",
+        "section_schedule": "Ütemezés",
+        "target_sheet_desc": "A szerver ütemezetten ellenőrzi ezt a címet, és rögzíti, hogy válaszol-e.",
+        "history_sheet_desc": "{host} ellenőrzései, a legújabb elöl."
     },
     "dataguard": {
         "title": "DataGuard â€” DLP",
@@ -3257,7 +3272,10 @@
         "legend_blocked": "letiltva",
         "legend_logged": "naplózva",
         "legend_allowed": "engedélyezve",
-        "advanced": "Speciális beállítások"
+        "advanced": "Speciális beállítások",
+        "section_covers": "Mire vonatkozik",
+        "policy_sheet_desc": "Mely átvitelekre vonatkozik az irányelv, és az eszközök letiltják, naplózzák vagy engedélyezik-e őket.",
+        "saving": "Mentés…"
     },
     "reports": {
         "title": "Jelentések",
