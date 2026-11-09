@@ -296,6 +296,10 @@
 
 	let clientConfig = $state.raw<ClientConfig | null>(null);
 	let clientError = $state('');
+	// The side column's server information waits for the addresses and the
+	// connection mode above it, which grow once they arrive and would push it
+	// down (a layout shift); a box that appears doesn't count as one
+	const sideSettled = $derived(!canConfig || ((clientConfig !== null || clientError !== '') && loaded));
 
 	async function loadClientConfig() {
 		try {
@@ -619,7 +623,7 @@
 		{/if}
 		{#if connRuntime}<p class="side-line" id="connection-mode-runtime">{connRuntime}</p>{/if}
 	</section>
-	{@render serverInfo()}
+	{#if sideSettled}{@render serverInfo()}{/if}
 {/snippet}
 
 {#snippet meshStatusValue()}<Status tone="good" label={t('mesh.enabled_label')} />{/snippet}

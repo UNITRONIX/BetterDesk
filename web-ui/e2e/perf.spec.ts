@@ -51,7 +51,7 @@ const observe = () => {
 	}
 };
 
-for (const page of ['/', '/devices']) {
+for (const page of ['/', '/devices', '/settings']) {
 	test(`@perf ${page}: LCP under 1 s, no layout shift over 0.02, JS within budget`, async ({ browser }) => {
 		const ctx = await browser.newContext({
 			storageState: 'e2e/.auth/admin.json',
