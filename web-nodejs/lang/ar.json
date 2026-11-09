@@ -47,7 +47,7 @@
         "copy_failed": "تعذّر النسخ. حدّد النص وانسخه يدويًا."
     },
     "nav": {
-        "main": "Main",
+        "main": "القائمة الرئيسية",
         "tools": "Tools",
         "system": "System",
         "dashboard": "لوحة القيادة",
@@ -55,18 +55,18 @@
         "keys": "إعداد العميل",
         "generator": "وكلاء BetterDesk",
         "settings": "إعدادات",
-        "users": "Users",
+        "users": "المستخدمون",
         "inventory": "الجرد",
         "tickets": "Tickets",
         "help_requests": "طلبات المساعدة",
-        "activity": "Activity",
+        "activity": "النشاط",
         "automation": "التنبيهات والأتمتة",
         "file_transfer": "نقل الملفات",
         "network": "مراقبة الشبكة",
         "dataguard": "منع فقدان البيانات",
         "reports": "التقارير",
         "tenants": "Tenants",
-        "registrations": "Registrations",
+        "registrations": "طلبات التسجيل",
         "activate_agent": "تفعيل وكيل دعم",
         "management": "إدارة",
         "toggle_sidebar": "تبديل الشريط الجانبي",
@@ -84,7 +84,7 @@
         "languages": "الترجمات",
         "resource_control": "الوصول إلى USB والأقراص",
         "chat": "Chat",
-        "help": "Help",
+        "help": "مساعدة",
         "expand_sidebar": "قم بتوسيع الشريط الجانبي",
         "toggle_theme": "تبديل الموضوع",
         "sdk_studio": "محرر التدفقات (SDK)",
@@ -621,7 +621,19 @@
         "strategy_assign_none_selected": "حدّد جهازًا أو مستخدمًا أو مجموعة أجهزة واحدة على الأقل.",
         "strategy_sheet_desc": "إعدادات العميل التي تنطبق عندما يعمل شخص من مجموعة مستخدمين على جهاز في مجموعة أجهزة.",
         "strategy_section_scope": "من وأين",
-        "strategy_enabled_hint": "عند إيقافها تبقى القاعدة محفوظة لكنها لا تُطبَّق."
+        "strategy_enabled_hint": "عند إيقافها تبقى القاعدة محفوظة لكنها لا تُطبَّق.",
+        "selected_count": "{count} محدد",
+        "move_to_folder": "نقل إلى مجلد",
+        "move_many_to_folder": "نقل {count} أجهزة إلى مجلد",
+        "move": "نقل",
+        "clear_selection": "إلغاء التحديد",
+        "showing_count": "عرض {shown} من {total}",
+        "scopes_label": "المجلدات والمجموعات",
+        "tag_too_long": "يمكن أن يحتوي الوسم على 50 حرفًا كحد أقصى.",
+        "tag_on_count": "على {count} من {total}",
+        "bulk_tags_title": "وسوم {count} أجهزة",
+        "bulk_tags_hint": "تُضاف الوسوم المحددة إلى كل جهاز مختار، وتُزال الوسوم غير المحددة. تبقى الوسوم المحددة جزئيًا كما هي.",
+        "bulk_tags_saved": "تم تغيير الوسوم على {count} أجهزة."
     },
     "keys": {
         "title": "مفاتيح الخادم",
@@ -675,7 +687,7 @@
     "settings": {
         "title": "إعدادات",
         "subtitle": "تكوين وحدة التحكم وإعدادات الحساب",
-        "tab_general": "General",
+        "tab_general": "عام",
         "tab_server": "الخادم",
         "tab_branding": "المظهر",
         "tab_backup": "Backup",
@@ -1760,7 +1772,8 @@
         "remove": "إزالة",
         "retry": "إعادة المحاولة",
         "show_value": "إظهار",
-        "hide_value": "إخفاء"
+        "hide_value": "إخفاء",
+        "run": "تشغيل"
     },
     "time": {
         "just_now": "Just now",
@@ -2551,7 +2564,21 @@
         "edit_heading": "تعديل الجهاز",
         "discard_title": "تجاهل التغييرات؟",
         "discard_message": "لم تُحفظ التغييرات على هذا الجهاز بعد.",
-        "discard_confirm": "تجاهل التغييرات"
+        "discard_confirm": "تجاهل التغييرات",
+        "action_cdap_viewer_desc": "صور للشاشة بدلاً من بث مباشر",
+        "action_delete_target_desc": "إزالة هدف RDP/VNC من القائمة",
+        "action_edit_fields_desc": "تغيير الاسم والمستخدم والملاحظة والمجلد والوسوم",
+        "action_edit_target_desc": "العنوان وتسجيل الدخول وإعدادات الأمان",
+        "action_groups_desc": "إضافة الجهاز إلى مجموعة أو إخراجه منها",
+        "action_guest_desc": "رابط يعمل دون حساب في وحدة التحكم لفترة محدودة",
+        "action_mesh_command_desc": "تشغيل أمر واحد على الجهاز",
+        "action_mesh_files_desc": "ملفات الجهاز في عارض الوصول عن بُعد",
+        "action_mesh_share_desc": "رابط سطح مكتب للعرض فقط لا يحتاج إلى تسجيل دخول",
+        "action_mesh_terminal_desc": "واجهة أوامر على الجهاز عبر MeshAgent الخاص به",
+        "action_port_desc": "الوصول إلى منفذ على الجهاز أو في شبكته",
+        "agent_cached": "الجهاز غير متصل. هذا آخر ما أرسله:",
+        "file_downloaded": "تم تنزيل {name}.",
+        "user_hint": "يظهر في القائمة. يستبدله الجهاز عندما يُبلغ عمن سجّل الدخول."
     },
     "inventory": {
         "title": "Inventory",
@@ -4420,9 +4447,9 @@
         "file_share": "ملف",
         "file_too_large": "الملف كبير جدًا (الحد الأقصى 50 ميجابايت)",
         "file_encrypted": "نقل الملفات المشفرة",
-        "presence_online": "Online",
-        "presence_away": "Away",
-        "presence_busy": "Busy",
+        "presence_online": "متصل",
+        "presence_away": "بعيد",
+        "presence_busy": "مشغول",
         "presence_offline": "Offline",
         "key_rotation": "تم تدوير مفاتيح الأمان",
         "new_message": "New message",
@@ -4501,10 +4528,10 @@
         "reconnecting": "جارٍ إعادة الاتصال..."
     },
     "theme": {
-        "dark": "Dark",
-        "light": "Light",
+        "dark": "داكن",
+        "light": "فاتح",
         "auto": "System",
-        "title": "Theme",
+        "title": "السمة",
         "custom": "مخصص",
         "switch_to_dark": "التبديل إلى الوضع الداكن",
         "switch_to_light": "التبديل إلى الوضع الفاتح",
@@ -6286,7 +6313,7 @@
         "dyslexia_spacing_hint": "يزيد المسافة بين الحروف والكلمات.",
         "visual": "مرئي",
         "contrast": "التباين",
-        "contrast_normal": "Normal",
+        "contrast_normal": "عادي",
         "contrast_high_dark": "الظلام عالية التباين",
         "contrast_high_light": "ضوء عالي التباين",
         "contrast_yellow_black": "أصفر على أسود",
@@ -7477,5 +7504,9 @@
         "previous": "الصفحة السابقة",
         "next": "الصفحة التالية",
         "page": "الصفحة {page}"
+    },
+    "shell": {
+        "skip_to_content": "انتقل إلى المحتوى الرئيسي",
+        "start_failed": "تعذّر بدء تشغيل لوحة التحكم."
     }
 }

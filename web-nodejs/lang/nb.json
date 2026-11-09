@@ -65,7 +65,7 @@
         "dataguard": "Forebygging av datatap",
         "reports": "Rapporter",
         "tenants": "Leietakere",
-        "registrations": "Registrations",
+        "registrations": "Registreringsforespørsler",
         "activate_agent": "Aktiver støtteagent",
         "management": "Ledelse",
         "toggle_sidebar": "Bytt sidefelt",
@@ -620,7 +620,19 @@
         "strategy_assign_none_selected": "Kryss av minst én enhet, bruker eller enhetsgruppe.",
         "strategy_sheet_desc": "Klientinnstillinger som gjelder når noen fra en brukergruppe jobber på en enhet i en enhetsgruppe.",
         "strategy_section_scope": "Hvem og hvor",
-        "strategy_enabled_hint": "Når den er av, beholdes regelen, men brukes ikke."
+        "strategy_enabled_hint": "Når den er av, beholdes regelen, men brukes ikke.",
+        "selected_count": "{count} valgt",
+        "move_to_folder": "Flytt til mappe",
+        "move_many_to_folder": "Flytt {count} enheter til en mappe",
+        "move": "Flytt",
+        "clear_selection": "Fjern valg",
+        "showing_count": "Viser {shown} av {total}",
+        "scopes_label": "Mapper og grupper",
+        "tag_too_long": "En tagg kan ha høyst 50 tegn.",
+        "tag_on_count": "På {count} av {total}",
+        "bulk_tags_title": "Tagger for {count} enheter",
+        "bulk_tags_hint": "Avkryssede tagger legges på hver valgte enhet, tagger uten kryss tas bort. Halvt avkryssede tagger blir som de er.",
+        "bulk_tags_saved": "Tagger endret på {count} enheter."
     },
     "keys": {
         "title": "Servernøkler",
@@ -674,7 +686,7 @@
     "settings": {
         "title": "Innstillinger",
         "subtitle": "Konsollkonfigurasjon og kontoinnstillinger",
-        "tab_general": "General",
+        "tab_general": "Generelt",
         "tab_server": "Serverinnstillinger",
         "tab_branding": "Utseende",
         "tab_backup": "Backup",
@@ -1723,7 +1735,7 @@
     "status": {
         "online": "Online",
         "offline": "Offline",
-        "banned": "Banned",
+        "banned": "Utestengt",
         "running": "Running",
         "stopped": "Stopped",
         "unknown": "Unknown",
@@ -1759,7 +1771,8 @@
         "remove": "Fjern",
         "retry": "Prøv igjen",
         "show_value": "Vis",
-        "hide_value": "Skjul"
+        "hide_value": "Skjul",
+        "run": "Kjør"
     },
     "time": {
         "just_now": "Just now",
@@ -2550,7 +2563,21 @@
         "edit_heading": "Rediger enhet",
         "discard_title": "Forkaste endringene?",
         "discard_message": "Endringene på denne enheten er ikke lagret ennå.",
-        "discard_confirm": "Forkast endringer"
+        "discard_confirm": "Forkast endringer",
+        "action_cdap_viewer_desc": "Bilder av skjermen i stedet for en direktestrøm",
+        "action_delete_target_desc": "Fjern RDP/VNC-målet fra listen",
+        "action_edit_fields_desc": "Endre navn, bruker, notat, mappe og tagger",
+        "action_edit_target_desc": "Adresse, pålogging og sikkerhetsinnstillinger",
+        "action_groups_desc": "Legg enheten i en gruppe eller ta den ut",
+        "action_guest_desc": "En lenke som virker uten konsollkonto i en begrenset tid",
+        "action_mesh_command_desc": "Kjør én kommando på enheten",
+        "action_mesh_files_desc": "Enhetens filer i fjernvisningen",
+        "action_mesh_share_desc": "En skrivebordslenke bare for visning, uten pålogging",
+        "action_mesh_terminal_desc": "Et skall på enheten via MeshAgent",
+        "action_port_desc": "Nå en port på enheten eller i nettverket",
+        "agent_cached": "Enheten er frakoblet. Dette sendte den sist:",
+        "file_downloaded": "{name} er lastet ned.",
+        "user_hint": "Vises i listen. Enheten erstatter den når den melder hvem som er pålogget."
     },
     "inventory": {
         "title": "Inventory",
@@ -4420,8 +4447,8 @@
         "file_too_large": "Filen er for stor (maks 50 MB)",
         "file_encrypted": "Kryptert filoverføring",
         "presence_online": "Online",
-        "presence_away": "Away",
-        "presence_busy": "Busy",
+        "presence_away": "Borte",
+        "presence_busy": "Opptatt",
         "presence_offline": "Offline",
         "key_rotation": "Sikkerhetsnøkler rotert",
         "new_message": "New message",
@@ -4447,7 +4474,7 @@
         "today": "Today",
         "yesterday": "Yesterday",
         "react": "React",
-        "my_presence": "My status",
+        "my_presence": "Min status",
         "search_placeholder": "Søk i kontakter og meldinger",
         "select_conversation_hint": "Velg en samtale for å se meldinger",
         "info": "Info",
@@ -4500,10 +4527,10 @@
         "reconnecting": "Kobler på nytt ..."
     },
     "theme": {
-        "dark": "Dark",
-        "light": "Light",
+        "dark": "Mørk",
+        "light": "Lys",
         "auto": "System",
-        "title": "Theme",
+        "title": "Tema",
         "custom": "Tilpasset",
         "switch_to_dark": "Bytt til mørkt tema",
         "switch_to_light": "Bytt til lyst tema",
@@ -7476,5 +7503,9 @@
         "previous": "Forrige side",
         "next": "Neste side",
         "page": "Side {page}"
+    },
+    "shell": {
+        "skip_to_content": "Gå til hovedinnholdet",
+        "start_failed": "Konsollen kunne ikke starte."
     }
 }

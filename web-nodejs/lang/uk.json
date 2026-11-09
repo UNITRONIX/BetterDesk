@@ -65,7 +65,7 @@
         "dataguard": "Запобігання витоку даних",
         "reports": "Звіти",
         "tenants": "Орендарі",
-        "registrations": "Registrations",
+        "registrations": "Запити на реєстрацію",
         "activate_agent": "Активувати агента підтримки",
         "management": "управління",
         "toggle_sidebar": "Перемкнути бічну панель",
@@ -620,7 +620,19 @@
         "strategy_assign_none_selected": "Позначте принаймні один пристрій, користувача або групу пристроїв.",
         "strategy_sheet_desc": "Налаштування клієнта, що діють, коли хтось із групи користувачів працює на пристрої з групи пристроїв.",
         "strategy_section_scope": "Хто і де",
-        "strategy_enabled_hint": "Якщо вимкнено, правило зберігається, але не застосовується."
+        "strategy_enabled_hint": "Якщо вимкнено, правило зберігається, але не застосовується.",
+        "selected_count": "Вибрано: {count}",
+        "move_to_folder": "Перемістити до папки",
+        "move_many_to_folder": "Перемістити пристрої ({count}) до папки",
+        "move": "Перемістити",
+        "clear_selection": "Зняти виділення",
+        "showing_count": "Показано {shown} з {total}",
+        "scopes_label": "Папки та групи",
+        "tag_too_long": "Тег може мати щонайбільше 50 символів.",
+        "tag_on_count": "На {count} з {total}",
+        "bulk_tags_title": "Теги пристроїв ({count})",
+        "bulk_tags_hint": "Позначені теги додаються до кожного вибраного пристрою, зняті прибираються. Частково позначені залишаються без змін.",
+        "bulk_tags_saved": "Теги змінено на пристроях: {count}."
     },
     "keys": {
         "title": "Ключі сервера",
@@ -674,7 +686,7 @@
     "settings": {
         "title": "Налаштування",
         "subtitle": "Конфігурація консолі та налаштування облікового запису",
-        "tab_general": "General",
+        "tab_general": "Загальні",
         "tab_server": "Сервер",
         "tab_branding": "Вигляд",
         "tab_backup": "Backup",
@@ -1723,7 +1735,7 @@
     "status": {
         "online": "Online",
         "offline": "Offline",
-        "banned": "Banned",
+        "banned": "Заблоковано",
         "running": "Running",
         "stopped": "Stopped",
         "unknown": "Unknown",
@@ -1759,7 +1771,8 @@
         "remove": "Видалити",
         "retry": "Повторити",
         "show_value": "Показати",
-        "hide_value": "Сховати"
+        "hide_value": "Сховати",
+        "run": "Виконати"
     },
     "time": {
         "just_now": "Just now",
@@ -2550,7 +2563,21 @@
         "edit_heading": "Редагувати пристрій",
         "discard_title": "Скасувати зміни?",
         "discard_message": "Зміни цього пристрою ще не збережено.",
-        "discard_confirm": "Скасувати зміни"
+        "discard_confirm": "Скасувати зміни",
+        "action_cdap_viewer_desc": "Знімки екрана замість трансляції наживо",
+        "action_delete_target_desc": "Прибрати ціль RDP/VNC зі списку",
+        "action_edit_fields_desc": "Змінити назву, користувача, нотатку, теку й теги",
+        "action_edit_target_desc": "Адреса, вхід і параметри безпеки",
+        "action_groups_desc": "Додати пристрій до групи або вилучити з неї",
+        "action_guest_desc": "Посилання, що працює без облікового запису консолі обмежений час",
+        "action_mesh_command_desc": "Виконати одну команду на пристрої",
+        "action_mesh_files_desc": "Файли пристрою у віддаленому переглядачі",
+        "action_mesh_share_desc": "Посилання на робочий стіл лише для перегляду, без входу",
+        "action_mesh_terminal_desc": "Командна оболонка на пристрої через його MeshAgent",
+        "action_port_desc": "Під'єднатися до порту на пристрої або в його мережі",
+        "agent_cached": "Пристрій не в мережі. Ось що він надіслав востаннє:",
+        "file_downloaded": "{name} завантажено.",
+        "user_hint": "Показується у списку. Пристрій замінює це значення, коли повідомляє, хто ввійшов."
     },
     "inventory": {
         "title": "Inventory",
@@ -4419,9 +4446,9 @@
         "file_share": "Файл",
         "file_too_large": "Файл завеликий (макс. 50 МБ)",
         "file_encrypted": "Зашифрована передача файлів",
-        "presence_online": "Online",
-        "presence_away": "Away",
-        "presence_busy": "Busy",
+        "presence_online": "У мережі",
+        "presence_away": "Немає на місці",
+        "presence_busy": "Зайнято",
         "presence_offline": "Offline",
         "key_rotation": "Ключі безпеки повернуто",
         "new_message": "New message",
@@ -4447,7 +4474,7 @@
         "today": "Today",
         "yesterday": "Yesterday",
         "react": "React",
-        "my_presence": "My status",
+        "my_presence": "Мій статус",
         "search_placeholder": "Пошук контактів і повідомлень",
         "select_conversation_hint": "Виберіть розмову, щоб переглянути повідомлення",
         "info": "Info",
@@ -4500,10 +4527,10 @@
         "reconnecting": "Повторне підключення..."
     },
     "theme": {
-        "dark": "Dark",
-        "light": "Light",
+        "dark": "Темна",
+        "light": "Світла",
         "auto": "System",
-        "title": "Theme",
+        "title": "Тема",
         "custom": "Власний",
         "switch_to_dark": "Перемкнути на темну тему",
         "switch_to_light": "Перемкнути на світлу тему",
@@ -6285,7 +6312,7 @@
         "dyslexia_spacing_hint": "Збільшує відстань між літерами та словами.",
         "visual": "Візуальне",
         "contrast": "Контраст",
-        "contrast_normal": "Normal",
+        "contrast_normal": "Звичайний",
         "contrast_high_dark": "Темний високий контраст",
         "contrast_high_light": "Висококонтрастне світло",
         "contrast_yellow_black": "Жовте на чорному",
@@ -7476,5 +7503,9 @@
         "previous": "Попередня сторінка",
         "next": "Наступна сторінка",
         "page": "Сторінка {page}"
+    },
+    "shell": {
+        "skip_to_content": "Перейти до основного вмісту",
+        "start_failed": "Не вдалося запустити консоль."
     }
 }

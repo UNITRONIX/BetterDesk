@@ -46,7 +46,7 @@
         "copy_failed": "Tidak dapat menyalin. Pilih teksnya dan salin sendiri."
     },
     "nav": {
-        "main": "Main",
+        "main": "Utama",
         "tools": "Tools",
         "system": "System",
         "dashboard": "Dasbor",
@@ -54,18 +54,18 @@
         "keys": "Pengaturan klien",
         "generator": "Agen BetterDesk",
         "settings": "Pengaturan",
-        "users": "Users",
+        "users": "Pengguna",
         "inventory": "Inventaris",
         "tickets": "Tickets",
         "help_requests": "Permintaan Bantuan",
-        "activity": "Activity",
+        "activity": "Aktivitas",
         "automation": "Peringatan dan otomatisasi",
         "file_transfer": "Pemindahan Berkas",
         "network": "Pemantauan jaringan",
         "dataguard": "Pencegahan kebocoran data",
         "reports": "Laporan",
         "tenants": "Tenants",
-        "registrations": "Registrations",
+        "registrations": "Permintaan pendaftaran",
         "activate_agent": "Aktifkan agen dukungan",
         "management": "Manajemen",
         "toggle_sidebar": "Alihkan bilah sisi",
@@ -83,7 +83,7 @@
         "languages": "Terjemahan",
         "resource_control": "Akses USB dan drive",
         "chat": "Chat",
-        "help": "Help",
+        "help": "Bantuan",
         "expand_sidebar": "Luaskan bilah sisi",
         "toggle_theme": "Beralih tema",
         "sdk_studio": "Pembuat alur (SDK)",
@@ -620,7 +620,19 @@
         "strategy_assign_none_selected": "Centang setidaknya satu perangkat, pengguna, atau grup perangkat.",
         "strategy_sheet_desc": "Pengaturan klien yang berlaku saat seseorang dari grup pengguna bekerja di perangkat dalam grup perangkat.",
         "strategy_section_scope": "Siapa dan di mana",
-        "strategy_enabled_hint": "Jika mati, aturan tetap disimpan tetapi tidak diterapkan."
+        "strategy_enabled_hint": "Jika mati, aturan tetap disimpan tetapi tidak diterapkan.",
+        "selected_count": "{count} dipilih",
+        "move_to_folder": "Pindahkan ke folder",
+        "move_many_to_folder": "Pindahkan {count} perangkat ke folder",
+        "move": "Pindahkan",
+        "clear_selection": "Hapus pilihan",
+        "showing_count": "Menampilkan {shown} dari {total}",
+        "scopes_label": "Folder dan grup",
+        "tag_too_long": "Tag maksimal 50 karakter.",
+        "tag_on_count": "Pada {count} dari {total}",
+        "bulk_tags_title": "Tag untuk {count} perangkat",
+        "bulk_tags_hint": "Tag yang dicentang dipasang di setiap perangkat yang dipilih, yang dikosongkan dilepas. Tag yang dicentang sebagian tetap seperti semula.",
+        "bulk_tags_saved": "Tag diubah pada {count} perangkat."
     },
     "keys": {
         "title": "Kunci Server",
@@ -674,7 +686,7 @@
     "settings": {
         "title": "Pengaturan",
         "subtitle": "Konfigurasi konsol dan pengaturan akun",
-        "tab_general": "General",
+        "tab_general": "Umum",
         "tab_server": "pelayan",
         "tab_branding": "Tampilan",
         "tab_backup": "Backup",
@@ -1723,7 +1735,7 @@
     "status": {
         "online": "Online",
         "offline": "Offline",
-        "banned": "Banned",
+        "banned": "Diblokir",
         "running": "Running",
         "stopped": "Stopped",
         "unknown": "Unknown",
@@ -1759,7 +1771,8 @@
         "remove": "Hapus",
         "retry": "Coba lagi",
         "show_value": "Tampilkan",
-        "hide_value": "Sembunyikan"
+        "hide_value": "Sembunyikan",
+        "run": "Jalankan"
     },
     "time": {
         "just_now": "Just now",
@@ -2550,7 +2563,21 @@
         "edit_heading": "Edit perangkat",
         "discard_title": "Buang perubahan?",
         "discard_message": "Perubahan pada perangkat ini belum disimpan.",
-        "discard_confirm": "Buang perubahan"
+        "discard_confirm": "Buang perubahan",
+        "action_cdap_viewer_desc": "Gambar layar, bukan siaran langsung",
+        "action_delete_target_desc": "Hapus target RDP/VNC dari daftar",
+        "action_edit_fields_desc": "Ubah nama, pengguna, catatan, folder, dan tag",
+        "action_edit_target_desc": "Alamat, masuk, dan pengaturan keamanan",
+        "action_groups_desc": "Masukkan perangkat ke grup atau keluarkan darinya",
+        "action_guest_desc": "Tautan yang berfungsi tanpa akun konsol, untuk waktu terbatas",
+        "action_mesh_command_desc": "Jalankan satu perintah di perangkat",
+        "action_mesh_files_desc": "File perangkat di penampil jarak jauh",
+        "action_mesh_share_desc": "Tautan desktop khusus lihat yang tidak perlu masuk",
+        "action_mesh_terminal_desc": "Shell di perangkat melalui MeshAgent-nya",
+        "action_port_desc": "Jangkau port di perangkat atau di jaringannya",
+        "agent_cached": "Perangkat sedang offline. Ini yang terakhir dikirimnya:",
+        "file_downloaded": "{name} telah diunduh.",
+        "user_hint": "Ditampilkan di daftar. Perangkat menggantinya saat melaporkan siapa yang masuk."
     },
     "inventory": {
         "title": "Inventory",
@@ -4420,8 +4447,8 @@
         "file_too_large": "File terlalu besar (maks 50 MB)",
         "file_encrypted": "Transfer file terenkripsi",
         "presence_online": "Online",
-        "presence_away": "Away",
-        "presence_busy": "Busy",
+        "presence_away": "Tidak di tempat",
+        "presence_busy": "Sibuk",
         "presence_offline": "Offline",
         "key_rotation": "Kunci keamanan diputar",
         "new_message": "New message",
@@ -4447,7 +4474,7 @@
         "today": "Today",
         "yesterday": "Yesterday",
         "react": "React",
-        "my_presence": "My status",
+        "my_presence": "Status saya",
         "search_placeholder": "Cari kontak & pesan",
         "select_conversation_hint": "Pilih percakapan untuk melihat pesan",
         "info": "Info",
@@ -4500,10 +4527,10 @@
         "reconnecting": "Menyambungkan kembali..."
     },
     "theme": {
-        "dark": "Dark",
-        "light": "Light",
+        "dark": "Gelap",
+        "light": "Terang",
         "auto": "System",
-        "title": "Theme",
+        "title": "Tema",
         "custom": "Kustom",
         "switch_to_dark": "Beralih ke tema gelap",
         "switch_to_light": "Beralih ke tema terang",
@@ -7476,5 +7503,9 @@
         "previous": "Halaman sebelumnya",
         "next": "Halaman berikutnya",
         "page": "Halaman {page}"
+    },
+    "shell": {
+        "skip_to_content": "Langsung ke konten utama",
+        "start_failed": "Konsol tidak dapat dimulai."
     }
 }

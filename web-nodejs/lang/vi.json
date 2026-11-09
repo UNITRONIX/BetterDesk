@@ -46,7 +46,7 @@
         "copy_failed": "Không sao chép được. Hãy chọn văn bản và tự sao chép."
     },
     "nav": {
-        "main": "Main",
+        "main": "Chính",
         "tools": "Tools",
         "system": "System",
         "dashboard": "Trang tổng quan",
@@ -54,18 +54,18 @@
         "keys": "Thiết lập ứng dụng khách",
         "generator": "Tác nhân BetterDesk",
         "settings": "Cài đặt",
-        "users": "Users",
+        "users": "Người dùng",
         "inventory": "Kiểm kê",
         "tickets": "Tickets",
         "help_requests": "Yêu cầu trợ giúp",
-        "activity": "Activity",
+        "activity": "Hoạt động",
         "automation": "Cảnh báo và tự động hóa",
         "file_transfer": "Truyền tệp",
         "network": "Giám sát mạng",
         "dataguard": "Chống thất thoát dữ liệu",
         "reports": "Báo cáo",
         "tenants": "Tenants",
-        "registrations": "Registrations",
+        "registrations": "Yêu cầu đăng ký",
         "activate_agent": "Kích hoạt tác tử hỗ trợ",
         "management": "Quản lý",
         "toggle_sidebar": "Chuyển đổi thanh bên",
@@ -83,7 +83,7 @@
         "languages": "Bản dịch",
         "resource_control": "Truy cập USB và ổ đĩa",
         "chat": "Chat",
-        "help": "Help",
+        "help": "Trợ giúp",
         "expand_sidebar": "Mở rộng thanh bên",
         "toggle_theme": "Chuyển đổi chủ đề",
         "sdk_studio": "Trình tạo luồng (SDK)",
@@ -620,7 +620,19 @@
         "strategy_assign_none_selected": "Chọn ít nhất một thiết bị, người dùng hoặc nhóm thiết bị.",
         "strategy_sheet_desc": "Cài đặt máy khách áp dụng khi một người trong nhóm người dùng làm việc trên thiết bị thuộc nhóm thiết bị.",
         "strategy_section_scope": "Ai và ở đâu",
-        "strategy_enabled_hint": "Khi tắt, quy tắc vẫn được giữ nhưng không áp dụng."
+        "strategy_enabled_hint": "Khi tắt, quy tắc vẫn được giữ nhưng không áp dụng.",
+        "selected_count": "Đã chọn {count}",
+        "move_to_folder": "Chuyển vào thư mục",
+        "move_many_to_folder": "Chuyển {count} thiết bị vào thư mục",
+        "move": "Chuyển",
+        "clear_selection": "Bỏ chọn",
+        "showing_count": "Hiển thị {shown} trên {total}",
+        "scopes_label": "Thư mục và nhóm",
+        "tag_too_long": "Thẻ có tối đa 50 ký tự.",
+        "tag_on_count": "Trên {count}/{total}",
+        "bulk_tags_title": "Thẻ của {count} thiết bị",
+        "bulk_tags_hint": "Thẻ được đánh dấu sẽ gắn vào mọi thiết bị đã chọn, thẻ bị bỏ đánh dấu sẽ bị gỡ. Thẻ đánh dấu một phần giữ nguyên.",
+        "bulk_tags_saved": "Đã đổi thẻ trên {count} thiết bị."
     },
     "keys": {
         "title": "Khóa máy chủ",
@@ -674,7 +686,7 @@
     "settings": {
         "title": "Cài đặt",
         "subtitle": "Cấu hình bảng điều khiển và cài đặt tài khoản",
-        "tab_general": "General",
+        "tab_general": "Chung",
         "tab_server": "Máy chủ",
         "tab_branding": "Giao diện",
         "tab_backup": "Backup",
@@ -1723,7 +1735,7 @@
     "status": {
         "online": "Online",
         "offline": "Offline",
-        "banned": "Banned",
+        "banned": "Bị cấm",
         "running": "Running",
         "stopped": "Stopped",
         "unknown": "Unknown",
@@ -1759,7 +1771,8 @@
         "remove": "Gỡ",
         "retry": "Thử lại",
         "show_value": "Hiện",
-        "hide_value": "Ẩn"
+        "hide_value": "Ẩn",
+        "run": "Chạy"
     },
     "time": {
         "just_now": "Just now",
@@ -2550,7 +2563,21 @@
         "edit_heading": "Sửa thiết bị",
         "discard_title": "Bỏ các thay đổi?",
         "discard_message": "Các thay đổi của thiết bị này chưa được lưu.",
-        "discard_confirm": "Bỏ thay đổi"
+        "discard_confirm": "Bỏ thay đổi",
+        "action_cdap_viewer_desc": "Ảnh chụp màn hình thay vì luồng trực tiếp",
+        "action_delete_target_desc": "Xóa đích RDP/VNC khỏi danh sách",
+        "action_edit_fields_desc": "Đổi tên, người dùng, ghi chú, thư mục và thẻ",
+        "action_edit_target_desc": "Địa chỉ, đăng nhập và cài đặt bảo mật",
+        "action_groups_desc": "Thêm thiết bị vào nhóm hoặc đưa ra khỏi nhóm",
+        "action_guest_desc": "Liên kết dùng được mà không cần tài khoản bảng điều khiển, trong thời gian giới hạn",
+        "action_mesh_command_desc": "Chạy một lệnh trên thiết bị",
+        "action_mesh_files_desc": "Tệp của thiết bị trong trình xem từ xa",
+        "action_mesh_share_desc": "Liên kết màn hình chỉ xem, không cần đăng nhập",
+        "action_mesh_terminal_desc": "Shell trên thiết bị qua MeshAgent của thiết bị",
+        "action_port_desc": "Kết nối tới một cổng trên thiết bị hoặc trong mạng của thiết bị",
+        "agent_cached": "Thiết bị đang ngoại tuyến. Đây là dữ liệu gửi gần nhất:",
+        "file_downloaded": "Đã tải xuống {name}.",
+        "user_hint": "Hiển thị trong danh sách. Thiết bị sẽ thay thế khi báo cáo ai đang đăng nhập."
     },
     "inventory": {
         "title": "Inventory",
@@ -4419,9 +4446,9 @@
         "file_share": "tập tin",
         "file_too_large": "Tệp quá lớn (tối đa 50MB)",
         "file_encrypted": "Truyền tập tin được mã hóa",
-        "presence_online": "Online",
-        "presence_away": "Away",
-        "presence_busy": "Busy",
+        "presence_online": "Trực tuyến",
+        "presence_away": "Vắng mặt",
+        "presence_busy": "Bận",
         "presence_offline": "Offline",
         "key_rotation": "Đã xoay khóa bảo mật",
         "new_message": "New message",
@@ -4447,7 +4474,7 @@
         "today": "Today",
         "yesterday": "Yesterday",
         "react": "React",
-        "my_presence": "My status",
+        "my_presence": "Trạng thái của tôi",
         "search_placeholder": "Tìm kiếm danh bạ và tin nhắn",
         "select_conversation_hint": "Chọn cuộc trò chuyện để xem tin nhắn",
         "info": "Info",
@@ -4500,10 +4527,10 @@
         "reconnecting": "Đang kết nối lại..."
     },
     "theme": {
-        "dark": "Dark",
-        "light": "Light",
+        "dark": "Tối",
+        "light": "Sáng",
         "auto": "System",
-        "title": "Theme",
+        "title": "Giao diện",
         "custom": "Tùy chỉnh",
         "switch_to_dark": "Chuyển sang giao diện tối",
         "switch_to_light": "Chuyển sang giao diện sáng",
@@ -6285,7 +6312,7 @@
         "dyslexia_spacing_hint": "Tăng khoảng cách giữa các chữ cái và các từ.",
         "visual": "Hiển thị",
         "contrast": "Độ tương phản",
-        "contrast_normal": "Normal",
+        "contrast_normal": "Bình thường",
         "contrast_high_dark": "Độ tương phản cao tối",
         "contrast_high_light": "Ánh sáng có độ tương phản cao",
         "contrast_yellow_black": "Màu vàng trên nền đen",
@@ -7476,5 +7503,9 @@
         "previous": "Trang trước",
         "next": "Trang sau",
         "page": "Trang {page}"
+    },
+    "shell": {
+        "skip_to_content": "Chuyển đến nội dung chính",
+        "start_failed": "Không thể khởi động bảng điều khiển."
     }
 }

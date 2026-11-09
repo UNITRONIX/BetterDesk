@@ -65,7 +65,7 @@
         "dataguard": "Skydd mot dataläckor",
         "reports": "Rapporter",
         "tenants": "Hyresgäster",
-        "registrations": "Registrations",
+        "registrations": "Registreringsförfrågningar",
         "activate_agent": "Aktivera supportagent",
         "management": "Ledning",
         "toggle_sidebar": "Växla sidofältet",
@@ -620,7 +620,19 @@
         "strategy_assign_none_selected": "Markera minst en enhet, användare eller enhetsgrupp.",
         "strategy_sheet_desc": "Klientinställningar som gäller när någon från en användargrupp arbetar på en enhet i en enhetsgrupp.",
         "strategy_section_scope": "Vem och var",
-        "strategy_enabled_hint": "När den är av sparas regeln men tillämpas inte."
+        "strategy_enabled_hint": "När den är av sparas regeln men tillämpas inte.",
+        "selected_count": "{count} markerade",
+        "move_to_folder": "Flytta till mapp",
+        "move_many_to_folder": "Flytta {count} enheter till en mapp",
+        "move": "Flytta",
+        "clear_selection": "Avmarkera",
+        "showing_count": "Visar {shown} av {total}",
+        "scopes_label": "Mappar och grupper",
+        "tag_too_long": "En tagg kan ha högst 50 tecken.",
+        "tag_on_count": "På {count} av {total}",
+        "bulk_tags_title": "Taggar för {count} enheter",
+        "bulk_tags_hint": "Markerade taggar läggs på varje vald enhet, avmarkerade tas bort. Halvmarkerade taggar lämnas som de är.",
+        "bulk_tags_saved": "Taggar ändrade på {count} enheter."
     },
     "keys": {
         "title": "Servernycklar",
@@ -674,7 +686,7 @@
     "settings": {
         "title": "Inställningar",
         "subtitle": "Konsolkonfiguration och kontoinställningar",
-        "tab_general": "General",
+        "tab_general": "Allmänt",
         "tab_server": "Serverinställningar",
         "tab_branding": "Utseende",
         "tab_backup": "Backup",
@@ -1723,7 +1735,7 @@
     "status": {
         "online": "Online",
         "offline": "Offline",
-        "banned": "Banned",
+        "banned": "Spärrad",
         "running": "Running",
         "stopped": "Stopped",
         "unknown": "Unknown",
@@ -1759,7 +1771,8 @@
         "remove": "Ta bort",
         "retry": "Försök igen",
         "show_value": "Visa",
-        "hide_value": "Dölj"
+        "hide_value": "Dölj",
+        "run": "Kör"
     },
     "time": {
         "just_now": "Just now",
@@ -2550,7 +2563,21 @@
         "edit_heading": "Redigera enhet",
         "discard_title": "Kasta ändringarna?",
         "discard_message": "Ändringarna av den här enheten är inte sparade än.",
-        "discard_confirm": "Kasta ändringar"
+        "discard_confirm": "Kasta ändringar",
+        "action_cdap_viewer_desc": "Bilder av skärmen i stället för en direktström",
+        "action_delete_target_desc": "Ta bort RDP/VNC-målet från listan",
+        "action_edit_fields_desc": "Ändra namn, användare, anteckning, mapp och taggar",
+        "action_edit_target_desc": "Adress, inloggning och säkerhetsinställningar",
+        "action_groups_desc": "Lägg enheten i en grupp eller ta bort den",
+        "action_guest_desc": "En länk som fungerar utan konsolkonto under en begränsad tid",
+        "action_mesh_command_desc": "Kör ett kommando på enheten",
+        "action_mesh_files_desc": "Enhetens filer i fjärrvisaren",
+        "action_mesh_share_desc": "En skrivbordslänk endast för visning, utan inloggning",
+        "action_mesh_terminal_desc": "Ett skal på enheten via dess MeshAgent",
+        "action_port_desc": "Nå en port på enheten eller i dess nätverk",
+        "agent_cached": "Enheten är offline. Det här skickade den senast:",
+        "file_downloaded": "{name} har laddats ned.",
+        "user_hint": "Visas i listan. Enheten ersätter den när den rapporterar vem som är inloggad."
     },
     "inventory": {
         "title": "Inventory",
@@ -4420,8 +4447,8 @@
         "file_too_large": "Filen är för stor (max 50 MB)",
         "file_encrypted": "Krypterad filöverföring",
         "presence_online": "Online",
-        "presence_away": "Away",
-        "presence_busy": "Busy",
+        "presence_away": "Borta",
+        "presence_busy": "Upptagen",
         "presence_offline": "Offline",
         "key_rotation": "Säkerhetsnycklar roterade",
         "new_message": "New message",
@@ -4447,7 +4474,7 @@
         "today": "Today",
         "yesterday": "Yesterday",
         "react": "React",
-        "my_presence": "My status",
+        "my_presence": "Min status",
         "search_placeholder": "Sök kontakter och meddelanden",
         "select_conversation_hint": "Välj en konversation för att visa meddelanden",
         "info": "Info",
@@ -4500,10 +4527,10 @@
         "reconnecting": "Återansluter..."
     },
     "theme": {
-        "dark": "Dark",
-        "light": "Light",
+        "dark": "Mörkt",
+        "light": "Ljust",
         "auto": "System",
-        "title": "Theme",
+        "title": "Tema",
         "custom": "Anpassad",
         "switch_to_dark": "Byt till mörkt tema",
         "switch_to_light": "Byt till ljust tema",
@@ -7476,5 +7503,9 @@
         "previous": "Föregående sida",
         "next": "Nästa sida",
         "page": "Sida {page}"
+    },
+    "shell": {
+        "skip_to_content": "Hoppa till huvudinnehållet",
+        "start_failed": "Konsolen kunde inte starta."
     }
 }

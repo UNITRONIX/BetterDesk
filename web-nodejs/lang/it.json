@@ -59,7 +59,7 @@
         "dataguard": "Prevenzione della perdita di dati",
         "reports": "Report",
         "tenants": "Tenant",
-        "registrations": "Registrazioni",
+        "registrations": "Richieste di registrazione",
         "activate_agent": "Attiva agente di assistenza",
         "management": "Gestione",
         "toggle_sidebar": "Attiva/disattiva barra laterale",
@@ -614,7 +614,19 @@
         "strategy_assign_none_selected": "Spunta almeno un dispositivo, un utente o un gruppo di dispositivi.",
         "strategy_sheet_desc": "Impostazioni del client valide quando qualcuno di un gruppo di utenti lavora su un dispositivo di un gruppo di dispositivi.",
         "strategy_section_scope": "Chi e dove",
-        "strategy_enabled_hint": "Se disattivata, la regola resta salvata ma non viene applicata."
+        "strategy_enabled_hint": "Se disattivata, la regola resta salvata ma non viene applicata.",
+        "selected_count": "{count} selezionati",
+        "move_to_folder": "Sposta nella cartella",
+        "move_many_to_folder": "Sposta {count} dispositivi in una cartella",
+        "move": "Sposta",
+        "clear_selection": "Annulla selezione",
+        "showing_count": "{shown} di {total} mostrati",
+        "scopes_label": "Cartelle e gruppi",
+        "tag_too_long": "Un tag può avere al massimo 50 caratteri.",
+        "tag_on_count": "Su {count} di {total}",
+        "bulk_tags_title": "Tag di {count} dispositivi",
+        "bulk_tags_hint": "I tag spuntati vanno su ogni dispositivo scelto, quelli senza spunta vengono rimossi. I tag spuntati a metà restano come sono.",
+        "bulk_tags_saved": "Tag modificati su {count} dispositivi."
     },
     "keys": {
         "title": "Chiavi del server",
@@ -1753,7 +1765,8 @@
         "remove": "Rimuovi",
         "retry": "Riprova",
         "show_value": "Mostra",
-        "hide_value": "Nascondi"
+        "hide_value": "Nascondi",
+        "run": "Esegui"
     },
     "time": {
         "just_now": "Proprio ora",
@@ -2544,7 +2557,21 @@
         "edit_heading": "Modifica dispositivo",
         "discard_title": "Annullare le modifiche?",
         "discard_message": "Le modifiche a questo dispositivo non sono ancora salvate.",
-        "discard_confirm": "Annulla modifiche"
+        "discard_confirm": "Annulla modifiche",
+        "action_cdap_viewer_desc": "Immagini dello schermo invece di un flusso in diretta",
+        "action_delete_target_desc": "Rimuovi la destinazione RDP/VNC dall'elenco",
+        "action_edit_fields_desc": "Modifica nome, utente, nota, cartella e tag",
+        "action_edit_target_desc": "Indirizzo, accesso e impostazioni di sicurezza",
+        "action_groups_desc": "Aggiungi il dispositivo a un gruppo o toglilo",
+        "action_guest_desc": "Un link che funziona senza un account della console, per un tempo limitato",
+        "action_mesh_command_desc": "Esegui un comando sul dispositivo",
+        "action_mesh_files_desc": "I file del dispositivo nel visualizzatore remoto",
+        "action_mesh_share_desc": "Un link al desktop di sola visualizzazione che non richiede l'accesso",
+        "action_mesh_terminal_desc": "Una shell sul dispositivo tramite il suo MeshAgent",
+        "action_port_desc": "Raggiungi una porta sul dispositivo o nella sua rete",
+        "agent_cached": "Il dispositivo è offline. Questo è l'ultimo invio:",
+        "file_downloaded": "{name} scaricato.",
+        "user_hint": "Mostrato nell'elenco. Il dispositivo lo sostituisce quando segnala chi ha effettuato l'accesso."
     },
     "inventory": {
         "title": "Inventario",
@@ -4494,10 +4521,10 @@
         "reconnecting": "Riconnessione in corso"
     },
     "theme": {
-        "dark": "Dark",
-        "light": "Light",
+        "dark": "Scuro",
+        "light": "Chiaro",
         "auto": "System",
-        "title": "Theme",
+        "title": "Tema",
         "custom": "Personalizzato",
         "switch_to_dark": "Passa al tema scuro",
         "switch_to_light": "Passa al tema chiaro",
@@ -6279,7 +6306,7 @@
         "dyslexia_spacing_hint": "Aggiunge spazio tra lettere e parole.",
         "visual": "Visivo",
         "contrast": "Contrasto",
-        "contrast_normal": "Normal",
+        "contrast_normal": "Normale",
         "contrast_high_dark": "Alto contrasto scuro",
         "contrast_high_light": "Alto contrasto chiaro",
         "contrast_yellow_black": "Giallo su nero",
@@ -7470,5 +7497,9 @@
         "previous": "Pagina precedente",
         "next": "Pagina successiva",
         "page": "Pagina {page}"
+    },
+    "shell": {
+        "skip_to_content": "Vai al contenuto principale",
+        "start_failed": "Impossibile avviare la console."
     }
 }

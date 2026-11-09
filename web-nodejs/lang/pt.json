@@ -59,7 +59,7 @@
         "dataguard": "Prevenção de perda de dados",
         "reports": "Relatórios",
         "tenants": "Inquilinos",
-        "registrations": "Registos",
+        "registrations": "Pedidos de registo",
         "activate_agent": "Ativar agente de suporte",
         "management": "Gerenciamento",
         "toggle_sidebar": "Alternar barra lateral",
@@ -614,7 +614,19 @@
         "strategy_assign_none_selected": "Marque pelo menos um dispositivo, usuário ou grupo de dispositivos.",
         "strategy_sheet_desc": "Configurações do cliente que valem quando alguém de um grupo de usuários trabalha em um dispositivo de um grupo de dispositivos.",
         "strategy_section_scope": "Quem e onde",
-        "strategy_enabled_hint": "Desligada, a regra é mantida, mas não é aplicada."
+        "strategy_enabled_hint": "Desligada, a regra é mantida, mas não é aplicada.",
+        "selected_count": "{count} selecionados",
+        "move_to_folder": "Mover para pasta",
+        "move_many_to_folder": "Mover {count} dispositivos para uma pasta",
+        "move": "Mover",
+        "clear_selection": "Limpar seleção",
+        "showing_count": "A mostrar {shown} de {total}",
+        "scopes_label": "Pastas e grupos",
+        "tag_too_long": "Uma etiqueta pode ter no máximo 50 caracteres.",
+        "tag_on_count": "Em {count} de {total}",
+        "bulk_tags_title": "Etiquetas de {count} dispositivos",
+        "bulk_tags_hint": "As etiquetas marcadas vão para cada dispositivo escolhido, as desmarcadas são removidas. As marcadas em parte ficam como estão.",
+        "bulk_tags_saved": "Etiquetas alteradas em {count} dispositivos."
     },
     "keys": {
         "title": "Chaves do servidor",
@@ -1753,7 +1765,8 @@
         "remove": "Remover",
         "retry": "Tentar novamente",
         "show_value": "Mostrar",
-        "hide_value": "Ocultar"
+        "hide_value": "Ocultar",
+        "run": "Executar"
     },
     "time": {
         "just_now": "Agora mesmo",
@@ -2544,7 +2557,21 @@
         "edit_heading": "Editar dispositivo",
         "discard_title": "Descartar as alterações?",
         "discard_message": "As alterações deste dispositivo ainda não foram salvas.",
-        "discard_confirm": "Descartar alterações"
+        "discard_confirm": "Descartar alterações",
+        "action_cdap_viewer_desc": "Imagens do ecrã em vez de uma transmissão ao vivo",
+        "action_delete_target_desc": "Remover o destino RDP/VNC da lista",
+        "action_edit_fields_desc": "Alterar o nome, o utilizador, a nota, a pasta e as etiquetas",
+        "action_edit_target_desc": "Endereço, início de sessão e definições de segurança",
+        "action_groups_desc": "Colocar o dispositivo num grupo ou retirá-lo",
+        "action_guest_desc": "Uma ligação que funciona sem conta na consola, por tempo limitado",
+        "action_mesh_command_desc": "Executar um comando no dispositivo",
+        "action_mesh_files_desc": "Os ficheiros do dispositivo no visualizador remoto",
+        "action_mesh_share_desc": "Uma ligação ao ambiente de trabalho só de visualização, sem início de sessão",
+        "action_mesh_terminal_desc": "Uma shell no dispositivo através do seu MeshAgent",
+        "action_port_desc": "Aceder a uma porta no dispositivo ou na sua rede",
+        "agent_cached": "O dispositivo está offline. Isto foi o último que enviou:",
+        "file_downloaded": "{name} transferido.",
+        "user_hint": "Aparece na lista. O dispositivo substitui-o quando indica quem tem sessão iniciada."
     },
     "inventory": {
         "title": "Inventário",
@@ -4494,10 +4521,10 @@
         "reconnecting": "Reconectando"
     },
     "theme": {
-        "dark": "Dark",
-        "light": "Light",
+        "dark": "Escuro",
+        "light": "Claro",
         "auto": "System",
-        "title": "Theme",
+        "title": "Tema",
         "custom": "Personalizado",
         "switch_to_dark": "Mudar para tema escuro",
         "switch_to_light": "Mudar para tema claro",
@@ -7470,5 +7497,9 @@
         "previous": "Página anterior",
         "next": "Página seguinte",
         "page": "Página {page}"
+    },
+    "shell": {
+        "skip_to_content": "Ir para o conteúdo principal",
+        "start_failed": "Não foi possível iniciar a consola."
     }
 }

@@ -59,7 +59,7 @@
         "dataguard": "情報漏えい対策",
         "reports": "レポート",
         "tenants": "Tenants",
-        "registrations": "Registrations",
+        "registrations": "登録リクエスト",
         "activate_agent": "サポートエージェントを有効化",
         "management": "管理",
         "toggle_sidebar": "サイドバーの切り替え",
@@ -77,7 +77,7 @@
         "languages": "翻訳",
         "resource_control": "USB とドライブへのアクセス",
         "chat": "チャット",
-        "help": "Help",
+        "help": "ヘルプ",
         "expand_sidebar": "サイドバーを展開する",
         "toggle_theme": "テーマの切り替え",
         "sdk_studio": "フロー作成 (SDK)",
@@ -614,7 +614,19 @@
         "strategy_assign_none_selected": "デバイス、ユーザー、デバイスグループのいずれかを 1 つ以上チェックしてください。",
         "strategy_sheet_desc": "ユーザーグループのメンバーがデバイスグループのデバイスで作業するときに適用されるクライアント設定です。",
         "strategy_section_scope": "対象",
-        "strategy_enabled_hint": "オフの場合、ルールは残りますが適用されません。"
+        "strategy_enabled_hint": "オフの場合、ルールは残りますが適用されません。",
+        "selected_count": "{count} 件を選択",
+        "move_to_folder": "フォルダーに移動",
+        "move_many_to_folder": "{count} 台のデバイスをフォルダーに移動",
+        "move": "移動",
+        "clear_selection": "選択を解除",
+        "showing_count": "{total} 件中 {shown} 件を表示",
+        "scopes_label": "フォルダーとグループ",
+        "tag_too_long": "タグは 50 文字までです。",
+        "tag_on_count": "{total} 台中 {count} 台",
+        "bulk_tags_title": "{count} 台のデバイスのタグ",
+        "bulk_tags_hint": "チェックしたタグは選択したすべてのデバイスに付き、チェックを外したタグは外れます。一部だけのタグはそのままです。",
+        "bulk_tags_saved": "{count} 台のデバイスのタグを変更しました。"
     },
     "keys": {
         "title": "サーバーキー",
@@ -668,7 +680,7 @@
     "settings": {
         "title": "設定",
         "subtitle": "コンソールの構成とアカウント設定",
-        "tab_general": "General",
+        "tab_general": "一般",
         "tab_server": "サーバー",
         "tab_branding": "外観",
         "tab_backup": "Backup",
@@ -1717,7 +1729,7 @@
     "status": {
         "online": "Online",
         "offline": "Offline",
-        "banned": "Banned",
+        "banned": "禁止",
         "running": "Running",
         "stopped": "Stopped",
         "unknown": "Unknown",
@@ -1753,7 +1765,8 @@
         "remove": "削除",
         "retry": "再試行",
         "show_value": "表示",
-        "hide_value": "非表示"
+        "hide_value": "非表示",
+        "run": "実行"
     },
     "time": {
         "just_now": "Just now",
@@ -2544,7 +2557,21 @@
         "edit_heading": "デバイスを編集",
         "discard_title": "変更を破棄しますか？",
         "discard_message": "このデバイスの変更はまだ保存されていません。",
-        "discard_confirm": "変更を破棄"
+        "discard_confirm": "変更を破棄",
+        "action_cdap_viewer_desc": "ライブ映像ではなく画面の画像",
+        "action_delete_target_desc": "RDP/VNC ターゲットを一覧から削除します",
+        "action_edit_fields_desc": "名前、ユーザー、メモ、フォルダー、タグを変更します",
+        "action_edit_target_desc": "アドレス、サインイン、セキュリティの設定",
+        "action_groups_desc": "デバイスをグループに追加するか、グループから外します",
+        "action_guest_desc": "コンソールのアカウントなしで使える期限付きのリンク",
+        "action_mesh_command_desc": "デバイスでコマンドを 1 つ実行します",
+        "action_mesh_files_desc": "リモートビューアーでデバイスのファイルを表示します",
+        "action_mesh_share_desc": "サインイン不要の表示専用デスクトップリンク",
+        "action_mesh_terminal_desc": "MeshAgent 経由でデバイスのシェルを開きます",
+        "action_port_desc": "デバイスまたはそのネットワーク上のポートに接続します",
+        "agent_cached": "デバイスはオフラインです。最後に送信された内容:",
+        "file_downloaded": "{name} をダウンロードしました。",
+        "user_hint": "一覧に表示されます。デバイスがサインイン中のユーザーを報告すると置き換えられます。"
     },
     "inventory": {
         "title": "Inventory",
@@ -4494,10 +4521,10 @@
         "reconnecting": "再接続中..."
     },
     "theme": {
-        "dark": "Dark",
-        "light": "Light",
+        "dark": "ダーク",
+        "light": "ライト",
         "auto": "System",
-        "title": "Theme",
+        "title": "テーマ",
         "custom": "カスタム",
         "switch_to_dark": "ダークテーマに切り替え",
         "switch_to_light": "ライトテーマに切り替え",
@@ -6279,7 +6306,7 @@
         "dyslexia_spacing_hint": "文字と単語の間隔を広げます。",
         "visual": "表示",
         "contrast": "コントラスト",
-        "contrast_normal": "Normal",
+        "contrast_normal": "標準",
         "contrast_high_dark": "ハイコントラストダーク",
         "contrast_high_light": "ハイコントラストライト",
         "contrast_yellow_black": "黒地に黄色",
@@ -7470,5 +7497,9 @@
         "previous": "前のページ",
         "next": "次のページ",
         "page": "{page} ページ"
+    },
+    "shell": {
+        "skip_to_content": "メインコンテンツへ移動",
+        "start_failed": "コンソールを起動できませんでした。"
     }
 }

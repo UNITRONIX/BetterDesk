@@ -63,7 +63,7 @@
         "dataguard": "資料外洩防護",
         "reports": "報表",
         "tenants": "租戶",
-        "registrations": "註冊",
+        "registrations": "註冊請求",
         "activate_agent": "啟用支援代理程式",
         "management": "管理",
         "toggle_sidebar": "切換側邊欄",
@@ -618,7 +618,19 @@
         "strategy_assign_none_selected": "請至少勾選一個裝置、使用者或裝置群組。",
         "strategy_sheet_desc": "使用者群組中的人在裝置群組的裝置上作業時套用的用戶端設定。",
         "strategy_section_scope": "對象與範圍",
-        "strategy_enabled_hint": "關閉時規則仍會保留，但不會套用。"
+        "strategy_enabled_hint": "關閉時規則仍會保留，但不會套用。",
+        "selected_count": "已選取 {count} 個",
+        "move_to_folder": "移至資料夾",
+        "move_many_to_folder": "將 {count} 台裝置移至資料夾",
+        "move": "移動",
+        "clear_selection": "清除選取",
+        "showing_count": "顯示 {total} 個中的 {shown} 個",
+        "scopes_label": "資料夾和群組",
+        "tag_too_long": "標籤最多 50 個字元。",
+        "tag_on_count": "{total} 台中的 {count} 台",
+        "bulk_tags_title": "{count} 台裝置的標籤",
+        "bulk_tags_hint": "勾選的標籤會加到每台所選裝置，取消勾選的會移除。部分勾選的標籤維持不變。",
+        "bulk_tags_saved": "已變更 {count} 台裝置的標籤。"
     },
     "keys": {
         "title": "服務器密鑰",
@@ -1775,7 +1787,8 @@
         "remove": "移除",
         "retry": "重試",
         "show_value": "顯示",
-        "hide_value": "隱藏"
+        "hide_value": "隱藏",
+        "run": "執行"
     },
     "time": {
         "just_now": "剛剛",
@@ -2566,7 +2579,21 @@
         "edit_heading": "編輯裝置",
         "discard_title": "要捨棄變更嗎？",
         "discard_message": "此裝置的變更尚未儲存。",
-        "discard_confirm": "捨棄變更"
+        "discard_confirm": "捨棄變更",
+        "action_cdap_viewer_desc": "螢幕截圖，而非即時串流",
+        "action_delete_target_desc": "從清單中移除 RDP/VNC 目標",
+        "action_edit_fields_desc": "變更名稱、使用者、備註、資料夾和標籤",
+        "action_edit_target_desc": "位址、登入和安全性設定",
+        "action_groups_desc": "將裝置加入群組或從群組移除",
+        "action_guest_desc": "限時有效、不需主控台帳號的連結",
+        "action_mesh_command_desc": "在裝置上執行一個命令",
+        "action_mesh_files_desc": "在遠端檢視器中瀏覽裝置的檔案",
+        "action_mesh_share_desc": "僅供檢視、不需登入的桌面連結",
+        "action_mesh_terminal_desc": "透過 MeshAgent 開啟裝置上的命令列",
+        "action_port_desc": "連線到裝置或其網路中的連接埠",
+        "agent_cached": "裝置已離線。這是它最後傳送的內容：",
+        "file_downloaded": "已下載 {name}。",
+        "user_hint": "顯示在清單中。裝置回報登入的使用者時會取代此值。"
     },
     "inventory": {
         "title": "資產清單",
@@ -6301,7 +6328,7 @@
         "dyslexia_spacing_hint": "加大字母與單字之間的間距。",
         "visual": "視覺",
         "contrast": "對比度",
-        "contrast_normal": "Normal",
+        "contrast_normal": "標準",
         "contrast_high_dark": "高對比度深色",
         "contrast_high_light": "高對比度淺色",
         "contrast_yellow_black": "黑底黃字",
@@ -7474,5 +7501,9 @@
         "previous": "上一頁",
         "next": "下一頁",
         "page": "第 {page} 頁"
+    },
+    "shell": {
+        "skip_to_content": "跳至主要內容",
+        "start_failed": "主控台無法啟動。"
     }
 }

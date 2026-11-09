@@ -59,7 +59,7 @@
         "dataguard": "Ochrana před únikem dat",
         "reports": "Reporty",
         "tenants": "Tenanti",
-        "registrations": "Registrace",
+        "registrations": "Žádosti o registraci",
         "activate_agent": "Aktivovat agenta podpory",
         "management": "Správa",
         "toggle_sidebar": "Zobrazit/skrýt boční panel",
@@ -614,7 +614,19 @@
         "strategy_assign_none_selected": "Zaškrtněte aspoň jedno zařízení, uživatele nebo skupinu zařízení.",
         "strategy_sheet_desc": "Nastavení klienta, která platí, když někdo ze skupiny uživatelů pracuje na zařízení ve skupině zařízení.",
         "strategy_section_scope": "Kdo a kde",
-        "strategy_enabled_hint": "Když je vypnuto, pravidlo zůstane uložené, ale nepoužije se."
+        "strategy_enabled_hint": "Když je vypnuto, pravidlo zůstane uložené, ale nepoužije se.",
+        "selected_count": "Vybráno: {count}",
+        "move_to_folder": "Přesunout do složky",
+        "move_many_to_folder": "Přesunout zařízení ({count}) do složky",
+        "move": "Přesunout",
+        "clear_selection": "Zrušit výběr",
+        "showing_count": "Zobrazeno {shown} z {total}",
+        "scopes_label": "Složky a skupiny",
+        "tag_too_long": "Štítek může mít nejvýše 50 znaků.",
+        "tag_on_count": "Na {count} z {total}",
+        "bulk_tags_title": "Štítky zařízení ({count})",
+        "bulk_tags_hint": "Zaškrtnuté štítky se přidají ke každému vybranému zařízení, odškrtnuté se odeberou. Částečně zaškrtnuté zůstanou beze změny.",
+        "bulk_tags_saved": "Štítky změněny na zařízeních: {count}."
     },
     "keys": {
         "title": "Klíče serveru",
@@ -1753,7 +1765,8 @@
         "remove": "Odebrat",
         "retry": "Zkusit znovu",
         "show_value": "Zobrazit",
-        "hide_value": "Skrýt"
+        "hide_value": "Skrýt",
+        "run": "Spustit"
     },
     "time": {
         "just_now": "Právě teď",
@@ -2544,7 +2557,21 @@
         "edit_heading": "Upravit zařízení",
         "discard_title": "Zahodit změny?",
         "discard_message": "Změny tohoto zařízení ještě nejsou uložené.",
-        "discard_confirm": "Zahodit změny"
+        "discard_confirm": "Zahodit změny",
+        "action_cdap_viewer_desc": "Snímky obrazovky místo živého přenosu",
+        "action_delete_target_desc": "Odebrat cíl RDP/VNC ze seznamu",
+        "action_edit_fields_desc": "Změnit název, uživatele, poznámku, složku a štítky",
+        "action_edit_target_desc": "Adresa, přihlášení a nastavení zabezpečení",
+        "action_groups_desc": "Přidat zařízení do skupiny nebo ho z ní odebrat",
+        "action_guest_desc": "Odkaz, který po omezenou dobu funguje bez účtu v konzoli",
+        "action_mesh_command_desc": "Spustit na zařízení jeden příkaz",
+        "action_mesh_files_desc": "Soubory zařízení ve vzdáleném prohlížeči",
+        "action_mesh_share_desc": "Odkaz na plochu jen ke sledování, bez přihlášení",
+        "action_mesh_terminal_desc": "Příkazový řádek na zařízení přes jeho MeshAgent",
+        "action_port_desc": "Připojit se k portu na zařízení nebo v jeho síti",
+        "agent_cached": "Zařízení je offline. Toto naposledy odeslalo:",
+        "file_downloaded": "Soubor {name} byl stažen.",
+        "user_hint": "Zobrazuje se v seznamu. Zařízení hodnotu nahradí, jakmile ohlásí, kdo je přihlášen."
     },
     "inventory": {
         "title": "Inventář",
@@ -7470,5 +7497,9 @@
         "previous": "Předchozí stránka",
         "next": "Další stránka",
         "page": "Stránka {page}"
+    },
+    "shell": {
+        "skip_to_content": "Přejít na hlavní obsah",
+        "start_failed": "Konzoli se nepodařilo spustit."
     }
 }

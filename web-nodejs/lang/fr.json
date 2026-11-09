@@ -56,14 +56,14 @@
         "inventory": "Inventaire",
         "tickets": "Tickets",
         "help_requests": "Help Requests",
-        "activity": "Activity",
+        "activity": "Activité",
         "automation": "Alertes et automatisation",
         "file_transfer": "Transfert de fichiers",
         "network": "Surveillance réseau",
         "dataguard": "Prévention des fuites de données",
         "reports": "Rapports",
         "tenants": "Tenants",
-        "registrations": "Registrations",
+        "registrations": "Demandes d’inscription",
         "activate_agent": "Activer un agent d'assistance",
         "management": "Management",
         "toggle_sidebar": "Basculer la barre latérale",
@@ -84,7 +84,7 @@
         "resource_control": "Accès USB et lecteurs",
         "sdk_studio": "Éditeur de flux (SDK)",
         "chat": "Discussion",
-        "help": "Help",
+        "help": "Aide",
         "expand_sidebar": "Expand sidebar",
         "login": "Connexion",
         "server_management": "Server-Verwaltung",
@@ -618,7 +618,19 @@
         "strategy_assign_none_selected": "Cochez au moins un appareil, un utilisateur ou un groupe d'appareils.",
         "strategy_sheet_desc": "Réglages du client qui s'appliquent quand quelqu'un d'un groupe d'utilisateurs travaille sur un appareil d'un groupe d'appareils.",
         "strategy_section_scope": "Qui et où",
-        "strategy_enabled_hint": "Désactivée, la règle est conservée mais pas appliquée."
+        "strategy_enabled_hint": "Désactivée, la règle est conservée mais pas appliquée.",
+        "selected_count": "Sélection : {count}",
+        "move_to_folder": "Déplacer vers un dossier",
+        "move_many_to_folder": "Déplacer {count} appareils vers un dossier",
+        "move": "Déplacer",
+        "clear_selection": "Désélectionner",
+        "showing_count": "{shown} sur {total} affichés",
+        "scopes_label": "Dossiers et groupes",
+        "tag_too_long": "Une balise peut contenir au plus 50 caractères.",
+        "tag_on_count": "{count} sur {total}",
+        "bulk_tags_title": "Balises de {count} appareils",
+        "bulk_tags_hint": "Les balises cochées sont ajoutées à chaque appareil choisi, les décochées sont retirées. Les balises à moitié cochées restent telles quelles.",
+        "bulk_tags_saved": "Balises modifiées sur {count} appareils."
     },
     "keys": {
         "title": "Tableau de bord",
@@ -1775,7 +1787,8 @@
         "remove": "Retirer",
         "retry": "Réessayer",
         "show_value": "Afficher",
-        "hide_value": "Masquer"
+        "hide_value": "Masquer",
+        "run": "Exécuter"
     },
     "time": {
         "just_now": "à l'instant",
@@ -2566,7 +2579,21 @@
         "edit_heading": "Modifier l'appareil",
         "discard_title": "Abandonner les modifications ?",
         "discard_message": "Les modifications de cet appareil ne sont pas encore enregistrées.",
-        "discard_confirm": "Abandonner les modifications"
+        "discard_confirm": "Abandonner les modifications",
+        "action_cdap_viewer_desc": "Des images de l'écran au lieu d'un flux en direct",
+        "action_delete_target_desc": "Retirer la cible RDP/VNC de la liste",
+        "action_edit_fields_desc": "Modifier le nom, l'utilisateur, la note, le dossier et les étiquettes",
+        "action_edit_target_desc": "Adresse, connexion et paramètres de sécurité",
+        "action_groups_desc": "Ajouter l'appareil à un groupe ou l'en retirer",
+        "action_guest_desc": "Un lien qui fonctionne sans compte de console, pendant une durée limitée",
+        "action_mesh_command_desc": "Exécuter une commande sur l'appareil",
+        "action_mesh_files_desc": "Les fichiers de l'appareil dans la visionneuse à distance",
+        "action_mesh_share_desc": "Un lien vers le bureau en lecture seule, sans connexion",
+        "action_mesh_terminal_desc": "Un shell sur l'appareil via son MeshAgent",
+        "action_port_desc": "Atteindre un port de l'appareil ou de son réseau",
+        "agent_cached": "L'appareil est hors ligne. Voici ce qu'il a envoyé en dernier :",
+        "file_downloaded": "{name} téléchargé.",
+        "user_hint": "Affiché dans la liste. L'appareil le remplace lorsqu'il signale qui est connecté."
     },
     "inventory": {
         "title": "Tableau de bord",
@@ -4627,10 +4654,10 @@
         "reconnecting": "Reconnecting..."
     },
     "theme": {
-        "dark": "Dark",
-        "light": "Light",
+        "dark": "Sombre",
+        "light": "Clair",
         "auto": "System",
-        "title": "Tableau de bord",
+        "title": "Thème",
         "custom": "Personnalisé",
         "switch_to_dark": "Passer au thème sombre",
         "switch_to_light": "Passer au thème clair",
@@ -7474,5 +7501,9 @@
         "previous": "Page précédente",
         "next": "Page suivante",
         "page": "Page {page}"
+    },
+    "shell": {
+        "skip_to_content": "Aller au contenu principal",
+        "start_failed": "La console n’a pas pu démarrer."
     }
 }

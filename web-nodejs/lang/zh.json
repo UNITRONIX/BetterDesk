@@ -59,7 +59,7 @@
         "dataguard": "数据防泄漏",
         "reports": "报表",
         "tenants": "租户",
-        "registrations": "注册",
+        "registrations": "注册请求",
         "activate_agent": "激活支持代理",
         "management": "管理",
         "toggle_sidebar": "切换侧边栏",
@@ -614,7 +614,19 @@
         "strategy_assign_none_selected": "请至少勾选一个设备、用户或设备分组。",
         "strategy_sheet_desc": "用户组中的人在设备分组的设备上操作时应用的客户端设置。",
         "strategy_section_scope": "对象与范围",
-        "strategy_enabled_hint": "关闭时规则仍会保留，但不会应用。"
+        "strategy_enabled_hint": "关闭时规则仍会保留，但不会应用。",
+        "selected_count": "已选择 {count} 个",
+        "move_to_folder": "移至文件夹",
+        "move_many_to_folder": "将 {count} 台设备移至文件夹",
+        "move": "移动",
+        "clear_selection": "清除选择",
+        "showing_count": "显示 {total} 个中的 {shown} 个",
+        "scopes_label": "文件夹和组",
+        "tag_too_long": "标签最多 50 个字符。",
+        "tag_on_count": "{total} 台中的 {count} 台",
+        "bulk_tags_title": "{count} 台设备的标签",
+        "bulk_tags_hint": "勾选的标签会加到每台所选设备，取消勾选的会移除。部分勾选的标签保持不变。",
+        "bulk_tags_saved": "已更改 {count} 台设备的标签。"
     },
     "keys": {
         "title": "服务器密钥",
@@ -1753,7 +1765,8 @@
         "cdap_viewer": "CDAP Snapshot Viewer",
         "retry": "重试",
         "show_value": "显示",
-        "hide_value": "隐藏"
+        "hide_value": "隐藏",
+        "run": "运行"
     },
     "time": {
         "just_now": "刚刚",
@@ -2544,7 +2557,21 @@
         "edit_heading": "编辑设备",
         "discard_title": "要放弃更改吗？",
         "discard_message": "此设备的更改尚未保存。",
-        "discard_confirm": "放弃更改"
+        "discard_confirm": "放弃更改",
+        "action_cdap_viewer_desc": "屏幕截图，而非实时画面",
+        "action_delete_target_desc": "从列表中删除 RDP/VNC 目标",
+        "action_edit_fields_desc": "更改名称、用户、备注、文件夹和标签",
+        "action_edit_target_desc": "地址、登录和安全设置",
+        "action_groups_desc": "将设备加入组或从组中移除",
+        "action_guest_desc": "限时有效、无需控制台账号的链接",
+        "action_mesh_command_desc": "在设备上运行一条命令",
+        "action_mesh_files_desc": "在远程查看器中浏览设备的文件",
+        "action_mesh_share_desc": "仅供查看、无需登录的桌面链接",
+        "action_mesh_terminal_desc": "通过 MeshAgent 打开设备上的命令行",
+        "action_port_desc": "连接到设备或其网络中的端口",
+        "agent_cached": "设备已离线。这是它最后发送的内容：",
+        "file_downloaded": "已下载 {name}。",
+        "user_hint": "显示在列表中。设备报告已登录的用户时会替换此值。"
     },
     "inventory": {
         "title": "资产清单",
@@ -6279,7 +6306,7 @@
         "dyslexia_spacing_hint": "加大字母和单词之间的间距。",
         "visual": "视觉",
         "contrast": "对比度",
-        "contrast_normal": "Normal",
+        "contrast_normal": "标准",
         "contrast_high_dark": "高对比度深色",
         "contrast_high_light": "高对比度浅色",
         "contrast_yellow_black": "黑底黄字",
@@ -7470,5 +7497,9 @@
         "previous": "上一页",
         "next": "下一页",
         "page": "第 {page} 页"
+    },
+    "shell": {
+        "skip_to_content": "跳到主要内容",
+        "start_failed": "控制台无法启动。"
     }
 }

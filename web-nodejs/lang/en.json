@@ -622,7 +622,19 @@
         "strategy_assign_none_selected": "Tick at least one device, user or device group.",
         "strategy_sheet_desc": "Client settings that apply when someone from a user group works on a device in a device group.",
         "strategy_section_scope": "Who and where",
-        "strategy_enabled_hint": "When off, the rule is kept but not applied."
+        "strategy_enabled_hint": "When off, the rule is kept but not applied.",
+        "selected_count": "{count} selected",
+        "move_to_folder": "Move to folder",
+        "move_many_to_folder": "Move {count} devices to a folder",
+        "move": "Move",
+        "clear_selection": "Clear selection",
+        "showing_count": "Showing {shown} of {total}",
+        "scopes_label": "Folders and groups",
+        "tag_too_long": "A tag can have at most 50 characters.",
+        "tag_on_count": "On {count} of {total}",
+        "bulk_tags_title": "Tags of {count} devices",
+        "bulk_tags_hint": "Ticked tags go on every chosen device, cleared ones come off. Half-ticked tags stay as they are.",
+        "bulk_tags_saved": "Tags changed on {count} devices."
     },
     "keys": {
         "title": "Server Keys",
@@ -1779,7 +1791,8 @@
         "remove": "Remove",
         "retry": "Retry",
         "show_value": "Show",
-        "hide_value": "Hide"
+        "hide_value": "Hide",
+        "run": "Run"
     },
     "time": {
         "just_now": "Just now",
@@ -2623,7 +2636,21 @@
         "edit_heading": "Edit device",
         "discard_title": "Discard your changes?",
         "discard_message": "The changes to this device are not saved yet.",
-        "discard_confirm": "Discard changes"
+        "discard_confirm": "Discard changes",
+        "action_cdap_viewer_desc": "Pictures of the screen instead of a live stream",
+        "action_delete_target_desc": "Remove the RDP/VNC target from the list",
+        "action_edit_fields_desc": "Change the name, user, note, folder and tags",
+        "action_edit_target_desc": "Address, sign-in and security settings",
+        "action_groups_desc": "Put the device in a group or take it out",
+        "action_guest_desc": "A link that works without a console account, for a limited time",
+        "action_mesh_command_desc": "Run one command on the device",
+        "action_mesh_files_desc": "The device's files in the remote viewer",
+        "action_mesh_share_desc": "A view-only desktop link that needs no sign-in",
+        "action_mesh_terminal_desc": "A shell on the device through its MeshAgent",
+        "action_port_desc": "Reach a port on the device or in its network",
+        "agent_cached": "The device is offline. This is what it sent last:",
+        "file_downloaded": "Downloaded {name}.",
+        "user_hint": "Shown in the list. The device replaces it when it reports who is signed in."
     },
     "inventory": {
         "title": "Inventory",
@@ -7470,5 +7497,9 @@
         "previous": "Previous page",
         "next": "Next page",
         "page": "Page {page}"
+    },
+    "shell": {
+        "skip_to_content": "Skip to main content",
+        "start_failed": "The console could not start."
     }
 }

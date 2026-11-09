@@ -614,7 +614,19 @@
         "strategy_assign_none_selected": "Zaznacz co najmniej jedno urządzenie, użytkownika lub grupę urządzeń.",
         "strategy_sheet_desc": "Ustawienia klienta obowiązujące, gdy ktoś z grupy użytkowników pracuje na urządzeniu z grupy urządzeń.",
         "strategy_section_scope": "Kto i gdzie",
-        "strategy_enabled_hint": "Gdy wyłączona, reguła zostaje zapisana, ale nie jest stosowana."
+        "strategy_enabled_hint": "Gdy wyłączona, reguła zostaje zapisana, ale nie jest stosowana.",
+        "selected_count": "Zaznaczono: {count}",
+        "move_to_folder": "Przenieś do folderu",
+        "move_many_to_folder": "Przenieś urządzenia ({count}) do folderu",
+        "move": "Przenieś",
+        "clear_selection": "Wyczyść zaznaczenie",
+        "showing_count": "Wyświetlono {shown} z {total}",
+        "scopes_label": "Foldery i grupy",
+        "tag_too_long": "Tag może mieć najwyżej 50 znaków.",
+        "tag_on_count": "Na {count} z {total}",
+        "bulk_tags_title": "Tagi urządzeń ({count})",
+        "bulk_tags_hint": "Zaznaczone tagi trafią na każde wybrane urządzenie, odznaczone zostaną usunięte. Częściowo zaznaczone pozostaną bez zmian.",
+        "bulk_tags_saved": "Zmieniono tagi na urządzeniach: {count}."
     },
     "keys": {
         "title": "Klucze serwera",
@@ -1771,7 +1783,8 @@
         "remove": "Usuń",
         "retry": "Ponów",
         "show_value": "Pokaż",
-        "hide_value": "Ukryj"
+        "hide_value": "Ukryj",
+        "run": "Uruchom"
     },
     "time": {
         "just_now": "Przed chwilą",
@@ -2562,7 +2575,21 @@
         "edit_heading": "Edytuj urządzenie",
         "discard_title": "Odrzucić zmiany?",
         "discard_message": "Zmiany tego urządzenia nie zostały jeszcze zapisane.",
-        "discard_confirm": "Odrzuć zmiany"
+        "discard_confirm": "Odrzuć zmiany",
+        "action_cdap_viewer_desc": "Zrzuty ekranu zamiast obrazu na żywo",
+        "action_delete_target_desc": "Usuń cel RDP/VNC z listy",
+        "action_edit_fields_desc": "Zmień nazwę, użytkownika, notatkę, folder i tagi",
+        "action_edit_target_desc": "Adres, logowanie i ustawienia zabezpieczeń",
+        "action_groups_desc": "Dodaj urządzenie do grupy lub usuń je z niej",
+        "action_guest_desc": "Link działający bez konta w konsoli przez ograniczony czas",
+        "action_mesh_command_desc": "Uruchom jedno polecenie na urządzeniu",
+        "action_mesh_files_desc": "Pliki urządzenia w podglądzie zdalnym",
+        "action_mesh_share_desc": "Link do pulpitu tylko do podglądu, bez logowania",
+        "action_mesh_terminal_desc": "Powłoka na urządzeniu przez jego MeshAgent",
+        "action_port_desc": "Połącz się z portem na urządzeniu lub w jego sieci",
+        "agent_cached": "Urządzenie jest offline. Oto co wysłało ostatnio:",
+        "file_downloaded": "Pobrano {name}.",
+        "user_hint": "Widoczne na liście. Urządzenie zastępuje tę wartość, gdy zgłosi, kto jest zalogowany."
     },
     "inventory": {
         "title": "Inwentaryzacja",
@@ -7470,5 +7497,9 @@
         "previous": "Poprzednia strona",
         "next": "Następna strona",
         "page": "Strona {page}"
+    },
+    "shell": {
+        "skip_to_content": "Przejdź do głównej treści",
+        "start_failed": "Nie udało się uruchomić konsoli."
     }
 }

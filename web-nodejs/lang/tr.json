@@ -46,7 +46,7 @@
         "copy_failed": "Kopyalanamadı. Metni seçip kendiniz kopyalayın."
     },
     "nav": {
-        "main": "Main",
+        "main": "Ana menü",
         "tools": "Tools",
         "system": "System",
         "dashboard": "Kontrol Paneli",
@@ -54,18 +54,18 @@
         "keys": "İstemci kurulumu",
         "generator": "BetterDesk Aracıları",
         "settings": "Ayarlar",
-        "users": "Users",
+        "users": "Kullanıcılar",
         "inventory": "Envanter",
         "tickets": "Tickets",
         "help_requests": "Yardım İstekleri",
-        "activity": "Activity",
+        "activity": "Etkinlik",
         "automation": "Uyarılar ve otomasyon",
         "file_transfer": "Dosya Aktarımı",
         "network": "Ağ izleme",
         "dataguard": "Veri sızıntısı önleme",
         "reports": "Raporlar",
         "tenants": "Tenants",
-        "registrations": "Registrations",
+        "registrations": "Kayıt istekleri",
         "activate_agent": "Destek aracısını etkinleştir",
         "management": "Yönetim",
         "toggle_sidebar": "Kenar çubuğunu aç/kapat",
@@ -83,7 +83,7 @@
         "languages": "Çeviriler",
         "resource_control": "USB ve sürücü erişimi",
         "chat": "Chat",
-        "help": "Help",
+        "help": "Yardım",
         "expand_sidebar": "Kenar çubuğunu genişlet",
         "toggle_theme": "Temayı değiştir",
         "sdk_studio": "Akış oluşturucu (SDK)",
@@ -620,7 +620,19 @@
         "strategy_assign_none_selected": "En az bir cihaz, kullanıcı veya cihaz grubu işaretleyin.",
         "strategy_sheet_desc": "Bir kullanıcı grubundan biri bir cihaz grubundaki cihazda çalıştığında geçerli olan istemci ayarları.",
         "strategy_section_scope": "Kim ve nerede",
-        "strategy_enabled_hint": "Kapalıyken kural saklanır ama uygulanmaz."
+        "strategy_enabled_hint": "Kapalıyken kural saklanır ama uygulanmaz.",
+        "selected_count": "{count} seçili",
+        "move_to_folder": "Klasöre taşı",
+        "move_many_to_folder": "{count} cihazı bir klasöre taşı",
+        "move": "Taşı",
+        "clear_selection": "Seçimi temizle",
+        "showing_count": "{total} içinden {shown} gösteriliyor",
+        "scopes_label": "Klasörler ve gruplar",
+        "tag_too_long": "Bir etiket en fazla 50 karakter olabilir.",
+        "tag_on_count": "{total} cihazdan {count} tanesinde",
+        "bulk_tags_title": "{count} cihazın etiketleri",
+        "bulk_tags_hint": "İşaretli etiketler seçilen her cihaza eklenir, işareti kaldırılanlar çıkarılır. Kısmen işaretli etiketler olduğu gibi kalır.",
+        "bulk_tags_saved": "{count} cihazdaki etiketler değiştirildi."
     },
     "keys": {
         "title": "Sunucu Anahtarları",
@@ -674,7 +686,7 @@
     "settings": {
         "title": "Ayarlar",
         "subtitle": "Konsol yapılandırması ve hesap ayarları",
-        "tab_general": "General",
+        "tab_general": "Genel",
         "tab_server": "Sunucu",
         "tab_branding": "Görünüm",
         "tab_backup": "Backup",
@@ -1723,7 +1735,7 @@
     "status": {
         "online": "Online",
         "offline": "Offline",
-        "banned": "Banned",
+        "banned": "Yasaklı",
         "running": "Running",
         "stopped": "Stopped",
         "unknown": "Unknown",
@@ -1759,7 +1771,8 @@
         "remove": "Kaldır",
         "retry": "Yeniden dene",
         "show_value": "Göster",
-        "hide_value": "Gizle"
+        "hide_value": "Gizle",
+        "run": "Çalıştır"
     },
     "time": {
         "just_now": "Just now",
@@ -2550,7 +2563,21 @@
         "edit_heading": "Cihazı düzenle",
         "discard_title": "Değişiklikler atılsın mı?",
         "discard_message": "Bu cihazdaki değişiklikler henüz kaydedilmedi.",
-        "discard_confirm": "Değişiklikleri at"
+        "discard_confirm": "Değişiklikleri at",
+        "action_cdap_viewer_desc": "Canlı yayın yerine ekran görüntüleri",
+        "action_delete_target_desc": "RDP/VNC hedefini listeden kaldır",
+        "action_edit_fields_desc": "Adı, kullanıcıyı, notu, klasörü ve etiketleri değiştir",
+        "action_edit_target_desc": "Adres, oturum açma ve güvenlik ayarları",
+        "action_groups_desc": "Cihazı bir gruba ekle veya gruptan çıkar",
+        "action_guest_desc": "Konsol hesabı olmadan sınırlı bir süre çalışan bir bağlantı",
+        "action_mesh_command_desc": "Cihazda bir komut çalıştır",
+        "action_mesh_files_desc": "Uzaktan görüntüleyicide cihazın dosyaları",
+        "action_mesh_share_desc": "Oturum açma gerektirmeyen, yalnızca görüntüleme amaçlı masaüstü bağlantısı",
+        "action_mesh_terminal_desc": "MeshAgent üzerinden cihazda bir kabuk",
+        "action_port_desc": "Cihazdaki veya ağındaki bir bağlantı noktasına eriş",
+        "agent_cached": "Cihaz çevrimdışı. En son bunu gönderdi:",
+        "file_downloaded": "{name} indirildi.",
+        "user_hint": "Listede gösterilir. Cihaz, kimin oturum açtığını bildirdiğinde bunu değiştirir."
     },
     "inventory": {
         "title": "Inventory",
@@ -4419,9 +4446,9 @@
         "file_share": "Dosya",
         "file_too_large": "Dosya çok büyük (maks. 50MB)",
         "file_encrypted": "Şifreli dosya aktarımı",
-        "presence_online": "Online",
-        "presence_away": "Away",
-        "presence_busy": "Busy",
+        "presence_online": "Çevrimiçi",
+        "presence_away": "Uzakta",
+        "presence_busy": "Meşgul",
         "presence_offline": "Offline",
         "key_rotation": "Güvenlik anahtarları döndürüldü",
         "new_message": "New message",
@@ -4447,7 +4474,7 @@
         "today": "Today",
         "yesterday": "Yesterday",
         "react": "React",
-        "my_presence": "My status",
+        "my_presence": "Durumum",
         "search_placeholder": "Kişileri ve mesajları arayın",
         "select_conversation_hint": "Mesajları görüntülemek için bir görüşme seçin",
         "info": "Info",
@@ -4500,10 +4527,10 @@
         "reconnecting": "Yeniden bağlanılıyor..."
     },
     "theme": {
-        "dark": "Dark",
-        "light": "Light",
+        "dark": "Koyu",
+        "light": "Açık",
         "auto": "System",
-        "title": "Theme",
+        "title": "Tema",
         "custom": "Özel",
         "switch_to_dark": "Koyu temaya geç",
         "switch_to_light": "Açık temaya geç",
@@ -7476,5 +7503,9 @@
         "previous": "Önceki sayfa",
         "next": "Sonraki sayfa",
         "page": "Sayfa {page}"
+    },
+    "shell": {
+        "skip_to_content": "Ana içeriğe geç",
+        "start_failed": "Konsol başlatılamadı."
     }
 }

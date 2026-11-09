@@ -46,7 +46,7 @@
         "copy_failed": "कॉपी नहीं हो सका। टेक्स्ट चुनें और खुद कॉपी करें।"
     },
     "nav": {
-        "main": "Main",
+        "main": "मुख्य",
         "tools": "Tools",
         "system": "System",
         "dashboard": "डैशबोर्ड",
@@ -54,18 +54,18 @@
         "keys": "क्लाइंट सेटअप",
         "generator": "BetterDesk एजेंट",
         "settings": "सेटिंग्स",
-        "users": "Users",
+        "users": "उपयोगकर्ता",
         "inventory": "इन्वेंटरी",
         "tickets": "Tickets",
         "help_requests": "सहायता अनुरोध",
-        "activity": "Activity",
+        "activity": "गतिविधि",
         "automation": "अलर्ट और स्वचालन",
         "file_transfer": "दस्तावेज हस्तांतरण",
         "network": "नेटवर्क निगरानी",
         "dataguard": "डेटा हानि रोकथाम",
         "reports": "रिपोर्ट",
         "tenants": "Tenants",
-        "registrations": "Registrations",
+        "registrations": "नामांकन अनुरोध",
         "activate_agent": "सहायता एजेंट सक्रिय करें",
         "management": "प्रबंध",
         "toggle_sidebar": "साइडबार टॉगल करें",
@@ -83,7 +83,7 @@
         "languages": "अनुवाद",
         "resource_control": "USB और ड्राइव पहुँच",
         "chat": "Chat",
-        "help": "Help",
+        "help": "सहायता",
         "expand_sidebar": "साइडबार का विस्तार करें",
         "toggle_theme": "थीम टॉगल करें",
         "sdk_studio": "फ़्लो बिल्डर (SDK)",
@@ -620,7 +620,19 @@
         "strategy_assign_none_selected": "कम से कम एक डिवाइस, उपयोगकर्ता या डिवाइस समूह चुनें।",
         "strategy_sheet_desc": "क्लाइंट सेटिंग्स जो तब लागू होती हैं जब किसी उपयोगकर्ता समूह का कोई व्यक्ति किसी डिवाइस समूह के डिवाइस पर काम करता है।",
         "strategy_section_scope": "कौन और कहाँ",
-        "strategy_enabled_hint": "बंद होने पर नियम रखा रहता है पर लागू नहीं होता।"
+        "strategy_enabled_hint": "बंद होने पर नियम रखा रहता है पर लागू नहीं होता।",
+        "selected_count": "{count} चुने गए",
+        "move_to_folder": "फ़ोल्डर में ले जाएँ",
+        "move_many_to_folder": "{count} डिवाइस को फ़ोल्डर में ले जाएँ",
+        "move": "ले जाएँ",
+        "clear_selection": "चयन हटाएँ",
+        "showing_count": "{total} में से {shown} दिखाए जा रहे हैं",
+        "scopes_label": "फ़ोल्डर और समूह",
+        "tag_too_long": "टैग में अधिकतम 50 अक्षर हो सकते हैं।",
+        "tag_on_count": "{total} में से {count} पर",
+        "bulk_tags_title": "{count} डिवाइस के टैग",
+        "bulk_tags_hint": "टिक किए गए टैग हर चुने गए डिवाइस पर लगेंगे, हटाए गए टैग निकल जाएँगे। आधे टिक वाले टैग जैसे हैं वैसे ही रहेंगे।",
+        "bulk_tags_saved": "{count} डिवाइस पर टैग बदले गए।"
     },
     "keys": {
         "title": "सर्वर कुंजी",
@@ -674,7 +686,7 @@
     "settings": {
         "title": "सेटिंग्स",
         "subtitle": "कंसोल कॉन्फ़िगरेशन और खाता सेटिंग्स",
-        "tab_general": "General",
+        "tab_general": "सामान्य",
         "tab_server": "सर्वर",
         "tab_branding": "रूप-रंग",
         "tab_backup": "Backup",
@@ -1723,7 +1735,7 @@
     "status": {
         "online": "Online",
         "offline": "Offline",
-        "banned": "Banned",
+        "banned": "प्रतिबंधित",
         "running": "Running",
         "stopped": "Stopped",
         "unknown": "Unknown",
@@ -1759,7 +1771,8 @@
         "remove": "हटाएँ",
         "retry": "पुनः प्रयास",
         "show_value": "दिखाएँ",
-        "hide_value": "छिपाएँ"
+        "hide_value": "छिपाएँ",
+        "run": "चलाएँ"
     },
     "time": {
         "just_now": "Just now",
@@ -2550,7 +2563,21 @@
         "edit_heading": "डिवाइस संपादित करें",
         "discard_title": "बदलाव छोड़ दें?",
         "discard_message": "इस डिवाइस के बदलाव अभी सहेजे नहीं गए हैं।",
-        "discard_confirm": "बदलाव छोड़ें"
+        "discard_confirm": "बदलाव छोड़ें",
+        "action_cdap_viewer_desc": "लाइव स्ट्रीम के बजाय स्क्रीन की तस्वीरें",
+        "action_delete_target_desc": "RDP/VNC लक्ष्य को सूची से हटाएँ",
+        "action_edit_fields_desc": "नाम, उपयोगकर्ता, नोट, फ़ोल्डर और टैग बदलें",
+        "action_edit_target_desc": "पता, साइन-इन और सुरक्षा सेटिंग",
+        "action_groups_desc": "डिवाइस को किसी समूह में डालें या उससे निकालें",
+        "action_guest_desc": "एक लिंक जो सीमित समय तक कंसोल खाते के बिना काम करता है",
+        "action_mesh_command_desc": "डिवाइस पर एक कमांड चलाएँ",
+        "action_mesh_files_desc": "रिमोट व्यूअर में डिवाइस की फ़ाइलें",
+        "action_mesh_share_desc": "केवल देखने वाला डेस्कटॉप लिंक, जिसके लिए साइन-इन ज़रूरी नहीं",
+        "action_mesh_terminal_desc": "डिवाइस के MeshAgent के ज़रिए उस पर शेल",
+        "action_port_desc": "डिवाइस पर या उसके नेटवर्क में किसी पोर्ट तक पहुँचें",
+        "agent_cached": "डिवाइस ऑफ़लाइन है। इसने आख़िरी बार यह भेजा था:",
+        "file_downloaded": "{name} डाउनलोड हो गई।",
+        "user_hint": "सूची में दिखता है। जब डिवाइस बताता है कि कौन साइन इन है, तो वह इसे बदल देता है।"
     },
     "inventory": {
         "title": "Inventory",
@@ -4419,9 +4446,9 @@
         "file_share": "फ़ाइल",
         "file_too_large": "फ़ाइल बहुत बड़ी है (अधिकतम 50एमबी)",
         "file_encrypted": "एन्क्रिप्टेड फ़ाइल स्थानांतरण",
-        "presence_online": "Online",
-        "presence_away": "Away",
-        "presence_busy": "Busy",
+        "presence_online": "ऑनलाइन",
+        "presence_away": "दूर",
+        "presence_busy": "व्यस्त",
         "presence_offline": "Offline",
         "key_rotation": "सुरक्षा कुंजियाँ घुमाई गईं",
         "new_message": "New message",
@@ -4447,7 +4474,7 @@
         "today": "Today",
         "yesterday": "Yesterday",
         "react": "React",
-        "my_presence": "My status",
+        "my_presence": "मेरी स्थिति",
         "search_placeholder": "संपर्क एवं संदेश खोजें",
         "select_conversation_hint": "संदेश देखने के लिए कोई वार्तालाप चुनें",
         "info": "Info",
@@ -4500,10 +4527,10 @@
         "reconnecting": "पुनः कनेक्ट हो रहा है..."
     },
     "theme": {
-        "dark": "Dark",
-        "light": "Light",
+        "dark": "गहरा",
+        "light": "हल्का",
         "auto": "System",
-        "title": "Theme",
+        "title": "थीम",
         "custom": "कस्टम",
         "switch_to_dark": "डार्क थीम पर स्विच करें",
         "switch_to_light": "लाइट थीम पर स्विच करें",
@@ -6285,7 +6312,7 @@
         "dyslexia_spacing_hint": "अक्षरों और शब्दों के बीच जगह बढ़ाता है।",
         "visual": "दृश्य",
         "contrast": "कंट्रास्ट",
-        "contrast_normal": "Normal",
+        "contrast_normal": "सामान्य",
         "contrast_high_dark": "उच्च कंट्रास्ट अंधेरा",
         "contrast_high_light": "उच्च कंट्रास्ट प्रकाश",
         "contrast_yellow_black": "काले पर पीला",
@@ -7476,5 +7503,9 @@
         "previous": "पिछला पृष्ठ",
         "next": "अगला पृष्ठ",
         "page": "पृष्ठ {page}"
+    },
+    "shell": {
+        "skip_to_content": "मुख्य सामग्री पर जाएँ",
+        "start_failed": "कंसोल शुरू नहीं हो सका।"
     }
 }

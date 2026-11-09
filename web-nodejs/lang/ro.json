@@ -65,7 +65,7 @@
         "dataguard": "Prevenirea pierderii datelor",
         "reports": "Rapoarte",
         "tenants": "Chiriași",
-        "registrations": "Registrations",
+        "registrations": "Cereri de înregistrare",
         "activate_agent": "Activează agentul de asistență",
         "management": "management",
         "toggle_sidebar": "Comutați bara laterală",
@@ -620,7 +620,19 @@
         "strategy_assign_none_selected": "Bifați cel puțin un dispozitiv, utilizator sau grup de dispozitive.",
         "strategy_sheet_desc": "Setări de client care se aplică atunci când cineva dintr-un grup de utilizatori lucrează pe un dispozitiv dintr-un grup de dispozitive.",
         "strategy_section_scope": "Cine și unde",
-        "strategy_enabled_hint": "Când este oprită, regula se păstrează, dar nu se aplică."
+        "strategy_enabled_hint": "Când este oprită, regula se păstrează, dar nu se aplică.",
+        "selected_count": "{count} selectate",
+        "move_to_folder": "Mută în dosar",
+        "move_many_to_folder": "Mută {count} dispozitive într-un dosar",
+        "move": "Mută",
+        "clear_selection": "Anulează selecția",
+        "showing_count": "Se afișează {shown} din {total}",
+        "scopes_label": "Dosare și grupuri",
+        "tag_too_long": "O etichetă poate avea cel mult 50 de caractere.",
+        "tag_on_count": "Pe {count} din {total}",
+        "bulk_tags_title": "Etichetele a {count} dispozitive",
+        "bulk_tags_hint": "Etichetele bifate se adaugă pe fiecare dispozitiv ales, cele debifate se elimină. Etichetele bifate parțial rămân neschimbate.",
+        "bulk_tags_saved": "Etichete modificate pe {count} dispozitive."
     },
     "keys": {
         "title": "Cheile serverului",
@@ -1723,7 +1735,7 @@
     "status": {
         "online": "Online",
         "offline": "Offline",
-        "banned": "Banned",
+        "banned": "Blocat",
         "running": "Running",
         "stopped": "Stopped",
         "unknown": "Unknown",
@@ -1759,7 +1771,8 @@
         "remove": "Eliminați",
         "retry": "Reîncearcă",
         "show_value": "Afișează",
-        "hide_value": "Ascunde"
+        "hide_value": "Ascunde",
+        "run": "Rulează"
     },
     "time": {
         "just_now": "Just now",
@@ -2550,7 +2563,21 @@
         "edit_heading": "Editați dispozitivul",
         "discard_title": "Renunțați la modificări?",
         "discard_message": "Modificările acestui dispozitiv nu sunt salvate încă.",
-        "discard_confirm": "Renunțați la modificări"
+        "discard_confirm": "Renunțați la modificări",
+        "action_cdap_viewer_desc": "Imagini ale ecranului în loc de o transmisie live",
+        "action_delete_target_desc": "Elimină ținta RDP/VNC din listă",
+        "action_edit_fields_desc": "Schimbă numele, utilizatorul, nota, folderul și etichetele",
+        "action_edit_target_desc": "Adresă, autentificare și setări de securitate",
+        "action_groups_desc": "Adaugă dispozitivul într-un grup sau scoate-l din el",
+        "action_guest_desc": "Un link care funcționează fără cont în consolă, pentru o perioadă limitată",
+        "action_mesh_command_desc": "Rulează o comandă pe dispozitiv",
+        "action_mesh_files_desc": "Fișierele dispozitivului în vizualizatorul la distanță",
+        "action_mesh_share_desc": "Un link de desktop doar pentru vizualizare, fără autentificare",
+        "action_mesh_terminal_desc": "Un shell pe dispozitiv prin MeshAgent-ul său",
+        "action_port_desc": "Accesează un port pe dispozitiv sau în rețeaua sa",
+        "agent_cached": "Dispozitivul este offline. Iată ce a trimis ultima dată:",
+        "file_downloaded": "{name} a fost descărcat.",
+        "user_hint": "Apare în listă. Dispozitivul îl înlocuiește când raportează cine este autentificat."
     },
     "inventory": {
         "title": "Inventory",
@@ -4420,8 +4447,8 @@
         "file_too_large": "Fișier prea mare (maximum 50 MB)",
         "file_encrypted": "Transfer de fișiere criptat",
         "presence_online": "Online",
-        "presence_away": "Away",
-        "presence_busy": "Busy",
+        "presence_away": "Plecat",
+        "presence_busy": "Ocupat",
         "presence_offline": "Offline",
         "key_rotation": "Cheile de securitate au fost rotite",
         "new_message": "New message",
@@ -4447,7 +4474,7 @@
         "today": "Today",
         "yesterday": "Yesterday",
         "react": "React",
-        "my_presence": "My status",
+        "my_presence": "Starea mea",
         "search_placeholder": "Căutați contacte și mesaje",
         "select_conversation_hint": "Selectați o conversație pentru a vizualiza mesajele",
         "info": "Info",
@@ -4500,10 +4527,10 @@
         "reconnecting": "Se reconecta..."
     },
     "theme": {
-        "dark": "Dark",
-        "light": "Light",
+        "dark": "Întunecat",
+        "light": "Luminos",
         "auto": "System",
-        "title": "Theme",
+        "title": "Temă",
         "custom": "Personalizat",
         "switch_to_dark": "Comută la tema întunecată",
         "switch_to_light": "Comută la tema deschisă",
@@ -7476,5 +7503,9 @@
         "previous": "Pagina anterioară",
         "next": "Pagina următoare",
         "page": "Pagina {page}"
+    },
+    "shell": {
+        "skip_to_content": "Salt la conținutul principal",
+        "start_failed": "Consola nu a putut porni."
     }
 }

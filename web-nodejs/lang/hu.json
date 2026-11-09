@@ -65,7 +65,7 @@
         "dataguard": "Adatszivárgás-megelőzés",
         "reports": "Jelentések",
         "tenants": "Bérlők",
-        "registrations": "Registrations",
+        "registrations": "Regisztrációs kérelmek",
         "activate_agent": "Támogatási ügynök aktiválása",
         "management": "Menedzsment",
         "toggle_sidebar": "Oldalsáv váltása",
@@ -620,7 +620,19 @@
         "strategy_assign_none_selected": "Jelöljön be legalább egy eszközt, felhasználót vagy eszközcsoportot.",
         "strategy_sheet_desc": "Kliensbeállítások, amelyek akkor érvényesek, ha egy felhasználói csoport tagja egy eszközcsoport eszközén dolgozik.",
         "strategy_section_scope": "Ki és hol",
-        "strategy_enabled_hint": "Kikapcsolva a szabály megmarad, de nem érvényesül."
+        "strategy_enabled_hint": "Kikapcsolva a szabály megmarad, de nem érvényesül.",
+        "selected_count": "{count} kijelölve",
+        "move_to_folder": "Áthelyezés mappába",
+        "move_many_to_folder": "{count} eszköz áthelyezése mappába",
+        "move": "Áthelyezés",
+        "clear_selection": "Kijelölés törlése",
+        "showing_count": "{shown} / {total} látható",
+        "scopes_label": "Mappák és csoportok",
+        "tag_too_long": "Egy címke legfeljebb 50 karakter lehet.",
+        "tag_on_count": "{total} eszközből {count} eszközön",
+        "bulk_tags_title": "{count} eszköz címkéi",
+        "bulk_tags_hint": "A bejelölt címkék minden kiválasztott eszközre rákerülnek, a jelöletlenek lekerülnek. A részben bejelöltek változatlanok maradnak.",
+        "bulk_tags_saved": "A címkék módosultak {count} eszközön."
     },
     "keys": {
         "title": "Szerverkulcsok",
@@ -674,7 +686,7 @@
     "settings": {
         "title": "Beállítások elemre",
         "subtitle": "Konzolkonfiguráció és fiókbeállítások",
-        "tab_general": "General",
+        "tab_general": "Általános",
         "tab_server": "Szerver",
         "tab_branding": "Megjelenés",
         "tab_backup": "Backup",
@@ -1723,7 +1735,7 @@
     "status": {
         "online": "Online",
         "offline": "Offline",
-        "banned": "Banned",
+        "banned": "Tiltva",
         "running": "Running",
         "stopped": "Stopped",
         "unknown": "Unknown",
@@ -1759,7 +1771,8 @@
         "remove": "Eltávolítás",
         "retry": "Újra",
         "show_value": "Megjelenítés",
-        "hide_value": "Elrejtés"
+        "hide_value": "Elrejtés",
+        "run": "Futtatás"
     },
     "time": {
         "just_now": "Just now",
@@ -2550,7 +2563,21 @@
         "edit_heading": "Eszköz szerkesztése",
         "discard_title": "Elveti a módosításokat?",
         "discard_message": "Az eszköz módosításai még nincsenek mentve.",
-        "discard_confirm": "Módosítások elvetése"
+        "discard_confirm": "Módosítások elvetése",
+        "action_cdap_viewer_desc": "Képek a képernyőről élő közvetítés helyett",
+        "action_delete_target_desc": "Az RDP/VNC-cél eltávolítása a listából",
+        "action_edit_fields_desc": "A név, a felhasználó, a jegyzet, a mappa és a címkék módosítása",
+        "action_edit_target_desc": "Cím, bejelentkezés és biztonsági beállítások",
+        "action_groups_desc": "Az eszköz hozzáadása egy csoporthoz vagy eltávolítása belőle",
+        "action_guest_desc": "Egy hivatkozás, amely korlátozott ideig konzolfiók nélkül is működik",
+        "action_mesh_command_desc": "Egy parancs futtatása az eszközön",
+        "action_mesh_files_desc": "Az eszköz fájljai a távoli megjelenítőben",
+        "action_mesh_share_desc": "Csak megtekintésre szolgáló asztali hivatkozás, bejelentkezés nélkül",
+        "action_mesh_terminal_desc": "Parancssor az eszközön a MeshAgenten keresztül",
+        "action_port_desc": "Egy port elérése az eszközön vagy annak hálózatában",
+        "agent_cached": "Az eszköz offline. Ezt küldte utoljára:",
+        "file_downloaded": "{name} letöltve.",
+        "user_hint": "A listában jelenik meg. Az eszköz lecseréli, amikor jelenti, ki van bejelentkezve."
     },
     "inventory": {
         "title": "Inventory",
@@ -4419,9 +4446,9 @@
         "file_share": "Fájl",
         "file_too_large": "A fájl túl nagy (max. 50 MB)",
         "file_encrypted": "Titkosított fájlátvitel",
-        "presence_online": "Online",
-        "presence_away": "Away",
-        "presence_busy": "Busy",
+        "presence_online": "Elérhető",
+        "presence_away": "Távol",
+        "presence_busy": "Elfoglalt",
         "presence_offline": "Offline",
         "key_rotation": "A biztonsági kulcsok elforgatva",
         "new_message": "New message",
@@ -4447,7 +4474,7 @@
         "today": "Today",
         "yesterday": "Yesterday",
         "react": "React",
-        "my_presence": "My status",
+        "my_presence": "Állapotom",
         "search_placeholder": "Névjegyek és üzenetek keresése",
         "select_conversation_hint": "Az üzenetek megtekintéséhez válasszon egy beszélgetést",
         "info": "Info",
@@ -4500,10 +4527,10 @@
         "reconnecting": "Újracsatlakozás..."
     },
     "theme": {
-        "dark": "Dark",
-        "light": "Light",
+        "dark": "Sötét",
+        "light": "Világos",
         "auto": "System",
-        "title": "Theme",
+        "title": "Téma",
         "custom": "Egyéni",
         "switch_to_dark": "Váltás sötét témára",
         "switch_to_light": "Váltás világos témára",
@@ -6285,7 +6312,7 @@
         "dyslexia_spacing_hint": "Növeli a betűk és szavak közötti távolságot.",
         "visual": "Megjelenés",
         "contrast": "Kontraszt",
-        "contrast_normal": "Normal",
+        "contrast_normal": "Normál",
         "contrast_high_dark": "Nagy kontrasztú sötét",
         "contrast_high_light": "Nagy kontrasztú fény",
         "contrast_yellow_black": "Sárga a feketén",
@@ -7476,5 +7503,9 @@
         "previous": "Előző oldal",
         "next": "Következő oldal",
         "page": "{page}. oldal"
+    },
+    "shell": {
+        "skip_to_content": "Ugrás a fő tartalomhoz",
+        "start_failed": "A konzol nem tudott elindulni."
     }
 }

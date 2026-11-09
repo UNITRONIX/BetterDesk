@@ -59,7 +59,7 @@
         "dataguard": "Preventie van gegevensverlies",
         "reports": "Rapporten",
         "tenants": "Organisaties",
-        "registrations": "Registraties",
+        "registrations": "Registratieverzoeken",
         "activate_agent": "Ondersteuningsagent activeren",
         "management": "Beheer",
         "toggle_sidebar": "Zijbalk in-/uitschakelen",
@@ -614,7 +614,19 @@
         "strategy_assign_none_selected": "Vink minstens één apparaat, gebruiker of apparaatgroep aan.",
         "strategy_sheet_desc": "Clientinstellingen die gelden wanneer iemand uit een gebruikersgroep werkt op een apparaat in een apparaatgroep.",
         "strategy_section_scope": "Wie en waar",
-        "strategy_enabled_hint": "Als deze uit staat, blijft de regel bewaard maar wordt hij niet toegepast."
+        "strategy_enabled_hint": "Als deze uit staat, blijft de regel bewaard maar wordt hij niet toegepast.",
+        "selected_count": "{count} geselecteerd",
+        "move_to_folder": "Naar map verplaatsen",
+        "move_many_to_folder": "{count} apparaten naar een map verplaatsen",
+        "move": "Verplaatsen",
+        "clear_selection": "Selectie wissen",
+        "showing_count": "{shown} van {total} getoond",
+        "scopes_label": "Mappen en groepen",
+        "tag_too_long": "Een tag mag maximaal 50 tekens hebben.",
+        "tag_on_count": "Op {count} van {total}",
+        "bulk_tags_title": "Tags van {count} apparaten",
+        "bulk_tags_hint": "Aangevinkte tags komen op elk gekozen apparaat, uitgevinkte gaan eraf. Half aangevinkte tags blijven zoals ze zijn.",
+        "bulk_tags_saved": "Tags gewijzigd op {count} apparaten."
     },
     "keys": {
         "title": "Serversleutels",
@@ -1753,7 +1765,8 @@
         "remove": "Verwijderen",
         "retry": "Opnieuw",
         "show_value": "Tonen",
-        "hide_value": "Verbergen"
+        "hide_value": "Verbergen",
+        "run": "Uitvoeren"
     },
     "time": {
         "just_now": "Zojuist",
@@ -2544,7 +2557,21 @@
         "edit_heading": "Apparaat bewerken",
         "discard_title": "Wijzigingen verwerpen?",
         "discard_message": "De wijzigingen aan dit apparaat zijn nog niet opgeslagen.",
-        "discard_confirm": "Wijzigingen verwerpen"
+        "discard_confirm": "Wijzigingen verwerpen",
+        "action_cdap_viewer_desc": "Afbeeldingen van het scherm in plaats van een livestream",
+        "action_delete_target_desc": "Het RDP/VNC-doel uit de lijst verwijderen",
+        "action_edit_fields_desc": "Naam, gebruiker, notitie, map en tags wijzigen",
+        "action_edit_target_desc": "Adres, aanmelding en beveiligingsinstellingen",
+        "action_groups_desc": "Het apparaat aan een groep toevoegen of eruit halen",
+        "action_guest_desc": "Een link die een beperkte tijd werkt zonder consoleaccount",
+        "action_mesh_command_desc": "Eén opdracht op het apparaat uitvoeren",
+        "action_mesh_files_desc": "De bestanden van het apparaat in de externe viewer",
+        "action_mesh_share_desc": "Een bureaubladlink alleen om te kijken, zonder aanmelding",
+        "action_mesh_terminal_desc": "Een shell op het apparaat via de MeshAgent",
+        "action_port_desc": "Een poort op het apparaat of in het netwerk bereiken",
+        "agent_cached": "Het apparaat is offline. Dit stuurde het als laatste:",
+        "file_downloaded": "{name} gedownload.",
+        "user_hint": "Wordt in de lijst getoond. Het apparaat vervangt het zodra het meldt wie er is aangemeld."
     },
     "inventory": {
         "title": "Inventaris",
@@ -4494,10 +4521,10 @@
         "reconnecting": "Opnieuw verbinden"
     },
     "theme": {
-        "dark": "Dark",
-        "light": "Light",
+        "dark": "Donker",
+        "light": "Licht",
         "auto": "System",
-        "title": "Theme",
+        "title": "Thema",
         "custom": "Aangepast",
         "switch_to_dark": "Overschakelen naar donker thema",
         "switch_to_light": "Overschakelen naar licht thema",
@@ -7470,5 +7497,9 @@
         "previous": "Vorige pagina",
         "next": "Volgende pagina",
         "page": "Pagina {page}"
+    },
+    "shell": {
+        "skip_to_content": "Naar de hoofdinhoud",
+        "start_failed": "De console kon niet starten."
     }
 }

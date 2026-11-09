@@ -59,7 +59,7 @@
         "dataguard": "Prevención de pérdida de datos",
         "reports": "Informes",
         "tenants": "Tenants",
-        "registrations": "Registros",
+        "registrations": "Solicitudes de registro",
         "activate_agent": "Activar agente de soporte",
         "management": "Administración",
         "toggle_sidebar": "Alternar barra lateral",
@@ -79,7 +79,7 @@
         "resource_control": "Acceso a USB y unidades",
         "sdk_studio": "Editor de flujos (SDK)",
         "chat": "Chat",
-        "help": "Help",
+        "help": "Ayuda",
         "expand_sidebar": "Expandir barra lateral",
         "login": "Iniciar sesión",
         "permissions": "Roles y permisos",
@@ -614,7 +614,19 @@
         "strategy_assign_none_selected": "Marque al menos un dispositivo, usuario o grupo de dispositivos.",
         "strategy_sheet_desc": "Ajustes del cliente que se aplican cuando alguien de un grupo de usuarios trabaja en un dispositivo de un grupo de dispositivos.",
         "strategy_section_scope": "Quién y dónde",
-        "strategy_enabled_hint": "Si está desactivada, la regla se conserva pero no se aplica."
+        "strategy_enabled_hint": "Si está desactivada, la regla se conserva pero no se aplica.",
+        "selected_count": "{count} seleccionados",
+        "move_to_folder": "Mover a carpeta",
+        "move_many_to_folder": "Mover {count} dispositivos a una carpeta",
+        "move": "Mover",
+        "clear_selection": "Quitar selección",
+        "showing_count": "Mostrando {shown} de {total}",
+        "scopes_label": "Carpetas y grupos",
+        "tag_too_long": "Una etiqueta puede tener como máximo 50 caracteres.",
+        "tag_on_count": "En {count} de {total}",
+        "bulk_tags_title": "Etiquetas de {count} dispositivos",
+        "bulk_tags_hint": "Las etiquetas marcadas se añaden a cada dispositivo elegido y las desmarcadas se quitan. Las marcadas a medias se quedan como están.",
+        "bulk_tags_saved": "Etiquetas cambiadas en {count} dispositivos."
     },
     "keys": {
         "title": "Panel",
@@ -1753,7 +1765,8 @@
         "remove": "Quitar",
         "retry": "Reintentar",
         "show_value": "Mostrar",
-        "hide_value": "Ocultar"
+        "hide_value": "Ocultar",
+        "run": "Ejecutar"
     },
     "time": {
         "just_now": "ahora mismo",
@@ -2544,7 +2557,21 @@
         "edit_heading": "Editar dispositivo",
         "discard_title": "¿Descartar los cambios?",
         "discard_message": "Los cambios de este dispositivo aún no se han guardado.",
-        "discard_confirm": "Descartar cambios"
+        "discard_confirm": "Descartar cambios",
+        "action_cdap_viewer_desc": "Imágenes de la pantalla en lugar de una transmisión en directo",
+        "action_delete_target_desc": "Quitar el destino RDP/VNC de la lista",
+        "action_edit_fields_desc": "Cambiar el nombre, el usuario, la nota, la carpeta y las etiquetas",
+        "action_edit_target_desc": "Dirección, inicio de sesión y ajustes de seguridad",
+        "action_groups_desc": "Añadir el dispositivo a un grupo o sacarlo de él",
+        "action_guest_desc": "Un enlace que funciona sin cuenta en la consola durante un tiempo limitado",
+        "action_mesh_command_desc": "Ejecutar un comando en el dispositivo",
+        "action_mesh_files_desc": "Los archivos del dispositivo en el visor remoto",
+        "action_mesh_share_desc": "Un enlace al escritorio solo para ver, sin iniciar sesión",
+        "action_mesh_terminal_desc": "Una consola en el dispositivo a través de su MeshAgent",
+        "action_port_desc": "Acceder a un puerto del dispositivo o de su red",
+        "agent_cached": "El dispositivo está desconectado. Esto es lo último que envió:",
+        "file_downloaded": "Se descargó {name}.",
+        "user_hint": "Se muestra en la lista. El dispositivo lo sustituye cuando informa de quién ha iniciado sesión."
     },
     "inventory": {
         "title": "Panel",
@@ -4494,10 +4521,10 @@
         "reconnecting": "Reconectando"
     },
     "theme": {
-        "dark": "Dark",
-        "light": "Light",
+        "dark": "Oscuro",
+        "light": "Claro",
         "auto": "System",
-        "title": "Panel",
+        "title": "Tema",
         "custom": "Personalizado",
         "switch_to_dark": "Cambiar al tema oscuro",
         "switch_to_light": "Cambiar al tema claro",
@@ -7470,5 +7497,9 @@
         "previous": "Página anterior",
         "next": "Página siguiente",
         "page": "Página {page}"
+    },
+    "shell": {
+        "skip_to_content": "Ir al contenido principal",
+        "start_failed": "No se pudo iniciar la consola."
     }
 }

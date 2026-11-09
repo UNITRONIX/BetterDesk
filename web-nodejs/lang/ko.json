@@ -59,7 +59,7 @@
         "dataguard": "데이터 유출 방지",
         "reports": "보고서",
         "tenants": "Tenants",
-        "registrations": "Registrations",
+        "registrations": "등록 요청",
         "activate_agent": "지원 에이전트 활성화",
         "management": "관리",
         "toggle_sidebar": "사이드바 전환",
@@ -77,7 +77,7 @@
         "languages": "번역",
         "resource_control": "USB 및 드라이브 접근",
         "chat": "채팅",
-        "help": "Help",
+        "help": "도움말",
         "expand_sidebar": "사이드바 확장",
         "toggle_theme": "테마 전환",
         "sdk_studio": "흐름 편집기 (SDK)",
@@ -614,7 +614,19 @@
         "strategy_assign_none_selected": "장치, 사용자 또는 장치 그룹을 하나 이상 선택하세요.",
         "strategy_sheet_desc": "사용자 그룹의 구성원이 장치 그룹의 장치에서 작업할 때 적용되는 클라이언트 설정입니다.",
         "strategy_section_scope": "대상",
-        "strategy_enabled_hint": "끄면 규칙은 유지되지만 적용되지 않습니다."
+        "strategy_enabled_hint": "끄면 규칙은 유지되지만 적용되지 않습니다.",
+        "selected_count": "{count}개 선택됨",
+        "move_to_folder": "폴더로 이동",
+        "move_many_to_folder": "기기 {count}대를 폴더로 이동",
+        "move": "이동",
+        "clear_selection": "선택 해제",
+        "showing_count": "{total}개 중 {shown}개 표시",
+        "scopes_label": "폴더 및 그룹",
+        "tag_too_long": "태그는 최대 50자까지 입력할 수 있습니다.",
+        "tag_on_count": "{total}대 중 {count}대",
+        "bulk_tags_title": "기기 {count}대의 태그",
+        "bulk_tags_hint": "체크한 태그는 선택한 모든 기기에 추가되고, 체크를 해제한 태그는 제거됩니다. 일부만 체크된 태그는 그대로 유지됩니다.",
+        "bulk_tags_saved": "기기 {count}대의 태그를 변경했습니다."
     },
     "keys": {
         "title": "서버 키",
@@ -668,7 +680,7 @@
     "settings": {
         "title": "설정",
         "subtitle": "콘솔 구성 및 계정 설정",
-        "tab_general": "General",
+        "tab_general": "일반",
         "tab_server": "서버",
         "tab_branding": "모양",
         "tab_backup": "Backup",
@@ -1717,7 +1729,7 @@
     "status": {
         "online": "Online",
         "offline": "Offline",
-        "banned": "Banned",
+        "banned": "차단됨",
         "running": "Running",
         "stopped": "Stopped",
         "unknown": "Unknown",
@@ -1753,7 +1765,8 @@
         "remove": "제거",
         "retry": "다시 시도",
         "show_value": "표시",
-        "hide_value": "숨기기"
+        "hide_value": "숨기기",
+        "run": "실행"
     },
     "time": {
         "just_now": "Just now",
@@ -2544,7 +2557,21 @@
         "edit_heading": "장치 편집",
         "discard_title": "변경 사항을 취소할까요?",
         "discard_message": "이 장치의 변경 사항이 아직 저장되지 않았습니다.",
-        "discard_confirm": "변경 사항 취소"
+        "discard_confirm": "변경 사항 취소",
+        "action_cdap_viewer_desc": "실시간 스트림 대신 화면 이미지",
+        "action_delete_target_desc": "목록에서 RDP/VNC 대상 제거",
+        "action_edit_fields_desc": "이름, 사용자, 메모, 폴더, 태그 변경",
+        "action_edit_target_desc": "주소, 로그인 및 보안 설정",
+        "action_groups_desc": "장치를 그룹에 넣거나 그룹에서 빼기",
+        "action_guest_desc": "콘솔 계정 없이 제한된 시간 동안 작동하는 링크",
+        "action_mesh_command_desc": "장치에서 명령 하나 실행",
+        "action_mesh_files_desc": "원격 뷰어에서 장치의 파일 보기",
+        "action_mesh_share_desc": "로그인이 필요 없는 보기 전용 데스크톱 링크",
+        "action_mesh_terminal_desc": "MeshAgent를 통한 장치의 셸",
+        "action_port_desc": "장치 또는 장치 네트워크의 포트에 연결",
+        "agent_cached": "장치가 오프라인입니다. 마지막으로 보낸 내용:",
+        "file_downloaded": "{name}을(를) 다운로드했습니다.",
+        "user_hint": "목록에 표시됩니다. 장치가 로그인한 사용자를 보고하면 이 값이 바뀝니다."
     },
     "inventory": {
         "title": "Inventory",
@@ -4494,10 +4521,10 @@
         "reconnecting": "다시 연결하는 중..."
     },
     "theme": {
-        "dark": "Dark",
-        "light": "Light",
+        "dark": "다크",
+        "light": "라이트",
         "auto": "System",
-        "title": "Theme",
+        "title": "테마",
         "custom": "사용자 지정",
         "switch_to_dark": "다크 테마로 전환",
         "switch_to_light": "라이트 테마로 전환",
@@ -6279,7 +6306,7 @@
         "dyslexia_spacing_hint": "글자와 단어 사이 간격을 넓힙니다.",
         "visual": "시각",
         "contrast": "대비",
-        "contrast_normal": "Normal",
+        "contrast_normal": "보통",
         "contrast_high_dark": "고대비 어두운",
         "contrast_high_light": "고대비 조명",
         "contrast_yellow_black": "검정색 바탕에 노란색",
@@ -7470,5 +7497,9 @@
         "previous": "이전 페이지",
         "next": "다음 페이지",
         "page": "{page}페이지"
+    },
+    "shell": {
+        "skip_to_content": "본문으로 건너뛰기",
+        "start_failed": "콘솔을 시작할 수 없습니다."
     }
 }

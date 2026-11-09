@@ -614,7 +614,19 @@
         "strategy_assign_none_selected": "Haken Sie mindestens ein Gerät, einen Benutzer oder eine Gerätegruppe an.",
         "strategy_sheet_desc": "Client-Einstellungen, die gelten, wenn jemand aus einer Benutzergruppe an einem Gerät einer Gerätegruppe arbeitet.",
         "strategy_section_scope": "Wer und wo",
-        "strategy_enabled_hint": "Wenn aus, bleibt die Regel gespeichert, wird aber nicht angewendet."
+        "strategy_enabled_hint": "Wenn aus, bleibt die Regel gespeichert, wird aber nicht angewendet.",
+        "selected_count": "{count} ausgewählt",
+        "move_to_folder": "In Ordner verschieben",
+        "move_many_to_folder": "{count} Geräte in einen Ordner verschieben",
+        "move": "Verschieben",
+        "clear_selection": "Auswahl aufheben",
+        "showing_count": "{shown} von {total} angezeigt",
+        "scopes_label": "Ordner und Gruppen",
+        "tag_too_long": "Ein Tag darf höchstens 50 Zeichen haben.",
+        "tag_on_count": "Auf {count} von {total}",
+        "bulk_tags_title": "Tags von {count} Geräten",
+        "bulk_tags_hint": "Angehakte Tags kommen auf jedes ausgewählte Gerät, abgewählte werden entfernt. Halb angehakte Tags bleiben, wie sie sind.",
+        "bulk_tags_saved": "Tags auf {count} Geräten geändert."
     },
     "keys": {
         "title": "Dashboard",
@@ -1753,7 +1765,8 @@
         "remove": "Entfernen",
         "retry": "Erneut versuchen",
         "show_value": "Anzeigen",
-        "hide_value": "Ausblenden"
+        "hide_value": "Ausblenden",
+        "run": "Ausführen"
     },
     "time": {
         "just_now": "gerade eben",
@@ -2544,7 +2557,21 @@
         "edit_heading": "Gerät bearbeiten",
         "discard_title": "Änderungen verwerfen?",
         "discard_message": "Die Änderungen an diesem Gerät sind noch nicht gespeichert.",
-        "discard_confirm": "Änderungen verwerfen"
+        "discard_confirm": "Änderungen verwerfen",
+        "action_cdap_viewer_desc": "Bilder des Bildschirms statt einer Live-Übertragung",
+        "action_delete_target_desc": "Entfernt das RDP/VNC-Ziel aus der Liste",
+        "action_edit_fields_desc": "Name, Benutzer, Notiz, Ordner und Tags ändern",
+        "action_edit_target_desc": "Adresse, Anmeldung und Sicherheitseinstellungen",
+        "action_groups_desc": "Das Gerät einer Gruppe hinzufügen oder daraus entfernen",
+        "action_guest_desc": "Ein Link, der für begrenzte Zeit ohne Konsolenkonto funktioniert",
+        "action_mesh_command_desc": "Einen Befehl auf dem Gerät ausführen",
+        "action_mesh_files_desc": "Die Dateien des Geräts im Fernzugriff",
+        "action_mesh_share_desc": "Ein Link zum Ansehen des Desktops ohne Anmeldung",
+        "action_mesh_terminal_desc": "Eine Shell auf dem Gerät über seinen MeshAgent",
+        "action_port_desc": "Einen Port auf dem Gerät oder in seinem Netzwerk erreichen",
+        "agent_cached": "Das Gerät ist offline. Das hat es zuletzt gesendet:",
+        "file_downloaded": "{name} wurde heruntergeladen.",
+        "user_hint": "Wird in der Liste angezeigt. Das Gerät ersetzt den Wert, sobald es meldet, wer angemeldet ist."
     },
     "inventory": {
         "title": "Dashboard",
@@ -4494,10 +4521,10 @@
         "reconnecting": "Verbindung wird wiederhergestellt"
     },
     "theme": {
-        "dark": "Dark",
-        "light": "Light",
+        "dark": "Dunkel",
+        "light": "Hell",
         "auto": "System",
-        "title": "Dashboard",
+        "title": "Design",
         "custom": "Benutzerdefiniert",
         "switch_to_dark": "Zum dunklen Design wechseln",
         "switch_to_light": "Zum hellen Design wechseln",
@@ -7470,5 +7497,9 @@
         "previous": "Vorherige Seite",
         "next": "Nächste Seite",
         "page": "Seite {page}"
+    },
+    "shell": {
+        "skip_to_content": "Zum Hauptinhalt springen",
+        "start_failed": "Die Konsole konnte nicht starten."
     }
 }

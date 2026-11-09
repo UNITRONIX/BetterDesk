@@ -46,7 +46,7 @@
         "copy_failed": "คัดลอกไม่ได้ เลือกข้อความแล้วคัดลอกด้วยตนเอง"
     },
     "nav": {
-        "main": "Main",
+        "main": "หลัก",
         "tools": "Tools",
         "system": "System",
         "dashboard": "แดชบอร์ด",
@@ -54,18 +54,18 @@
         "keys": "การตั้งค่าไคลเอนต์",
         "generator": "เอเจนต์ BetterDesk",
         "settings": "การตั้งค่า",
-        "users": "Users",
+        "users": "ผู้ใช้",
         "inventory": "รายการทรัพย์สิน",
         "tickets": "Tickets",
         "help_requests": "คำขอความช่วยเหลือ",
-        "activity": "Activity",
+        "activity": "กิจกรรม",
         "automation": "การแจ้งเตือนและระบบอัตโนมัติ",
         "file_transfer": "การถ่ายโอนไฟล์",
         "network": "การตรวจสอบเครือข่าย",
         "dataguard": "การป้องกันข้อมูลรั่วไหล",
         "reports": "รายงาน",
         "tenants": "Tenants",
-        "registrations": "Registrations",
+        "registrations": "คำขอลงทะเบียน",
         "activate_agent": "เปิดใช้งานเอเจนต์ช่วยเหลือ",
         "management": "การจัดการ",
         "toggle_sidebar": "สลับแถบด้านข้าง",
@@ -83,7 +83,7 @@
         "languages": "คำแปล",
         "resource_control": "การเข้าถึง USB และไดรฟ์",
         "chat": "Chat",
-        "help": "Help",
+        "help": "ช่วยเหลือ",
         "expand_sidebar": "ขยายแถบด้านข้าง",
         "toggle_theme": "สลับธีม",
         "sdk_studio": "ตัวสร้างโฟลว์ (SDK)",
@@ -620,7 +620,19 @@
         "strategy_assign_none_selected": "เลือกอุปกรณ์ ผู้ใช้ หรือกลุ่มอุปกรณ์อย่างน้อยหนึ่งรายการ",
         "strategy_sheet_desc": "การตั้งค่าไคลเอนต์ที่ใช้เมื่อคนในกลุ่มผู้ใช้ทำงานบนอุปกรณ์ในกลุ่มอุปกรณ์",
         "strategy_section_scope": "ใครและที่ไหน",
-        "strategy_enabled_hint": "เมื่อปิด กฎยังถูกเก็บไว้แต่ไม่ถูกนำไปใช้"
+        "strategy_enabled_hint": "เมื่อปิด กฎยังถูกเก็บไว้แต่ไม่ถูกนำไปใช้",
+        "selected_count": "เลือกแล้ว {count}",
+        "move_to_folder": "ย้ายไปยังโฟลเดอร์",
+        "move_many_to_folder": "ย้ายอุปกรณ์ {count} เครื่องไปยังโฟลเดอร์",
+        "move": "ย้าย",
+        "clear_selection": "ล้างการเลือก",
+        "showing_count": "แสดง {shown} จาก {total}",
+        "scopes_label": "โฟลเดอร์และกลุ่ม",
+        "tag_too_long": "แท็กมีได้ไม่เกิน 50 ตัวอักษร",
+        "tag_on_count": "อยู่บน {count} จาก {total}",
+        "bulk_tags_title": "แท็กของอุปกรณ์ {count} เครื่อง",
+        "bulk_tags_hint": "แท็กที่ติ๊กจะใส่ให้อุปกรณ์ที่เลือกทุกเครื่อง แท็กที่เอาติ๊กออกจะถูกลบ แท็กที่ติ๊กไว้บางส่วนจะคงเดิม",
+        "bulk_tags_saved": "เปลี่ยนแท็กบนอุปกรณ์ {count} เครื่องแล้ว"
     },
     "keys": {
         "title": "คีย์เซิร์ฟเวอร์",
@@ -674,7 +686,7 @@
     "settings": {
         "title": "การตั้งค่า",
         "subtitle": "การกำหนดค่าคอนโซลและการตั้งค่าบัญชี",
-        "tab_general": "General",
+        "tab_general": "ทั่วไป",
         "tab_server": "เซิร์ฟเวอร์",
         "tab_branding": "ลักษณะที่ปรากฏ",
         "tab_backup": "Backup",
@@ -1723,7 +1735,7 @@
     "status": {
         "online": "Online",
         "offline": "Offline",
-        "banned": "Banned",
+        "banned": "ถูกแบน",
         "running": "Running",
         "stopped": "Stopped",
         "unknown": "Unknown",
@@ -1759,7 +1771,8 @@
         "remove": "นำออก",
         "retry": "ลองอีกครั้ง",
         "show_value": "แสดง",
-        "hide_value": "ซ่อน"
+        "hide_value": "ซ่อน",
+        "run": "เรียกใช้"
     },
     "time": {
         "just_now": "Just now",
@@ -2550,7 +2563,21 @@
         "edit_heading": "แก้ไขอุปกรณ์",
         "discard_title": "ยกเลิกการเปลี่ยนแปลงหรือไม่",
         "discard_message": "การเปลี่ยนแปลงของอุปกรณ์นี้ยังไม่ได้บันทึก",
-        "discard_confirm": "ยกเลิกการเปลี่ยนแปลง"
+        "discard_confirm": "ยกเลิกการเปลี่ยนแปลง",
+        "action_cdap_viewer_desc": "ภาพหน้าจอแทนการสตรีมสด",
+        "action_delete_target_desc": "นำเป้าหมาย RDP/VNC ออกจากรายการ",
+        "action_edit_fields_desc": "เปลี่ยนชื่อ ผู้ใช้ บันทึก โฟลเดอร์ และแท็ก",
+        "action_edit_target_desc": "ที่อยู่ การลงชื่อเข้าใช้ และการตั้งค่าความปลอดภัย",
+        "action_groups_desc": "นำอุปกรณ์เข้ากลุ่มหรือนำออกจากกลุ่ม",
+        "action_guest_desc": "ลิงก์ที่ใช้ได้โดยไม่ต้องมีบัญชีคอนโซล ภายในเวลาที่จำกัด",
+        "action_mesh_command_desc": "เรียกใช้คำสั่งหนึ่งคำสั่งบนอุปกรณ์",
+        "action_mesh_files_desc": "ไฟล์ของอุปกรณ์ในตัวดูระยะไกล",
+        "action_mesh_share_desc": "ลิงก์เดสก์ท็อปแบบดูอย่างเดียวที่ไม่ต้องลงชื่อเข้าใช้",
+        "action_mesh_terminal_desc": "เชลล์บนอุปกรณ์ผ่าน MeshAgent ของอุปกรณ์",
+        "action_port_desc": "เข้าถึงพอร์ตบนอุปกรณ์หรือในเครือข่ายของอุปกรณ์",
+        "agent_cached": "อุปกรณ์ออฟไลน์อยู่ นี่คือข้อมูลล่าสุดที่ส่งมา:",
+        "file_downloaded": "ดาวน์โหลด {name} แล้ว",
+        "user_hint": "แสดงในรายการ อุปกรณ์จะแทนที่ค่านี้เมื่อรายงานว่าใครลงชื่อเข้าใช้อยู่"
     },
     "inventory": {
         "title": "Inventory",
@@ -4419,9 +4446,9 @@
         "file_share": "ไฟล์",
         "file_too_large": "ไฟล์ใหญ่เกินไป (สูงสุด 50MB)",
         "file_encrypted": "การถ่ายโอนไฟล์ที่เข้ารหัส",
-        "presence_online": "Online",
-        "presence_away": "Away",
-        "presence_busy": "Busy",
+        "presence_online": "ออนไลน์",
+        "presence_away": "ไม่อยู่",
+        "presence_busy": "ไม่ว่าง",
         "presence_offline": "Offline",
         "key_rotation": "หมุนคีย์ความปลอดภัยแล้ว",
         "new_message": "New message",
@@ -4447,7 +4474,7 @@
         "today": "Today",
         "yesterday": "Yesterday",
         "react": "React",
-        "my_presence": "My status",
+        "my_presence": "สถานะของฉัน",
         "search_placeholder": "ค้นหาผู้ติดต่อและข้อความ",
         "select_conversation_hint": "เลือกการสนทนาเพื่อดูข้อความ",
         "info": "Info",
@@ -4500,10 +4527,10 @@
         "reconnecting": "กำลังเชื่อมต่อใหม่..."
     },
     "theme": {
-        "dark": "Dark",
-        "light": "Light",
+        "dark": "มืด",
+        "light": "สว่าง",
         "auto": "System",
-        "title": "Theme",
+        "title": "ธีม",
         "custom": "กำหนดเอง",
         "switch_to_dark": "สลับเป็นธีมมืด",
         "switch_to_light": "สลับเป็นธีมสว่าง",
@@ -6285,7 +6312,7 @@
         "dyslexia_spacing_hint": "เพิ่มระยะห่างระหว่างตัวอักษรและคำ",
         "visual": "การแสดงผล",
         "contrast": "คอนทราสต์",
-        "contrast_normal": "Normal",
+        "contrast_normal": "ปกติ",
         "contrast_high_dark": "คอนทราสต์สูงมืด",
         "contrast_high_light": "แสงคอนทราสต์สูง",
         "contrast_yellow_black": "สีเหลืองบนพื้นสีดำ",
@@ -7476,5 +7503,9 @@
         "previous": "หน้าก่อนหน้า",
         "next": "หน้าถัดไป",
         "page": "หน้า {page}"
+    },
+    "shell": {
+        "skip_to_content": "ข้ามไปยังเนื้อหาหลัก",
+        "start_failed": "ไม่สามารถเริ่มคอนโซลได้"
     }
 }

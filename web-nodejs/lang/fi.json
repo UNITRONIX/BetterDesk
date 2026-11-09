@@ -65,7 +65,7 @@
         "dataguard": "Tietovuotojen esto",
         "reports": "Raportit",
         "tenants": "Vuokralaiset",
-        "registrations": "Registrations",
+        "registrations": "Liittymispyynnöt",
         "activate_agent": "Aktivoi tukiagentti",
         "management": "Hallinto",
         "toggle_sidebar": "Vaihda sivupalkki",
@@ -620,7 +620,19 @@
         "strategy_assign_none_selected": "Valitse vähintään yksi laite, käyttäjä tai laiteryhmä.",
         "strategy_sheet_desc": "Asiakasohjelman asetukset, jotka ovat voimassa, kun käyttäjäryhmän jäsen työskentelee laiteryhmän laitteella.",
         "strategy_section_scope": "Kuka ja missä",
-        "strategy_enabled_hint": "Kun sääntö on pois päältä, se säilyy mutta ei ole käytössä."
+        "strategy_enabled_hint": "Kun sääntö on pois päältä, se säilyy mutta ei ole käytössä.",
+        "selected_count": "{count} valittu",
+        "move_to_folder": "Siirrä kansioon",
+        "move_many_to_folder": "Siirrä {count} laitetta kansioon",
+        "move": "Siirrä",
+        "clear_selection": "Tyhjennä valinta",
+        "showing_count": "Näytetään {shown}/{total}",
+        "scopes_label": "Kansiot ja ryhmät",
+        "tag_too_long": "Tagissa voi olla enintään 50 merkkiä.",
+        "tag_on_count": "{count}/{total} laitteessa",
+        "bulk_tags_title": "{count} laitteen tagit",
+        "bulk_tags_hint": "Valitut tagit lisätään jokaiseen valittuun laitteeseen ja tyhjennetyt poistetaan. Osittain valitut pysyvät ennallaan.",
+        "bulk_tags_saved": "Tagit muutettu {count} laitteessa."
     },
     "keys": {
         "title": "Palvelimen avaimet",
@@ -674,7 +686,7 @@
     "settings": {
         "title": "Asetukset",
         "subtitle": "Konsolin määritykset ja tiliasetukset",
-        "tab_general": "General",
+        "tab_general": "Yleiset",
         "tab_server": "Palvelin",
         "tab_branding": "Ulkoasu",
         "tab_backup": "Backup",
@@ -1723,7 +1735,7 @@
     "status": {
         "online": "Online",
         "offline": "Offline",
-        "banned": "Banned",
+        "banned": "Estetty",
         "running": "Running",
         "stopped": "Stopped",
         "unknown": "Unknown",
@@ -1759,7 +1771,8 @@
         "remove": "Poista",
         "retry": "Yritä uudelleen",
         "show_value": "Näytä",
-        "hide_value": "Piilota"
+        "hide_value": "Piilota",
+        "run": "Suorita"
     },
     "time": {
         "just_now": "Just now",
@@ -2550,7 +2563,21 @@
         "edit_heading": "Muokkaa laitetta",
         "discard_title": "Hylätäänkö muutokset?",
         "discard_message": "Tämän laitteen muutoksia ei ole vielä tallennettu.",
-        "discard_confirm": "Hylkää muutokset"
+        "discard_confirm": "Hylkää muutokset",
+        "action_cdap_viewer_desc": "Kuvia näytöstä suoran lähetyksen sijaan",
+        "action_delete_target_desc": "Poista RDP/VNC-kohde luettelosta",
+        "action_edit_fields_desc": "Muuta nimeä, käyttäjää, muistiinpanoa, kansiota ja tunnisteita",
+        "action_edit_target_desc": "Osoite, kirjautuminen ja suojausasetukset",
+        "action_groups_desc": "Lisää laite ryhmään tai poista se ryhmästä",
+        "action_guest_desc": "Linkki, joka toimii rajoitetun ajan ilman konsolitiliä",
+        "action_mesh_command_desc": "Suorita yksi komento laitteella",
+        "action_mesh_files_desc": "Laitteen tiedostot etänäkymässä",
+        "action_mesh_share_desc": "Vain katseluun tarkoitettu työpöytälinkki ilman kirjautumista",
+        "action_mesh_terminal_desc": "Komentotulkki laitteella sen MeshAgentin kautta",
+        "action_port_desc": "Yhdistä porttiin laitteella tai sen verkossa",
+        "agent_cached": "Laite on offline-tilassa. Tämän se lähetti viimeksi:",
+        "file_downloaded": "{name} ladattiin.",
+        "user_hint": "Näkyy luettelossa. Laite korvaa sen, kun se ilmoittaa, kuka on kirjautunut."
     },
     "inventory": {
         "title": "Inventory",
@@ -4419,9 +4446,9 @@
         "file_share": "Tiedosto",
         "file_too_large": "Tiedosto liian suuri (enintään 50 Mt)",
         "file_encrypted": "Salattu tiedostonsiirto",
-        "presence_online": "Online",
-        "presence_away": "Away",
-        "presence_busy": "Busy",
+        "presence_online": "Paikalla",
+        "presence_away": "Poissa",
+        "presence_busy": "Varattu",
         "presence_offline": "Offline",
         "key_rotation": "Suojausavaimia kierretty",
         "new_message": "New message",
@@ -4447,7 +4474,7 @@
         "today": "Today",
         "yesterday": "Yesterday",
         "react": "React",
-        "my_presence": "My status",
+        "my_presence": "Oma tila",
         "search_placeholder": "Hae yhteystietoja ja viestejä",
         "select_conversation_hint": "Valitse keskustelu nähdäksesi viestit",
         "info": "Info",
@@ -4500,10 +4527,10 @@
         "reconnecting": "Yhdistetään uudelleen..."
     },
     "theme": {
-        "dark": "Dark",
-        "light": "Light",
+        "dark": "Tumma",
+        "light": "Vaalea",
         "auto": "System",
-        "title": "Theme",
+        "title": "Teema",
         "custom": "Mukautettu",
         "switch_to_dark": "Vaihda tummaan teemaan",
         "switch_to_light": "Vaihda vaaleaan teemaan",
@@ -6285,7 +6312,7 @@
         "dyslexia_spacing_hint": "Lisää tilaa kirjainten ja sanojen väliin.",
         "visual": "Ulkoasu",
         "contrast": "Kontrasti",
-        "contrast_normal": "Normal",
+        "contrast_normal": "Normaali",
         "contrast_high_dark": "Korkea kontrasti tumma",
         "contrast_high_light": "Korkeakontrastinen valo",
         "contrast_yellow_black": "Keltainen mustalla",
@@ -7476,5 +7503,9 @@
         "previous": "Edellinen sivu",
         "next": "Seuraava sivu",
         "page": "Sivu {page}"
+    },
+    "shell": {
+        "skip_to_content": "Siirry pääsisältöön",
+        "start_failed": "Konsolia ei voitu käynnistää."
     }
 }
