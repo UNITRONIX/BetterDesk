@@ -120,14 +120,19 @@ test.describe('signed in', () => {
 		await page.goto(`/login?return=${encodeURIComponent(`${UI}/devices`)}`);
 		await expect(page).toHaveURL(new RegExp(`${UI}/devices$`));
 	});
+});
 
-	test('an address the app has no page for: the 404 page inside the shell', async ({ page, problems }) => {
-		await page.goto(`${UI}/no-such-page-here`);
+test.describe('signed in, an address the app has no page for', () => {
+	// The address itself answers 404 (the server knows the app's pages); any other problem fails the test.
+	// One pattern (an array's second item would be read as options)
+	test.use({ allowProblems: [/\/no-such-page-here$|status of 404 \(Not Found\)/] });
+	test('the 404 page inside the shell', async ({ page }) => {
+		const res = await page.goto(`${UI}/no-such-page-here`);
+		expect(res?.status()).toBe(404);
 		await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 		await expect(page.locator('.error-page')).toBeVisible();
 		await expect(page.getByRole('navigation').first()).toBeVisible();
 		await expectNoAxeViolations(page);
-		expect(problems.list).toEqual([]);
 	});
 });
 
