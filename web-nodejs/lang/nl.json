@@ -150,7 +150,8 @@
         "session_idle_warning_title": "Sessie verloopt binnenkort",
         "session_idle_warning_body": "U wordt over {{seconds}} seconden uitgelogd wegens inactiviteit.",
         "session_stay_signed_in": "Ingelogd blijven",
-        "show_password": "Wachtwoord tonen"
+        "show_password": "Wachtwoord tonen",
+        "sso_redirecting": "Single sign-on wordt geopend…"
     },
     "dashboard": {
         "title": "Overzicht",
@@ -7352,7 +7353,10 @@
             }
         },
         "prev": "Vorige dia",
-        "next": "Volgende dia"
+        "next": "Volgende dia",
+        "carousel": "carrousel",
+        "slide": "dia",
+        "slide_n": "Dia {n} van {count}"
     },
     "agents": {
         "title": "BetterDesk-agents",

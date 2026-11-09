@@ -156,7 +156,8 @@
         "session_idle_warning_title": "Istunto vanhenee pian",
         "session_idle_warning_body": "Sinut kirjataan ulos käyttämättömyyden vuoksi {{seconds}} sekunnin kuluttua.",
         "session_stay_signed_in": "Pysy kirjautuneena",
-        "show_password": "Näytä salasana"
+        "show_password": "Näytä salasana",
+        "sso_redirecting": "Avataan kertakirjautumista…"
     },
     "dashboard": {
         "title": "Kojelauta",
@@ -7358,7 +7359,10 @@
             }
         },
         "prev": "Edellinen dia",
-        "next": "Seuraava dia"
+        "next": "Seuraava dia",
+        "carousel": "karuselli",
+        "slide": "dia",
+        "slide_n": "Dia {n}/{count}"
     },
     "agents": {
         "title": "BetterDesk-agentit",

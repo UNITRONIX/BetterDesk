@@ -156,7 +156,8 @@
         "session_idle_warning_title": "Økten utløper snart",
         "session_idle_warning_body": "Du logges ut på grunn av inaktivitet om {{seconds}} sekunder.",
         "session_stay_signed_in": "Forbli innlogget",
-        "show_password": "Vis passord"
+        "show_password": "Vis passord",
+        "sso_redirecting": "Åpner enkel pålogging…"
     },
     "dashboard": {
         "title": "Dashbord",
@@ -7358,7 +7359,10 @@
             }
         },
         "prev": "Forrige lysbilde",
-        "next": "Neste lysbilde"
+        "next": "Neste lysbilde",
+        "carousel": "karusell",
+        "slide": "lysbilde",
+        "slide_n": "Lysbilde {n} av {count}"
     },
     "agents": {
         "title": "BetterDesk-agenter",

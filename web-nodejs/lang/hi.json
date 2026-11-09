@@ -156,7 +156,8 @@
         "session_idle_warning_title": "सत्र जल्द समाप्त होगा",
         "session_idle_warning_body": "निष्क्रियता के कारण {{seconds}} सेकंड में आपको साइन आउट किया जाएगा।",
         "session_stay_signed_in": "साइन इन रहें",
-        "show_password": "पासवर्ड दिखाएँ"
+        "show_password": "पासवर्ड दिखाएँ",
+        "sso_redirecting": "सिंगल साइन-ऑन खुल रहा है…"
     },
     "dashboard": {
         "title": "डैशबोर्ड",
@@ -7358,7 +7359,10 @@
             }
         },
         "prev": "पिछली स्लाइड",
-        "next": "अगली स्लाइड"
+        "next": "अगली स्लाइड",
+        "carousel": "कैरोसेल",
+        "slide": "स्लाइड",
+        "slide_n": "{count} में से स्लाइड {n}"
     },
     "agents": {
         "title": "BetterDesk एजेंट",

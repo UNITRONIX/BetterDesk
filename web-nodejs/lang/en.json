@@ -158,7 +158,8 @@
         "session_idle_warning_title": "Session expiring soon",
         "session_idle_warning_body": "You will be signed out due to inactivity in {{seconds}} seconds.",
         "session_stay_signed_in": "Stay signed in",
-        "show_password": "Show password"
+        "show_password": "Show password",
+        "sso_redirecting": "Opening single sign-on…"
     },
     "dashboard": {
         "title": "Dashboard",
@@ -7352,7 +7353,10 @@
             }
         },
         "prev": "Previous slide",
-        "next": "Next slide"
+        "next": "Next slide",
+        "carousel": "carousel",
+        "slide": "slide",
+        "slide_n": "Slide {n} of {count}"
     },
     "agents": {
         "title": "BetterDesk Agents",

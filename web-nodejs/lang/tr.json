@@ -156,7 +156,8 @@
         "session_idle_warning_title": "Oturum yakında sona erecek",
         "session_idle_warning_body": "Hareketsizlik nedeniyle {{seconds}} saniye içinde oturumunuz kapatılacak.",
         "session_stay_signed_in": "Oturumda kal",
-        "show_password": "Şifreyi göster"
+        "show_password": "Şifreyi göster",
+        "sso_redirecting": "Tek oturum açma açılıyor…"
     },
     "dashboard": {
         "title": "Kontrol Paneli",
@@ -7358,7 +7359,10 @@
             }
         },
         "prev": "Önceki slayt",
-        "next": "Sonraki slayt"
+        "next": "Sonraki slayt",
+        "carousel": "döngü",
+        "slide": "slayt",
+        "slide_n": "Slayt {n}/{count}"
     },
     "agents": {
         "title": "BetterDesk Aracıları",

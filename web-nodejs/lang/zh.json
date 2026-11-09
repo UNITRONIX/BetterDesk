@@ -150,7 +150,8 @@
         "session_idle_warning_title": "会话即将过期",
         "session_idle_warning_body": "由于无操作，将在 {{seconds}} 秒后退出登录。",
         "session_stay_signed_in": "保持登录",
-        "show_password": "显示密码"
+        "show_password": "显示密码",
+        "sso_redirecting": "正在打开单点登录…"
     },
     "dashboard": {
         "title": "仪表板",
@@ -7352,7 +7353,10 @@
             }
         },
         "prev": "上一张幻灯片",
-        "next": "下一张幻灯片"
+        "next": "下一张幻灯片",
+        "carousel": "轮播",
+        "slide": "幻灯片",
+        "slide_n": "第 {n} 张幻灯片，共 {count} 张"
     },
     "agents": {
         "title": "BetterDesk 代理",

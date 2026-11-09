@@ -156,7 +156,8 @@
         "session_idle_warning_title": "A munkamenet hamarosan lejár",
         "session_idle_warning_body": "Inaktivitás miatt {{seconds}} másodperc múlva kijelentkeztetjük.",
         "session_stay_signed_in": "Maradjon bejelentkezve",
-        "show_password": "Jelszó megjelenítése"
+        "show_password": "Jelszó megjelenítése",
+        "sso_redirecting": "Egyszeri bejelentkezés megnyitása…"
     },
     "dashboard": {
         "title": "Irányítópult",
@@ -7358,7 +7359,10 @@
             }
         },
         "prev": "Előző dia",
-        "next": "Következő dia"
+        "next": "Következő dia",
+        "carousel": "körhinta",
+        "slide": "dia",
+        "slide_n": "{n}. dia / {count}"
     },
     "agents": {
         "title": "BetterDesk ügynökök",

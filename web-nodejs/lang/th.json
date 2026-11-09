@@ -156,7 +156,8 @@
         "session_idle_warning_title": "เซสชันใกล้หมดอายุ",
         "session_idle_warning_body": "คุณจะถูกออกจากระบบเนื่องจากไม่มีการใช้งานใน {{seconds}} วินาที",
         "session_stay_signed_in": "คงสถานะเข้าสู่ระบบ",
-        "show_password": "แสดงรหัสผ่าน"
+        "show_password": "แสดงรหัสผ่าน",
+        "sso_redirecting": "กำลังเปิดการลงชื่อเข้าใช้ครั้งเดียว…"
     },
     "dashboard": {
         "title": "แดชบอร์ด",
@@ -7358,7 +7359,10 @@
             }
         },
         "prev": "สไลด์ก่อนหน้า",
-        "next": "สไลด์ถัดไป"
+        "next": "สไลด์ถัดไป",
+        "carousel": "ภาพหมุนเวียน",
+        "slide": "สไลด์",
+        "slide_n": "สไลด์ {n} จาก {count}"
     },
     "agents": {
         "title": "เอเจนต์ BetterDesk",

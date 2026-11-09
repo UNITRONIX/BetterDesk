@@ -150,7 +150,8 @@
         "session_idle_warning_title": "세션이 곧 만료됩니다",
         "session_idle_warning_body": "비활성으로 인해 {{seconds}}초 후 로그아웃됩니다.",
         "session_stay_signed_in": "로그인 유지",
-        "show_password": "비밀번호 표시"
+        "show_password": "비밀번호 표시",
+        "sso_redirecting": "통합 로그인을 여는 중…"
     },
     "dashboard": {
         "title": "대시보드",
@@ -7352,7 +7353,10 @@
             }
         },
         "prev": "이전 슬라이드",
-        "next": "다음 슬라이드"
+        "next": "다음 슬라이드",
+        "carousel": "캐러셀",
+        "slide": "슬라이드",
+        "slide_n": "슬라이드 {n}/{count}"
     },
     "agents": {
         "title": "BetterDesk 에이전트",

@@ -150,7 +150,8 @@
         "session_idle_warning_title": "Sessione in scadenza",
         "session_idle_warning_body": "Verrai disconnesso per inattività tra {{seconds}} secondi.",
         "session_stay_signed_in": "Resta connesso",
-        "show_password": "Mostra password"
+        "show_password": "Mostra password",
+        "sso_redirecting": "Apertura del single sign-on…"
     },
     "dashboard": {
         "title": "Panoramica",
@@ -7352,7 +7353,10 @@
             }
         },
         "prev": "Slide precedente",
-        "next": "Slide successiva"
+        "next": "Slide successiva",
+        "carousel": "carosello",
+        "slide": "slide",
+        "slide_n": "Slide {n} di {count}"
     },
     "agents": {
         "title": "Agenti BetterDesk",

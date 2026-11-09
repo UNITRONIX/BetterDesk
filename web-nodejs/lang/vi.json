@@ -156,7 +156,8 @@
         "session_idle_warning_title": "Phiên sắp hết hạn",
         "session_idle_warning_body": "Bạn sẽ bị đăng xuất do không hoạt động sau {{seconds}} giây.",
         "session_stay_signed_in": "Giữ đăng nhập",
-        "show_password": "Hiện mật khẩu"
+        "show_password": "Hiện mật khẩu",
+        "sso_redirecting": "Đang mở đăng nhập một lần…"
     },
     "dashboard": {
         "title": "Trang tổng quan",
@@ -7358,7 +7359,10 @@
             }
         },
         "prev": "Trang trước",
-        "next": "Trang sau"
+        "next": "Trang sau",
+        "carousel": "băng chuyền",
+        "slide": "trang",
+        "slide_n": "Trang {n} trên {count}"
     },
     "agents": {
         "title": "Tác nhân BetterDesk",

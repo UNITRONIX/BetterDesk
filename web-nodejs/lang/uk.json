@@ -156,7 +156,8 @@
         "session_idle_warning_title": "Сеанс скоро завершиться",
         "session_idle_warning_body": "Вас буде виведено через неактивність за {{seconds}} с.",
         "session_stay_signed_in": "Залишатися в системі",
-        "show_password": "Показати пароль"
+        "show_password": "Показати пароль",
+        "sso_redirecting": "Відкриваємо єдиний вхід…"
     },
     "dashboard": {
         "title": "Приладова панель",
@@ -7358,7 +7359,10 @@
             }
         },
         "prev": "Попередній слайд",
-        "next": "Наступний слайд"
+        "next": "Наступний слайд",
+        "carousel": "карусель",
+        "slide": "слайд",
+        "slide_n": "Слайд {n} з {count}"
     },
     "agents": {
         "title": "Агенти BetterDesk",

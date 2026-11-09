@@ -156,7 +156,8 @@
         "session_idle_warning_title": "Sessionen går snart ut",
         "session_idle_warning_body": "Du loggas ut på grund av inaktivitet om {{seconds}} sekunder.",
         "session_stay_signed_in": "Förbli inloggad",
-        "show_password": "Visa lösenord"
+        "show_password": "Visa lösenord",
+        "sso_redirecting": "Öppnar enkel inloggning…"
     },
     "dashboard": {
         "title": "Instrumentbräda",
@@ -7358,7 +7359,10 @@
             }
         },
         "prev": "Föregående bild",
-        "next": "Nästa bild"
+        "next": "Nästa bild",
+        "carousel": "karusell",
+        "slide": "bild",
+        "slide_n": "Bild {n} av {count}"
     },
     "agents": {
         "title": "BetterDesk-agenter",

@@ -156,7 +156,8 @@
         "session_idle_warning_title": "Sesi akan segera berakhir",
         "session_idle_warning_body": "Anda akan keluar karena tidak aktif dalam {{seconds}} detik.",
         "session_stay_signed_in": "Tetap masuk",
-        "show_password": "Tampilkan kata sandi"
+        "show_password": "Tampilkan kata sandi",
+        "sso_redirecting": "Membuka single sign-on…"
     },
     "dashboard": {
         "title": "Dasbor",
@@ -7358,7 +7359,10 @@
             }
         },
         "prev": "Slide sebelumnya",
-        "next": "Slide berikutnya"
+        "next": "Slide berikutnya",
+        "carousel": "korsel",
+        "slide": "slide",
+        "slide_n": "Slide {n} dari {count}"
     },
     "agents": {
         "title": "Agen BetterDesk",

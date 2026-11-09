@@ -154,7 +154,8 @@
         "session_idle_warning_title": "Session bientôt expirée",
         "session_idle_warning_body": "Vous serez déconnecté pour inactivité dans {{seconds}} secondes.",
         "session_stay_signed_in": "Rester connecté",
-        "show_password": "Afficher le mot de passe"
+        "show_password": "Afficher le mot de passe",
+        "sso_redirecting": "Ouverture de l'authentification unique…"
     },
     "dashboard": {
         "title": "Tableau de bord",
@@ -7356,7 +7357,10 @@
             }
         },
         "prev": "Diapositive précédente",
-        "next": "Diapositive suivante"
+        "next": "Diapositive suivante",
+        "carousel": "carrousel",
+        "slide": "diapositive",
+        "slide_n": "Diapositive {n} sur {count}"
     },
     "agents": {
         "title": "Agents BetterDesk",

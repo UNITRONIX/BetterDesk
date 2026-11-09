@@ -150,7 +150,8 @@
         "session_idle_warning_title": "La sesión expirará pronto",
         "session_idle_warning_body": "Se cerrará la sesión por inactividad en {{seconds}} segundos.",
         "session_stay_signed_in": "Seguir conectado",
-        "show_password": "Mostrar contraseña"
+        "show_password": "Mostrar contraseña",
+        "sso_redirecting": "Abriendo el inicio de sesión único…"
     },
     "dashboard": {
         "title": "Panel",
@@ -7352,7 +7353,10 @@
             }
         },
         "prev": "Diapositiva anterior",
-        "next": "Diapositiva siguiente"
+        "next": "Diapositiva siguiente",
+        "carousel": "carrusel",
+        "slide": "diapositiva",
+        "slide_n": "Diapositiva {n} de {count}"
     },
     "agents": {
         "title": "Agentes BetterDesk",

@@ -150,7 +150,8 @@
         "session_idle_warning_title": "Relace brzy vyprší",
         "session_idle_warning_body": "Budete odhlášeni kvůli nečinnosti za {{seconds}} s.",
         "session_stay_signed_in": "Zůstat přihlášen",
-        "show_password": "Zobrazit heslo"
+        "show_password": "Zobrazit heslo",
+        "sso_redirecting": "Otevírá se jednotné přihlášení…"
     },
     "dashboard": {
         "title": "Nástěnka",
@@ -7352,7 +7353,10 @@
             }
         },
         "prev": "Předchozí snímek",
-        "next": "Další snímek"
+        "next": "Další snímek",
+        "carousel": "karusel",
+        "slide": "snímek",
+        "slide_n": "Snímek {n} z {count}"
     },
     "agents": {
         "title": "Agenti BetterDesk",

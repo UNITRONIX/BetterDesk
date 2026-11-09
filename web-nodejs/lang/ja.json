@@ -150,7 +150,8 @@
         "session_idle_warning_title": "セッションまもなく期限切れ",
         "session_idle_warning_body": "操作がないため {{seconds}} 秒後にサインアウトされます。",
         "session_stay_signed_in": "サインインを維持",
-        "show_password": "パスワードを表示"
+        "show_password": "パスワードを表示",
+        "sso_redirecting": "シングルサインオンを開いています…"
     },
     "dashboard": {
         "title": "ダッシュボード",
@@ -7352,7 +7353,10 @@
             }
         },
         "prev": "前のスライド",
-        "next": "次のスライド"
+        "next": "次のスライド",
+        "carousel": "カルーセル",
+        "slide": "スライド",
+        "slide_n": "スライド {n}/{count}"
     },
     "agents": {
         "title": "BetterDeskエージェント",

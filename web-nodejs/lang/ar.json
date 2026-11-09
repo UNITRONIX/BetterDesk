@@ -157,7 +157,8 @@
         "session_idle_warning_title": "الجلسة على وشك الانتهاء",
         "session_idle_warning_body": "سيتم تسجيل خروجك بسبب عدم النشاط خلال {{seconds}} ثانية.",
         "session_stay_signed_in": "البقاء مسجلاً",
-        "show_password": "إظهار كلمة المرور"
+        "show_password": "إظهار كلمة المرور",
+        "sso_redirecting": "جارٍ فتح تسجيل الدخول الموحّد…"
     },
     "dashboard": {
         "title": "لوحة القيادة",
@@ -7359,7 +7360,10 @@
             }
         },
         "prev": "الشريحة السابقة",
-        "next": "الشريحة التالية"
+        "next": "الشريحة التالية",
+        "carousel": "عرض متتابع",
+        "slide": "شريحة",
+        "slide_n": "الشريحة {n} من {count}"
     },
     "agents": {
         "title": "وكلاء BetterDesk",

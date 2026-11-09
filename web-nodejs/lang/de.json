@@ -150,7 +150,8 @@
         "session_idle_warning_title": "Sitzung läuft bald ab",
         "session_idle_warning_body": "Sie werden wegen Inaktivität in {{seconds}} Sekunden abgemeldet.",
         "session_stay_signed_in": "Angemeldet bleiben",
-        "show_password": "Passwort anzeigen"
+        "show_password": "Passwort anzeigen",
+        "sso_redirecting": "Single Sign-on wird geöffnet…"
     },
     "dashboard": {
         "title": "Übersicht",
@@ -7352,7 +7353,10 @@
             }
         },
         "prev": "Vorherige Folie",
-        "next": "Nächste Folie"
+        "next": "Nächste Folie",
+        "carousel": "Karussell",
+        "slide": "Folie",
+        "slide_n": "Folie {n} von {count}"
     },
     "agents": {
         "title": "BetterDesk-Agenten",

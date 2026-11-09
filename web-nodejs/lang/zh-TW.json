@@ -154,7 +154,8 @@
         "session_idle_warning_title": "工作階段即將過期",
         "session_idle_warning_body": "因閒置將在 {{seconds}} 秒後登出。",
         "session_stay_signed_in": "保持登入",
-        "show_password": "顯示密碼"
+        "show_password": "顯示密碼",
+        "sso_redirecting": "正在開啟單一登入…"
     },
     "dashboard": {
         "title": "儀表板",
@@ -7356,7 +7357,10 @@
             }
         },
         "prev": "上一張投影片",
-        "next": "下一張投影片"
+        "next": "下一張投影片",
+        "carousel": "輪播",
+        "slide": "投影片",
+        "slide_n": "第 {n} 張投影片，共 {count} 張"
     },
     "agents": {
         "title": "BetterDesk 代理",

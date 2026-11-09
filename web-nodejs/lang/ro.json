@@ -156,7 +156,8 @@
         "session_idle_warning_title": "Sesiunea expiră în curând",
         "session_idle_warning_body": "Veți fi deconectat din cauza inactivității în {{seconds}} secunde.",
         "session_stay_signed_in": "Rămâneți autentificat",
-        "show_password": "Afișează parola"
+        "show_password": "Afișează parola",
+        "sso_redirecting": "Se deschide autentificarea unică…"
     },
     "dashboard": {
         "title": "Tabloul de bord",
@@ -7358,7 +7359,10 @@
             }
         },
         "prev": "Diapozitivul anterior",
-        "next": "Diapozitivul următor"
+        "next": "Diapozitivul următor",
+        "carousel": "carusel",
+        "slide": "diapozitiv",
+        "slide_n": "Diapozitivul {n} din {count}"
     },
     "agents": {
         "title": "Agenți BetterDesk",
