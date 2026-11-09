@@ -131,6 +131,21 @@ describe('Sidebar', () => {
 		expect(screen.getByRole('separator')).toHaveAttribute('aria-valuenow', '320');
 	});
 
+	test('"Powered by BetterDesk" links to the project with the version, unless branding turns it off', async () => {
+		const { session } = await import('../../../src/lib/state/session.svelte.ts');
+		session.appVersion = '3.5.219';
+		await setup('/devices');
+		// Unit tests show string keys: the name is "branding.powered_by BetterDesk 3.5.219"
+		const powered = screen.getByRole('link', { name: /BetterDesk 3\.5\.219$/ });
+		expect(powered).toHaveAttribute('href', 'https://github.com/UNITRONIX/BetterDesk');
+		expect(powered).toHaveAttribute('target', '_blank');
+		expect(powered).toHaveAttribute('rel', 'noopener noreferrer');
+		expect(powered).toHaveTextContent('3.5.219');
+		cleanup();
+		await setup('/devices', '', { branding: { showPoweredBy: false, footerText: '' } });
+		expect(screen.queryByRole('link', { name: /3\.5\.219/ })).toBeNull();
+	});
+
 	test('as a closed drawer it is out of reach; open it is a dialog', async () => {
 		const { view } = await setup('/devices', '', { drawer: true, open: false });
 		const root = view.container.querySelector<HTMLElement>('.shell-sidebar')!;

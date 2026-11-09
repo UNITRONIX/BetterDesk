@@ -232,6 +232,7 @@
 		branding?.logoUrl && /^(\/(?!\/)|https?:\/\/)/i.test(branding.logoUrl) ? branding.logoUrl : ''
 	);
 	const showPoweredBy = $derived(branding ? branding.showPoweredBy : true);
+	const PROJECT_URL = 'https://github.com/UNITRONIX/BetterDesk';
 	const footerText = $derived(branding?.footerText ?? '');
 </script>
 
@@ -335,7 +336,14 @@
 		{#if footerText || showPoweredBy}
 			<div class="sidebar-attribution">
 				{#if footerText}<span>{footerText}</span>{/if}
-				{#if showPoweredBy}<span>{t('branding.powered_by')} <span translate="no">BetterDesk</span></span>{/if}
+				{#if showPoweredBy}
+					<!-- The project's page, in a new tab so the console stays open -->
+					<a class="powered-by" href={PROJECT_URL} target="_blank" rel="noopener noreferrer">
+						<BrandLogo mark />
+						<span>{t('branding.powered_by')} <span translate="no">BetterDesk</span></span>
+						{#if session.appVersion}<span class="powered-version">{session.appVersion}</span>{/if}
+					</a>
+				{/if}
 			</div>
 		{/if}
 	</div>
@@ -553,8 +561,39 @@
 	.sidebar-attribution {
 		display: flex;
 		flex-direction: column;
+		gap: var(--space-1);
+		padding-top: var(--space-1);
 		color: var(--text-muted);
 		font-size: var(--text-xs);
+	}
+	/* The mark, the line and the version on one row; the version at the end */
+	.powered-by {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+		min-height: 24px;
+		color: inherit;
+		text-decoration: none;
+	}
+	.powered-by :global(.brand-logo-mark) {
+		flex: none;
+		width: 14px;
+		height: 14px;
+	}
+	.powered-version {
+		margin-inline-start: auto;
+		font-variant-numeric: tabular-nums;
+	}
+	.powered-by:hover {
+		color: var(--text);
+	}
+	.powered-by:hover > span:not(.powered-version) {
+		text-decoration: underline;
+	}
+	.powered-by:focus-visible {
+		outline: 2px solid var(--focus);
+		outline-offset: 2px;
+		border-radius: 2px;
 	}
 
 	.resize-handle {
