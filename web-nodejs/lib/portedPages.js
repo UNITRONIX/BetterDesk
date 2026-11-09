@@ -18,7 +18,11 @@ const PORTED_PAGES = Object.freeze([
     '/attestation',
     '/automation',
     '/resource-control',
-    '/dataguard'
+    '/dataguard',
+    '/server-management',
+    '/scaling',
+    '/server-attestation',
+    '/commercialization'
 ]);
 
 function isPortedPath(pathname, list = PORTED_PAGES) {

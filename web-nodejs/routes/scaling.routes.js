@@ -120,22 +120,6 @@ function sanitizeRule(body, existing) {
 }
 
 // ---------------------------------------------------------------------------
-// Page route
-// ---------------------------------------------------------------------------
-
-router.get('/scaling', requireAuth, requirePermission('server.config'), (req, res) => {
-    const tab = req.query.tab || 'overview';
-    res.render('scaling', {
-        title: req.t('scaling.title'),
-        pageStyles: ['scaling'],
-        pageScripts: ['scaling'],
-        currentPage: 'scaling',
-        breadcrumb: [{ label: req.t('scaling.title') }],
-        activeTab: tab
-    });
-});
-
-// ---------------------------------------------------------------------------
 // Relay Nodes API — local persistence
 // ---------------------------------------------------------------------------
 

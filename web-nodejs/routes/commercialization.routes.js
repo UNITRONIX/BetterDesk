@@ -14,36 +14,6 @@ const { getSmtpSettings } = require('../lib/smtpSettingsHandlers');
 const billingClockConfig = require('../services/billingClockConfigService');
 const restartCoordinator = require('../services/restartCoordinator');
 
-router.get('/commercialization', requireAuth, requirePermission('billing.view'), (req, res) => {
-    const validTabs = ['packages', 'sessions'];
-    // Legacy tabs redirect into the simplified IA (packages | sessions).
-    const legacyMap = {
-        overview: 'packages',
-        settings: 'packages',
-        reports: 'sessions',
-    };
-    const raw = String(req.query.tab || 'packages');
-    const tab = validTabs.includes(raw)
-        ? raw
-        : (legacyMap[raw] || 'packages');
-    const openSettings = raw === 'settings' || String(req.query.settings || '') === '1';
-    const tabKey = `commercialization.tabs.${tab}`;
-    res.render('commercialization', {
-        title: req.t(tabKey),
-        pageStyles: ['commercialization'],
-        pageScripts: ['commercialization'],
-        currentPage: 'commercialization',
-        currentTab: tab,
-        activeTab: tab,
-        openBillingSettings: openSettings,
-        breadcrumb: [
-            { label: req.t('commercialization.title') },
-            { label: req.t(tabKey) }
-        ],
-        req
-    });
-});
-
 /**
  * Reading the clock settings: billing.view (the billing pages) or
  * server.config (Settings > Time zones, which saves them with server.config).

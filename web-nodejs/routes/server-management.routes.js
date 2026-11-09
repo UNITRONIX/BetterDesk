@@ -1,8 +1,8 @@
 /**
  * BetterDesk Console — Server Management Routes (BETA)
  *
- * Page:
- *   GET  /server-management
+ * The page (/server-management) is in the new console (web-ui); the old
+ * address redirects there (lib/portedPages.js).
  *
  * REST API (all require server.config permission):
  *   GET    /api/server-management/info
@@ -53,19 +53,6 @@ async function audit(req, action, details) {
 function sendError(res, status, message) {
     res.status(status).json({ success: false, error: message });
 }
-
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
-router.get('/server-management', requireAuth, requirePermission(REQUIRED_PERMISSION), (req, res) => {
-    const validTabs = ['overview', 'terminal', 'files', 'services'];
-    const requested = String(req.query.tab || 'overview').toLowerCase();
-    const currentTab = validTabs.includes(requested) ? requested : 'overview';
-    res.render('server-management', {
-        title: req.t('server_mgmt.title'),
-        activePage: 'server-management',
-        currentTab
-    });
-});
 
 // ─── Info / capabilities ──────────────────────────────────────────────────────
 
