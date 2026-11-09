@@ -3744,7 +3744,8 @@
         "step_reject": "拒絕您不認識的裝置。RustDesk 用戶端可同時封鎖，使其無法再次申請。",
         "field_tag_add_hint": "加入上方清單並勾選。",
         "field_reporting_how_often": "回報頻率",
-        "approve_sheet_desc": "裝置會取得伺服器設定並可連線。名稱、資料夾、標籤和群組之後都能變更。"
+        "approve_sheet_desc": "裝置會取得伺服器設定並可連線。名稱、資料夾、標籤和群組之後都能變更。",
+        "field_groups_hint": "選填。群組決定誰能看到此裝置，以及套用哪些存取規則。"
     },
     "backup": {
         "title": "備份",

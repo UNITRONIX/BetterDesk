@@ -3801,7 +3801,8 @@
         "step_reject": "Reject a device you don't recognise. A RustDesk client can be banned at the same time, so it cannot ask again.",
         "field_tag_add_hint": "Adds it to the list above, ticked.",
         "field_reporting_how_often": "How often it reports",
-        "approve_sheet_desc": "The device gets the server settings and can connect. Name, folder, tags and groups can be changed later."
+        "approve_sheet_desc": "The device gets the server settings and can connect. Name, folder, tags and groups can be changed later.",
+        "field_groups_hint": "Optional. A group decides who can see the device and which access rules apply to it."
     },
     "backup": {
         "title": "Backup",

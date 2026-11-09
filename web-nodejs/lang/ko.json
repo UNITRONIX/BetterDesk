@@ -3722,7 +3722,8 @@
         "step_reject": "모르는 기기는 거부합니다. RustDesk 클라이언트는 동시에 차단할 수 있어 다시 요청할 수 없습니다.",
         "field_tag_add_hint": "위 목록에 선택된 상태로 추가합니다.",
         "field_reporting_how_often": "보고 빈도",
-        "approve_sheet_desc": "장치가 서버 설정을 받아 연결할 수 있게 됩니다. 이름, 폴더, 태그, 그룹은 나중에 바꿀 수 있습니다."
+        "approve_sheet_desc": "장치가 서버 설정을 받아 연결할 수 있게 됩니다. 이름, 폴더, 태그, 그룹은 나중에 바꿀 수 있습니다.",
+        "field_groups_hint": "선택 사항입니다. 그룹에 따라 장치를 볼 수 있는 사람과 적용되는 접근 규칙이 정해집니다."
     },
     "backup": {
         "title": "Backup",

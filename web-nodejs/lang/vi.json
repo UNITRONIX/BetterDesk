@@ -3728,7 +3728,8 @@
         "step_reject": "Từ chối thiết bị bạn không nhận ra. Có thể cấm máy khách RustDesk cùng lúc để nó không thể yêu cầu lại.",
         "field_tag_add_hint": "Thêm vào danh sách phía trên, ở trạng thái đã chọn.",
         "field_reporting_how_often": "Tần suất báo cáo",
-        "approve_sheet_desc": "Thiết bị nhận cài đặt máy chủ và có thể kết nối. Tên, thư mục, thẻ và nhóm có thể đổi sau."
+        "approve_sheet_desc": "Thiết bị nhận cài đặt máy chủ và có thể kết nối. Tên, thư mục, thẻ và nhóm có thể đổi sau.",
+        "field_groups_hint": "Tùy chọn. Nhóm quyết định ai thấy được thiết bị và quy tắc truy cập nào áp dụng cho nó."
     },
     "backup": {
         "title": "Backup",

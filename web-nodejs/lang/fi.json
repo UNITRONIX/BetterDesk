@@ -3728,7 +3728,8 @@
         "step_reject": "Hylkää laite, jota et tunnista. RustDesk-asiakkaan voi samalla estää, jotta se ei voi pyytää uudelleen.",
         "field_tag_add_hint": "Lisää sen yllä olevaan luetteloon valittuna.",
         "field_reporting_how_often": "Kuinka usein se raportoi",
-        "approve_sheet_desc": "Laite saa palvelimen asetukset ja voi muodostaa yhteyden. Nimeä, kansiota, tunnisteita ja ryhmiä voi muuttaa myöhemmin."
+        "approve_sheet_desc": "Laite saa palvelimen asetukset ja voi muodostaa yhteyden. Nimeä, kansiota, tunnisteita ja ryhmiä voi muuttaa myöhemmin.",
+        "field_groups_hint": "Valinnainen. Ryhmä määrää, kuka laitteen näkee ja mitkä käyttösäännöt siihen pätevät."
     },
     "backup": {
         "title": "Varmuuskopio",

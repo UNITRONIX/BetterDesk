@@ -3728,7 +3728,8 @@
         "step_reject": "Utasítsa el az ismeretlen eszközt. Egy RustDesk-klienst egyúttal le is tilthat, így nem kérhet újra.",
         "field_tag_add_hint": "Bejelölve hozzáadja a fenti listához.",
         "field_reporting_how_often": "Milyen gyakran jelent",
-        "approve_sheet_desc": "Az eszköz megkapja a szerverbeállításokat, és csatlakozhat. A név, a mappa, a címkék és a csoportok később módosíthatók."
+        "approve_sheet_desc": "Az eszköz megkapja a szerverbeállításokat, és csatlakozhat. A név, a mappa, a címkék és a csoportok később módosíthatók.",
+        "field_groups_hint": "Nem kötelező. A csoport határozza meg, ki láthatja az eszközt, és milyen hozzáférési szabályok vonatkoznak rá."
     },
     "backup": {
         "title": "Biztonsági mentés",

@@ -3728,7 +3728,8 @@
         "step_reject": "Afvis en enhed, du ikke kender. En RustDesk-klient kan spærres samtidig, så den ikke kan spørge igen.",
         "field_tag_add_hint": "Tilføjer det til listen ovenfor, afkrydset.",
         "field_reporting_how_often": "Hvor ofte den rapporterer",
-        "approve_sheet_desc": "Enheden får serverindstillingerne og kan oprette forbindelse. Navn, mappe, tags og grupper kan ændres senere."
+        "approve_sheet_desc": "Enheden får serverindstillingerne og kan oprette forbindelse. Navn, mappe, tags og grupper kan ændres senere.",
+        "field_groups_hint": "Valgfrit. En gruppe bestemmer, hvem der kan se enheden, og hvilke adgangsregler der gælder for den."
     },
     "backup": {
         "title": "Sikkerhedskopi",

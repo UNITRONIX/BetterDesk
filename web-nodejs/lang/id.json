@@ -3728,7 +3728,8 @@
         "step_reject": "Tolak perangkat yang tidak Anda kenali. Klien RustDesk dapat diblokir sekaligus agar tidak meminta lagi.",
         "field_tag_add_hint": "Menambahkannya ke daftar di atas, dalam keadaan dicentang.",
         "field_reporting_how_often": "Seberapa sering melapor",
-        "approve_sheet_desc": "Perangkat mendapat pengaturan server dan dapat terhubung. Nama, folder, tag, dan grup dapat diubah nanti."
+        "approve_sheet_desc": "Perangkat mendapat pengaturan server dan dapat terhubung. Nama, folder, tag, dan grup dapat diubah nanti.",
+        "field_groups_hint": "Opsional. Grup menentukan siapa yang dapat melihat perangkat dan aturan akses mana yang berlaku."
     },
     "backup": {
         "title": "Backup",

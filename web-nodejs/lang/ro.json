@@ -3728,7 +3728,8 @@
         "step_reject": "Respingeți un dispozitiv pe care nu îl recunoașteți. Un client RustDesk poate fi blocat în același timp, ca să nu mai ceară.",
         "field_tag_add_hint": "O adaugă în lista de mai sus, bifată.",
         "field_reporting_how_often": "Cât de des raportează",
-        "approve_sheet_desc": "Dispozitivul primește setările serverului și se poate conecta. Numele, dosarul, etichetele și grupurile pot fi schimbate ulterior."
+        "approve_sheet_desc": "Dispozitivul primește setările serverului și se poate conecta. Numele, dosarul, etichetele și grupurile pot fi schimbate ulterior.",
+        "field_groups_hint": "Opțional. Un grup stabilește cine poate vedea dispozitivul și ce reguli de acces i se aplică."
     },
     "backup": {
         "title": "Copie de rezervă",

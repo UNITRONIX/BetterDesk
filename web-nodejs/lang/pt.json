@@ -3722,7 +3722,8 @@
         "step_reject": "Rejeite um dispositivo que não reconheça. Um cliente RustDesk pode ser bloqueado ao mesmo tempo para não voltar a pedir.",
         "field_tag_add_hint": "Adiciona à lista acima, marcada.",
         "field_reporting_how_often": "Com que frequência relata",
-        "approve_sheet_desc": "O dispositivo recebe as configurações do servidor e pode se conectar. Nome, pasta, tags e grupos podem ser alterados depois."
+        "approve_sheet_desc": "O dispositivo recebe as configurações do servidor e pode se conectar. Nome, pasta, tags e grupos podem ser alterados depois.",
+        "field_groups_hint": "Opcional. Um grupo decide quem pode ver o dispositivo e que regras de acesso se aplicam a ele."
     },
     "backup": {
         "title": "Backup",

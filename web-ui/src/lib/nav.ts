@@ -44,7 +44,8 @@ export const PORTED: readonly string[] = [
 	'/cross-platform',
 	'/cdap',
 	'/cdap/devices',
-	'/cdap/devices/*'
+	'/cdap/devices/*',
+	'/registrations'
 ];
 
 /** Whether a path (no query) is one of the entries */

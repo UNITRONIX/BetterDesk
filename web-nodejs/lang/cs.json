@@ -3722,7 +3722,8 @@
         "step_reject": "Zamítněte zařízení, které neznáte. Klienta RustDesk lze zároveň zablokovat, aby nemohl žádat znovu.",
         "field_tag_add_hint": "Přidá ho do seznamu výše jako zaškrtnutý.",
         "field_reporting_how_often": "Jak často hlásí",
-        "approve_sheet_desc": "Zařízení dostane nastavení serveru a může se připojit. Název, složku, štítky a skupiny lze změnit později."
+        "approve_sheet_desc": "Zařízení dostane nastavení serveru a může se připojit. Název, složku, štítky a skupiny lze změnit později.",
+        "field_groups_hint": "Volitelné. Skupina určuje, kdo zařízení uvidí a která pravidla přístupu na něj platí."
     },
     "backup": {
         "title": "Záloha",

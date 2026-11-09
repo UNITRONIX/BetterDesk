@@ -3744,7 +3744,8 @@
         "step_reject": "Refusez un appareil que vous ne reconnaissez pas. Un client RustDesk peut être banni en même temps pour qu'il ne redemande pas.",
         "field_tag_add_hint": "L'ajoute à la liste ci-dessus, coché.",
         "field_reporting_how_often": "Fréquence des rapports",
-        "approve_sheet_desc": "L'appareil reçoit les réglages du serveur et peut se connecter. Le nom, le dossier, les étiquettes et les groupes se modifient plus tard."
+        "approve_sheet_desc": "L'appareil reçoit les réglages du serveur et peut se connecter. Le nom, le dossier, les étiquettes et les groupes se modifient plus tard.",
+        "field_groups_hint": "Facultatif. Un groupe détermine qui peut voir l'appareil et quelles règles d'accès s'y appliquent."
     },
     "backup": {
         "title": "Tableau de bord",

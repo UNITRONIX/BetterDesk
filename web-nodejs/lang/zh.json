@@ -3722,7 +3722,8 @@
         "step_reject": "拒绝您不认识的设备。RustDesk 客户端可同时封禁，使其无法再次申请。",
         "field_tag_add_hint": "添加到上方列表并勾选。",
         "field_reporting_how_often": "上报频率",
-        "approve_sheet_desc": "设备会获得服务器设置并可以连接。名称、文件夹、标签和分组之后都可以更改。"
+        "approve_sheet_desc": "设备会获得服务器设置并可以连接。名称、文件夹、标签和分组之后都可以更改。",
+        "field_groups_hint": "可选。组决定谁能看到此设备以及适用哪些访问规则。"
     },
     "backup": {
         "title": "备份",

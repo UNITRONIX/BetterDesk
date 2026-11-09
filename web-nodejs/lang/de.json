@@ -3722,7 +3722,8 @@
         "step_reject": "Lehnen Sie ein Gerät ab, das Sie nicht kennen. Einen RustDesk-Client können Sie dabei gleich sperren, damit er nicht erneut anfragt.",
         "field_tag_add_hint": "Fügt ihn der Liste oben hinzu, angehakt.",
         "field_reporting_how_often": "Wie oft es meldet",
-        "approve_sheet_desc": "Das Gerät erhält die Servereinstellungen und kann sich verbinden. Name, Ordner, Tags und Gruppen lassen sich später ändern."
+        "approve_sheet_desc": "Das Gerät erhält die Servereinstellungen und kann sich verbinden. Name, Ordner, Tags und Gruppen lassen sich später ändern.",
+        "field_groups_hint": "Optional. Eine Gruppe legt fest, wer das Gerät sieht und welche Zugriffsregeln dafür gelten."
     },
     "backup": {
         "title": "Dashboard",

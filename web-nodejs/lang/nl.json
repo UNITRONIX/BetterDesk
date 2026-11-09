@@ -3722,7 +3722,8 @@
         "step_reject": "Wijs een apparaat af dat u niet herkent. Een RustDesk-client kunt u tegelijk blokkeren, zodat hij niet opnieuw kan vragen.",
         "field_tag_add_hint": "Voegt hem aangevinkt toe aan de lijst hierboven.",
         "field_reporting_how_often": "Hoe vaak het rapporteert",
-        "approve_sheet_desc": "Het apparaat krijgt de serverinstellingen en kan verbinden. Naam, map, tags en groepen kunt u later wijzigen."
+        "approve_sheet_desc": "Het apparaat krijgt de serverinstellingen en kan verbinden. Naam, map, tags en groepen kunt u later wijzigen.",
+        "field_groups_hint": "Optioneel. Een groep bepaalt wie het apparaat kan zien en welke toegangsregels ervoor gelden."
     },
     "backup": {
         "title": "Back-up",

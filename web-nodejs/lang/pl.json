@@ -3740,7 +3740,8 @@
         "step_reject": "Odrzuć urządzenie, którego nie rozpoznajesz. Klienta RustDesk można przy tym zablokować, aby nie prosił ponownie.",
         "field_tag_add_hint": "Dodaje go do listy powyżej jako zaznaczony.",
         "field_reporting_how_often": "Jak często raportuje",
-        "approve_sheet_desc": "Urządzenie otrzyma ustawienia serwera i będzie mogło się połączyć. Nazwę, folder, tagi i grupy można zmienić później."
+        "approve_sheet_desc": "Urządzenie otrzyma ustawienia serwera i będzie mogło się połączyć. Nazwę, folder, tagi i grupy można zmienić później.",
+        "field_groups_hint": "Opcjonalne. Grupa decyduje, kto widzi urządzenie i które reguły dostępu go dotyczą."
     },
     "backup": {
         "title": "Kopia zapasowa",

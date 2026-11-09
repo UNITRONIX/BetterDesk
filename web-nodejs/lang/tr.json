@@ -3728,7 +3728,8 @@
         "step_reject": "Tanımadığınız bir cihazı reddedin. RustDesk istemcisi aynı anda yasaklanabilir, böylece tekrar isteyemez.",
         "field_tag_add_hint": "Yukarıdaki listeye işaretli olarak ekler.",
         "field_reporting_how_often": "Ne sıklıkla rapor verir",
-        "approve_sheet_desc": "Cihaz sunucu ayarlarını alır ve bağlanabilir. Ad, klasör, etiketler ve gruplar daha sonra değiştirilebilir."
+        "approve_sheet_desc": "Cihaz sunucu ayarlarını alır ve bağlanabilir. Ad, klasör, etiketler ve gruplar daha sonra değiştirilebilir.",
+        "field_groups_hint": "İsteğe bağlı. Grup, cihazı kimin görebileceğini ve hangi erişim kurallarının uygulanacağını belirler."
     },
     "backup": {
         "title": "Backup",
