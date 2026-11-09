@@ -5300,7 +5300,7 @@
         "page_description": "Uruchamiaj zadania i przepływy pracy na wielu urządzeniach jednocześnie, przypisuj urządzeniom drukarki, dyski i ustawienia sieciowe oraz sprawdzaj, czy spełniają reguły dotyczące oprogramowania.",
         "resources_note": "Drukarki, dyski sieciowe oraz ustawienia DNS, VPN i proxy, które otrzymują urządzenia organizacji.",
         "tasks_note": "Zadanie uruchamia skrypt, instalację, aktualizację lub ponowne uruchomienie na wybranych urządzeniach, od razu lub według harmonogramu.",
-        "builder_note": "Przepływ pracy łączy kroki: co go uruchamia, warunki, akcje i co dzieje się z wynikiem. Przeciągnij kroki na obszar roboczy lub kliknij je, a następnie połącz punkt po prawej stronie jednego kroku z punktem po lewej stronie następnego.",
+        "builder_note": "Przepływ pracy łączy kroki: co go uruchamia, warunki, akcje i co dzieje się z wynikiem. Przeciągnij kroki na obszar roboczy lub kliknij je, a następnie połącz punkt po prawej stronie jednego kroku z punktem po lewej stronie następnego albo użyj Połącz z w ustawieniach kroku.",
         "compliance_note": "Na ile każde urządzenie spełnia reguły dotyczące oprogramowania. Skanowanie ponownie sprawdza urządzenie; „Napraw automatycznie” zleca urządzeniu naprawienie tego, co wykryło skanowanie.",
         "address_dns": "Serwery DNS",
         "address_vpn": "Adres serwera VPN",
@@ -5423,7 +5423,15 @@
         "section_script": "Co zostanie uruchomione",
         "section_failures": "Ponowienia i limit czasu",
         "task_sheet_desc": "Skrypt, instalacja, aktualizacja lub ponowne uruchomienie na wskazanych urządzeniach, od razu lub według harmonogramu.",
-        "run_output_desc": "Co przepływ pracy {name} zgłosił przy uruchomieniu."
+        "run_output_desc": "Co przepływ pracy {name} zgłosił przy uruchomieniu.",
+        "prop_connections": "Połączenia",
+        "prop_from": "Z: {name}",
+        "prop_to": "Do: {name}",
+        "prop_remove_connection": "Usuń",
+        "prop_no_connections": "Jeszcze niepołączony.",
+        "prop_connect_to": "Połącz z",
+        "prop_choose_step": "Wybierz krok",
+        "prop_connect": "Połącz"
     },
     "scaling": {
         "title": "Skalowanie i zarządzanie przekaźnikami",

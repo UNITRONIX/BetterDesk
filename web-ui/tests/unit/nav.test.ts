@@ -12,10 +12,9 @@ describe('link', () => {
 		expect(link('/')).toBe('/app');
 		expect(link('/?activateAgent=1')).toBe('/app?activateAgent=1');
 	});
-	test('pages still in the old console, old aliases and API paths keep their URL', () => {
-		// Fleet tasks move with the canvas tools; until then it is an old page
-		expect(link('/fleet?tab=tasks')).toBe('/fleet?tab=tasks');
-		expect(isPorted('/fleet')).toBe(false);
+	test('old aliases and API paths keep their URL', () => {
+		// The old remote dashboard address stays a server redirect
+		expect(isPorted('/remote-dashboard')).toBe(false);
 		expect(link('/remote-dashboard')).toBe('/remote-dashboard');
 		expect(link('/api/mesh/download.msh')).toBe('/api/mesh/download.msh');
 	});

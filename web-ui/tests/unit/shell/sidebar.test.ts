@@ -35,8 +35,10 @@ describe('Sidebar', () => {
 			'href',
 			'/app/inventory'
 		);
-		// A page still in the old console keeps its URL (fleet tasks move with the canvas tools)
-		expect(screen.getByRole('link', { name: 'Fleet tasks', hidden: true })).toHaveAttribute('href', '/fleet');
+		expect(screen.getByRole('link', { name: 'Fleet tasks', hidden: true })).toHaveAttribute(
+			'href',
+			'/app/fleet'
+		);
 	});
 
 	test('settings tabs are matched by their tab (pageKey)', async () => {

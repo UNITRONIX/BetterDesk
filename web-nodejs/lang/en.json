@@ -5373,7 +5373,7 @@
         "page_description": "Run tasks and workflows on many devices at once, give devices printers, drives and network settings, and check whether they meet your software rules.",
         "resources_note": "Printers, network drives, DNS, VPN and proxy settings that the devices of an organization receive.",
         "tasks_note": "A task runs a script, an install, an update or a restart on the devices you choose, right away or on a schedule.",
-        "builder_note": "A workflow chains steps: what starts it, conditions, actions and what happens with the result. Drag steps onto the canvas or click them, then connect the dot on the right of one step to the dot on the left of the next.",
+        "builder_note": "A workflow chains steps: what starts it, conditions, actions and what happens with the result. Drag steps onto the canvas or click them, then connect the dot on the right of one step to the dot on the left of the next, or use Connect to in the step settings.",
         "compliance_note": "How well each device meets your software rules. A scan checks a device again; Fix automatically asks the device to repair what the scan found.",
         "address_dns": "DNS servers",
         "address_vpn": "VPN server address",
@@ -5496,7 +5496,15 @@
         "section_script": "What runs",
         "section_failures": "Retries and time limit",
         "task_sheet_desc": "A script, install, update or restart that runs on the devices you name, right away or on a schedule.",
-        "run_output_desc": "What the workflow {name} reported when it started."
+        "run_output_desc": "What the workflow {name} reported when it started.",
+        "prop_connections": "Connections",
+        "prop_from": "From {name}",
+        "prop_to": "To {name}",
+        "prop_remove_connection": "Remove",
+        "prop_no_connections": "Not connected yet.",
+        "prop_connect_to": "Connect to",
+        "prop_choose_step": "Choose a step",
+        "prop_connect": "Connect"
     },
     "scaling": {
         "title": "Scaling & Relay Management",

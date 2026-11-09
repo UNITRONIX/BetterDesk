@@ -5171,7 +5171,7 @@
         "page_description": "Spouštějte úlohy a workflow na mnoha zařízeních najednou, přidělujte zařízením tiskárny, jednotky a nastavení sítě a kontrolujte, zda splňují vaše softwarová pravidla.",
         "resources_note": "Tiskárny, síťové jednotky a nastavení DNS, VPN a proxy, která dostávají zařízení organizace.",
         "tasks_note": "Úloha spustí skript, instalaci, aktualizaci nebo restart na vybraných zařízeních, ihned nebo podle plánu.",
-        "builder_note": "Workflow řetězí kroky: co ho spouští, podmínky, akce a co se stane s výsledkem. Přetáhněte kroky na plochu nebo na ně klikněte a pak propojte tečku vpravo u jednoho kroku s tečkou vlevo u dalšího.",
+        "builder_note": "Workflow řetězí kroky: co ho spouští, podmínky, akce a co se stane s výsledkem. Přetáhněte kroky na plochu nebo na ně klikněte a pak propojte tečku vpravo u jednoho kroku s tečkou vlevo u dalšího, nebo použijte Připojit k v nastavení kroku.",
         "compliance_note": "Jak dobře jednotlivá zařízení splňují vaše softwarová pravidla. Kontrola zařízení znovu prověří; „Opravit automaticky“ požádá zařízení, aby opravilo, co kontrola našla.",
         "address_dns": "Servery DNS",
         "address_vpn": "Adresa serveru VPN",
@@ -5294,7 +5294,15 @@
         "section_script": "Co se spustí",
         "section_failures": "Opakování a časový limit",
         "task_sheet_desc": "Skript, instalace, aktualizace nebo restart, který se spustí na zadaných zařízeních, hned nebo podle plánu.",
-        "run_output_desc": "Co pracovní postup {name} hlásil při spuštění."
+        "run_output_desc": "Co pracovní postup {name} hlásil při spuštění.",
+        "prop_connections": "Spojení",
+        "prop_from": "Z {name}",
+        "prop_to": "Do {name}",
+        "prop_remove_connection": "Odebrat",
+        "prop_no_connections": "Zatím nepropojeno.",
+        "prop_connect_to": "Připojit k",
+        "prop_choose_step": "Vyberte krok",
+        "prop_connect": "Připojit"
     },
     "scaling": {
         "title": "Škálování a správa relay uzlů",
