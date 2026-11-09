@@ -11,7 +11,10 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
-const { requireAuth } = require('../middleware/auth');
+const { requireAuth, requirePermission } = require('../middleware/auth');
+
+// The chat WebSocket needs chat.access; its HTTP routes need the same
+const chatAccess = requirePermission('chat.access');
 
 // File upload config — max 50MB, store in data/chat-files/
 const UPLOAD_DIR = path.join(__dirname, '..', 'data', 'chat-files');
@@ -48,7 +51,7 @@ router.get('/chat', requireAuth, (req, res) => {
 // ========== API Routes ==========
 
 // Upload encrypted file
-router.post('/api/chat/upload', requireAuth, upload.single('file'), (req, res) => {
+router.post('/api/chat/upload', requireAuth, chatAccess, upload.single('file'), (req, res) => {
     if (!req.file) {
         return res.status(400).json({ success: false, error: 'No file provided' });
     }
@@ -63,7 +66,7 @@ router.post('/api/chat/upload', requireAuth, upload.single('file'), (req, res) =
 });
 
 // Download file
-router.get('/api/chat/files/:fileId', requireAuth, (req, res) => {
+router.get('/api/chat/files/:fileId', requireAuth, chatAccess, (req, res) => {
     const fileId = req.params.fileId.replace(/[^a-f0-9]/gi, '');
     if (!fileId) return res.status(400).json({ success: false, error: 'Invalid file ID' });
 
@@ -81,7 +84,7 @@ router.get('/api/chat/files/:fileId', requireAuth, (req, res) => {
 });
 
 // Search messages via Go server proxy
-router.get('/api/chat/search', requireAuth, async (req, res) => {
+router.get('/api/chat/search', requireAuth, chatAccess, async (req, res) => {
     try {
         const { apiClient } = require('../services/betterdeskApi');
         const query = String(req.query.q || '').slice(0, 200);

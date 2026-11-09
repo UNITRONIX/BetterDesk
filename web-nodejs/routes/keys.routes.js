@@ -6,7 +6,7 @@ const express = require('express');
 const router = express.Router();
 const keyService = require('../services/keyService');
 const clientConfigHost = require('../services/clientConfigHost');
-const { requireAuth } = require('../middleware/auth');
+const { requireAuth, requestHasPermission } = require('../middleware/auth');
 
 function resolveClientEndpoints(req) {
     const queryHost = typeof req.query.host === 'string' ? req.query.host : '';
@@ -132,11 +132,15 @@ router.get('/api/keys/public/download', requireAuth, async (req, res) => {
 });
 
 /**
- * GET /api/keys/api - Get API key (masked)
+ * GET /api/keys/api - Get API key (masked). ?show=true returns the full key,
+ * which acts as an admin on the Go server, so it needs server.keys.
  */
 router.get('/api/keys/api', requireAuth, (req, res) => {
     try {
         const show = req.query.show === 'true';
+        if (show && !requestHasPermission(req, 'server.keys')) {
+            return res.status(403).json({ success: false, error: 'Permission denied: server.keys' });
+        }
         const apiKey = keyService.getApiKey(!show);
         
         if (!apiKey) {
