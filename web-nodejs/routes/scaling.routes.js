@@ -111,7 +111,10 @@ function sanitizeRule(body, existing) {
     out.fallback = String(body.fallback || 'master').trim();
     const priority = parseInt(body.priority, 10);
     out.priority = Number.isFinite(priority) ? priority : 10;
-    out.enabled = body.enabled !== false;
+    // An edit without the switch keeps the rule's state; a new rule is on
+    out.enabled = body.enabled === undefined
+        ? (existing ? existing.enabled !== false : true)
+        : body.enabled !== false;
     out.updated_at = new Date().toISOString();
     return out;
 }
