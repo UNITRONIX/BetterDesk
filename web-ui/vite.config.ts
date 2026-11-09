@@ -10,6 +10,8 @@ const base = (process.env.BD_UI_BASE ?? '/app') as '' | `/${string}`;
 const backend = process.env.BD_BACKEND ?? 'http://localhost:5000';
 
 export default defineConfig({
+	// Several dev servers share this folder (one per worker); each keeps its own dependency cache
+	cacheDir: process.env.BD_VITE_CACHE,
 	plugins: [
 		// licenses.txt next to the code; fails the build on a license the console may not ship
 		licenses(),
