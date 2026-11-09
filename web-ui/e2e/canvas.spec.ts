@@ -93,7 +93,7 @@ for (const role of ROLES) {
 			const save = page.getByRole('dialog');
 			await expect(save.getByText('A test run needs a saved flow')).toBeVisible();
 			await expectNoAxeViolations(page);
-			await save.getByRole('textbox', { name: 'Name' }).fill(name);
+			await save.getByRole('textbox', { name: 'Name', exact: true }).fill(name);
 			await save.getByRole('button', { name: 'Save flow' }).click();
 			await expect(page.locator('#studio-log-body')).toContainText(
 				'Test run finished: 4 nodes, 3 connections'
@@ -139,7 +139,7 @@ for (const role of ROLES) {
 
 			await page.getByRole('button', { name: 'Add resource' }).click();
 			const sheet = page.getByRole('dialog');
-			await expect(sheet.getByRole('textbox', { name: 'Name' })).toBeVisible();
+			await expect(sheet.getByRole('textbox', { name: 'Name', exact: true })).toBeVisible();
 			if (unavailable) await expect(sheet.getByRole('button', { name: 'Add resource' })).toBeDisabled();
 			await expectNoAxeViolations(page);
 			await page.keyboard.press('Escape');
@@ -158,7 +158,7 @@ for (const role of ROLES) {
 			await expect(page.locator('.node')).toHaveCount(2);
 			await expect(page.locator('.props')).toBeVisible();
 			await expectNoAxeViolations(page);
-			if (unavailable) await expect(page.getByRole('button', { name: 'Save' })).toBeDisabled();
+			if (unavailable) await expect(page.getByRole('button', { name: 'Save', exact: true })).toBeDisabled();
 
 			// Switching tabs keeps the workflow on the canvas
 			await page.getByRole('tab', { name: 'Compliance' }).click();
