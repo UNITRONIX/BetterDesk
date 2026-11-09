@@ -26,7 +26,7 @@ const router = express.Router();
 const crypto = require('crypto');
 const db = require('../services/database');
 const config = require('../config/config');
-const { requirePermission } = require('../middleware/auth');
+const { requireAuth, requirePermission } = require('../middleware/auth');
 const betterdeskApi = require('../services/betterdeskApi');
 const deviceGroupService = require('../services/deviceGroupService');
 const serverBackend = require('../services/serverBackend');
@@ -199,7 +199,7 @@ router.get('/register-status', async (req, res) => {
 /**
  * GET /registrations — Render the registrations management page.
  */
-router.get('/registrations', requirePermission('enrollment.approve'), (req, res) => {
+router.get('/registrations', requireAuth, requirePermission('enrollment.approve'), (req, res) => {
     res.render('registrations', {
         title: req.t('nav.registrations'),
         activePage: 'registrations',
