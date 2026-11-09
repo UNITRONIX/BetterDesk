@@ -90,7 +90,8 @@ export async function listNotifications(
 }
 
 export function markNotificationRead(id: string): Promise<unknown> {
-	return request(`/api/bd/notifications/${encodeURIComponent(id)}/read`, { method: 'POST' });
+	// Sent as the person follows the notification's link, so it must survive leaving the page
+	return request(`/api/bd/notifications/${encodeURIComponent(id)}/read`, { method: 'POST', keepalive: true });
 }
 
 export function markAllNotificationsRead(): Promise<unknown> {

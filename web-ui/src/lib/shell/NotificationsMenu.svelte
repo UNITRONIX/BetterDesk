@@ -11,9 +11,8 @@
   closes and moves on (Menu).
 -->
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
-	import { isPorted, link } from '#lib/nav.ts';
+	import { link } from '#lib/nav.ts';
 	import { can } from '#lib/state/session.svelte.ts';
 	import Icon from '#lib/ui/Icon.svelte';
 	import IconButton from '#lib/ui/IconButton.svelte';
@@ -86,21 +85,11 @@
 		if (hadFocus) firstRow()?.focus();
 	}
 
-	const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
-	/** Unread: mark it read first (briefly), so the request is not cut off by leaving the page */
-	async function openRow(e: MouseEvent, item: Notification, href: string, target: string) {
-		if (item.read || e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) {
-			if (!item.read) void markRead(item.id).catch(() => {});
-			return;
-		}
-		e.preventDefault();
-		await Promise.race([markRead(item.id).catch(() => {}), sleep(600)]);
-		open = false;
-		if (isPorted(target)) {
-			// eslint-disable-next-line svelte/no-navigation-without-resolve -- link() adds the base
-			await goto(href);
-		} else location.assign(href);
+	/** The link opens as usual; an unread row is marked read on the way (the
+	    request is sent with keepalive, so leaving the page doesn't cut it off) */
+	function openRow(e: MouseEvent, item: Notification) {
+		if (!item.read) void markRead(item.id).catch(() => {});
+		if (!(e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0)) open = false;
 	}
 
 	function retry(e: MouseEvent) {
@@ -161,7 +150,7 @@
 								{href}
 								role="menuitem"
 								tabindex="-1"
-								onclick={(e) => openRow(e, item, href, view.link)}
+								onclick={(e) => openRow(e, item)}
 							>
 								<span class="notif-mark" aria-hidden="true">
 									{#if view.platform && platformId(view.platform)}

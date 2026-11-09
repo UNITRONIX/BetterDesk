@@ -50,6 +50,8 @@ export interface RequestOptions {
 	/** Don't redirect to the login page on 401 (the login page itself) */
 	allowAnonymous?: boolean;
 	headers?: Record<string, string>;
+	/** Let the request finish when the page is left (a small write before navigating away) */
+	keepalive?: boolean;
 }
 
 /** Messages the client itself writes; set from the strings once they load. */
@@ -145,7 +147,8 @@ export async function request(path: string, opts: RequestOptions = {}): Promise<
 				headers,
 				body,
 				credentials: 'same-origin',
-				signal: opts.signal ?? null
+				signal: opts.signal ?? null,
+				keepalive: opts.keepalive ?? false
 			});
 		} catch (err) {
 			if (err instanceof DOMException && err.name === 'AbortError') throw err;

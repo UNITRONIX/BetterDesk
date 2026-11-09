@@ -60,6 +60,17 @@ describe('request', () => {
 		expect(calls[0]!.init.body).toBe('{}');
 	});
 
+	test('keepalive lets a write finish while the page is left', async () => {
+		replies.push(
+			() => json({}),
+			() => json({})
+		);
+		await request('/api/x/read', { method: 'POST', keepalive: true });
+		await request('/api/x/other', { method: 'POST' });
+		expect(calls[0]!.init.keepalive).toBe(true);
+		expect(calls[1]!.init.keepalive).toBe(false);
+	});
+
 	test('refuses other origins and protocol-relative paths', async () => {
 		await expect(request('//evil.example/api')).rejects.toBeInstanceOf(ApiError);
 		await expect(request('https://evil.example/api')).rejects.toBeInstanceOf(ApiError);
