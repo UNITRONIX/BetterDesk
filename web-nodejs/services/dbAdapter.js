@@ -2276,7 +2276,7 @@ function createSqliteAdapter(config) {
             const db = openAuth();
             const sets = [];
             const params = [];
-            for (const key of ['title', 'description', 'status', 'priority', 'category', 'assigned_to', 'sla_due_at']) {
+            for (const key of ['title', 'description', 'status', 'priority', 'category', 'assigned_to', 'sla_due_at', 'device_id']) {
                 if (data[key] !== undefined) { sets.push(`${key} = ?`); params.push(data[key]); }
             }
             if (data.status === 'resolved' && !data.resolved_at) { sets.push("resolved_at = datetime('now')"); }
@@ -5897,7 +5897,7 @@ function createPostgresAdapter() {
             const sets = [];
             const params = [];
             let idx = 1;
-            for (const key of ['title', 'description', 'status', 'priority', 'category', 'assigned_to', 'sla_due_at']) {
+            for (const key of ['title', 'description', 'status', 'priority', 'category', 'assigned_to', 'sla_due_at', 'device_id']) {
                 if (data[key] !== undefined) { sets.push(`${key} = $${idx++}`); params.push(data[key]); }
             }
             if (data.status === 'resolved') { sets.push('resolved_at = NOW()'); }

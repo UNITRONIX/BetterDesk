@@ -114,8 +114,8 @@ app.use('/api/', (req, res, next) => {
     next();
 });
 
-// Body parsing (2MB limit for base64 logo images)
-app.use(express.json({ limit: '2mb' }));
+// Body parsing (2MB limit for base64 logo images; ticket attachments are parsed by their route, lib/jsonBody.js)
+app.use(require('./lib/jsonBody').jsonBody());
 app.use(express.urlencoded({ extended: false, limit: '2mb' }));
 
 // Cookie parsing
