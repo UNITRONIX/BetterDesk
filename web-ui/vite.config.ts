@@ -49,6 +49,8 @@ export default defineConfig({
 	server: {
 		port: 5173,
 		strictPort: true,
+		// Windows bind mounts don't deliver file events into containers
+		watch: process.env.BD_POLL ? { usePolling: true, interval: 300 } : undefined,
 		proxy: {
 			// Everything outside the UI base goes to Express (API, sockets, branding.css, fonts, old pages)
 			[base === ''
