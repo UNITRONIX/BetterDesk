@@ -16,17 +16,6 @@ const betterdeskApi = require('../services/betterdeskApi');
 const largeJson = express.json({ limit: '2mb' });
 
 router.get(
-    '/client-branding',
-    requireAuth,
-    requirePermission('branding.edit'),
-    (req, res) => {
-        res.render('client-branding', {
-            title: req.t('nav.client_branding'),
-        });
-    }
-);
-
-router.get(
     '/api/client-branding',
     requireAuth,
     requirePermission('branding.edit'),

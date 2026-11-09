@@ -1,8 +1,8 @@
 /**
- * BetterDesk Console — Agents info + legacy Support Generator APIs
+ * BetterDesk Console — legacy Support Generator APIs
  *
  * Provides:
- *   - Agents info page (/agents); /generator redirects here
+ *   - /generator, which redirects to the agents page (/agents, in the new console)
  *   - Legacy module/bundle APIs (/api/generator/*) for embedded maintainer mode
  *   - Public download portal per legacy bundle (/d/:slug)
  */
@@ -254,15 +254,8 @@ function filterAvailableBuilds(builds) {
 }
 
 // =========================================================================
-//  Agents info page (replaces the confusing in-panel client Generator UI)
+//  Old client Generator address: the agents page replaced it
 // =========================================================================
-
-router.get('/agents', requireAuth, requireAdmin, (req, res) => {
-    res.render('agents', {
-        title: req.t('nav.agents'),
-        activePage: 'agents',
-    });
-});
 
 router.get('/generator', requireAuth, requireAdmin, (_req, res) => {
     res.redirect(301, '/agents');

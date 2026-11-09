@@ -1,11 +1,8 @@
 /**
  * Server pieces the new console's clients and enrollment pages need:
- * - GET /api/panel/pairing/host gives the pairing page its suggested
- *   server address (the old page had it rendered into the HTML), with the
- *   page's own permission (enrollment.approve).
- * - GET /registrations sends a signed-out visitor to the sign-in page like
- *   every other page (BUGS.md R8: it had no requireAuth and skipped the
- *   redirect the other pages make).
+ * GET /api/panel/pairing/host gives the pairing page its suggested server
+ * address (the old page had it rendered into the HTML), with the page's own
+ * permission (enrollment.approve).
  */
 
 'use strict';
@@ -17,19 +14,14 @@ jest.mock('../services/rustDeskPublicEndpointsService', () => ({
     getPublicEndpoints: jest.fn(() => ({ serverId: 'rd.example.org', apiUrl: 'https://rd.example.org:21121' }))
 }));
 jest.mock('../services/betterdeskApi', () => ({
-    listPairingCodes: jest.fn().mockResolvedValue({ success: true, data: { codes: [] } }),
-    getEnrollmentPending: jest.fn().mockResolvedValue({ success: true, data: [], count: 0 })
+    listPairingCodes: jest.fn().mockResolvedValue({ success: true, data: { codes: [] } })
 }));
 jest.mock('../services/database', () => ({
-    logAction: jest.fn().mockResolvedValue(undefined),
-    getPendingRegistrationCount: jest.fn().mockResolvedValue(0)
+    logAction: jest.fn().mockResolvedValue(undefined)
 }));
-jest.mock('../services/deviceGroupService', () => ({}));
-jest.mock('../services/serverBackend', () => ({}));
 
 const endpoints = require('../services/rustDeskPublicEndpointsService');
 const pairingRoutes = require('../routes/pairing.routes');
-const registrationRoutes = require('../routes/registration.routes');
 
 function app(role) {
     const a = createTestApp();
@@ -41,7 +33,6 @@ function app(role) {
         });
     }
     a.use(pairingRoutes);
-    a.use(registrationRoutes);
     return a;
 }
 
@@ -72,14 +63,5 @@ describe('GET /api/panel/pairing/host', () => {
     test('nobody signed in gets 401', async () => {
         const res = await request(app(null)).get('/api/panel/pairing/host');
         expect(res.status).toBe(401);
-    });
-});
-
-describe('GET /registrations signed out (R8)', () => {
-    test('goes to the sign-in page with the way back, like the other pages', async () => {
-        const res = await request(app(null)).get('/registrations');
-        expect(res.status).toBe(302);
-        // No "expired" on a first visit (R4), the page to come back to (R3)
-        expect(res.headers.location).toBe('/login?return=%2Fregistrations');
     });
 });

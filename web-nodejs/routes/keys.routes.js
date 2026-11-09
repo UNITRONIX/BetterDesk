@@ -37,16 +37,6 @@ function buildConfigQrPayload(qrDataUrl, endpoints) {
 }
 
 /**
- * GET /keys - Keys management page
- */
-router.get('/keys', requireAuth, (req, res) => {
-    res.render('keys', {
-        title: req.t('nav.keys'),
-        activePage: 'keys'
-    });
-});
-
-/**
  * GET /api/keys/public - Get public key
  */
 router.get('/api/keys/public', requireAuth, async (req, res) => {

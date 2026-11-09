@@ -19,10 +19,6 @@ const db = require('../services/database');
 const jsonBody = express.json({ limit: '4kb' });
 
 /**
- * GET /pairing — code pairing page (operator).
- * Shown next to Generator → Activate agent, which uses QR codes.
- */
-/**
  * The address to suggest in the "Server address" field: the public client
  * endpoint from Settings. Display only; the Go server reports the
  * authoritative host when a code is minted.
@@ -39,13 +35,6 @@ function suggestedHost() {
     }
     return '';
 }
-
-router.get('/pairing', requireAuth, requirePermission('enrollment.approve'), (req, res) => {
-    res.render('pairing', {
-        title: req.t('nav.pairing'),
-        suggested_host: suggestedHost(),
-    });
-});
 
 /**
  * GET /api/panel/pairing/host: the same suggested address for the new

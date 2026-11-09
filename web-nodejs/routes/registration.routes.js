@@ -8,13 +8,15 @@
  *   GET    /api/bd/register-status     — Poll approval status (by device_id)
  *
  * Admin-facing (session auth required):
- *   GET    /registrations              — Registrations page (EJS)
  *   GET    /api/registrations          — List all registration requests
  *   GET    /api/registrations/count    — Pending count (for sidebar badge)
  *   GET    /api/registrations/:id      — Single registration detail
  *   PUT    /api/registrations/:id/approve — Approve a pending request
  *   PUT    /api/registrations/:id/reject  — Reject a pending request
  *   DELETE /api/registrations/:id      — Delete a registration record
+ *
+ * The page (/registrations) is in the new console (web-ui); the old
+ * address redirects there (lib/portedPages.js).
  *
  * @module routes/registration.routes
  */
@@ -26,7 +28,7 @@ const router = express.Router();
 const crypto = require('crypto');
 const db = require('../services/database');
 const config = require('../config/config');
-const { requireAuth, requirePermission } = require('../middleware/auth');
+const { requirePermission } = require('../middleware/auth');
 const betterdeskApi = require('../services/betterdeskApi');
 const deviceGroupService = require('../services/deviceGroupService');
 const serverBackend = require('../services/serverBackend');
@@ -195,16 +197,6 @@ router.get('/register-status', async (req, res) => {
 // ===========================================================================
 //  Admin-facing endpoints (session auth required)
 // ===========================================================================
-
-/**
- * GET /registrations — Render the registrations management page.
- */
-router.get('/registrations', requireAuth, requirePermission('enrollment.approve'), (req, res) => {
-    res.render('registrations', {
-        title: req.t('nav.registrations'),
-        activePage: 'registrations',
-    });
-});
 
 /**
  * GET /api/registrations — List all registration requests.
