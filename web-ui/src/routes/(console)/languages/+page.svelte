@@ -240,11 +240,10 @@
 		>{/if}
 {/snippet}
 {#snippet actionsCell(l: LanguageRow)}
-	<Button size="sm" href={`#${encodeURIComponent(l.code)}`}
-		><!-- Button drops aria-label on links: the full name is in the text, the short one is what shows -->
-		<span aria-hidden="true">{t('languages.show_texts')}</span><span class="sr-only"
-			>{t('languages.show_texts_for', { language: nameOf(l) })}</span
-		></Button
+	<Button
+		size="sm"
+		href={`#${encodeURIComponent(l.code)}`}
+		aria-label={t('languages.show_texts_for', { language: nameOf(l) })}>{t('languages.show_texts')}</Button
 	>
 {/snippet}
 
