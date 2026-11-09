@@ -161,7 +161,9 @@
 		savedMode = next.themeMode;
 		prevMode = next.themeMode;
 		form.reset(next);
-		cssOpen = !!next.customCss.trim();
+		// Open when there is custom CSS; never closed here, so a link or search
+		// that opened it before the data arrived keeps it open
+		if (next.customCss.trim()) cssOpen = true;
 	}
 
 	async function load() {
