@@ -6,8 +6,10 @@
  * role sees the same pages as before; only the grouping changed. A section
  * is shown when at least one of its pages is visible.
  *
- * `when` receives { can, isSuperAdmin } where can(perm) is the request's
- * permission check.
+ * `when` receives { can, isSuperAdmin, role } where can(perm) is the
+ * request's permission check. A few routes check role names instead of
+ * permissions (requireAdmin, requireRole); their pages use the same check
+ * here, so the menu shows them to exactly the roles the route lets in.
  */
 
 'use strict';
@@ -15,6 +17,11 @@
 const always = () => true;
 const perm = (p) => ({ can }) => can(p);
 const anyPerm = (...ps) => ({ can }) => ps.some((p) => can(p));
+// requireAdmin in middleware/auth.js
+const ADMIN_ROLES = new Set(['super_admin', 'admin', 'global_admin', 'server_admin']);
+const adminRole = ({ role }) => ADMIN_ROLES.has(role);
+// requireRole(r) in middleware/auth.js: that role, or a super admin
+const roleOrSuper = (r) => ({ role }) => role === r || role === 'super_admin' || role === 'admin';
 
 const SECTIONS = [
     {
@@ -85,13 +92,13 @@ const SECTIONS = [
             { page: 'keys', keywords: 'keys public key qr client setup rustdesk config', core: true, href: '/keys', label: 'nav.keys', when: perm('server.config'), group: 'nav.group_clients' },
             { page: 'tokens', keywords: 'tokens enrollment mode', href: '/tokens', label: 'nav.tokens', when: perm('enrollment.manage'), group: 'nav.group_clients' },
             { page: 'pairing', keywords: 'pairing code', href: '/pairing', label: 'nav.pairing', when: perm('enrollment.approve'), group: 'nav.group_clients' },
-            { page: 'agents', keywords: 'agents installers generator', href: '/agents', label: 'nav.agents', when: perm('server.config'), alsoActiveFor: ['generator'], group: 'nav.group_clients' },
+            { page: 'agents', keywords: 'agents installers generator', href: '/agents', label: 'nav.agents', when: adminRole, alsoActiveFor: ['generator'], group: 'nav.group_clients' },
             { page: 'client-branding', keywords: 'client branding white label', href: '/client-branding', label: 'nav.client_branding', when: perm('branding.edit'), group: 'nav.group_clients' },
-            { page: 'policies', keywords: 'policies rules', href: '/policies', label: 'nav.policies', when: perm('server.config'), group: 'nav.group_rules' },
+            { page: 'policies', keywords: 'policies rules', href: '/policies', label: 'nav.policies', when: adminRole, group: 'nav.group_rules' },
             { page: 'automation', keywords: 'automation alerts commands', href: '/automation', label: 'nav.automation', when: perm('server.config'), group: 'nav.group_rules' },
             { page: 'resource-control', keywords: 'resource control usb drives disks', href: '/resource-control', label: 'nav.resource_control', when: perm('server.config'), group: 'nav.group_rules' },
             { page: 'dataguard', keywords: 'dataguard dlp data loss', href: '/dataguard', label: 'nav.dataguard', when: perm('server.config'), group: 'nav.group_rules' },
-            { page: 'attestation', keywords: 'attestation fingerprint hardware identity', href: '/attestation', label: 'nav.attestation', when: perm('server.config'), group: 'nav.group_rules' },
+            { page: 'attestation', keywords: 'attestation fingerprint hardware identity', href: '/attestation', label: 'nav.attestation', when: adminRole, group: 'nav.group_rules' },
             { page: 'server-management:overview', keywords: 'server management status health cpu memory uptime', core: true, href: '/server-management?tab=overview', label: 'nav.server_status', when: perm('server.config'), group: 'nav.group_server' },
             { page: 'server-management:terminal', keywords: 'shell console ssh', href: '/server-management?tab=terminal', label: 'server_mgmt.tab_terminal', when: perm('server.config'), group: 'nav.group_server' },
             { page: 'server-management:files', keywords: 'file browser', href: '/server-management?tab=files', label: 'server_mgmt.tab_files', when: perm('server.config'), group: 'nav.group_server' },
@@ -99,7 +106,7 @@ const SECTIONS = [
             { page: 'scaling', keywords: 'scaling relays', href: '/scaling', label: 'nav.scaling', when: perm('server.config'), group: 'nav.group_server' },
             { page: 'server-attestation', keywords: 'server attestation benchmark load test badge', href: '/server-attestation', label: 'nav.server_attestation', when: perm('server.attestation'), group: 'nav.group_server' },
             { page: 'commercialization:packages', keywords: 'packages contracts billing', href: '/commercialization?tab=packages', label: 'commercialization.tabs.packages', when: perm('billing.view'), group: 'nav.group_billing' },
-            { page: 'cdap-studio', keywords: 'sdk studio flows widgets', href: '/cdap-studio', label: 'nav.sdk_studio', when: perm('cdap.view'), group: 'nav.group_developer' },
+            { page: 'cdap-studio', keywords: 'sdk studio flows widgets', href: '/cdap-studio', label: 'nav.sdk_studio', when: roleOrSuper('operator'), group: 'nav.group_developer' },
         ],
     },
 ];
@@ -127,9 +134,9 @@ function pageKey(currentPage, currentTab, activateAgentNav) {
  * Build the visible navigation for one request.
  * @returns {{ sections: Array, activeSection: object|null, activePage: object|null }}
  */
-function buildNav({ can, isSuperAdmin, t, currentPage, currentTab, activateAgentNav }) {
+function buildNav({ can, isSuperAdmin, role, t, currentPage, currentTab, activateAgentNav }) {
     const key = pageKey(currentPage, currentTab, activateAgentNav);
-    const ctx = { can: can || (() => false), isSuperAdmin: !!isSuperAdmin };
+    const ctx = { can: can || (() => false), isSuperAdmin: !!isSuperAdmin, role: role || '' };
     let activeSection = null;
     let activePage = null;
 

@@ -216,7 +216,7 @@ router.get('/api/console/bootstrap', requireAuth, async (req, res) => {
     const can = (p) => requestHasPermission(req, p);
     const superAdmin = isSuperAdminRole(role);
     const t = res.locals._ || req.t || ((k) => k);
-    const nav = buildNav({ can, isSuperAdmin: superAdmin, t, currentPage: '', currentTab: '' });
+    const nav = buildNav({ can, isSuperAdmin: superAdmin, role, t, currentPage: '', currentTab: '' });
     const branding = res.locals.branding || brandingService.getBranding() || {};
     const boot = publicBoot(req);
     // getAvatarVersion answers null on any failure: initials instead of the picture

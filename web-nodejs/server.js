@@ -282,6 +282,7 @@ app.use((req, res, next) => {
     res.locals.consoleNav = (opts) => buildConsoleNav({
         can: res.locals.hasPermission,
         isSuperAdmin: res.locals.isSuperAdmin,
+        role,
         t: res.locals._ || ((key) => key),
         ...opts
     });
