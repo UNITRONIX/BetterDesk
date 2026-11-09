@@ -999,6 +999,14 @@ router.post('/api/devices/:id/connection-mode', requireAuth, requirePermission('
     }
 });
 
+/** The Go server refused a ban or unban: say so instead of answering success */
+function banRefused(res, result) {
+    return res.status(502).json({
+        success: false,
+        error: (result && result.error) || 'The server did not change the ban'
+    });
+}
+
 /**
  * POST /api/devices/:id/ban - Ban device
  */
@@ -1016,7 +1024,8 @@ router.post('/api/devices/:id/ban', requireAuth, requirePermission('device.ban')
         }
         if (await rejectIfDeviceOutOfScope(req, res, device)) return;
         
-        await serverBackend.setBanStatus(id, true, reason);
+        const result = await serverBackend.setBanStatus(id, true, reason);
+        if (!result || !result.success) return banRefused(res, result);
 
         // Log action (the device panel reads who banned from this entry)
         await db.logAction(req.session.userId, 'device_banned', `Device ${id} banned` + (reason ? `: ${reason}` : ''), req.ip);
@@ -1047,8 +1056,9 @@ router.post('/api/devices/:id/unban', requireAuth, requirePermission('device.ban
         }
         if (await rejectIfDeviceOutOfScope(req, res, device)) return;
         
-        await serverBackend.setBanStatus(id, false);
-        
+        const result = await serverBackend.setBanStatus(id, false);
+        if (!result || !result.success) return banRefused(res, result);
+
         // Log action
         await db.logAction(req.session.userId, 'device_unbanned', `Device ${id} unbanned`, req.ip);
         
@@ -1219,7 +1229,10 @@ router.post('/api/devices/bulk-delete', requireAuth, requirePermission('device.d
         const devicesToDelete = [];
         for (const id of ids) {
             const device = await serverBackend.getDeviceById(id);
-            if (!device || await rejectIfDeviceOutOfScope(req, res, device)) return;
+            if (!device) {
+                return res.status(404).json({ success: false, error: req.t('devices.not_found'), id: String(id) });
+            }
+            if (await rejectIfDeviceOutOfScope(req, res, device)) return;
             devicesToDelete.push(String(id));
         }
 
