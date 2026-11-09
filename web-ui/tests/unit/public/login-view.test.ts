@@ -7,6 +7,7 @@ import { readLoginQuery } from '../../../src/lib/public/login.ts';
 vi.mock('$app/paths', () => ({ resolve: (p: string) => '/app' + (p || '/'), asset: (p: string) => '/' + p }));
 
 const LoginView = (await import('../../../src/lib/public/LoginView.svelte')).default;
+const { i18n, setStrings } = await import('../../../src/lib/i18n/i18n.svelte.ts');
 
 function page(over: Partial<LoginPage> = {}, branding: Partial<LoginPage['branding']> = {}): LoginPage {
 	return {
@@ -232,6 +233,28 @@ describe('notices, branding and the compact sign-in', () => {
 		cleanup();
 		render(LoginView, { page: page(), query: readLoginQuery(''), go: vi.fn() });
 		expect(screen.queryByText('auth.session_expired')).toBeNull();
+	});
+
+	test("the top bar's language menu: the current language as its label; a choice loads, saves and reloads", async () => {
+		const p = page();
+		setStrings('en', 'ltr', {}, p.languages);
+		reply('/api/auth/oidc/status', { body: { enabled: false } });
+		reply('/api/console/strings/de', { body: {} });
+		reply('/api/i18n/set/de', { body: { success: true } });
+		reply('/api/auth/login-page', { body: page({ csrfToken: 'tok2' }) });
+		const user = userEvent.setup();
+		render(LoginView, { page: p, query: readLoginQuery(''), go: vi.fn() });
+		await user.click(screen.getByRole('button', { name: 'settings.language: English' }));
+		await user.click(screen.getByRole('menuitemradio', { name: 'Deutsch' }));
+		await waitFor(() => expect(sent.map((x) => x.url)).toContain('/api/auth/login-page'));
+		expect(sent.map((x) => x.url)).toEqual(
+			expect.arrayContaining(['/api/console/strings/de', '/api/i18n/set/de'])
+		);
+		expect(i18n.lang).toBe('de');
+		expect(screen.getByRole('button', { name: 'settings.language: Deutsch' })).toBeInTheDocument();
+		// No select left over from the old picker
+		expect(screen.queryByRole('combobox')).toBeNull();
+		setStrings('en', 'ltr', {});
 	});
 
 	test('admin title, subtitle, footer and version; the wallpaper classes on <body>', () => {

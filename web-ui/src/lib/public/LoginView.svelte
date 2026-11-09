@@ -25,13 +25,12 @@
 		type OidcStatus
 	} from '#lib/api/signin.ts';
 	import { i18n, switchLanguage, t, tf } from '#lib/i18n/i18n.svelte.ts';
+	import LanguageMenu from '#lib/shell/LanguageMenu.svelte';
 	import Button from '#lib/ui/Button.svelte';
 	import Checkbox from '#lib/ui/Checkbox.svelte';
 	import Field from '#lib/ui/Field.svelte';
 	import Input from '#lib/ui/Input.svelte';
-	import LangFlag from '#lib/ui/LangFlag.svelte';
 	import Notice from '#lib/ui/Notice.svelte';
-	import Select from '#lib/ui/Select.svelte';
 	import AttestBadge from './AttestBadge.svelte';
 	import LoginBrand from './LoginBrand.svelte';
 	import PromoPanel from './PromoPanel.svelte';
@@ -56,6 +55,8 @@
 	/** How a recovery code looks; a format, not text to translate */
 	const RECOVERY_FORMAT = 'XXXX-XXXX';
 	const compact = $derived(query.desktop || page.desktopMode);
+	/** This server's address, under the title when the admin set no subtitle */
+	const host = typeof location !== 'undefined' ? location.host : '';
 	const mode = $derived(compact ? 'classic' : page.branding.loginPromoMode);
 
 	let step = $state<'password' | 'totp'>('password');
@@ -73,7 +74,6 @@
 	/** Off to the identity provider ("Prefer SSO"): the form is hidden meanwhile */
 	let leaving = $state(false);
 	let languageError = $state('');
-	let chosen = $state(i18n.lang);
 
 	let usernameInput = $state<HTMLInputElement | null>(null);
 	let passwordInput = $state<HTMLInputElement | null>(null);
@@ -84,9 +84,6 @@
 	const ssoHref = $derived(oidcStartUrl(query.returnPath));
 	const ssoLabel = $derived(
 		oidc?.display_name ? t('auth.login_sso_with', { provider: oidc.display_name }) : t('auth.login_sso')
-	);
-	const languageOptions = $derived(
-		page.languages.map((l) => ({ value: l.code, label: l.native || l.name || l.code }))
 	);
 
 	// The old page's body classes: /css/branding.css paints the sign-in wallpaper and the promo picture through them
@@ -233,8 +230,6 @@
 		} catch {
 			// The strings switched but the page's own values didn't reload: nothing to say
 			if (i18n.lang !== next) languageError = t('errors.language_change_failed');
-		} finally {
-			chosen = i18n.lang;
 		}
 	}
 </script>
@@ -257,6 +252,9 @@
 			</h1>
 			{#if !compact && page.branding.loginSubtitle}
 				<p class="login-subtitle">{page.branding.loginSubtitle}</p>
+			{:else if host}
+				<!-- Which server this is, for people who sign in to more than one -->
+				<p class="login-subtitle">{host}</p>
 			{/if}
 
 			{#if query.expired && !error}
@@ -384,31 +382,25 @@
 				</form>
 			{/if}
 
-			<footer class="login-footer">
-				<div class="login-language-picker">
-					<label for="{uid}-lang">{t('settings.language')}</label>
-					<LangFlag code={i18n.lang} />
-					<Select
-						id="{uid}-lang"
-						small
-						options={languageOptions}
-						bind:value={chosen}
-						onchange={() => void changeLanguage(chosen ?? '')}
-					/>
-				</div>
-				{#if languageError}<p class="login-language-error" role="alert">{languageError}</p>{/if}
-				{#if !compact && page.branding.footerText}
-					<p class="login-footer-custom">{page.branding.footerText}</p>
-				{/if}
-				{#if compact || page.branding.showPoweredBy}
-					<p class="login-version">{page.appName} {page.appVersion}</p>
-				{/if}
-			</footer>
-
 			{#if page.attestation}
 				<AttestBadge badge={page.attestation} appName={page.appName} />
 			{/if}
 		</div>
+
+		<!-- At the bottom of the page, on the form's left edge -->
+		<footer class="login-footer">
+			<div class="login-footer-row">
+				<!-- The top bar's language menu, opening above when there is no room below -->
+				<LanguageMenu trigger="label" align="start" onchoose={changeLanguage} />
+				{#if compact || page.branding.showPoweredBy}
+					<p class="login-version">{page.appName} {page.appVersion}</p>
+				{/if}
+			</div>
+			{#if languageError}<p class="login-language-error" role="alert">{languageError}</p>{/if}
+			{#if !compact && page.branding.footerText}
+				<p class="login-footer-custom">{page.branding.footerText}</p>
+			{/if}
+		</footer>
 	</main>
 </div>
 
@@ -418,27 +410,42 @@
 		min-height: 100vh;
 		min-height: 100dvh;
 	}
+	/* One column: the form in the middle of the page (a little above it), the
+	   language and version at the bottom, both on the same left edge */
 	.login-main {
 		display: flex;
 		flex: 1;
-		align-items: flex-start;
-		justify-content: center;
-		padding: 12vh var(--space-4) var(--space-6);
+		flex-direction: column;
+		align-items: center;
+		padding: var(--space-6) var(--space-4) var(--space-5);
+	}
+	.login-box,
+	.login-footer {
+		width: 100%;
+		max-width: 360px;
 	}
 	.login-box {
-		width: 100%;
-		max-width: 340px;
+		margin-block: auto;
+		padding-block: var(--space-6) 8vh;
+	}
+	.login-box > :global(.login-brand) {
+		margin-bottom: calc(var(--space-6) + var(--space-2));
+	}
+	.login-box > :global(.login-brand .brand-logo-full) {
+		height: 32px;
 	}
 	.login-title {
-		margin-bottom: var(--space-4);
-		font-size: var(--text-lg);
+		margin-bottom: var(--space-5);
+		font-size: var(--text-xl);
+		line-height: 1.2;
 	}
 	.login-title:has(+ .login-subtitle) {
-		margin-bottom: var(--space-2);
+		margin-bottom: var(--space-1);
 	}
 	.login-subtitle {
-		margin-bottom: var(--space-4);
+		margin-bottom: var(--space-5);
 		color: var(--text-muted);
+		overflow-wrap: anywhere;
 	}
 	.login-box > :global(.login-notice) {
 		margin-bottom: var(--space-4);
@@ -511,26 +518,27 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-2);
-		margin-top: var(--space-6);
-		padding-top: var(--space-4);
-		border-top: 1px solid var(--rule);
 		color: var(--text-muted);
 		font-size: var(--text-sm);
 	}
-	.login-language-picker {
+	.login-footer-row {
 		display: flex;
+		flex-wrap: wrap;
 		align-items: center;
-		gap: var(--space-2);
+		justify-content: space-between;
+		gap: var(--space-2) var(--space-4);
 	}
-	.login-language-picker > :global(.form-select) {
-		width: auto;
+	.login-footer p {
+		margin: 0;
 	}
 	.login-language-error {
 		color: var(--danger);
 	}
+	/* Phones: the form starts near the top, where the keyboard leaves it in view */
 	@media (max-width: 640px) {
-		.login-main {
-			padding-top: var(--space-6);
+		.login-box {
+			margin-top: 0;
+			padding-block: var(--space-4) var(--space-6);
 		}
 	}
 </style>
