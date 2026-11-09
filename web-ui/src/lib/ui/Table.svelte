@@ -658,10 +658,12 @@
 		text-underline-offset: 2px;
 	}
 
-	/* Checkbox column */
+	/* Checkbox column. The space after the checkbox keeps it a 24px target
+	   (WCAG 2.2 target size): its circle must not reach the next column's
+	   sort button */
 	.data-table .select-col {
 		width: 1%;
-		padding-inline-end: 0;
+		padding-inline-end: var(--space-2);
 	}
 	.data-table th.select-col {
 		cursor: default;

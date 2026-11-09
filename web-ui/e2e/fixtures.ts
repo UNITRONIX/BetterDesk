@@ -51,9 +51,9 @@ export const test = base.extend<{ problems: Problems; role: Role; allowProblems:
 
 export { expect };
 
-/** axe with the WCAG 2.1 AA rules; returns nothing, fails the test on any violation */
+/** axe with the WCAG 2.2 AA rules (2.0 and 2.1 included); fails the test on any violation */
 export async function expectNoAxeViolations(page: Page, include?: string): Promise<void> {
-	let builder = new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']);
+	let builder = new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']);
 	if (include) builder = builder.include(include);
 	const result = await builder.analyze();
 	const summary = result.violations.map(
