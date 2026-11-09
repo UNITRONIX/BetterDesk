@@ -683,7 +683,10 @@
         "next_pairing_sub": "BetterDesk istemcisi için: bu değerler yerine bir sunucu adresi ve kısa bir kod.",
         "next_devices_sub": "Yeni cihazın orada olduğunu kontrol edin.",
         "portal_title": "Destek aracısı indirme sayfası",
-        "portal_sub": "Destek verdiğiniz kişiler için. Adresi onlarla paylaşın."
+        "portal_sub": "Destek verdiğiniz kişiler için. Adresi onlarla paylaşın.",
+        "show_api_key": "Anahtarın tamamını göster",
+        "hide_api_key": "Anahtarı gizle",
+        "server_api_key_full_hint": "Anahtarın tamamı. Ona sahip olan herkes bu sunucuyu API üzerinden yönetebilir, bu yüzden betiklerinizin gizli bilgi deposunda saklayın."
     },
     "settings": {
         "title": "Ayarlar",

@@ -677,7 +677,10 @@
         "next_pairing_sub": "Pro klienta BetterDesk: adresa serveru a krátký kód místo těchto hodnot.",
         "next_devices_sub": "Zkontrolujte, že tam nové zařízení je.",
         "portal_title": "Stránka ke stažení agenta podpory",
-        "portal_sub": "Pro lidi, kterým poskytujete podporu. Pošlete jim adresu."
+        "portal_sub": "Pro lidi, kterým poskytujete podporu. Pošlete jim adresu.",
+        "show_api_key": "Zobrazit celý klíč",
+        "hide_api_key": "Skrýt klíč",
+        "server_api_key_full_hint": "Celý klíč. Kdo ho má, může tento server spravovat přes jeho API, proto ho uchovávejte v úložišti tajemství svých skriptů."
     },
     "settings": {
         "title": "Nastavení",

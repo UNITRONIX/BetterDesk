@@ -683,7 +683,10 @@
         "next_pairing_sub": "Til BetterDesk-klienten: en serveradresse og en kort kode i stedet for disse værdier.",
         "next_devices_sub": "Tjek, at den nye enhed er der.",
         "portal_title": "Downloadside til supportagenten",
-        "portal_sub": "Til de personer, du hjælper. Del adressen med dem."
+        "portal_sub": "Til de personer, du hjælper. Del adressen med dem.",
+        "show_api_key": "Vis hele nøglen",
+        "hide_api_key": "Skjul nøglen",
+        "server_api_key_full_hint": "Hele nøglen. Alle, der har den, kan styre denne server via dens API, så gem den i dine scripts' hemmelighedslager."
     },
     "settings": {
         "title": "Indstillinger",

@@ -683,7 +683,10 @@
         "next_pairing_sub": "Pentru clientul BetterDesk: o adresă de server și un cod scurt în locul acestor valori.",
         "next_devices_sub": "Verificați că noul dispozitiv apare acolo.",
         "portal_title": "Pagina de descărcare a agentului de asistență",
-        "portal_sub": "Pentru persoanele pe care le asistați. Trimiteți-le adresa."
+        "portal_sub": "Pentru persoanele pe care le asistați. Trimiteți-le adresa.",
+        "show_api_key": "Afișează cheia întreagă",
+        "hide_api_key": "Ascunde cheia",
+        "server_api_key_full_hint": "Cheia întreagă. Oricine o are poate administra acest server prin API-ul său, așa că păstrați-o în depozitul de secrete al scripturilor."
     },
     "settings": {
         "title": "Setări",

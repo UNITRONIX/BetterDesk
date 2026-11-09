@@ -685,7 +685,10 @@
         "next_pairing_sub": "For the BetterDesk client: a server address and a short code instead of these values.",
         "next_devices_sub": "Check that the new device is there.",
         "portal_title": "Support agent download page",
-        "portal_sub": "For people you support. Share the address with them."
+        "portal_sub": "For people you support. Share the address with them.",
+        "show_api_key": "Show whole key",
+        "hide_api_key": "Hide key",
+        "server_api_key_full_hint": "The whole key. Anyone who has it can manage this server through its API, so keep it in your scripts' secret store."
     },
     "settings": {
         "title": "Settings",

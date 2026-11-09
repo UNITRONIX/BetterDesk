@@ -681,7 +681,10 @@
         "next_pairing_sub": "適用於 BetterDesk 用戶端：用伺服器位址和簡短代碼取代這些值。",
         "next_devices_sub": "確認新裝置已出現在清單中。",
         "portal_title": "支援代理程式下載頁面",
-        "portal_sub": "供您支援的人使用。把網址分享給他們。"
+        "portal_sub": "供您支援的人使用。把網址分享給他們。",
+        "show_api_key": "顯示完整金鑰",
+        "hide_api_key": "隱藏金鑰",
+        "server_api_key_full_hint": "完整金鑰。擁有它的人可以透過 API 管理此伺服器，請將它存放在指令碼的機密儲存區。"
     },
     "settings": {
         "title": "設置",

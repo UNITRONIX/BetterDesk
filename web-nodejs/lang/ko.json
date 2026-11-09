@@ -677,7 +677,10 @@
         "next_pairing_sub": "BetterDesk 클라이언트용: 이 값들 대신 서버 주소와 짧은 코드를 사용합니다.",
         "next_devices_sub": "새 장치가 있는지 확인합니다.",
         "portal_title": "지원 에이전트 다운로드 페이지",
-        "portal_sub": "지원하는 사람들을 위한 페이지입니다. 주소를 공유하세요."
+        "portal_sub": "지원하는 사람들을 위한 페이지입니다. 주소를 공유하세요.",
+        "show_api_key": "전체 키 표시",
+        "hide_api_key": "키 숨기기",
+        "server_api_key_full_hint": "전체 키입니다. 이 키를 가진 사람은 API로 이 서버를 관리할 수 있으므로 스크립트의 비밀 저장소에 보관하세요."
     },
     "settings": {
         "title": "설정",

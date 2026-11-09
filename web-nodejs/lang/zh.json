@@ -677,7 +677,10 @@
         "next_pairing_sub": "适用于 BetterDesk 客户端：用服务器地址和简短代码代替这些值。",
         "next_devices_sub": "确认新设备已出现在列表中。",
         "portal_title": "支持代理下载页面",
-        "portal_sub": "供您支持的人使用。把网址分享给他们。"
+        "portal_sub": "供您支持的人使用。把网址分享给他们。",
+        "show_api_key": "显示完整密钥",
+        "hide_api_key": "隐藏密钥",
+        "server_api_key_full_hint": "完整密钥。拥有它的人可以通过 API 管理此服务器，请将它存放在脚本的机密存储中。"
     },
     "settings": {
         "title": "设置",

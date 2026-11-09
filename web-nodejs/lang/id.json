@@ -683,7 +683,10 @@
         "next_pairing_sub": "Untuk klien BetterDesk: alamat server dan kode pendek sebagai ganti nilai-nilai ini.",
         "next_devices_sub": "Periksa apakah perangkat baru ada di sana.",
         "portal_title": "Halaman unduhan agen dukungan",
-        "portal_sub": "Untuk orang yang Anda bantu. Bagikan alamatnya kepada mereka."
+        "portal_sub": "Untuk orang yang Anda bantu. Bagikan alamatnya kepada mereka.",
+        "show_api_key": "Tampilkan seluruh kunci",
+        "hide_api_key": "Sembunyikan kunci",
+        "server_api_key_full_hint": "Seluruh kunci. Siapa pun yang memilikinya dapat mengelola server ini melalui API-nya, jadi simpan di penyimpanan rahasia skrip Anda."
     },
     "settings": {
         "title": "Pengaturan",

@@ -677,7 +677,10 @@
         "next_pairing_sub": "Per il client BetterDesk: un indirizzo del server e un codice breve al posto di questi valori.",
         "next_devices_sub": "Controlla che il nuovo dispositivo sia presente.",
         "portal_title": "Pagina di download dell'agente di supporto",
-        "portal_sub": "Per le persone che assisti. Condividi con loro l'indirizzo."
+        "portal_sub": "Per le persone che assisti. Condividi con loro l'indirizzo.",
+        "show_api_key": "Mostra la chiave intera",
+        "hide_api_key": "Nascondi la chiave",
+        "server_api_key_full_hint": "La chiave intera. Chi la possiede può gestire questo server tramite la sua API, quindi conservala nell'archivio dei segreti dei tuoi script."
     },
     "settings": {
         "title": "Impostazioni",

@@ -683,7 +683,10 @@
         "next_pairing_sub": "Dành cho ứng dụng khách BetterDesk: địa chỉ máy chủ và một mã ngắn thay cho các giá trị này.",
         "next_devices_sub": "Kiểm tra xem thiết bị mới đã có ở đó chưa.",
         "portal_title": "Trang tải xuống tác nhân hỗ trợ",
-        "portal_sub": "Dành cho những người bạn hỗ trợ. Chia sẻ địa chỉ cho họ."
+        "portal_sub": "Dành cho những người bạn hỗ trợ. Chia sẻ địa chỉ cho họ.",
+        "show_api_key": "Hiện toàn bộ khóa",
+        "hide_api_key": "Ẩn khóa",
+        "server_api_key_full_hint": "Toàn bộ khóa. Ai có khóa này đều có thể quản lý máy chủ qua API, vì vậy hãy cất nó trong kho bí mật của script."
     },
     "settings": {
         "title": "Cài đặt",

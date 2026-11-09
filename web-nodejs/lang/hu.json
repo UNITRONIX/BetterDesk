@@ -683,7 +683,10 @@
         "next_pairing_sub": "A BetterDesk klienshez: szervercím és egy rövid kód ezek helyett az értékek helyett.",
         "next_devices_sub": "Ellenőrizze, hogy ott van-e az új eszköz.",
         "portal_title": "A támogatási ügynök letöltési oldala",
-        "portal_sub": "Azoknak, akiket támogat. Ossza meg velük a címet."
+        "portal_sub": "Azoknak, akiket támogat. Ossza meg velük a címet.",
+        "show_api_key": "Teljes kulcs megjelenítése",
+        "hide_api_key": "Kulcs elrejtése",
+        "server_api_key_full_hint": "A teljes kulcs. Akinél megvan, az API-n keresztül kezelheti ezt a szervert, ezért a szkriptjei titoktárában tartsa."
     },
     "settings": {
         "title": "Beállítások elemre",

@@ -683,7 +683,10 @@
         "next_pairing_sub": "BetterDesk-asiakasohjelmalle: palvelimen osoite ja lyhyt koodi näiden arvojen sijaan.",
         "next_devices_sub": "Tarkista, että uusi laite näkyy siellä.",
         "portal_title": "Tukiagentin lataussivu",
-        "portal_sub": "Tuettaville henkilöille. Jaa osoite heille."
+        "portal_sub": "Tuettaville henkilöille. Jaa osoite heille.",
+        "show_api_key": "Näytä koko avain",
+        "hide_api_key": "Piilota avain",
+        "server_api_key_full_hint": "Koko avain. Kuka tahansa, jolla se on, voi hallita tätä palvelinta sen API:n kautta, joten säilytä se skriptiesi salaisuusvarastossa."
     },
     "settings": {
         "title": "Asetukset",

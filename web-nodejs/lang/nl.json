@@ -677,7 +677,10 @@
         "next_pairing_sub": "Voor de BetterDesk-client: een serveradres en een korte code in plaats van deze waarden.",
         "next_devices_sub": "Controleer of het nieuwe apparaat erbij staat.",
         "portal_title": "Downloadpagina voor de ondersteuningsagent",
-        "portal_sub": "Voor de mensen die u ondersteunt. Deel het adres met hen."
+        "portal_sub": "Voor de mensen die u ondersteunt. Deel het adres met hen.",
+        "show_api_key": "Hele sleutel tonen",
+        "hide_api_key": "Sleutel verbergen",
+        "server_api_key_full_hint": "De hele sleutel. Wie hem heeft, kan deze server via de API beheren, dus bewaar hem in de geheimenopslag van uw scripts."
     },
     "settings": {
         "title": "Instellingen",

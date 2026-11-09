@@ -677,7 +677,10 @@
         "next_pairing_sub": "Dla klienta BetterDesk: adres serwera i krótki kod zamiast tych wartości.",
         "next_devices_sub": "Sprawdź, czy nowe urządzenie tam jest.",
         "portal_title": "Strona pobierania agenta wsparcia",
-        "portal_sub": "Dla osób, którym pomagasz. Udostępnij im adres."
+        "portal_sub": "Dla osób, którym pomagasz. Udostępnij im adres.",
+        "show_api_key": "Pokaż cały klucz",
+        "hide_api_key": "Ukryj klucz",
+        "server_api_key_full_hint": "Cały klucz. Każdy, kto go ma, może zarządzać tym serwerem przez jego API, więc przechowuj go w magazynie sekretów swoich skryptów."
     },
     "settings": {
         "title": "Ustawienia",
