@@ -162,7 +162,7 @@ describe('overview per permission', () => {
 		render(Page, early());
 		await settle();
 		const linked = within(attention()).getByText('dashboard.status_relay_down').closest('a');
-		expect(linked).toHaveAttribute('href', '/server-management?tab=overview');
+		expect(linked).toHaveAttribute('href', '/app/server-management?tab=overview');
 		expect(screen.getByRole('link', { name: 'dashboard.open_keys' })).toBeInTheDocument();
 		expect(screen.getByRole('link', { name: /dashboard\.open_agents/ })).toBeInTheDocument();
 	});
@@ -187,7 +187,7 @@ describe('?activateAgent=1', () => {
 		// jsdom has no BarcodeDetector: the way to approve the device instead
 		expect(within(dialog).getByRole('link', { name: 'nav.registrations' })).toHaveAttribute(
 			'href',
-			'/registrations'
+			'/app/registrations'
 		);
 		expect(pageInfo.title).toBe('nav.activate_agent');
 		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('nav.dashboard');
