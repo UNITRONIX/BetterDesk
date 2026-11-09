@@ -41,16 +41,19 @@ async function refused(
 	return r.status();
 }
 
+/**
+ * For what the signal server answers (organizations, policies, devices, a device's rules,
+ * fingerprints): its reads usually take milliseconds, but take seconds while other test
+ * runs keep the console busy, and the pages show their loading state meanwhile.
+ */
+const waitData = expect.configure({ timeout: 30_000 });
+
 const forbidden = (page: Page) =>
 	page.getByRole('heading', { level: 1, name: "You don't have access to this page" });
 
 for (const role of ROLES) {
 	test.describe(`rules pages as ${role}`, () => {
-		test.use({
-			role,
-			// Opening a device's USB rules asks for them; the server answers 404 while it can't store them (BUGS.md P5)
-			allowProblems: [/http 404: GET .*\/api\/panel\/resource-control\/policies\//]
-		});
+		test.use({ role });
 
 		test('policies', async ({ page }) => {
 			const b = await boot(page);
@@ -63,12 +66,12 @@ for (const role of ROLES) {
 			}
 			await expect(page.getByRole('heading', { level: 1, name: 'Policies' })).toBeVisible();
 			const orgs = page.locator('.org-list a');
-			await expect(orgs.first()).toBeVisible();
+			await waitData(orgs.first()).toBeVisible();
 			await expectNoAxeViolations(page);
 			// One click opens an organization and puts it in the address, replacing the entry
 			await orgs.first().click();
 			await expect(page).toHaveURL(new RegExp(`${UI}/policies/[^/]+$`));
-			await expect(page.locator('#pol-connection-title')).toBeVisible();
+			await waitData(page.locator('#pol-connection-title')).toBeVisible();
 			await expect(page.getByRole('button', { name: 'Save policies' })).toBeVisible();
 			await expectNoAxeViolations(page);
 			// A change marks the form; a refused number says why and keeps the change
@@ -156,38 +159,51 @@ for (const role of ROLES) {
 			}
 		});
 
-		test('USB and drive access', async ({ page }) => {
-			const b = await boot(page);
-			const allowed = b.isSuperAdmin || b.permissions.includes('server.config');
-			await page.goto(`${UI}/resource-control`);
-			if (!allowed) {
-				await expect(forbidden(page)).toBeVisible();
+		test.describe(() => {
+			// Opening a device's USB rules asks for them; the server answers 404 while it can't store
+			// them (BUGS.md P5). The browser logs that 404 without its address; any other 404 in this
+			// test still fails through its own "http 404: <url>" line. One pattern, not two: test.use
+			// reads [value, options] when an array's second item is an object, and a RegExp is one.
+			test.use({
+				allowProblems: [
+					/^(?:http 404: GET .*\/api\/panel\/resource-control\/policies\/[^/]+|console: Failed to load resource: the server responded with a status of 404 \(Not Found\))$/
+				]
+			});
+
+			test('USB and drive access', async ({ page }) => {
+				const b = await boot(page);
+				const allowed = b.isSuperAdmin || b.permissions.includes('server.config');
+				await page.goto(`${UI}/resource-control`);
+				if (!allowed) {
+					await expect(forbidden(page)).toBeVisible();
+					await expectNoAxeViolations(page);
+					const r = await page.request.get('/api/panel/resource-control/devices', {
+						headers: { Accept: 'application/json' }
+					});
+					expect(r.status()).toBe(403);
+					return;
+				}
+				await expect(page.getByRole('heading', { level: 1, name: 'USB and drive access' })).toBeVisible();
+				const rows = page.locator('tbody tr[data-key]');
+				await waitData(rows.first()).toBeVisible();
 				await expectNoAxeViolations(page);
-				const r = await page.request.get('/api/panel/resource-control/devices', {
-					headers: { Accept: 'application/json' }
-				});
-				expect(r.status()).toBe(403);
-				return;
-			}
-			await expect(page.getByRole('heading', { level: 1, name: 'USB and drive access' })).toBeVisible();
-			const rows = page.locator('tbody tr[data-key]');
-			await expect(rows.first()).toBeVisible();
-			await expectNoAxeViolations(page);
-			// A click anywhere on the row opens the device's rules
-			await rows.first().locator('td').nth(1).click();
-			const sheet = page.getByRole('dialog');
-			await expect(sheet).toBeVisible();
-			// Every kind of rule under its own heading, one Save for all
-			await expect(sheet.locator('h3.form-section-title')).toHaveCount(5);
-			// The allowed USB devices only apply to "Only listed devices"
-			const policy = sheet.getByLabel('USB storage', { exact: true });
-			await policy.selectOption('whitelist');
-			await expect(sheet.getByLabel('Allowed USB devices')).toBeVisible();
-			await policy.selectOption('allowed');
-			await expect(sheet.getByLabel('Allowed USB devices')).toBeHidden();
-			await expectNoAxeViolations(page);
-			await page.keyboard.press('Escape');
-			await expect(sheet).toBeHidden();
+				// A click anywhere on the row opens the device's rules
+				await rows.first().locator('td').nth(1).click();
+				const sheet = page.getByRole('dialog');
+				await expect(sheet).toBeVisible();
+				// Every kind of rule under its own heading, one Save for all (shown once the device's
+				// saved rules have been asked for)
+				await waitData(sheet.locator('h3.form-section-title')).toHaveCount(5);
+				// The allowed USB devices only apply to "Only listed devices"
+				const policy = sheet.getByLabel('USB storage', { exact: true });
+				await policy.selectOption('whitelist');
+				await expect(sheet.getByLabel('Allowed USB devices')).toBeVisible();
+				await policy.selectOption('allowed');
+				await expect(sheet.getByLabel('Allowed USB devices')).toBeHidden();
+				await expectNoAxeViolations(page);
+				await page.keyboard.press('Escape');
+				await expect(sheet).toBeHidden();
+			});
 		});
 
 		test('device identity', async ({ page }) => {
@@ -205,7 +221,7 @@ for (const role of ROLES) {
 			expect(b.csrfToken).toBeTruthy();
 			await expect(page.getByRole('heading', { level: 1, name: 'Device identity' })).toBeVisible();
 			// The server can't receive fingerprints yet: the page says so instead of an empty table
-			await expect(page.locator('.att-empty')).toBeVisible();
+			await waitData(page.locator('.att-empty')).toBeVisible();
 			await expectNoAxeViolations(page);
 		});
 	});
