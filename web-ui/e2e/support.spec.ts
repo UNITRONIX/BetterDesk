@@ -78,9 +78,11 @@ for (const role of ROLES) {
 			expect((await page.locator('.tickets-table tbody [aria-haspopup="menu"]').count()) > 0).toBe(
 				canEdit && (await rows.count()) > 0
 			);
-			if (!(await rows.count())) return;
+			// Another role's run may delete its own "e2e <role> ticket" meanwhile: open a lasting one
+			const lasting = rows.filter({ hasNotText: /e2e \w+ ticket/ });
+			if (!(await lasting.count())) return;
 
-			await rows.first().locator('.row-open').click();
+			await lasting.first().locator('.row-open').click();
 			const sheet = page.getByRole('dialog');
 			await expect(sheet.locator('.ticket-facts')).toBeVisible();
 			await expect(sheet.getByRole('button', { name: 'Edit ticket' })).toHaveCount(canEdit ? 1 : 0);
