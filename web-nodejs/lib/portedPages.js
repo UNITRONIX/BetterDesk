@@ -41,7 +41,9 @@ const PORTED_PAGES = Object.freeze([
     '/chat',
     '/toolkit',
     '/settings',
-    '/languages'
+    '/languages',
+    '/cdap-studio',
+    '/fleet'
 ]);
 
 function isPortedPath(pathname, list = PORTED_PAGES) {

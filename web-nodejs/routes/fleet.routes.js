@@ -8,22 +8,6 @@ const { proxyToGo, safeSegment, assertSafeApiId } = require('../lib/goApiProxy')
 const { requireDeviceToken, requireTokenDeviceMatch } = require('../middleware/deviceAuth');
 
 // ---------------------------------------------------------------------------
-// Page routes
-// ---------------------------------------------------------------------------
-
-router.get('/fleet', requireAuth, requirePermission('org.manage_devices'), (req, res) => {
-    const tab = req.query.tab || 'resources';
-    res.render('fleet', {
-        title: req.t('fleet.title'),
-        pageStyles: ['fleet'],
-        pageScripts: ['fleet', 'fleet-builder'],
-        currentPage: 'fleet',
-        breadcrumb: [{ label: req.t('fleet.title') }],
-        activeTab: tab
-    });
-});
-
-// ---------------------------------------------------------------------------
 // Whether the Go server offers fleet functions at all
 // ---------------------------------------------------------------------------
 

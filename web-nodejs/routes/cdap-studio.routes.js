@@ -1,7 +1,8 @@
 /**
  * BetterDesk Console — CDAP SDK Studio Routes
- * Visual node editor for building CDAP bridge flows.
- * Phase 14 of the BetterDesk 3.0 Roadmap.
+ * Flow storage for the visual node editor that builds CDAP bridge flows.
+ * Phase 14 of the BetterDesk 3.0 Roadmap. The editor (/cdap-studio) is in the
+ * new console (web-ui); the old address redirects there (lib/portedPages.js).
  */
 
 const express = require('express');
@@ -9,19 +10,6 @@ const router = express.Router();
 const { requireAuth, requireRole, isSuperAdminRole } = require('../middleware/auth');
 const { getAdapter } = require('../services/dbAdapter');
 const crypto = require('crypto');
-
-// ── Page Route ───────────────────────────────────────────────────────────
-
-/**
- * GET /cdap-studio
- * Renders the SDK Studio visual editor page.
- */
-router.get('/cdap-studio', requireAuth, requireRole('operator'), (req, res) => {
-    res.render('cdap-studio', {
-        title: req.t('sdk_studio.title'),
-        currentPage: 'cdap-studio'
-    });
-});
 
 // ── Flow storage (studio_flows table, see services/dbAdapter) ───────────
 
