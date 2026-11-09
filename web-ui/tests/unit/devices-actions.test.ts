@@ -211,6 +211,13 @@ describe('permission gates: nothing is asked or sent without the permission', ()
 });
 
 describe('what the actions send', () => {
+	test('the snapshot viewer opens the viewer with the agent transport, not the old alias', () => {
+		as('device.connect');
+		const open = vi.spyOn(window, 'open').mockReturnValue(null);
+		expect(act.openSnapshotViewer(dev())).toBe(true);
+		expect(open).toHaveBeenCalledWith('/remote/900100001?transport=cdap', '_blank');
+	});
+
 	test('ban sends the reason from the dialog; cancelling sends nothing', async () => {
 		as('device.ban');
 		answers.ban = '  stolen  ';

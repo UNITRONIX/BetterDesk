@@ -189,7 +189,7 @@ export function connectInApp(d: DeviceLike): boolean {
 /** The CDAP snapshot viewer (screenshots instead of a stream) */
 export function openSnapshotViewer(d: DeviceLike): boolean {
 	if (!may.connectApp(d)) return false;
-	window.open(`/remote-cdap/${encodeURIComponent(d.id)}`, '_blank');
+	window.open(`/remote/${encodeURIComponent(d.id)}?transport=cdap`, '_blank');
 	return true;
 }
 
