@@ -714,7 +714,9 @@ describe('Devices Routes', () => {
                 1,
                 'device_connection_mode',
                 expect.stringContaining('123456789'),
-                '::ffff:127.0.0.1'
+                // Node reports loopback as ::ffff:127.0.0.1 on dual-stack hosts and
+                // 127.0.0.1 in IPv4-only containers
+                expect.stringMatching(/^(::ffff:)?127\.0\.0\.1$/)
             );
             const details = db.logAction.mock.calls.at(-1)[2];
             expect(details).toContain('normal -> incoming-only');
