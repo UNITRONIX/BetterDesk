@@ -82,12 +82,13 @@ router.get('/api/devices', requireAuth, requirePermission('device.view'), async 
         let devices = await serverBackend.getAllDevices(filters);
         const scope = await deviceGroupService.getDeviceScopeForUser(db, req.session.user, devices);
         devices = deviceGroupService.filterDevicesByScope(devices, scope);
+        // One query for every device's groups (one per device took ~0.5 s for 5,000)
+        let groupsByPeer = new Map();
+        try {
+            groupsByPeer = await db.getDeviceGroupsForPeers(devices.map((d) => d.id));
+        } catch (_) { /* groups stay empty */ }
         for (const device of devices) {
-            try {
-                device.groups = await db.getDeviceGroupsForPeer(device.id);
-            } catch (_) {
-                device.groups = [];
-            }
+            device.groups = groupsByPeer.get(String(device.id)) || [];
         }
         
         res.json({

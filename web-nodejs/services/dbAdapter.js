@@ -3350,6 +3350,25 @@ function createSqliteAdapter(config) {
             `).all(peerId);
         },
 
+        /** Groups of many devices in one query: Map(peerId -> rows), for the device list */
+        async getDeviceGroupsForPeers(peerIds) {
+            const wanted = new Set((peerIds || []).map(String));
+            const out = new Map();
+            if (!wanted.size) return out;
+            const rows = openAuth().prepare(`
+                SELECT dgm.peer_id AS member_peer_id, dg.* FROM device_groups dg
+                INNER JOIN device_group_members dgm ON dg.id = dgm.device_group_id
+                ORDER BY dg.name ASC
+            `).all();
+            for (const { member_peer_id: peer, ...group } of rows) {
+                const key = String(peer);
+                if (!wanted.has(key)) continue;
+                if (!out.has(key)) out.set(key, []);
+                out.get(key).push(group);
+            }
+            return out;
+        },
+
         async setDeviceGroupUserAccess(groupGuid, usernames = []) {
             const db = openAuth();
             const group = db.prepare('SELECT id FROM device_groups WHERE guid = ?').get(groupGuid);
@@ -6920,6 +6939,25 @@ function createPostgresAdapter() {
                 WHERE dgm.peer_id = $1
                 ORDER BY dg.name ASC
             `, [peerId]);
+        },
+
+        /** Groups of many devices in one query: Map(peerId -> rows), for the device list */
+        async getDeviceGroupsForPeers(peerIds) {
+            const ids = Array.from(new Set((peerIds || []).map(String)));
+            const out = new Map();
+            if (!ids.length) return out;
+            const rows = await all(`
+                SELECT dgm.peer_id AS member_peer_id, dg.* FROM device_groups dg
+                INNER JOIN device_group_members dgm ON dg.id = dgm.device_group_id
+                WHERE dgm.peer_id = ANY($1)
+                ORDER BY dg.name ASC
+            `, [ids]);
+            for (const { member_peer_id: peer, ...group } of rows) {
+                const key = String(peer);
+                if (!out.has(key)) out.set(key, []);
+                out.get(key).push(group);
+            }
+            return out;
         },
 
         async setDeviceGroupUserAccess(groupGuid, usernames = []) {

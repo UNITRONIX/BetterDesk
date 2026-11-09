@@ -18,6 +18,7 @@ jest.mock('../services/database', () => ({
     getLatestPeerMetric: jest.fn().mockResolvedValue(null),
     getPeerMetrics: jest.fn().mockResolvedValue([]),
     getDeviceGroupsForPeer: jest.fn().mockResolvedValue([]),
+    getDeviceGroupsForPeers: jest.fn().mockResolvedValue(new Map()),
     getDeviceGroupAccessForUser: jest.fn().mockResolvedValue([]),
     getUserGroupsForUser: jest.fn().mockResolvedValue([]),
     getAllDeviceGroups: jest.fn().mockResolvedValue([]),

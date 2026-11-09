@@ -77,6 +77,7 @@ function createMockDb() {
         getLatestPeerMetric: jest.fn().mockResolvedValue(null),
         getPeerMetrics: jest.fn().mockResolvedValue([]),
         getDeviceGroupsForPeer: jest.fn().mockResolvedValue([]),
+        getDeviceGroupsForPeers: jest.fn().mockResolvedValue(new Map()),
         getFolders: jest.fn().mockResolvedValue([]),
         createFolder: jest.fn().mockResolvedValue({ id: 1 }),
         updateFolder: jest.fn().mockResolvedValue(undefined),
