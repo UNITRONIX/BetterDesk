@@ -31,7 +31,13 @@
 	}: Props = $props();
 </script>
 
-<details {id} class={['disclosure', cls]} bind:open ontoggle={() => ontoggle?.(open)}>
+<!-- The element's own state: `open` may not be updated yet when this listener runs -->
+<details
+	{id}
+	class={['disclosure', cls]}
+	bind:open
+	ontoggle={(e) => ontoggle?.((e.currentTarget as HTMLDetailsElement).open)}
+>
 	<summary>
 		<svelte:element this={`h${level}`} class="disclosure-title">{title}</svelte:element>
 		{#if meta}<span class="summary-meta">{meta}</span>{/if}

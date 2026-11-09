@@ -522,6 +522,15 @@ describe('Disclosure, Notice, States', () => {
 		expect(document.querySelector('details')).toHaveAttribute('id', 'ldap-attrs');
 	});
 
+	test('ontoggle gets the state after the toggle (a loader runs on opening)', async () => {
+		const ontoggle = vi.fn();
+		render(Disclosure, { title: 'For scripts', ontoggle, children: text('Inside') });
+		await userEvent.click(screen.getByText('For scripts'));
+		await vi.waitFor(() => expect(ontoggle).toHaveBeenLastCalledWith(true));
+		await userEvent.click(screen.getByText('For scripts'));
+		await vi.waitFor(() => expect(ontoggle).toHaveBeenLastCalledWith(false));
+	});
+
 	test('a notice shows its tone as a class and its message as text', () => {
 		render(Notice, { tone: 'danger', message: '<b>x</b>' });
 		expect(screen.getByText('<b>x</b>').closest('.notice')).toHaveClass('is-danger');
