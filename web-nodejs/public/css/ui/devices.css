@@ -608,6 +608,85 @@
     cursor: default;
 }
 
+/* ── Sheets opened from this page ── */
+
+/* Pick lists in a sheet (user groups, where a rule applies): rows of check
+   fields; a long device list scrolls in its own box under its filter */
+.sheet .group-membership-list {
+    max-height: none;
+    overflow: visible;
+}
+
+.sheet .strategy-assign-list {
+    max-height: 18rem;
+    overflow-y: auto;
+}
+
+.sheet .manage-tags-list {
+    max-height: none;
+    overflow: visible;
+}
+
+/* Access policy: days on one wrapping line, start and end time side by side */
+.sheet .day-checkboxes {
+    gap: 0 var(--space-4);
+}
+
+.sheet .day-checkbox {
+    padding: 0;
+    border-bottom: 0;
+}
+
+.access-policy-times {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+}
+
+.access-policy-times .form-group {
+    margin: 0;
+}
+
+.access-policy-state,
+.access-policy-updated {
+    margin: 0;
+}
+
+/* Remote terminal: the terminal takes the height the sheet has */
+.mesh-terminal-sheet .sheet-body {
+    display: flex;
+    flex-direction: column;
+}
+
+.mesh-terminal-host {
+    flex: 1;
+    min-height: 320px;
+    overflow: hidden;
+}
+
+/* Port relay: what came over the connection, then the text to send */
+.mesh-port-log {
+    min-height: 12rem;
+    max-height: 40vh;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.mesh-port-log-line.error {
+    color: #ffb4ab;
+}
+
+.mesh-port-send-row {
+    display: flex;
+    gap: var(--space-2);
+}
+
+.mesh-port-send-row .form-input {
+    flex: 1;
+    min-width: 0;
+}
+
 /* ── Dialogs opened from this page ── */
 
 .form-section + .form-section {

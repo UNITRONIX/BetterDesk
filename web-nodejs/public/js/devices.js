@@ -345,7 +345,15 @@
             }
         });
 
-        document.addEventListener('scroll', () => {
+        // Scrolling the page or the table moves the button a menu hangs off, so the
+        // menu closes. Scrolls that leave that button where it was keep it open:
+        // scrolling a long menu itself, and the scroll that brought a half-hidden
+        // menu button into view as it was clicked or focused (that scroll event
+        // arrives a frame after the menu opened).
+        document.addEventListener('scroll', (e) => {
+            const target = e.target;
+            if (target && target.nodeType === 1 && target.closest('.kebab-menu, .devices-context-menu')) return;
+            if (menuAnchorUnmoved()) return;
             closeAllKebabMenus();
             closeContextMenu();
         }, true);
@@ -366,6 +374,7 @@
     }
 
     function closeAllKebabMenus() {
+        menuAnchor = null;
         document.querySelectorAll('.kebab-menu.open').forEach(m => {
             m.classList.remove('open');
             m.style.top = '';
@@ -378,6 +387,23 @@
 
     // Button that opened the current menu; Escape returns focus to it
     let menuOpener = null;
+    // The button an open menu was placed against, and where it was then
+    let menuAnchor = null;
+
+    function rememberMenuAnchor(el) {
+        if (!el || !document.contains(el)) {
+            menuAnchor = null;
+            return;
+        }
+        const r = el.getBoundingClientRect();
+        menuAnchor = { el, top: r.top, left: r.left };
+    }
+
+    function menuAnchorUnmoved() {
+        if (!menuAnchor || !document.contains(menuAnchor.el)) return false;
+        const r = menuAnchor.el.getBoundingClientRect();
+        return Math.abs(r.top - menuAnchor.top) < 1 && Math.abs(r.left - menuAnchor.left) < 1;
+    }
 
     /**
      * Keyboard support for an open menu: focus the first item, move with
@@ -600,10 +626,12 @@
         positionContextMenu(clientX, clientY);
         menuOpener = opener || null;
         if (opener) focusMenu(contextMenuEl, opener);
+        rememberMenuAnchor(opener);
     }
 
     function closeContextMenu() {
         if (!contextMenuEl) return;
+        if (!document.querySelector('.kebab-menu.open')) menuAnchor = null;
         contextMenuEl.classList.remove('open');
         contextMenuEl.hidden = true;
         contextMenuEl.innerHTML = '';
@@ -1149,6 +1177,7 @@
                         if (overlay) overlay.classList.add('open');
                     }
                     focusMenu(menu, btn);
+                    rememberMenuAnchor(btn);
                 }
             });
         });
@@ -1678,103 +1707,136 @@
         window.open('rustdesk://' + encodeURIComponent(deviceId), '_blank');
     }
 
+    // New or edit a device group: a side sheet (GUIDE.md "Dialogs and sheets")
     async function showDeviceGroupModal(group = null) {
         await ensureUserGroupsLoaded();
         const editing = !!group;
+        const esc = (value) => Utils.escapeHtml(String(value ?? ''));
         const sourceType = group?.source_type || 'manual';
-        const selectedUserGroups = normalizeGuids(group?.allowed_groups || group?.allowed_user_groups);
+        const isDynamic = sourceType === 'tag';
+        const selectedUserGroups = new Set(normalizeGuids(group?.allowed_groups || group?.allowed_user_groups));
         const allowedUsersValue = Array.isArray(group?.allowed_users) ? group.allowed_users.join(', ') : String(group?.allowed_users || '');
-        const tagOptions = availableTags.map(tag => `<option value="${Utils.escapeHtml(tag)}"></option>`).join('');
+        const tagOptions = availableTags.map(tag => `<option value="${esc(tag)}"></option>`).join('');
+        const userGroupsHtml = availableUserGroups.length
+            ? `<div role="group" aria-labelledby="dg-user-groups-label" aria-describedby="dg-user-groups-hint"><ul class="list group-membership-list">${availableUserGroups.map(item => `
+                    <li class="list-row">
+                        <label class="check-field">
+                            <input type="checkbox" class="dg-user-group" value="${esc(item.guid)}"${selectedUserGroups.has(item.guid) ? ' checked' : ''}>
+                            <span class="check-label">${esc(item.name || item.guid)}</span>
+                        </label>
+                    </li>`).join('')}</ul></div>`
+            : `<p class="form-hint">${esc(_('devices.no_user_groups') || 'No user groups')}</p>`;
         const content = `
-            <div class="device-group-form">
+            <form id="device-group-form" class="device-group-form form-stack" novalidate>
                 <div class="form-group">
-                    <label>${_('devices.group_name') || 'Group name'}</label>
-                    <input type="text" id="dg-name" class="form-input" maxlength="80" placeholder="${_('devices.group_name_placeholder') || 'e.g. Media PCs'}" value="${Utils.escapeHtml(group?.name || '')}">
+                    <label class="form-label" for="dg-name">${esc(_('devices.group_name') || 'Group name')}</label>
+                    <input type="text" id="dg-name" class="form-input is-medium" maxlength="80" required aria-describedby="dg-name-hint" value="${esc(group?.name || '')}">
+                    <p class="form-hint" id="dg-name-hint">${esc(remoteText('devices.group_name_hint', 'For example Media PCs.'))}</p>
                 </div>
-                <label class="toggle-row">
-                    <input type="checkbox" id="dg-dynamic" ${sourceType === 'tag' ? 'checked' : ''}>
-                    <span>${_('devices.dynamic_group') || 'Dynamic group from tag'}</span>
-                </label>
-                <div class="form-group" id="dg-tag-row" style="opacity:${sourceType === 'tag' ? '1' : '0.5'};pointer-events:${sourceType === 'tag' ? 'auto' : 'none'}">
-                    <label>${_('devices.tag_filter') || 'Tag filter'}</label>
-                    <input type="text" id="dg-tag" class="form-input" maxlength="50" list="dg-tag-options" placeholder="Linux" value="${Utils.escapeHtml(group?.tag_filter || '')}">
-                    <datalist id="dg-tag-options">${tagOptions}</datalist>
-                    <p class="form-hint">${_('devices.dynamic_group_hint') || 'Devices with this tag join automatically.'}</p>
-                </div>
-                <div class="form-group">
-                    <label>${_('devices.group_allowed_users') || 'Allowed users'}</label>
-                    <input type="text" id="dg-users" class="form-input" placeholder="operator1, operator2" value="${Utils.escapeHtml(allowedUsersValue)}">
-                    <p class="form-hint">${_('devices.group_allowed_users_hint') || 'Leave empty to keep the group visible to everyone with device permissions.'}</p>
-                </div>
-                <div class="form-group">
-                    <div class="form-label-row">
-                        <label>${_('devices.group_allowed_user_groups') || 'Allowed user groups'}</label>
-                        <button type="button" class="btn btn-secondary btn-sm" id="dg-manage-user-groups">
-                            <span class="material-icons">groups</span>
-                            ${_('devices.manage_user_groups') || 'Manage user groups'}
-                        </button>
+                <section class="form-section" aria-labelledby="dg-members-title">
+                    <h3 class="form-section-title" id="dg-members-title">${esc(remoteText('devices.group_section_members', 'Members'))}</h3>
+                    <label class="check-field">
+                        <input type="checkbox" id="dg-dynamic" aria-controls="dg-tag-row"${isDynamic ? ' checked' : ''}>
+                        <span class="check-label">${esc(_('devices.dynamic_group') || 'Dynamic group from tag')}</span>
+                        <span class="form-hint">${esc(remoteText('devices.dynamic_group_off_hint', 'When off, you add devices yourself, for example by dragging them onto the group.'))}</span>
+                    </label>
+                    <div class="form-group" id="dg-tag-row"${isDynamic ? '' : ' hidden'}>
+                        <label class="form-label" for="dg-tag">${esc(_('devices.tag_filter') || 'Tag filter')}</label>
+                        <input type="text" id="dg-tag" class="form-input is-medium" maxlength="50" list="dg-tag-options" autocomplete="off" aria-describedby="dg-tag-hint" value="${esc(group?.tag_filter || '')}">
+                        <datalist id="dg-tag-options">${tagOptions}</datalist>
+                        <p class="form-hint" id="dg-tag-hint">${esc(_('devices.dynamic_group_hint') || 'Devices with this tag join automatically.')}</p>
                     </div>
-                    <div class="group-membership-list compact">${renderUserGroupAccessOptions(selectedUserGroups)}</div>
-                    <p class="form-hint">${_('devices.group_allowed_user_groups_hint') || 'Users in selected user groups can access this device group.'}</p>
-                </div>
-            </div>`;
+                </section>
+                <section class="form-section" aria-labelledby="dg-access-title">
+                    <h3 class="form-section-title" id="dg-access-title">${esc(remoteText('devices.group_section_access', 'Who can see it'))}</h3>
+                    <div class="form-group">
+                        <label class="form-label" for="dg-users">${esc(_('devices.group_allowed_users') || 'Allowed users')}</label>
+                        <input type="text" id="dg-users" class="form-input" autocomplete="off" spellcheck="false" aria-describedby="dg-users-hint" value="${esc(allowedUsersValue)}">
+                        <p class="form-hint" id="dg-users-hint">${esc(remoteText('devices.group_allowed_users_hint_list', 'Usernames, separated by commas. Leave empty to keep the group visible to everyone with device permissions.'))}</p>
+                    </div>
+                    <div class="form-group">
+                        <span class="form-label" id="dg-user-groups-label">${esc(_('devices.group_allowed_user_groups') || 'Allowed user groups')}</span>
+                        ${userGroupsHtml}
+                        <p class="form-hint" id="dg-user-groups-hint">${esc(_('devices.group_allowed_user_groups_hint') || 'Users in selected user groups can access this device group.')}
+                            <a class="dg-manage-user-groups" href="/users#user-groups">${esc(_('devices.manage_user_groups') || 'Manage user groups')}</a></p>
+                    </div>
+                </section>
+                <button type="submit" hidden tabindex="-1" aria-hidden="true"></button>
+            </form>`;
 
-        Modal.show({
+        let busy = false;
+        const save = async () => {
+            const form = document.getElementById('device-group-form');
+            if (!form || busy) return;
+            const nameInput = form.querySelector('#dg-name');
+            const tagInput = form.querySelector('#dg-tag');
+            const dynamic = form.querySelector('#dg-dynamic').checked;
+            nameInput.removeAttribute('aria-invalid');
+            tagInput.removeAttribute('aria-invalid');
+            const payload = {
+                guid: group?.guid || '',
+                name: nameInput.value.trim(),
+                source_type: dynamic ? 'tag' : 'manual',
+                tag_filter: tagInput.value.trim(),
+                allowed_users: form.querySelector('#dg-users').value,
+                allowed_groups: Array.from(form.querySelectorAll('.dg-user-group:checked')).map(input => input.value)
+            };
+            if (group?.team_id) {
+                payload.team_id = group.team_id;
+            }
+            if (!payload.name) {
+                nameInput.setAttribute('aria-invalid', 'true');
+                nameInput.focus();
+                Modal.setStatus(_('common.name_required') || 'Name is required', 'error');
+                return;
+            }
+            if (payload.source_type === 'tag' && !payload.tag_filter) {
+                tagInput.setAttribute('aria-invalid', 'true');
+                tagInput.focus();
+                Modal.setStatus(_('devices.group_tag_required') || 'Tag filter is required', 'error');
+                return;
+            }
+            busy = true;
+            Modal.setStatus(remoteText('devices.remote_saving', 'Saving…'));
+            try {
+                await Utils.api('/api/device-groups', {
+                    method: 'POST',
+                    body: payload
+                });
+                Modal.close();
+                Notifications.success(_('devices.group_saved') || 'Device group saved');
+                loadDeviceGroups();
+            } catch (err) {
+                Modal.setStatus(err.message || _('errors.server_error'), 'error');
+            } finally {
+                busy = false;
+            }
+        };
+
+        Modal.sheet({
             title: editing ? (_('devices.edit_group') || 'Edit device group') : (_('devices.create_group') || 'Create device group'),
+            subtitle: remoteText('devices.group_sheet_desc', 'A set of devices you can filter the list by, apply access rules to and limit to some people.'),
             content,
-            size: 'medium',
+            status: true,
             buttons: [
-                { label: _('actions.cancel'), class: 'btn-secondary', onClick: () => Modal.close() },
-                {
-                    label: _('actions.save'), class: 'btn-primary', onClick: async () => {
-                        const dynamic = document.getElementById('dg-dynamic').checked;
-                        const payload = {
-                            guid: group?.guid || '',
-                            name: document.getElementById('dg-name').value.trim(),
-                            source_type: dynamic ? 'tag' : 'manual',
-                            tag_filter: document.getElementById('dg-tag').value.trim(),
-                            allowed_users: document.getElementById('dg-users').value,
-                            allowed_groups: Array.from(document.querySelectorAll('.dg-user-group:checked')).map(input => input.value)
-                        };
-                        if (group?.team_id) {
-                            payload.team_id = group.team_id;
-                        }
-                        if (!payload.name) {
-                            Notifications.error(_('common.name_required') || 'Name is required');
-                            return;
-                        }
-                        if (payload.source_type === 'tag' && !payload.tag_filter) {
-                            Notifications.error(_('devices.group_tag_required') || 'Tag filter is required');
-                            return;
-                        }
-                        try {
-                            await Utils.api('/api/device-groups', {
-                                method: 'POST',
-                                body: payload
-                            });
-                            Notifications.success(_('devices.group_saved') || 'Device group saved');
-                            Modal.close();
-                            loadDeviceGroups();
-                        } catch (err) {
-                            Notifications.error(err.message || _('errors.server_error'));
-                        }
-                    }
-                }
+                { label: _('actions.cancel'), class: 'btn-secondary', start: true, onClick: () => Modal.close() },
+                { label: _('actions.save'), class: 'btn-primary', onClick: save }
             ]
         });
 
-        const dynamicInput = document.getElementById('dg-dynamic');
-        const tagRow = document.getElementById('dg-tag-row');
-        dynamicInput?.addEventListener('change', () => {
-            tagRow.style.opacity = dynamicInput.checked ? '1' : '0.5';
-            tagRow.style.pointerEvents = dynamicInput.checked ? 'auto' : 'none';
+        const form = document.getElementById('device-group-form');
+        if (!form) return;
+        form.addEventListener('submit', (event) => {
+            event.preventDefault();
+            save();
         });
-        document.getElementById('dg-manage-user-groups')?.addEventListener('click', () => {
-            window.location.href = '/users#user-groups';
+        // The tag field only for a group filled from a tag
+        const dynamicInput = form.querySelector('#dg-dynamic');
+        const tagRow = form.querySelector('#dg-tag-row');
+        dynamicInput.addEventListener('change', () => {
+            tagRow.hidden = !dynamicInput.checked;
         });
-        document.getElementById('dg-manage-user-groups-empty')?.addEventListener('click', () => {
-            window.location.href = '/users#user-groups';
-        });
+        form.addEventListener('input', () => Modal.setStatus(''));
     }
 
     async function showDeviceMembershipModal(deviceId) {
@@ -1928,9 +1990,15 @@
     }
 
     async function meshPowerAction(deviceId, action) {
-        const labels = { sleep: _('mesh.power_sleep') || 'Sleep', reset: _('mesh.power_reset') || 'Reset' };
+        const labels = { wake: _('mesh.power_wake') || 'Wake', sleep: _('mesh.power_sleep') || 'Sleep', reset: _('mesh.power_reset') || 'Reset', off: _('mesh.power_off') || 'Power off' };
         const label = labels[action] || action;
-        if (!confirm((_('mesh.power_confirm') || 'Send power action') + ': ' + label + '?')) return;
+        const confirmed = await Modal.confirm({
+            title: (_('mesh.power_confirm') || 'Send power action') + ': ' + label + '?',
+            message: fillRemoteText('mesh.power_confirm_message', 'The device {id} gets the command "{action}" through its MeshAgent.', { id: deviceId, action: label }),
+            confirmLabel: label,
+            danger: action !== 'wake'
+        });
+        if (!confirmed) return;
         try {
             await Utils.api('/api/mesh/devices/' + encodeURIComponent(deviceId) + '/power', {
                 method: 'POST',
@@ -2112,127 +2180,166 @@
     }
 
     /**
-     * Show Access Policy modal for unattended access management
+     * Access policy of one device (unattended access, password, schedule,
+     * allowed operators): a side sheet (GUIDE.md "Dialogs and sheets")
      */
     async function showAccessPolicyModal(deviceId) {
         try {
             const resp = await Utils.api(`/api/devices/${deviceId}/access-policy`);
             const policy = resp.data || resp;
+            const esc = (value) => Utils.escapeHtml(String(value ?? ''));
 
             const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
             const activeDays = (policy.schedule_days || '').split(',').map(d => d.trim().toLowerCase()).filter(Boolean);
-
+            const scheduleOn = !!policy.schedule_enabled;
             const dayCheckboxes = days.map(d => {
-                const checked = activeDays.includes(d) ? 'checked' : '';
                 const label = _('days.' + d) || d.charAt(0).toUpperCase() + d.slice(1);
-                return `<label class="day-checkbox"><input type="checkbox" name="schedule_day" value="${d}" ${checked}> ${label}</label>`;
+                return `<label class="checkbox-row day-checkbox"><input type="checkbox" name="schedule_day" value="${d}"${activeDays.includes(d) ? ' checked' : ''}><span>${esc(label)}</span></label>`;
             }).join('');
+            const timeZone = policy.schedule_timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+            const zones = typeof Intl.supportedValuesOf === 'function' ? Intl.supportedValuesOf('timeZone') : [];
+            const zoneOptions = zones.map(zone => `<option value="${esc(zone)}"></option>`).join('');
+            const passwordState = policy.password_set
+                ? Utils.statusHtml('good', _('devices.password_configured') || 'Password set')
+                : Utils.statusHtml('neutral', _('devices.no_password') || 'No password');
+            const updated = policy.updated_by
+                ? `<p class="form-hint access-policy-updated">${esc(_('devices.last_updated_by') || 'Last updated by')}: ${Utils.userHtml(policy.updated_by)}${policy.updated_at ? ', ' + Utils.timeHtml(policy.updated_at, { relative: false }) : ''}</p>`
+                : '';
 
             const content = `
-                <div class="access-policy-form">
-                    <div class="form-section">
-                        <h4><span class="material-icons">vpn_key</span> ${_('devices.unattended_access') || 'Unattended Access'}</h4>
-                        <label class="toggle-row">
-                            <input type="checkbox" id="ap-unattended" ${policy.unattended_enabled ? 'checked' : ''}>
-                            <span>${_('devices.enable_unattended') || 'Enable unattended access'}</span>
+                <form id="access-policy-form" class="access-policy-form form-stack" novalidate>
+                    <section class="form-section" aria-labelledby="ap-unattended-title">
+                        <h3 class="form-section-title" id="ap-unattended-title">${esc(_('devices.unattended_access') || 'Unattended access')}</h3>
+                        <label class="check-field">
+                            <input type="checkbox" id="ap-unattended"${policy.unattended_enabled ? ' checked' : ''}>
+                            <span class="check-label">${esc(_('devices.enable_unattended') || 'Enable unattended access')}</span>
+                            <span class="form-hint">${esc(remoteText('devices.unattended_hint', 'Operators can connect without someone on the device accepting.'))}</span>
                         </label>
-                    </div>
-                    <div class="form-section">
-                        <h4><span class="material-icons">lock</span> ${_('devices.access_password') || 'Access Password'}</h4>
-                        <p class="form-hint">${policy.password_set ? '<span class="badge badge-success">✓ ' + (_('devices.password_configured') || 'Password set') + '</span>' : '<span class="badge badge-warning">' + (_('devices.no_password') || 'No password') + '</span>'}</p>
-                        <div class="form-row">
-                            <input type="password" id="ap-password" class="form-input" placeholder="${_('devices.new_password') || 'New password (leave empty to keep current)'}">
+                    </section>
+                    <section class="form-section" aria-labelledby="ap-password-title">
+                        <h3 class="form-section-title" id="ap-password-title">${esc(_('devices.access_password') || 'Access password')}</h3>
+                        <p class="access-policy-state">${passwordState}</p>
+                        ${policy.password_set ? `<label class="check-field">
+                            <input type="checkbox" id="ap-clear-password" aria-controls="ap-password-group">
+                            <span class="check-label">${esc(_('devices.clear_password') || 'Clear password')}</span>
+                            <span class="form-hint">${esc(remoteText('devices.clear_password_hint', 'Removes the saved password from this device.'))}</span>
+                        </label>` : '<input type="checkbox" id="ap-clear-password" hidden>'}
+                        <div class="form-group" id="ap-password-group">
+                            <label class="form-label" for="ap-password">${esc(policy.password_set ? remoteText('devices.access_password_new', 'New password') : remoteText('devices.access_password_set', 'Password'))}</label>
+                            <input type="password" id="ap-password" class="form-input is-medium" autocomplete="new-password" aria-describedby="ap-password-hint">
+                            <p class="form-hint" id="ap-password-hint">${esc(policy.password_set
+                                ? remoteText('devices.access_password_keep_hint', 'Leave empty to keep the current password.')
+                                : remoteText('devices.access_password_hint', 'Leave empty to set no password.'))}</p>
                         </div>
-                        <label class="toggle-row">
-                            <input type="checkbox" id="ap-clear-password">
-                            <span>${_('devices.clear_password') || 'Clear password'}</span>
+                    </section>
+                    <section class="form-section" aria-labelledby="ap-schedule-title">
+                        <h3 class="form-section-title" id="ap-schedule-title">${esc(_('devices.access_schedule') || 'Access schedule')}</h3>
+                        <label class="check-field">
+                            <input type="checkbox" id="ap-schedule" aria-controls="ap-schedule-fields"${scheduleOn ? ' checked' : ''}>
+                            <span class="check-label">${esc(_('devices.enable_schedule') || 'Enable time-based access')}</span>
+                            <span class="form-hint">${esc(remoteText('devices.schedule_hint', 'Allows connections only on the chosen days, between the start and end time.'))}</span>
                         </label>
-                    </div>
-                    <div class="form-section">
-                        <h4><span class="material-icons">schedule</span> ${_('devices.access_schedule') || 'Access Schedule'}</h4>
-                        <label class="toggle-row">
-                            <input type="checkbox" id="ap-schedule" ${policy.schedule_enabled ? 'checked' : ''}>
-                            <span>${_('devices.enable_schedule') || 'Enable time-based access'}</span>
-                        </label>
-                        <div id="ap-schedule-fields" style="${policy.schedule_enabled ? '' : 'opacity:0.5;pointer-events:none'}">
-                            <div class="form-row">
-                                <label>${_('devices.allowed_days') || 'Allowed days'}:</label>
-                                <div class="day-checkboxes">${dayCheckboxes}</div>
+                        <div class="form-section" id="ap-schedule-fields"${scheduleOn ? '' : ' hidden'}>
+                            <div class="form-group">
+                                <span class="form-label" id="ap-days-label">${esc(_('devices.allowed_days') || 'Allowed days')}</span>
+                                <div class="day-checkboxes" role="group" aria-labelledby="ap-days-label">${dayCheckboxes}</div>
                             </div>
-                            <div class="form-row form-row-inline">
-                                <div>
-                                    <label>${_('devices.start_time') || 'Start time'}:</label>
-                                    <input type="time" id="ap-start-time" class="form-input" value="${policy.schedule_start_time || '08:00'}">
+                            <div class="access-policy-times">
+                                <div class="form-group">
+                                    <label class="form-label" for="ap-start-time">${esc(_('devices.start_time') || 'Start time')}</label>
+                                    <input type="time" id="ap-start-time" class="form-input" value="${esc(policy.schedule_start_time || '08:00')}">
                                 </div>
-                                <div>
-                                    <label>${_('devices.end_time') || 'End time'}:</label>
-                                    <input type="time" id="ap-end-time" class="form-input" value="${policy.schedule_end_time || '18:00'}">
+                                <div class="form-group">
+                                    <label class="form-label" for="ap-end-time">${esc(_('devices.end_time') || 'End time')}</label>
+                                    <input type="time" id="ap-end-time" class="form-input" value="${esc(policy.schedule_end_time || '18:00')}">
                                 </div>
                             </div>
-                            <div class="form-row">
-                                <label>${_('devices.timezone') || 'Timezone'}:</label>
-                                <input type="text" id="ap-timezone" class="form-input" placeholder="Europe/Warsaw" value="${Utils.escapeHtml(policy.schedule_timezone || Intl.DateTimeFormat().resolvedOptions().timeZone)}">
+                            <div class="form-group">
+                                <label class="form-label" for="ap-timezone">${esc(_('devices.timezone') || 'Timezone')}</label>
+                                <input type="text" id="ap-timezone" class="form-input is-host" list="ap-timezone-options" autocomplete="off" spellcheck="false" aria-describedby="ap-timezone-hint" value="${esc(timeZone)}">
+                                <datalist id="ap-timezone-options">${zoneOptions}</datalist>
+                                <p class="form-hint" id="ap-timezone-hint">${esc(remoteText('devices.timezone_hint', 'The days and times count in this time zone, for example Europe/Berlin.'))}</p>
                             </div>
                         </div>
-                    </div>
-                    <div class="form-section">
-                        <h4><span class="material-icons">people</span> ${_('devices.allowed_operators') || 'Allowed Operators'}</h4>
-                        <div class="form-row">
-                            <input type="text" id="ap-operators" class="form-input" placeholder="${_('devices.all_operators') || 'All operators (leave empty)'}" value="${Utils.escapeHtml(policy.allowed_operators || '')}">
-                            <p class="form-hint">${_('devices.operators_hint') || 'Comma-separated usernames. Leave empty to allow all operators.'}</p>
+                    </section>
+                    <section class="form-section" aria-labelledby="ap-operators-title">
+                        <h3 class="form-section-title" id="ap-operators-title">${esc(_('devices.allowed_operators') || 'Allowed operators')}</h3>
+                        <div class="form-group">
+                            <label class="form-label" for="ap-operators">${esc(remoteText('devices.allowed_operators_field', 'Usernames'))}</label>
+                            <input type="text" id="ap-operators" class="form-input" autocomplete="off" spellcheck="false" aria-describedby="ap-operators-hint" value="${esc(policy.allowed_operators || '')}">
+                            <p class="form-hint" id="ap-operators-hint">${esc(_('devices.operators_hint') || 'Comma-separated usernames. Leave empty to allow all operators.')}</p>
                         </div>
-                    </div>
-                    ${policy.updated_by ? `<p class="form-meta">${_('devices.last_updated_by') || 'Last updated by'}: ${Utils.escapeHtml(policy.updated_by)} ${policy.updated_at ? '(' + Utils.formatDate(policy.updated_at) + ')' : ''}</p>` : ''}
-                </div>
+                    </section>
+                    ${updated}
+                    <button type="submit" hidden tabindex="-1" aria-hidden="true"></button>
+                </form>
             `;
 
-            Modal.show({
-                title: (_('devices.access_policy') || 'Access Policy') + ' — ' + deviceId,
-                content: content,
-                size: 'large',
-                buttons: [
-                    { label: _('actions.cancel'), class: 'btn-secondary', onClick: () => Modal.close() },
-                    {
-                        label: _('actions.save'), class: 'btn-primary', onClick: async () => {
-                            const scheduleCheckbox = document.getElementById('ap-schedule');
-                            const selectedDays = Array.from(document.querySelectorAll('input[name="schedule_day"]:checked')).map(cb => cb.value);
-                            const payload = {
-                                unattended_enabled: document.getElementById('ap-unattended').checked,
-                                password: document.getElementById('ap-password').value,
-                                clear_password: document.getElementById('ap-clear-password').checked,
-                                schedule_enabled: scheduleCheckbox ? scheduleCheckbox.checked : false,
-                                schedule_days: selectedDays.join(','),
-                                schedule_start_time: document.getElementById('ap-start-time') ? document.getElementById('ap-start-time').value : '',
-                                schedule_end_time: document.getElementById('ap-end-time') ? document.getElementById('ap-end-time').value : '',
-                                schedule_timezone: document.getElementById('ap-timezone') ? document.getElementById('ap-timezone').value : '',
-                                allowed_operators: document.getElementById('ap-operators') ? document.getElementById('ap-operators').value : ''
-                            };
+            let busy = false;
+            const save = async () => {
+                const form = document.getElementById('access-policy-form');
+                if (!form || busy) return;
+                const selectedDays = Array.from(form.querySelectorAll('input[name="schedule_day"]:checked')).map(cb => cb.value);
+                const payload = {
+                    unattended_enabled: form.querySelector('#ap-unattended').checked,
+                    password: form.querySelector('#ap-password').value,
+                    clear_password: form.querySelector('#ap-clear-password').checked,
+                    schedule_enabled: form.querySelector('#ap-schedule').checked,
+                    schedule_days: selectedDays.join(','),
+                    schedule_start_time: form.querySelector('#ap-start-time').value,
+                    schedule_end_time: form.querySelector('#ap-end-time').value,
+                    schedule_timezone: form.querySelector('#ap-timezone').value,
+                    allowed_operators: form.querySelector('#ap-operators').value
+                };
+                // A password typed before "Clear password" was ticked is not sent
+                if (payload.clear_password) payload.password = '';
 
-                            try {
-                                await Utils.api(`/api/devices/${deviceId}/access-policy`, {
-                                    method: 'PUT',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify(payload)
-                                });
-                                Notifications.success(_('devices.access_policy_saved') || 'Access policy saved');
-                                Modal.close();
-                            } catch (err) {
-                                Notifications.error(err.message || 'Failed to save access policy');
-                            }
-                        }
-                    }
+                busy = true;
+                Modal.setStatus(remoteText('devices.remote_saving', 'Saving…'));
+                try {
+                    await Utils.api(`/api/devices/${deviceId}/access-policy`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    Modal.close();
+                    Notifications.success(_('devices.access_policy_saved') || 'Access policy saved');
+                } catch (err) {
+                    Modal.setStatus(err.message || remoteText('devices.access_policy_save_failed', 'Could not save the access policy.'), 'error');
+                } finally {
+                    busy = false;
+                }
+            };
+
+            Modal.sheet({
+                title: fillRemoteText('devices.access_policy_title', 'Access policy for {id}', { id: deviceId }),
+                subtitle: remoteText('devices.access_policy_desc', 'Who can connect to this device and when, without someone on the device accepting.'),
+                content,
+                status: true,
+                buttons: [
+                    { label: _('actions.cancel'), class: 'btn-secondary', start: true, onClick: () => Modal.close() },
+                    { label: _('actions.save'), class: 'btn-primary', onClick: save }
                 ]
             });
 
-            // Toggle schedule fields on checkbox change
-            const scheduleChk = document.getElementById('ap-schedule');
-            const scheduleFields = document.getElementById('ap-schedule-fields');
-            if (scheduleChk && scheduleFields) {
-                scheduleChk.addEventListener('change', () => {
-                    scheduleFields.style.opacity = scheduleChk.checked ? '1' : '0.5';
-                    scheduleFields.style.pointerEvents = scheduleChk.checked ? 'auto' : 'none';
-                });
-            }
+            const form = document.getElementById('access-policy-form');
+            if (!form) return;
+            form.addEventListener('submit', (event) => {
+                event.preventDefault();
+                save();
+            });
+            // The schedule fields only with the schedule on; the new password only while it is not being cleared
+            const scheduleChk = form.querySelector('#ap-schedule');
+            const scheduleFields = form.querySelector('#ap-schedule-fields');
+            scheduleChk.addEventListener('change', () => {
+                scheduleFields.hidden = !scheduleChk.checked;
+            });
+            const clearChk = form.querySelector('#ap-clear-password');
+            const passwordGroup = form.querySelector('#ap-password-group');
+            clearChk.addEventListener('change', () => {
+                passwordGroup.hidden = clearChk.checked;
+            });
+            form.addEventListener('input', () => Modal.setStatus(''));
 
         } catch (error) {
             Notifications.error(error.message || 'Failed to load access policy');
@@ -2370,97 +2477,80 @@
             return;
         }
 
+        // A centred dialog from modal.js (Escape, focus trap and focus return come
+        // from there). Delete unlocks after a 3 second countdown.
         return new Promise((resolve) => {
-            const modalHtml = `
-                <div class="modal-overlay delete-confirm-modal open" id="delete-modal-${deviceId}">
-                    <div class="modal modal-container modal-danger" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title-${deviceId}">
-                        <div class="modal-header">
-                            <h2 class="modal-title" id="delete-modal-title-${deviceId}">${_('devices.delete_title')}</h2>
-                        </div>
-                        <div class="modal-body">
-                            <p class="delete-warning">${_('devices.delete_confirm', { id: Utils.escapeHtml(deviceId) })}</p>
-                            <p class="delete-info form-hint">${_('devices.delete_reserved_hint')}</p>
-                            <div class="revoke-options">
-                                <label class="checkbox-label">
-                                    <input type="checkbox" id="hard-delete-check-${deviceId}" />
-                                    <span>${_('devices.delete_hard_option')}</span>
-                                </label>
-                                <p class="revoke-hint">${_('devices.delete_hard_hint')}</p>
-                                <label class="checkbox-label">
-                                    <input type="checkbox" id="revoke-check-${deviceId}" />
-                                    <span>${_('devices.revoke_option')}</span>
-                                </label>
-                                <p class="revoke-hint">${_('devices.revoke_hint')}</p>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary cancel-btn">${_('actions.cancel')}</button>
-                            <button type="button" class="btn btn-danger confirm-delete-btn" disabled>
-                                <span class="btn-text">${_('actions.delete')} (<span class="countdown">3</span>)</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            document.body.insertAdjacentHTML('beforeend', modalHtml);
-            
-            const modal = document.getElementById(`delete-modal-${deviceId}`);
-            const confirmBtn = modal.querySelector('.confirm-delete-btn');
-            const cancelBtn = modal.querySelector('.cancel-btn');
-            const countdownEl = confirmBtn.querySelector('.countdown');
-            const hardCheck = document.getElementById(`hard-delete-check-${deviceId}`);
-            const revokeCheck = document.getElementById(`revoke-check-${deviceId}`);
-            
+            const safeId = String(deviceId).replace(/[^A-Za-z0-9_-]/g, '_');
+            const hardId = `hard-delete-check-${safeId}`;
+            const revokeId = `revoke-check-${safeId}`;
+            const confirmId = `confirm-delete-btn-${safeId}`;
+            const deleteLabel = _('actions.delete');
+            let timer = null;
+            let settled = false;
+            const finish = (value) => {
+                if (timer) clearInterval(timer);
+                timer = null;
+                if (!settled) {
+                    settled = true;
+                    resolve(value);
+                }
+            };
+            const content = `
+                <div class="form-stack delete-device-form">
+                    <p class="delete-warning">${_('devices.delete_confirm', { id: Utils.escapeHtml(deviceId) })}</p>
+                    <p class="delete-info form-hint">${_('devices.delete_reserved_hint')}</p>
+                    <label class="check-field">
+                        <input type="checkbox" id="${hardId}">
+                        <span class="check-label">${_('devices.delete_hard_option')}</span>
+                        <span class="form-hint">${_('devices.delete_hard_hint')}</span>
+                    </label>
+                    <label class="check-field">
+                        <input type="checkbox" id="${revokeId}">
+                        <span class="check-label">${_('devices.revoke_option')}</span>
+                        <span class="form-hint">${_('devices.revoke_hint')}</span>
+                    </label>
+                </div>`;
+            Modal.show({
+                title: _('devices.delete_title'),
+                content,
+                className: 'delete-confirm-modal',
+                buttons: [
+                    { label: _('actions.cancel'), class: 'btn-secondary cancel-btn', onClick: () => { Modal.close(); finish(false); } },
+                    { label: `${deleteLabel} (3)`, class: 'btn-danger confirm-delete-btn', id: confirmId, onClick: () => onConfirm() }
+                ],
+                onClose: () => finish(false)
+            });
+            const confirmBtn = document.getElementById(confirmId);
+            const cancelBtn = confirmBtn && confirmBtn.parentElement.querySelector('.cancel-btn');
+            if (confirmBtn) confirmBtn.disabled = true;
+            // Start on Cancel, as before: the first thing Enter does here is not deleting
+            if (cancelBtn) cancelBtn.focus();
+
             let countdown = 3;
-            const timer = setInterval(() => {
+            timer = setInterval(() => {
                 countdown--;
-                if (countdownEl) {
-                    countdownEl.textContent = countdown;
+                if (!confirmBtn || !document.contains(confirmBtn)) {
+                    clearInterval(timer);
+                    return;
                 }
                 if (countdown <= 0) {
                     clearInterval(timer);
+                    timer = null;
                     confirmBtn.disabled = false;
-                    const btnText = confirmBtn.querySelector('.btn-text');
-                    if (btnText) btnText.textContent = _('actions.delete');
+                    confirmBtn.textContent = deleteLabel;
+                } else {
+                    confirmBtn.textContent = `${deleteLabel} (${countdown})`;
                 }
             }, 1000);
-            
-            const opener = document.activeElement;
-            const onKey = (e) => {
-                if (e.key !== 'Escape') return;
-                e.stopPropagation();
-                closeModal();
-                resolve(false);
-            };
-            document.addEventListener('keydown', onKey);
-            cancelBtn.focus();
 
-            const closeModal = () => {
-                clearInterval(timer);
-                document.removeEventListener('keydown', onKey);
-                modal.remove();
-                if (opener && document.contains(opener)) opener.focus({ preventScroll: true });
-            };
-            
-            cancelBtn.addEventListener('click', () => {
-                closeModal();
-                resolve(false);
-            });
-            
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    closeModal();
-                    resolve(false);
-                }
-            });
-            
-            confirmBtn.addEventListener('click', async () => {
-                if (confirmBtn.disabled) return;
-                const hard = hardCheck && hardCheck.checked;
-                const revoke = revokeCheck && revokeCheck.checked;
-                closeModal();
-                
+            const onConfirm = async () => {
+                if (!confirmBtn || confirmBtn.disabled) return;
+                const hard = document.getElementById(hardId)?.checked === true;
+                const revoke = document.getElementById(revokeId)?.checked === true;
+                Modal.close();
+                if (timer) clearInterval(timer);
+                settled = true;
+
                 try {
                     const params = new URLSearchParams();
                     if (hard) params.set('hard', 'true');
@@ -2483,7 +2573,7 @@
                     Notifications.error(error.message || _('errors.delete_failed'));
                     resolve(false);
                 }
-            });
+            };
         });
     }
 
@@ -2586,6 +2676,9 @@
         ).length;
     }
 
+    // Tags across all devices, with rename and delete per tag: a side sheet, so
+    // the rename prompt and the delete confirm open on top of it and the list
+    // is redrawn in place afterwards
     function showManageTagsModal() {
         const renderList = () => {
             if (!availableTags.length) {
@@ -2613,8 +2706,27 @@
             }).join('')}</ul>`;
         };
 
+        // Reload everything a tag change touches and draw the list again; focus
+        // goes to the row of `focusTag` (or the row now at `focusIndex`)
+        const refresh = async ({ focusTag = '', focusIndex = 0, action = 'rename' } = {}) => {
+            await loadTags();
+            await loadDeviceGroups();
+            await loadDevices();
+            const host = document.getElementById('manage-tags-host');
+            if (!host) return;
+            host.innerHTML = renderList();
+            bindActions();
+            const rows = Array.from(host.querySelectorAll('.manage-tags-row'));
+            const row = rows.find(item => item.dataset.tag === focusTag) || rows[Math.min(focusIndex, rows.length - 1)];
+            const target = row && row.querySelector(action === 'delete' ? '.manage-tag-delete' : '.manage-tag-rename');
+            if (target) target.focus();
+            else host.closest('[role="dialog"]')?.focus();
+        };
+
         const bindActions = () => {
-            document.querySelectorAll('.manage-tag-rename').forEach(button => {
+            const host = document.getElementById('manage-tags-host');
+            if (!host) return;
+            host.querySelectorAll('.manage-tag-rename').forEach(button => {
                 button.addEventListener('click', async () => {
                     const from = button.dataset.tag;
                     if (!from) return;
@@ -2622,17 +2734,17 @@
                         title: _('devices.rename_tag') || 'Rename tag',
                         label: _('devices.rename_tag_prompt') || 'New tag name',
                         value: from,
-                        placeholder: from,
                         hint: _('devices.rename_tag_hint') || 'Renames this tag on all devices you can see and updates matching dynamic groups.',
                         confirmLabel: _('actions.save')
                     });
                     if (to === null) return;
                     const cleaned = String(to || '').trim();
                     if (!cleaned) {
-                        Notifications.error(_('devices.tag_name_required') || 'Tag name is required');
+                        Modal.setStatus(_('devices.tag_name_required') || 'Tag name is required', 'error');
                         return;
                     }
                     if (cleaned === from) return;
+                    Modal.setStatus(remoteText('devices.remote_saving', 'Saving…'));
                     try {
                         const result = await Utils.api('/api/tags/rename', {
                             method: 'POST',
@@ -2642,25 +2754,22 @@
                             selectedTags.delete(from);
                             selectedTags.add(result?.to || cleaned);
                         }
-                        Notifications.success(
+                        await refresh({ focusTag: result?.to || cleaned });
+                        Modal.setStatus(
                             (_('devices.tag_renamed') || 'Tag renamed')
-                            + ` (${result?.updatedDevices || 0})`
+                            + ` (${result?.updatedDevices || 0})`, 'ok'
                         );
-                        Modal.close();
-                        await loadTags();
-                        await loadDeviceGroups();
-                        await loadDevices();
-                        showManageTagsModal();
                     } catch (err) {
-                        Notifications.error(err.message || _('errors.server_error'));
+                        Modal.setStatus(err.message || _('errors.server_error'), 'error');
                     }
                 });
             });
 
-            document.querySelectorAll('.manage-tag-delete').forEach(button => {
+            host.querySelectorAll('.manage-tag-delete').forEach(button => {
                 button.addEventListener('click', async () => {
                     const tag = button.dataset.tag;
                     if (!tag) return;
+                    const index = availableTags.indexOf(tag);
                     const deviceCount = countDevicesWithTag(tag);
                     const groupCount = countGroupsWithTag(tag);
                     const confirmMsg = (_('devices.delete_tag_confirm') || 'Remove tag "{tag}" from {count} device(s)? Dynamic groups that use this tag will become empty until updated.')
@@ -2674,40 +2783,35 @@
                         confirmLabel: _('actions.delete')
                     });
                     if (!confirmed) return;
+                    Modal.setStatus(remoteText('devices.tag_deleting', 'Deleting…'));
                     try {
                         const result = await Utils.api('/api/tags/delete', {
                             method: 'POST',
                             body: { tag }
                         });
                         selectedTags.delete(tag);
-                        Notifications.success(
+                        await refresh({ focusIndex: Math.max(index, 0), action: 'delete' });
+                        Modal.setStatus(
                             (_('devices.tag_deleted') || 'Tag deleted')
-                            + ` (${result?.updatedDevices || 0})`
+                            + ` (${result?.updatedDevices || 0})`, 'ok'
                         );
-                        Modal.close();
-                        await loadTags();
-                        await loadDeviceGroups();
-                        await loadDevices();
-                        showManageTagsModal();
                     } catch (err) {
-                        Notifications.error(err.message || _('errors.server_error'));
+                        Modal.setStatus(err.message || _('errors.server_error'), 'error');
                     }
                 });
             });
         };
 
-        Modal.show({
+        Modal.sheet({
             title: _('devices.manage_tags') || 'Manage tags',
-            content: `
-                <p class="form-hint manage-tags-hint">${Utils.escapeHtml(_('devices.tags_manage_hint') || 'Rename or delete tags across all devices you can see. Removing a tag from one device is done in Edit / Device details.')}</p>
-                ${renderList()}
-            `,
-            size: 'medium',
+            subtitle: _('devices.tags_manage_hint') || 'Rename or delete tags across all devices you can see. Removing a tag from one device is done in Edit / Device details.',
+            content: `<div id="manage-tags-host">${renderList()}</div>`,
+            status: true,
             buttons: [
                 { label: _('actions.close'), class: 'btn-secondary', onClick: () => Modal.close() }
-            ],
-            onOpen: bindActions
+            ]
         });
+        bindActions();
     }
 
     function initManageTags() {
@@ -3122,7 +3226,7 @@
 
     /**
      * Commercialization depends on org→default device group; packages attach to groups.
-     * Modal stays on Devices — create a package or assign an existing one to this group.
+     * A side sheet on Devices: assign an existing support package to this group, or create one and assign it.
      */
     async function openGroupCommercializationModal(group) {
         if (!group?.guid) return;
@@ -3135,127 +3239,165 @@
             return;
         }
 
-        const title = (_('devices.group_commercialization_title') || 'Commercialization — {name}').replace('{name}', group.name);
+        const esc = (value) => Utils.escapeHtml(String(value ?? ''));
+        const startNew = !packages.length;
         const pkgOptions = packages.map((p) =>
-            `<option value="${Utils.escapeHtml(p.id)}">${Utils.escapeHtml(p.name)} (${p.included_minutes || 0} min)</option>`
+            `<option value="${esc(p.id)}">${esc(p.name)} (${esc(p.included_minutes || 0)} min)</option>`
         ).join('');
 
         const bodyHtml = `
-            <p class="form-hint">${_('devices.group_commercialization_hint') || 'Assign a support package to this group. All devices in the group share the package pool.'}</p>
-            <div class="form-group">
-                <label class="form-label">${_('devices.group_commercialization_mode') || 'Action'}
-                    <select id="gc-mode" class="form-input">
-                        <option value="existing">${_('devices.group_commercialization_assign_existing') || 'Assign existing package'}</option>
-                        <option value="new">${_('devices.group_commercialization_create_new') || 'Create new package and assign'}</option>
+            <form id="gc-form" class="form-stack" novalidate>
+                <p class="form-hint">${esc(_('devices.group_commercialization_hint') || 'Assign a support package to this group. All devices in the group share the package pool.')}</p>
+                <div class="form-group">
+                    <span class="form-label" id="gc-mode-label">${esc(_('devices.group_commercialization_mode') || 'Action')}</span>
+                    <div role="radiogroup" aria-labelledby="gc-mode-label">
+                        <ul class="choice-list">
+                            <li><label class="choice">
+                                <input type="radio" name="gc-mode" value="existing" aria-controls="gc-existing-wrap"${startNew ? ' disabled' : ' checked'}>
+                                <span class="choice-title">${esc(_('devices.group_commercialization_assign_existing') || 'Assign existing package')}</span>
+                                ${startNew ? `<span class="choice-desc">${esc(remoteText('devices.group_billing_no_packages', 'There are no packages yet.'))}</span>` : ''}
+                            </label></li>
+                            <li><label class="choice">
+                                <input type="radio" name="gc-mode" value="new" aria-controls="gc-new-wrap"${startNew ? ' checked' : ''}>
+                                <span class="choice-title">${esc(_('devices.group_commercialization_create_new') || 'Create new package and assign')}</span>
+                            </label></li>
+                        </ul>
+                    </div>
+                </div>
+                <div id="gc-existing-wrap" class="form-group"${startNew ? ' hidden' : ''}>
+                    <label class="form-label" for="gc-package">${esc(_('commercialization.contracts.package') || 'Package')}</label>
+                    <select id="gc-package" class="form-select is-host"${packages.length ? '' : ' disabled'}>
+                        ${pkgOptions || `<option value="">${esc(_('commercialization.contracts.no_packages') || 'No packages yet')}</option>`}
                     </select>
-                </label>
-            </div>
-            <div id="gc-existing-wrap" class="form-group">
-                <label class="form-label">${_('commercialization.contracts.package') || 'Package'}
-                    <select id="gc-package" class="form-input" ${packages.length ? '' : 'disabled'}>
-                        ${pkgOptions || `<option value="">${_('commercialization.contracts.no_packages') || 'No packages yet'}</option>`}
-                    </select>
-                </label>
-            </div>
-            <div id="gc-new-wrap" class="form-group" hidden>
-                <label class="form-label">${_('commercialization.packages.name') || 'Name'}
-                    <input type="text" id="gc-name" class="form-input" maxlength="128">
-                </label>
-                <label class="form-label">${_('commercialization.packages.description') || 'Description'}
-                    <textarea id="gc-desc" class="form-input" rows="2" maxlength="512"></textarea>
-                </label>
-                <label class="form-label">${_('commercialization.packages.included_minutes') || 'Included minutes'}
-                    <input type="number" id="gc-minutes" class="form-input" value="600" min="1" step="1">
-                </label>
-                <label class="form-label">${_('commercialization.packages.overage_rate') || 'Overage rate'}
-                    <input type="number" id="gc-overage" class="form-input" value="100" min="0" step="0.01">
-                </label>
-                <label class="form-label">${_('commercialization.packages.currency') || 'Currency'}
-                    <input type="text" id="gc-currency" class="form-input" value="PLN" maxlength="8">
-                </label>
-            </div>
-            <p id="gc-error" class="form-error" hidden></p>
+                </div>
+                <section id="gc-new-wrap" class="form-section" aria-labelledby="gc-new-title"${startNew ? '' : ' hidden'}>
+                    <h3 class="form-section-title" id="gc-new-title">${esc(remoteText('devices.group_billing_new_section', 'New package'))}</h3>
+                    <div class="form-group">
+                        <label class="form-label" for="gc-name">${esc(_('commercialization.packages.name') || 'Name')}</label>
+                        <input type="text" id="gc-name" class="form-input is-medium" maxlength="128" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="gc-desc">${esc(_('commercialization.packages.description') || 'Description')}</label>
+                        <textarea id="gc-desc" class="form-textarea" rows="2" maxlength="512"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="gc-minutes">${esc(_('commercialization.packages.included_minutes') || 'Included minutes')}</label>
+                        <input type="number" id="gc-minutes" class="form-input is-short" value="600" min="1" step="1" inputmode="numeric">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="gc-overage">${esc(_('commercialization.packages.overage_rate') || 'Overage rate')}</label>
+                        <input type="number" id="gc-overage" class="form-input is-short" value="100" min="0" step="0.01" inputmode="decimal">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="gc-currency">${esc(_('commercialization.packages.currency') || 'Currency')}</label>
+                        <input type="text" id="gc-currency" class="form-input is-short" value="PLN" maxlength="8" autocomplete="off" spellcheck="false" aria-describedby="gc-currency-hint">
+                        <p class="form-hint" id="gc-currency-hint">${esc(remoteText('devices.group_billing_currency_hint', 'Three-letter code, for example EUR.'))}</p>
+                    </div>
+                </section>
+                <button type="submit" hidden tabindex="-1" aria-hidden="true"></button>
+            </form>
         `;
 
         return new Promise((resolve) => {
-            Modal.show({
-                title,
-                content: bodyHtml,
-                size: 'large',
-                onOpen: () => {
-                    const mode = document.getElementById('gc-mode');
-                    const existingWrap = document.getElementById('gc-existing-wrap');
-                    const newWrap = document.getElementById('gc-new-wrap');
-                    mode?.addEventListener('change', () => {
-                        const isNew = mode.value === 'new';
-                        if (existingWrap) existingWrap.hidden = isNew;
-                        if (newWrap) newWrap.hidden = !isNew;
+            let busy = false;
+            const save = async () => {
+                if (busy) return;
+                const form = document.getElementById('gc-form');
+                if (!form) return;
+                const nameInput = form.querySelector('#gc-name');
+                nameInput.removeAttribute('aria-invalid');
+                const showErr = (msg) => Modal.setStatus(msg, 'error');
+                busy = true;
+                try {
+                    const mode = form.querySelector('input[name="gc-mode"]:checked')?.value || 'existing';
+                    let packageId = form.querySelector('#gc-package')?.value;
+                    if (mode === 'new') {
+                        const name = nameInput.value.trim();
+                        if (!name) {
+                            nameInput.setAttribute('aria-invalid', 'true');
+                            nameInput.focus();
+                            showErr(_('commercialization.packages.prompt_name') || 'Package name required');
+                            return;
+                        }
+                        Modal.setStatus(remoteText('devices.remote_saving', 'Saving…'));
+                        await Utils.api('/api/panel/billing/packages', {
+                            method: 'POST',
+                            body: {
+                                name,
+                                description: form.querySelector('#gc-desc')?.value?.trim() || '',
+                                included_minutes: parseInt(form.querySelector('#gc-minutes')?.value, 10) || 600,
+                                overage_rate: parseFloat(form.querySelector('#gc-overage')?.value) || 0,
+                                currency: (form.querySelector('#gc-currency')?.value || 'PLN').trim().toUpperCase()
+                            }
+                        });
+                        const list = await Utils.api('/api/panel/billing/packages');
+                        const match = (list.packages || []).find((p) => p.name === name);
+                        packageId = match?.id;
+                        if (!packageId) {
+                            showErr(_('errors.server_error') || 'Failed to create package');
+                            return;
+                        }
+                    }
+                    if (!packageId) {
+                        showErr(_('commercialization.contracts.no_packages') || 'Select a package');
+                        return;
+                    }
+                    Modal.setStatus(remoteText('devices.remote_saving', 'Saving…'));
+                    await Utils.api('/api/panel/billing/contracts', {
+                        method: 'POST',
+                        body: {
+                            target_type: 'device_group',
+                            target_key: group.guid,
+                            package_id: packageId
+                        }
                     });
-                },
+                    Modal.close();
+                    Notifications.success(_('devices.group_commercialization_saved') || 'Package assigned to group');
+                    resolve(true);
+                } catch (e) {
+                    showErr(e.message || _('errors.server_error'));
+                } finally {
+                    busy = false;
+                }
+            };
+
+            Modal.sheet({
+                title: fillRemoteText('devices.group_billing_title', 'Support package for {name}', { name: group.name }),
+                content: bodyHtml,
+                status: true,
                 buttons: [
                     {
                         label: _('actions.cancel') || 'Cancel',
                         class: 'btn-secondary',
+                        start: true,
                         onClick: () => { Modal.close(); resolve(false); }
                     },
                     {
                         label: _('actions.save') || 'Save',
                         class: 'btn-primary',
-                        onClick: async () => {
-                            const err = document.getElementById('gc-error');
-                            const showErr = (msg) => {
-                                if (err) { err.hidden = false; err.textContent = msg; }
-                            };
-                            try {
-                                const mode = document.getElementById('gc-mode')?.value || 'existing';
-                                let packageId = document.getElementById('gc-package')?.value;
-                                if (mode === 'new') {
-                                    const name = document.getElementById('gc-name')?.value?.trim();
-                                    if (!name) {
-                                        showErr(_('commercialization.packages.prompt_name') || 'Package name required');
-                                        return;
-                                    }
-                                    await Utils.api('/api/panel/billing/packages', {
-                                        method: 'POST',
-                                        body: {
-                                            name,
-                                            description: document.getElementById('gc-desc')?.value?.trim() || '',
-                                            included_minutes: parseInt(document.getElementById('gc-minutes')?.value, 10) || 600,
-                                            overage_rate: parseFloat(document.getElementById('gc-overage')?.value) || 0,
-                                            currency: (document.getElementById('gc-currency')?.value || 'PLN').trim().toUpperCase()
-                                        }
-                                    });
-                                    const list = await Utils.api('/api/panel/billing/packages');
-                                    const match = (list.packages || []).find((p) => p.name === name);
-                                    packageId = match?.id;
-                                    if (!packageId) {
-                                        showErr(_('errors.server_error') || 'Failed to create package');
-                                        return;
-                                    }
-                                }
-                                if (!packageId) {
-                                    showErr(_('commercialization.contracts.no_packages') || 'Select a package');
-                                    return;
-                                }
-                                await Utils.api('/api/panel/billing/contracts', {
-                                    method: 'POST',
-                                    body: {
-                                        target_type: 'device_group',
-                                        target_key: group.guid,
-                                        package_id: packageId
-                                    }
-                                });
-                                Modal.close();
-                                Notifications.success(_('devices.group_commercialization_saved') || 'Package assigned to group');
-                                resolve(true);
-                            } catch (e) {
-                                showErr(e.message || _('errors.server_error'));
-                            }
-                        }
+                        onClick: save
                     }
                 ],
                 onClose: () => resolve(false)
             });
+
+            const form = document.getElementById('gc-form');
+            if (!form) return;
+            form.addEventListener('submit', (event) => {
+                event.preventDefault();
+                save();
+            });
+            // The package choice or the new package's fields, whichever applies
+            const existingWrap = form.querySelector('#gc-existing-wrap');
+            const newWrap = form.querySelector('#gc-new-wrap');
+            form.querySelectorAll('input[name="gc-mode"]').forEach(radio => {
+                radio.addEventListener('change', () => {
+                    const isNew = form.querySelector('input[name="gc-mode"]:checked')?.value === 'new';
+                    existingWrap.hidden = isNew;
+                    newWrap.hidden = !isNew;
+                });
+            });
+            form.addEventListener('input', () => Modal.setStatus(''));
         });
     }
 
@@ -3425,20 +3567,24 @@
         }));
     }
 
-    function renderAssignCheckboxList(items, selectedKeys, inputClass, labelFn) {
+    function renderAssignCheckboxList(items, selectedKeys, inputClass, labelFn, emptyText, labelledBy) {
         if (!items.length) {
-            return `<div class="empty-state-inline">${_('common.no_results') || 'No items'}</div>`;
+            return `<p class="form-hint">${Utils.escapeHtml(emptyText || _('common.no_results') || 'No items')}</p>`;
         }
-        return items.map(item => {
+        return `<div role="group" aria-labelledby="${labelledBy}"><ul class="list group-membership-list strategy-assign-list">${items.map(item => {
             const key = item.key;
-            const checked = selectedKeys.includes(key) ? 'checked' : '';
-            return `<label class="strategy-assign-option">
-                <input type="checkbox" class="${inputClass}" value="${Utils.escapeHtml(key)}" ${checked}>
-                <span>${Utils.escapeHtml(labelFn(item))}</span>
-            </label>`;
-        }).join('');
+            const checked = selectedKeys.includes(key) ? ' checked' : '';
+            return `<li class="list-row strategy-assign-row" data-label="${Utils.escapeHtml(String(labelFn(item)).toLowerCase())}">
+                <label class="check-field">
+                    <input type="checkbox" class="${inputClass}" value="${Utils.escapeHtml(key)}"${checked}>
+                    <span class="check-label">${Utils.escapeHtml(labelFn(item))}</span>
+                </label>
+            </li>`;
+        }).join('')}</ul></div>`;
     }
 
+    // Where an access rule applies (devices, users, device groups): a side sheet,
+    // the pick lists are long
     async function showStrategyAssignModal(strategy) {
         if (!deviceGroups.length) await loadDeviceGroups();
         let panelUsers = [];
@@ -3450,9 +3596,10 @@
         let detail = { peer_ids: [], user_names: [], group_guids: [] };
         try {
             const resp = await Utils.api(`/api/panel/strategies/${encodeURIComponent(strategy.guid)}`);
-            detail = resp?.data?.strategy || detail;
+            detail = resp?.data?.strategy || resp?.strategy || detail;
         } catch (_) {}
 
+        const esc = (value) => Utils.escapeHtml(String(value ?? ''));
         const deviceItems = (devices || []).slice(0, 500).map(d => ({
             key: d.id,
             label: `${d.id}${d.hostname ? ', ' + d.hostname : ''}`,
@@ -3462,52 +3609,92 @@
             label: u.username || u.name || String(u.id),
         }));
         const groupItems = deviceGroups.map(g => ({ key: g.guid, label: g.name || g.guid }));
+        // A filter above a long device list
+        const deviceFilter = deviceItems.length > 8 ? `
+            <div class="form-group">
+                <label class="form-label" for="strategy-assign-filter">${esc(remoteText('devices.strategy_assign_filter', 'Find devices'))}</label>
+                <input type="search" id="strategy-assign-filter" class="form-input is-medium" autocomplete="off" spellcheck="false" aria-describedby="strategy-assign-filter-hint" aria-controls="strategy-assign-devices-list">
+                <p class="form-hint" id="strategy-assign-filter-hint">${esc(remoteText('devices.strategy_assign_filter_hint', 'Type part of an ID or name. Ticked devices stay ticked when they are hidden.'))}</p>
+            </div>` : '';
 
-        Modal.show({
+        Modal.sheet({
             title: (_('devices.strategy_assign_title') || 'Assign strategy').replace('{name}', strategy.name),
             content: `
-                <form id="strategy-assign-form" class="device-group-form">
-                    <p class="form-hint">${_('devices.strategy_assign_hint')}</p>
-                    <fieldset class="form-group">
-                        <legend class="form-label">${_('devices.strategy_assign_devices')}</legend>
-                        <div class="strategy-assign-list">${renderAssignCheckboxList(deviceItems, detail.peer_ids || [], 'strategy-assign-peer', i => i.label)}</div>
-                    </fieldset>
-                    <fieldset class="form-group">
-                        <legend class="form-label">${_('devices.strategy_assign_users')}</legend>
-                        <div class="strategy-assign-list">${renderAssignCheckboxList(userItems, detail.user_names || [], 'strategy-assign-user', i => i.label)}</div>
-                    </fieldset>
-                    <fieldset class="form-group">
-                        <legend class="form-label">${_('devices.strategy_assign_groups')}</legend>
-                        <div class="strategy-assign-list">${renderAssignCheckboxList(groupItems, detail.group_guids || [], 'strategy-assign-group', i => i.label)}</div>
-                    </fieldset>
+                <form id="strategy-assign-form" class="form-stack" novalidate>
+                    <p class="form-hint">${esc(_('devices.strategy_assign_hint'))}</p>
+                    <section class="form-section" aria-labelledby="strategy-assign-devices-title">
+                        <h3 class="form-section-title" id="strategy-assign-devices-title">${esc(_('devices.strategy_assign_devices'))}</h3>
+                        ${deviceFilter}
+                        <div id="strategy-assign-devices-list">${renderAssignCheckboxList(deviceItems, detail.peer_ids || [], 'strategy-assign-peer', i => i.label, remoteText('devices.strategy_assign_no_devices', 'No devices.'), 'strategy-assign-devices-title')}</div>
+                        <p class="form-hint" id="strategy-assign-no-match" hidden>${esc(remoteText('devices.strategy_assign_no_match', 'No device matches.'))}</p>
+                    </section>
+                    <section class="form-section" aria-labelledby="strategy-assign-users-title">
+                        <h3 class="form-section-title" id="strategy-assign-users-title">${esc(_('devices.strategy_assign_users'))}</h3>
+                        ${renderAssignCheckboxList(userItems, detail.user_names || [], 'strategy-assign-user', i => i.label, remoteText('devices.strategy_assign_no_users', 'No users.'), 'strategy-assign-users-title')}
+                    </section>
+                    <section class="form-section" aria-labelledby="strategy-assign-groups-title">
+                        <h3 class="form-section-title" id="strategy-assign-groups-title">${esc(_('devices.strategy_assign_groups'))}</h3>
+                        ${renderAssignCheckboxList(groupItems, detail.group_guids || [], 'strategy-assign-group', i => i.label, remoteText('devices.strategy_assign_no_groups', 'No device groups yet.'), 'strategy-assign-groups-title')}
+                    </section>
+                    <button type="submit" hidden tabindex="-1" aria-hidden="true"></button>
                 </form>
             `,
-            size: 'large',
+            status: true,
             buttons: [
-                { label: _('actions.cancel'), class: 'btn-secondary', onClick: () => Modal.close() },
+                { label: _('actions.cancel'), class: 'btn-secondary', start: true, onClick: () => Modal.close() },
                 { label: _('actions.save'), class: 'btn-primary', onClick: () => saveStrategyAssignments(strategy) }
             ],
         });
+
+        const form = document.getElementById('strategy-assign-form');
+        if (!form) return;
+        form.addEventListener('submit', (event) => {
+            event.preventDefault();
+            saveStrategyAssignments(strategy);
+        });
+        const filter = form.querySelector('#strategy-assign-filter');
+        if (filter) {
+            // Enter in the filter does not save
+            filter.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') event.preventDefault();
+            });
+            filter.addEventListener('input', () => {
+                const q = filter.value.trim().toLowerCase();
+                let shown = 0;
+                form.querySelectorAll('#strategy-assign-devices-list .strategy-assign-row').forEach(row => {
+                    row.hidden = !!q && !row.dataset.label.includes(q);
+                    if (!row.hidden) shown++;
+                });
+                form.querySelector('#strategy-assign-no-match').hidden = shown > 0;
+            });
+        }
+        form.addEventListener('change', () => Modal.setStatus(''));
     }
 
     async function saveStrategyAssignments(strategy) {
-        const peers = Array.from(document.querySelectorAll('.strategy-assign-peer:checked')).map(el => el.value);
-        const users = Array.from(document.querySelectorAll('.strategy-assign-user:checked')).map(el => el.value);
-        const groups = Array.from(document.querySelectorAll('.strategy-assign-group:checked')).map(el => el.value);
+        const form = document.getElementById('strategy-assign-form');
+        if (!form || form.dataset.busy === 'true') return;
+        const peers = Array.from(form.querySelectorAll('.strategy-assign-peer:checked')).map(el => el.value);
+        const users = Array.from(form.querySelectorAll('.strategy-assign-user:checked')).map(el => el.value);
+        const groups = Array.from(form.querySelectorAll('.strategy-assign-group:checked')).map(el => el.value);
         if (!peers.length && !users.length && !groups.length) {
-            Notifications.error(_('devices.strategy_assign_hint'));
+            Modal.setStatus(remoteText('devices.strategy_assign_none_selected', 'Tick at least one device, user or device group.'), 'error');
             return;
         }
+        form.dataset.busy = 'true';
+        Modal.setStatus(remoteText('devices.remote_saving', 'Saving…'));
         try {
             await Utils.api(`/api/panel/strategies/${encodeURIComponent(strategy.guid)}/assign`, {
                 method: 'POST',
                 body: { peers, users, groups },
             });
-            Notifications.success(_('devices.strategy_assign_saved'));
             Modal.close();
+            Notifications.success(_('devices.strategy_assign_saved'));
             await refreshStrategyAssignCounts();
         } catch (error) {
-            Notifications.error(error.message || _('errors.server_error'));
+            Modal.setStatus(error.message || _('errors.server_error'), 'error');
+        } finally {
+            form.dataset.busy = '';
         }
     }
 
@@ -3538,60 +3725,83 @@
         return permissions;
     }
 
+    // Add or edit an access rule: a side sheet (GUIDE.md "Dialogs and sheets")
     async function showStrategyModal(strategy = null) {
         await ensureUserGroupsLoaded();
         if (!deviceGroups.length) await loadDeviceGroups();
         const editing = !!strategy;
+        const esc = (value) => Utils.escapeHtml(String(value ?? ''));
         const userGroupOptions = [
-            `<option value="">${Utils.escapeHtml(_('devices.strategy_any_user_group'))}</option>`,
-            ...availableUserGroups.map(group => `<option value="${Utils.escapeHtml(group.guid)}" ${strategy?.user_group_guid === group.guid ? 'selected' : ''}>${Utils.escapeHtml(group.name)}</option>`)
+            `<option value="">${esc(_('devices.strategy_any_user_group'))}</option>`,
+            ...availableUserGroups.map(group => `<option value="${esc(group.guid)}" ${strategy?.user_group_guid === group.guid ? 'selected' : ''}>${esc(group.name)}</option>`)
         ].join('');
         const deviceGroupOptions = [
-            `<option value="">${Utils.escapeHtml(_('devices.strategy_any_device_group'))}</option>`,
-            ...deviceGroups.map(group => `<option value="${Utils.escapeHtml(group.guid)}" ${strategy?.device_group_guid === group.guid ? 'selected' : ''}>${Utils.escapeHtml(group.name)}</option>`)
+            `<option value="">${esc(_('devices.strategy_any_device_group'))}</option>`,
+            ...deviceGroups.map(group => `<option value="${esc(group.guid)}" ${strategy?.device_group_guid === group.guid ? 'selected' : ''}>${esc(group.name)}</option>`)
         ].join('');
 
-        Modal.show({
+        Modal.sheet({
             title: editing ? _('devices.edit_strategy') : _('devices.create_strategy'),
+            subtitle: remoteText('devices.strategy_sheet_desc', 'Client settings that apply when someone from a user group works on a device in a device group.'),
             content: `
-                <form id="strategy-form" class="device-group-form">
+                <form id="strategy-form" class="form-stack" novalidate>
                     <div class="form-group">
-                        <label class="form-label" for="strategy-name">${_('devices.strategy_name')}</label>
-                        <input type="text" id="strategy-name" class="form-input" maxlength="80" required value="${Utils.escapeHtml(strategy?.name || '')}">
+                        <label class="form-label" for="strategy-name">${esc(_('devices.strategy_name'))}</label>
+                        <input type="text" id="strategy-name" class="form-input is-medium" maxlength="80" required value="${esc(strategy?.name || '')}">
                     </div>
-                    <div class="form-group">
-                        <label class="form-label" for="strategy-user-group">${_('devices.strategy_user_group')}</label>
-                        <select id="strategy-user-group" class="form-select">${userGroupOptions}</select>
+                    <section class="form-section" aria-labelledby="strategy-scope-title">
+                        <h3 class="form-section-title" id="strategy-scope-title">${esc(remoteText('devices.strategy_section_scope', 'Who and where'))}</h3>
+                        <div class="form-group">
+                            <label class="form-label" for="strategy-user-group">${esc(_('devices.strategy_user_group'))}</label>
+                            <select id="strategy-user-group" class="form-select is-host" aria-describedby="strategy-groups-hint">${userGroupOptions}</select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="strategy-device-group">${esc(_('devices.strategy_device_group'))}</label>
+                            <select id="strategy-device-group" class="form-select is-host" aria-describedby="strategy-groups-hint">${deviceGroupOptions}</select>
+                            <p class="form-hint" id="strategy-groups-hint">${esc(_('devices.strategy_groups_hint'))}</p>
+                        </div>
+                    </section>
+                    <section class="form-section" aria-labelledby="strategy-perms-title">
+                        <h3 class="form-section-title" id="strategy-perms-title">${esc(_('devices.strategy_permissions'))}</h3>
+                        <p class="form-hint">${esc(_('devices.strategy_permissions_hint'))}</p>
+                        <div class="strategy-perm-grid" role="group" aria-labelledby="strategy-perms-title">${renderStrategyPermissionOptions(strategy?.permissions || {})}</div>
+                    </section>
+                    <div class="form-section">
+                        <label class="check-field">
+                            <input type="checkbox" id="strategy-enabled" ${strategy?.enabled !== false ? 'checked' : ''}>
+                            <span class="check-label">${esc(_('devices.strategy_enabled_label'))}</span>
+                            <span class="form-hint">${esc(remoteText('devices.strategy_enabled_hint', 'When off, the rule is kept but not applied.'))}</span>
+                        </label>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label" for="strategy-device-group">${_('devices.strategy_device_group')}</label>
-                        <select id="strategy-device-group" class="form-select">${deviceGroupOptions}</select>
-                        <p class="form-hint">${_('devices.strategy_groups_hint')}</p>
-                    </div>
-                    <label class="check-field">
-                        <input type="checkbox" id="strategy-enabled" ${strategy?.enabled !== false ? 'checked' : ''}>
-                        <span class="check-label">${_('devices.strategy_enabled_label')}</span>
-                    </label>
-                    <fieldset class="form-group strategy-perm-fieldset">
-                        <legend class="form-label">${_('devices.strategy_permissions')}</legend>
-                        <p class="form-hint">${_('devices.strategy_permissions_hint')}</p>
-                        <div class="strategy-perm-grid">${renderStrategyPermissionOptions(strategy?.permissions || {})}</div>
-                    </fieldset>
+                    <button type="submit" hidden tabindex="-1" aria-hidden="true"></button>
                 </form>
             `,
-            size: 'medium',
+            status: true,
             buttons: [
-                { label: _('actions.cancel'), class: 'btn-secondary', onClick: () => Modal.close() },
+                { label: _('actions.cancel'), class: 'btn-secondary', start: true, onClick: () => Modal.close() },
                 { label: _('actions.save'), class: 'btn-primary', onClick: () => saveStrategy(strategy) }
-            ],
-            onOpen: () => document.getElementById('strategy-name')?.focus()
+            ]
         });
+
+        const form = document.getElementById('strategy-form');
+        if (!form) return;
+        form.addEventListener('submit', (event) => {
+            event.preventDefault();
+            saveStrategy(strategy);
+        });
+        form.addEventListener('input', () => Modal.setStatus(''));
     }
 
     async function saveStrategy(strategy = null) {
-        const name = document.getElementById('strategy-name')?.value.trim() || '';
+        const form = document.getElementById('strategy-form');
+        if (!form || form.dataset.busy === 'true') return;
+        const nameInput = form.querySelector('#strategy-name');
+        const name = nameInput?.value.trim() || '';
+        nameInput?.removeAttribute('aria-invalid');
         if (!name) {
-            Notifications.error(_('devices.strategy_name_required'));
+            nameInput?.setAttribute('aria-invalid', 'true');
+            nameInput?.focus();
+            Modal.setStatus(_('devices.strategy_name_required'), 'error');
             return;
         }
         const payload = {
@@ -3601,17 +3811,21 @@
             enabled: !!document.getElementById('strategy-enabled')?.checked,
             permissions: readStrategyPermissionsFromForm(),
         };
+        form.dataset.busy = 'true';
+        Modal.setStatus(remoteText('devices.remote_saving', 'Saving…'));
         try {
             const url = strategy
                 ? `/api/panel/strategies/${encodeURIComponent(strategy.guid)}`
                 : '/api/panel/strategies';
             await Utils.api(url, { method: strategy ? 'PATCH' : 'POST', body: payload });
-            Notifications.success(strategy ? _('devices.strategy_updated') : _('devices.strategy_created'));
             Modal.close();
+            Notifications.success(strategy ? _('devices.strategy_updated') : _('devices.strategy_created'));
             strategiesLoaded = false;
             await loadStrategies();
         } catch (error) {
-            Notifications.error(error.message || _('errors.server_error'));
+            Modal.setStatus(error.message || _('errors.server_error'), 'error');
+        } finally {
+            form.dataset.busy = '';
         }
     }
 

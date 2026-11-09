@@ -190,45 +190,35 @@
             </aside>
             </div>
 
-            <div class="modal-overlay open dashboard-agent-activation-modal" id="dashboard-agent-activation-modal"
-                 role="dialog" aria-modal="true" aria-labelledby="dashboard-agent-activation-title" hidden>
-                <div class="modal dashboard-agent-activation-dialog">
-                    <div class="modal-header">
-                        <h2 class="modal-title" id="dashboard-agent-activation-title">${_('dashboard.activate_agent_qr')}</h2>
-                        <button type="button" class="modal-close" id="dashboard-agent-activation-close"
-                                aria-label="${_('actions.close')}">
-                            <span class="material-icons" aria-hidden="true">close</span>
-                        </button>
+            <!-- Activate support agent: opened as a dialog by dashboard.js (Modal.show) -->
+            <template id="dashboard-agent-activation-template">
+                <div class="dashboard-agent-activation-body">
+                    <p class="form-hint">${_('dashboard.activate_agent_qr_hint')}</p>
+                    <div class="dashboard-agent-activation-reader" id="dashboard-agent-activation-reader">
+                        <video id="dashboard-agent-activation-video" autoplay muted playsinline aria-label="${_('dashboard.activate_agent_qr')}"></video>
                     </div>
-                    <div class="modal-body dashboard-agent-activation-body">
-                        <p class="form-hint">${_('dashboard.activate_agent_qr_hint')}</p>
-                        <div class="dashboard-agent-activation-reader" id="dashboard-agent-activation-reader">
-                            <video id="dashboard-agent-activation-video" autoplay muted playsinline></video>
-                        </div>
-                        <input type="file" id="dashboard-agent-activation-file" accept="image/*"
-                               class="dashboard-agent-activation-file" hidden>
-                        <div class="form-actions">
-                            <button type="button" class="btn btn-secondary" id="dashboard-agent-activation-file-btn">${_('dashboard.activate_agent_choose_image')}</button>
-                            <button type="button" class="btn btn-ghost" id="dashboard-agent-activation-stop">${_('actions.cancel')}</button>
-                        </div>
-                        <p class="dashboard-agent-activation-status" id="dashboard-agent-activation-status"
-                           aria-live="polite"></p>
-                        <div class="dashboard-agent-activation-form" id="dashboard-agent-activation-form" hidden>
-                            <div class="form-group">
-                                <label class="form-label" for="dashboard-agent-activation-name">${_('dashboard.activate_agent_name')}</label>
-                                <input class="form-input" id="dashboard-agent-activation-name" maxlength="120">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label" for="dashboard-agent-activation-folder">${_('dashboard.activate_agent_folder')}</label>
-                                <select class="form-select" id="dashboard-agent-activation-folder">
-                                    <option value="0">${_('dashboard.activate_agent_folder_none')}</option>
-                                </select>
-                            </div>
-                            <button type="button" class="btn btn-primary" id="dashboard-agent-activation-submit">${_('dashboard.activate_agent_submit')}</button>
-                        </div>
+                    <input type="file" id="dashboard-agent-activation-file" accept="image/*"
+                           class="dashboard-agent-activation-file" hidden>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="dashboard-agent-activation-file-btn">${_('dashboard.activate_agent_choose_image')}</button>
                     </div>
+                    <p class="dashboard-agent-activation-status" id="dashboard-agent-activation-status"
+                       role="status" aria-live="polite"></p>
+                    <form class="dashboard-agent-activation-form" id="dashboard-agent-activation-form" hidden novalidate>
+                        <div class="form-group">
+                            <label class="form-label" for="dashboard-agent-activation-name">${_('dashboard.activate_agent_name')}</label>
+                            <input class="form-input" id="dashboard-agent-activation-name" maxlength="120" autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="dashboard-agent-activation-folder">${_('dashboard.activate_agent_folder')}</label>
+                            <select class="form-select is-host" id="dashboard-agent-activation-folder">
+                                <option value="0">${_('dashboard.activate_agent_folder_none')}</option>
+                            </select>
+                        </div>
+                        <button type="submit" hidden tabindex="-1" aria-hidden="true"></button>
+                    </form>
                 </div>
-            </div>
+            </template>
         </div>
     `
 }) %>

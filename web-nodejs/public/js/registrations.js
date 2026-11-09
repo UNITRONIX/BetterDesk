@@ -439,57 +439,71 @@
 
     const SYNC_MODES = ['standard', 'silent', 'turbo'];
 
+    // Text of a new key, or the English fallback until the language files are reloaded
+    function textOr(key, fallback, params) {
+        const value = _(key, params || {});
+        if (value && value !== key) return value;
+        return String(fallback).replace(/\{(\w+)\}/g, (m, k) => (params && params[k] !== undefined ? params[k] : m));
+    }
+
     function approveFormHtml(row) {
         const isGo = row.source === SOURCE_ENROLLMENT;
         const folderOptions = [`<option value="0">${esc(_('registrations.field_folder_none'))}</option>`]
             .concat((folders || []).map(f => `<option value="${esc(f.id)}">${esc(f.name || f.label || `#${f.id}`)}</option>`))
             .join('');
         const tagsBlock = enrollmentUi.tag_picker
-            ? `<fieldset class="form-group approve-choices">
-                    <legend class="form-label">${esc(_('registrations.field_tags'))}</legend>
-                    <div id="approve-tags-picker" class="approve-check-grid">${tagCheckboxes([])}</div>
-                    <div class="input-with-button approve-tag-new">
-                        <input type="text" id="approve-tag-new" class="form-input" aria-label="${esc(_('registrations.field_tag_add_placeholder'))}" placeholder="${esc(_('registrations.field_tag_add_placeholder'))}">
-                        <button type="button" class="btn" id="approve-tag-add-btn">${Utils.icon('add')}<span>${esc(_('registrations.field_tag_add_btn'))}</span></button>
+            ? `<section class="form-section approve-choices" aria-labelledby="approve-tags-title">
+                    <h3 class="form-section-title" id="approve-tags-title">${esc(_('registrations.field_tags'))}</h3>
+                    <div id="approve-tags-picker" class="approve-check-grid" role="group" aria-labelledby="approve-tags-title">${tagCheckboxes([])}</div>
+                    <div class="form-group">
+                        <label class="form-label" for="approve-tag-new">${esc(_('registrations.field_tag_add_placeholder'))}</label>
+                        <div class="input-with-button approve-tag-new">
+                            <input type="text" id="approve-tag-new" class="form-input is-medium" autocomplete="off" aria-describedby="approve-tag-new-hint">
+                            <button type="button" class="btn" id="approve-tag-add-btn">${esc(_('registrations.field_tag_add_btn'))}</button>
+                        </div>
+                        <p class="form-hint" id="approve-tag-new-hint">${esc(textOr('registrations.field_tag_add_hint', 'Adds it to the list above, ticked.'))}</p>
                     </div>
-               </fieldset>`
+               </section>`
             : `<div class="form-group">
                     <label class="form-label" for="approve-tags">${esc(_('registrations.field_tags'))}</label>
-                    <input type="text" id="approve-tags" class="form-input">
-                    <p class="form-hint">${esc(_('registrations.field_tags_hint'))}</p>
+                    <input type="text" id="approve-tags" class="form-input" autocomplete="off" aria-describedby="approve-tags-hint">
+                    <p class="form-hint" id="approve-tags-hint">${esc(_('registrations.field_tags_hint'))}</p>
                </div>`;
         const groupsBlock = (groups && groups.length)
-            ? `<fieldset class="form-group approve-choices">
-                    <legend class="form-label">${esc(_('registrations.field_groups'))}</legend>
-                    <div id="approve-groups-picker" class="approve-check-grid">${groups.map(g => `
+            ? `<section class="form-section approve-choices" aria-labelledby="approve-groups-title">
+                    <h3 class="form-section-title" id="approve-groups-title">${esc(_('registrations.field_groups'))}</h3>
+                    <div id="approve-groups-picker" class="approve-check-grid" role="group" aria-labelledby="approve-groups-title" aria-describedby="approve-groups-hint">${groups.map(g => `
                         <label class="checkbox-row"><input type="checkbox" value="${esc(g.guid)}"><span>${esc(g.name || g.guid)}</span></label>`).join('')}</div>
-                    <p class="form-hint">${esc(_('registrations.field_groups_hint'))}</p>
-               </fieldset>`
+                    <p class="form-hint" id="approve-groups-hint">${esc(_('registrations.field_groups_hint'))}</p>
+               </section>`
             : '';
         const syncBlock = isGo
-            ? `<div class="form-group">
-                    <label class="form-label" for="approve-sync-mode">${esc(_('registrations.field_reporting'))}</label>
-                    <select id="approve-sync-mode" class="form-select">${SYNC_MODES.map(m => `<option value="${m}">${esc(_(`registrations.reporting_${m}`))}</option>`).join('')}</select>
-                    <p class="form-hint" id="approve-sync-hint" aria-live="polite">${esc(_('registrations.reporting_standard_desc'))}</p>
-               </div>`
+            ? `<section class="form-section" aria-labelledby="approve-sync-title">
+                    <h3 class="form-section-title" id="approve-sync-title">${esc(_('registrations.field_reporting'))}</h3>
+                    <div class="form-group">
+                        <label class="form-label" for="approve-sync-mode">${esc(textOr('registrations.field_reporting_how_often', 'How often it reports'))}</label>
+                        <select id="approve-sync-mode" class="form-select is-medium" aria-describedby="approve-sync-hint">${SYNC_MODES.map(m => `<option value="${m}">${esc(_(`registrations.reporting_${m}`))}</option>`).join('')}</select>
+                        <p class="form-hint" id="approve-sync-hint" aria-live="polite">${esc(_('registrations.reporting_standard_desc'))}</p>
+                    </div>
+               </section>`
             : '';
 
         return `${factsHtml(row)}
-            <div class="approve-form">
+            <form id="approve-form" class="approve-form form-stack" novalidate>
                 <div class="form-group">
                     <label class="form-label" for="approve-display-name">${esc(_('registrations.field_name'))}</label>
-                    <input type="text" id="approve-display-name" class="form-input" value="${esc(row.hostname)}" maxlength="120">
-                    <p class="form-hint">${esc(_('registrations.field_name_hint'))}</p>
+                    <input type="text" id="approve-display-name" class="form-input is-medium" value="${esc(row.hostname)}" maxlength="120" aria-describedby="approve-display-name-hint">
+                    <p class="form-hint" id="approve-display-name-hint">${esc(_('registrations.field_name_hint'))}</p>
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="approve-folder">${esc(_('registrations.field_folder'))}</label>
-                    <select id="approve-folder" class="form-select">${folderOptions}</select>
+                    <select id="approve-folder" class="form-select is-medium">${folderOptions}</select>
                 </div>
                 ${tagsBlock}
                 ${groupsBlock}
                 ${syncBlock}
-            </div>
-            <p class="form-status" id="approve-status" role="alert"></p>`;
+                <button type="submit" hidden tabindex="-1" aria-hidden="true"></button>
+            </form>`;
     }
 
     function tagCheckboxes(selected) {
@@ -524,14 +538,25 @@
         try { await ensureApproveData(); } finally { if (opener) opener.disabled = false; }
         if (opener) opener.focus();
 
-        Modal.show({
+        // A side sheet (GUIDE.md "Dialogs and sheets"): the request's facts and
+        // up to six fields, with the list of requests still in view
+        Modal.sheet({
             title: _('registrations.approve_title_named', { name: row.hostname || row.device_id }),
+            subtitle: textOr('registrations.approve_sheet_desc', 'The device gets the server settings and can connect. Name, folder, tags and groups can be changed later.'),
             content: approveFormHtml(row),
+            status: true,
             buttons: [
-                { label: _('actions.cancel'), class: 'btn-secondary', onClick: () => Modal.close() },
-                { label: _('registrations.approve_btn'), class: 'btn-primary', onClick: () => submitApprove(row) },
+                { label: _('actions.cancel'), class: 'btn-secondary', start: true, onClick: () => Modal.close() },
+                { label: _('registrations.approve_btn'), class: 'btn-primary', id: 'approve-submit-btn', onClick: () => submitApprove(row) },
             ],
         });
+        const approveForm = document.getElementById('approve-form');
+        if (approveForm) {
+            approveForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                submitApprove(row);
+            });
+        }
 
         const syncSelect = document.getElementById('approve-sync-mode');
         const syncHint = document.getElementById('approve-sync-hint');
@@ -560,12 +585,7 @@
             });
         }
         const nameInput = document.getElementById('approve-display-name');
-        if (nameInput) {
-            nameInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') { e.preventDefault(); submitApprove(row); }
-            });
-            nameInput.select();
-        }
+        if (nameInput) nameInput.select();
     }
 
     function selectedTags() {
@@ -576,8 +596,7 @@
     }
 
     async function submitApprove(row) {
-        const status = document.getElementById('approve-status');
-        const button = document.querySelector('.modal-footer .btn-primary');
+        const button = document.getElementById('approve-submit-btn');
         if (button && button.disabled) return;
         const groupsPicker = document.getElementById('approve-groups-picker');
         const payload = {
@@ -588,7 +607,7 @@
             group_guids: groupsPicker ? [...groupsPicker.querySelectorAll('input:checked')].map(i => i.value) : [],
         };
         if (button) { button.disabled = true; button.textContent = _('registrations.approving'); }
-        if (status) status.textContent = '';
+        Modal.setStatus(_('registrations.approving'));
 
         const result = row.source === SOURCE_ENROLLMENT
             ? await apiFetch(`/api/enrollment/approve/${encodeURIComponent(row.rowId)}`, { method: 'POST', body: JSON.stringify(payload) })
@@ -596,10 +615,7 @@
 
         if (!result.success) {
             if (button) { button.disabled = false; button.textContent = _('registrations.approve_btn'); }
-            if (status) {
-                status.classList.add('is-error');
-                status.textContent = failureText(result, 'registrations.approve_failed');
-            }
+            Modal.setStatus(failureText(result, 'registrations.approve_failed'), 'error');
             return;
         }
 

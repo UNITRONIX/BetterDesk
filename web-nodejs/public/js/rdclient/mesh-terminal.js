@@ -7,13 +7,22 @@
     var XTERM_VERSION = '5.5.0';
     var XTERM_CSS_URL = 'https://cdn.jsdelivr.net/npm/@xterm/xterm@' + XTERM_VERSION + '/css/xterm.min.css';
     var XTERM_JS_URL = 'https://cdn.jsdelivr.net/npm/@xterm/xterm@' + XTERM_VERSION + '/lib/xterm.min.js';
-    var XTERM_FIT_URL = 'https://cdn.jsdelivr.net/npm/@xterm/addon-fit@' + XTERM_VERSION + '/lib/addon-fit.min.js';
+    // addon-fit has its own version line (0.10.0 goes with xterm 5.5.0)
+    var XTERM_FIT_VERSION = '0.10.0';
+    var XTERM_FIT_URL = 'https://cdn.jsdelivr.net/npm/@xterm/addon-fit@' + XTERM_FIT_VERSION + '/lib/addon-fit.min.js';
     var CTRL = '102938';
     var PROTOCOL = '1';
 
     var xtermLoaded = false;
     var xtermLoading = null;
     var activeModal = null;
+
+    // POST requests need the console's CSRF token (as Utils.api sends it)
+    function csrfHeaders(headers) {
+        var token = window.BetterDesk && window.BetterDesk.csrfToken;
+        if (token) headers['X-CSRF-Token'] = token;
+        return headers;
+    }
 
     function t(key, fallback) {
         if (typeof window.t === 'function') {
@@ -52,15 +61,27 @@
         return JSON.stringify(o);
     }
 
-    function closeModal() {
+    // Status line of the sheet (Modal.setStatus) while this terminal is the open one
+    function setStatus(session, message, tone) {
+        if (!session || activeModal !== session || typeof Modal === 'undefined') return;
+        Modal.setStatus(message, tone);
+    }
+
+    // Disconnect and free the terminal. Unless closeSheet is false, also close
+    // its sheet (when the sheet was closed some other way it is already going).
+    function closeModal(closeSheet) {
         if (!activeModal) return;
-        if (activeModal.ws) {
-            try { activeModal.ws.close(); } catch { /* ignore */ }
-        }
-        if (activeModal.resizeObserver) activeModal.resizeObserver.disconnect();
-        if (activeModal.term) activeModal.term.dispose();
-        if (activeModal.overlay) activeModal.overlay.remove();
+        var session = activeModal;
         activeModal = null;
+        if (session.watcher) session.watcher.disconnect();
+        if (session.ws) {
+            try { session.ws.close(); } catch { /* ignore */ }
+        }
+        if (session.resizeObserver) session.resizeObserver.disconnect();
+        if (session.term) session.term.dispose();
+        if (closeSheet !== false && session.sheetId && typeof Modal !== 'undefined' && document.getElementById(session.sheetId)) {
+            Modal.close(session.sheetId);
+        }
     }
 
     async function openMeshTerminal(deviceId) {
@@ -82,22 +103,40 @@
             return;
         }
 
-        var overlay = document.createElement('div');
-        overlay.className = 'mesh-terminal-overlay';
-        overlay.innerHTML =
-            '<div class="mesh-terminal-modal">' +
-            '<div class="mesh-terminal-header">' +
-            '<span class="mesh-terminal-title">' + t('mesh.terminal_title', 'Remote terminal') + ' — ' + deviceId + '</span>' +
-            '<button type="button" class="mesh-terminal-close" aria-label="Close"><span class="material-icons">close</span></button>' +
-            '</div>' +
-            '<div class="mesh-terminal-host"></div>' +
-            '</div>';
-        document.body.appendChild(overlay);
-
-        overlay.querySelector('.mesh-terminal-close').addEventListener('click', closeModal);
-        overlay.addEventListener('click', function (e) {
-            if (e.target === overlay) closeModal();
+        // A wide side sheet (GUIDE.md "Dialogs and sheets"): Escape, focus return
+        // and the close button come from modal.js. Escape inside the terminal
+        // belongs to the shell; Shift+Escape closes the sheet from there.
+        var session = {
+            sheetId: null,
+            term: null,
+            fitAddon: null,
+            ws: null,
+            relayReady: false,
+        };
+        activeModal = session;
+        session.sheetId = Modal.sheet({
+            title: t('mesh.terminal_title_named', 'Remote terminal on {id}').replace('{id}', deviceId),
+            subtitle: t('mesh.terminal_sheet_desc', 'A shell on the device through its MeshAgent. Escape goes to the shell, Shift+Escape closes the terminal.'),
+            content: '<div class="terminal-box mesh-terminal-host" role="region" aria-label="' +
+                Utils.escapeHtml(t('mesh.terminal_title', 'Remote terminal')) + '"></div>',
+            wide: true,
+            status: true,
+            className: 'mesh-terminal-sheet',
+            buttons: [
+                { label: t('actions.close', 'Close'), class: 'btn-secondary', onClick: function () { closeModal(); } }
+            ],
+            onClose: function () { if (activeModal === session) closeModal(false); }
         });
+        var overlay = document.getElementById(session.sheetId);
+        if (!overlay) {
+            activeModal = null;
+            return;
+        }
+        // Closed without onClose (replaced by another sheet or dialog): disconnect too
+        session.watcher = new MutationObserver(function () {
+            if (!document.contains(overlay) && activeModal === session) closeModal(false);
+        });
+        session.watcher.observe(overlay.parentNode, { childList: true });
 
         var host = overlay.querySelector('.mesh-terminal-host');
         var fitAddon = new FitAddon();
@@ -105,22 +144,27 @@
             cursorBlink: true,
             fontSize: 13,
             fontFamily: "'IBM Plex Mono', 'Cascadia Code', 'Consolas', monospace",
-            theme: { background: '#0d1117', foreground: '#e6edf3' },
+            // The colours of .terminal-box: dark in both themes
+            // ANSI red and yellow lightened to stay above 4.5:1 on that background
+            theme: { background: '#111414', foreground: '#e3e6e6', red: '#ff8a80', brightRed: '#ffb4ab', yellow: '#f0d264', brightYellow: '#ffe08a' },
             scrollback: 5000,
         });
         term.loadAddon(fitAddon);
         term.open(host);
-        term.writeln('\x1b[33mConnecting…\x1b[0m');
+        session.term = term;
+        session.fitAddon = fitAddon;
+        // Escape goes to the shell; Shift+Escape reaches modal.js and closes the sheet
+        term.attachCustomKeyEventHandler(function (e) {
+            return !(e.key === 'Escape' && e.shiftKey);
+        });
+        host.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && !e.shiftKey) e.stopPropagation();
+        });
+        var connecting = t('mesh.port_connecting', 'Connecting…');
+        term.writeln('\x1b[33m' + connecting + '\x1b[0m');
+        setStatus(session, connecting);
         try { fitAddon.fit(); } catch { /* ignore */ }
-
-        var session = {
-            overlay: overlay,
-            term: term,
-            fitAddon: fitAddon,
-            ws: null,
-            relayReady: false,
-        };
-        activeModal = session;
+        term.focus();
 
         var resizeObserver = new ResizeObserver(function () {
             try {
@@ -138,7 +182,7 @@
                 {
                     method: 'POST',
                     credentials: 'same-origin',
-                    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+                    headers: csrfHeaders({ 'Content-Type': 'application/json', Accept: 'application/json' }),
                 }
             );
             if (!resp.ok) {
@@ -162,6 +206,7 @@
                             term.clear();
                             sendTermSize(session);
                             term.focus();
+                            setStatus(session, t('mesh.terminal_connected', 'Connected.'), 'ok');
                         }
                         return;
                     }
@@ -178,10 +223,15 @@
             };
 
             ws.onerror = function () {
-                term.writeln('\x1b[31mWebSocket error\x1b[0m');
+                var text = t('mesh.port_error', 'WebSocket error');
+                term.writeln('\x1b[31m' + text + '\x1b[0m');
+                setStatus(session, text, 'error');
             };
             ws.onclose = function () {
-                term.writeln('\x1b[33mDisconnected\x1b[0m');
+                if (activeModal !== session) return;
+                var text = t('mesh.port_closed', 'Disconnected');
+                term.writeln('\x1b[33m' + text + '\x1b[0m');
+                setStatus(session, text);
             };
 
             term.onData(function (data) {
@@ -192,6 +242,7 @@
             term.onResize(function () { sendTermSize(session); });
         } catch (err) {
             term.writeln('\x1b[31m' + err.message + '\x1b[0m');
+            setStatus(session, err.message, 'error');
         }
     }
 
@@ -204,5 +255,5 @@
     }
 
     window.openMeshTerminal = openMeshTerminal;
-    window.closeMeshTerminal = closeModal;
+    window.closeMeshTerminal = function () { closeModal(); };
 })();

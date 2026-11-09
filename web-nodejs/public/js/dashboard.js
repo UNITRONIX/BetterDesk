@@ -24,8 +24,6 @@
     let activateAgentQrButton = null;
     let activateAgentQrHandler = null;
     let activationModal = null;
-    let activationCloseButton = null;
-    let activationStopButton = null;
     let activationFileButton = null;
     let activationFileInput = null;
     let activationSubmitButton = null;
@@ -637,27 +635,35 @@ Start-Process -FilePath $RustDesk -ArgumentList @('--config', $CfgString) -Wait 
         }
 
         const script = buildIntuneScriptSnippet();
-        Modal.show({
+        // A wide side sheet (GUIDE.md "Dialogs and sheets"): details with one
+        // command, Copy, before Close; the result shows in the status line
+        Modal.sheet({
             title: _('dashboard.intune_script_title'),
+            subtitle: _('dashboard.intune_script_hint'),
             content: `
                 <div class="client-config-script-modal">
-                    <p>${escapeHtml(_('dashboard.intune_script_hint'))}</p>
                     <div class="code-block-head"><span class="code-block-title">install-rustdesk-config.ps1</span></div>
                     <pre class="code-block client-config-script-block" tabindex="0" role="region" aria-label="${escapeHtml(_('dashboard.intune_script_title'))}"><code>${escapeHtml(script)}</code></pre>
                 </div>
             `,
+            wide: true,
+            status: true,
             buttons: [
                 {
                     label: _('actions.copy'),
                     class: 'btn-primary',
                     onClick: async () => {
-                        await Utils.copyToClipboard(script);
-                        Notifications.success(_('common.copied'));
+                        let ok = false;
+                        try { ok = await Utils.copyToClipboard(script); } catch (e) { ok = false; }
+                        if (ok) {
+                            Modal.setStatus(_('common.copied'), 'ok');
+                        } else {
+                            Modal.setStatus(_('common.copy_failed'), 'error');
+                        }
                     }
                 },
                 { label: _('actions.close'), class: 'btn-secondary', onClick: () => Modal.close() }
-            ],
-            size: 'large'
+            ]
         });
     }
 
@@ -715,25 +721,11 @@ Start-Process -FilePath $RustDesk -ArgumentList @('--config', $CfgString) -Wait 
 
     function initAgentActivation() {
         activateAgentQrButton = findById('activate-agent-qr-btn');
-        activationModal = findById('dashboard-agent-activation-modal');
+        // The dialog's body is a <template>; openAgentActivation shows it with Modal
+        activationModal = findById('dashboard-agent-activation-template');
         if (!activationModal) return;
         activateAgentQrHandler = openAgentActivation;
         activateAgentQrButton?.addEventListener('click', activateAgentQrHandler);
-        activationCloseButton = findById('dashboard-agent-activation-close');
-        activationStopButton = findById('dashboard-agent-activation-stop');
-        activationFileButton = findById('dashboard-agent-activation-file-btn');
-        activationFileInput = findById('dashboard-agent-activation-file');
-        activationSubmitButton = findById('dashboard-agent-activation-submit');
-        activationVideo = findById('dashboard-agent-activation-video');
-        activationStatus = findById('dashboard-agent-activation-status');
-        activationForm = findById('dashboard-agent-activation-form');
-        activationNameInput = findById('dashboard-agent-activation-name');
-        activationFolderSelect = findById('dashboard-agent-activation-folder');
-        activationCloseButton?.addEventListener('click', closeAgentActivation);
-        activationStopButton?.addEventListener('click', closeAgentActivation);
-        activationFileButton?.addEventListener('click', () => activationFileInput?.click());
-        activationFileInput?.addEventListener('change', scanAgentQrImage);
-        activationSubmitButton?.addEventListener('click', submitAgentActivation);
 
         // Deep-link from Główne → Aktywuj agenta (/?activateAgent=1)
         try {
@@ -748,22 +740,44 @@ Start-Process -FilePath $RustDesk -ArgumentList @('--config', $CfgString) -Wait 
         } catch (_) { /* ignore */ }
     }
 
-    let activationOpener = null;
+    // Id of the open activation dialog (from Modal.show), null when closed
+    let activationDialogId = null;
 
-    function onActivationKeydown(event) {
-        if (event.key === 'Escape') {
-            event.preventDefault();
-            closeAgentActivation();
-        }
-    }
-
+    // A centred dialog from modal.js: Escape, the focus trap and focus return come from there.
+    // Footer: Cancel, and Activate once a code has been read.
     async function openAgentActivation() {
-        if (!activationModal) return;
-        activationOpener = document.activeElement;
-        activationModal.hidden = false;
-        activationModal.style.display = 'flex';
-        document.addEventListener('keydown', onActivationKeydown);
-        (activationFileButton || activationCloseButton)?.focus();
+        if (!activationModal || typeof Modal === 'undefined') return;
+        stopAgentActivation();
+        activationDialogId = Modal.show({
+            title: _('dashboard.activate_agent_qr'),
+            content: activationModal.innerHTML,
+            buttons: [
+                { label: _('actions.cancel'), class: 'btn-secondary', id: 'dashboard-agent-activation-stop', onClick: closeAgentActivation },
+                { label: _('dashboard.activate_agent_submit'), class: 'btn-primary', id: 'dashboard-agent-activation-submit', onClick: submitAgentActivation }
+            ],
+            // Escape, the close button or a click beside the dialog: stop the camera
+            onClose: () => {
+                activationDialogId = null;
+                stopAgentActivation();
+            }
+        });
+        activationFileButton = document.getElementById('dashboard-agent-activation-file-btn');
+        activationFileInput = document.getElementById('dashboard-agent-activation-file');
+        activationSubmitButton = document.getElementById('dashboard-agent-activation-submit');
+        activationVideo = document.getElementById('dashboard-agent-activation-video');
+        activationStatus = document.getElementById('dashboard-agent-activation-status');
+        activationForm = document.getElementById('dashboard-agent-activation-form');
+        activationNameInput = document.getElementById('dashboard-agent-activation-name');
+        activationFolderSelect = document.getElementById('dashboard-agent-activation-folder');
+        activationFileButton?.addEventListener('click', () => activationFileInput?.click());
+        activationFileInput?.addEventListener('change', scanAgentQrImage);
+        activationForm?.addEventListener('submit', (event) => {
+            event.preventDefault();
+            submitAgentActivation();
+        });
+        // Activate only once a code has been read and the form shows
+        if (activationSubmitButton) activationSubmitButton.hidden = true;
+        activationFileButton?.focus();
         activationForm.hidden = true;
         activationDeviceId = '';
         setActivationStatus(_('dashboard.activate_agent_scanning'));
@@ -772,13 +786,11 @@ Start-Process -FilePath $RustDesk -ArgumentList @('--config', $CfgString) -Wait 
 
     function closeAgentActivation() {
         stopAgentActivation();
-        if (activationModal) {
-            activationModal.hidden = true;
-            activationModal.style.display = 'none';
+        if (activationDialogId) {
+            const id = activationDialogId;
+            activationDialogId = null;
+            Modal.close(id);
         }
-        document.removeEventListener('keydown', onActivationKeydown);
-        if (activationOpener && document.contains(activationOpener)) activationOpener.focus();
-        activationOpener = null;
     }
 
     function stopAgentActivation() {
@@ -807,6 +819,11 @@ Start-Process -FilePath $RustDesk -ArgumentList @('--config', $CfgString) -Wait 
                 video: { facingMode: { ideal: 'environment' } },
                 audio: false,
             });
+            // Closed while the browser asked for the camera: let it go again
+            if (!activationDialogId) {
+                stopAgentActivation();
+                return;
+            }
             activationVideo.srcObject = activationStream;
             await activationVideo.play();
             const detector = new window.BarcodeDetector({ formats: ['qr_code'] });
@@ -882,6 +899,8 @@ Start-Process -FilePath $RustDesk -ArgumentList @('--config', $CfgString) -Wait 
             activationNameInput.value = match?.hostname || activationDeviceId;
             await loadActivationFolders();
             activationForm.hidden = false;
+            if (activationSubmitButton) activationSubmitButton.hidden = false;
+            activationNameInput.focus();
             setActivationStatus(_('dashboard.activate_agent_ready'));
         } catch (error) {
             setActivationStatus(error.message || _('errors.server_error'), true);
@@ -923,6 +942,7 @@ Start-Process -FilePath $RustDesk -ArgumentList @('--config', $CfgString) -Wait 
             if (!result?.success) throw new Error(result?.error || _('errors.server_error'));
             setActivationStatus(_('dashboard.activate_agent_success'));
             activationForm.hidden = true;
+            activationSubmitButton.hidden = true;
             setTimeout(closeAgentActivation, 1200);
         } catch (error) {
             setActivationStatus(error.message || _('errors.server_error'), true);
