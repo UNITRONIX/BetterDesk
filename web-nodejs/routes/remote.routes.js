@@ -356,7 +356,7 @@ async function resolveViewer(req) {
         serverPubKey: await resolveServerPubKey(),
         connection: await resolveConnectionSnapshot(),
         guestToken: req.guestToken || getGuestTokenFromQuery(req) || '',
-        mockRemote: devMockRemote.forRequest(req),
+        mockRemote: devMockRemote.forRequest(req, process.env, deviceId),
     };
 }
 
@@ -364,7 +364,7 @@ async function resolveViewer(req) {
  * GET /api/remote/viewer/:deviceId - The new viewer's data (web-ui), with the
  * viewer's access rules: a console session with device.connect
  * (remote_target.connect for rt_ targets), a guest grant for this device or
- * a mesh share. mockRemote is set only with BD_DEV_MOCK_REMOTE=1 and ?mock=1.
+ * a mesh share. mockRemote is set only with BD_DEV_MOCK_REMOTE=1, for ?mock=1 or a seeded demo device.
  */
 router.get('/api/remote/viewer/:deviceId', rdClientPageLimiter, requireRemoteAccess, async (req, res) => {
     const v = await resolveViewer(req);

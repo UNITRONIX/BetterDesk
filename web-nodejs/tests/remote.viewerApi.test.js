@@ -166,10 +166,17 @@ describe('dev mock remote device through the viewer data', () => {
         expect(wrong.body.mockRemote).toBeNull();
     });
 
-    test('is set with the flag and ?mock=1, with a known scenario only', async () => {
+    test('is set with the flag for ?mock=1 or a seeded demo device, with a known scenario only', async () => {
         process.env[FLAG] = '1';
-        const plain = await request(app(ADMIN)).get('/api/remote/viewer/900100012');
-        expect(plain.body.mockRemote).toBeNull();
+        const other = await request(app(ADMIN)).get('/api/remote/viewer/123456789');
+        expect(other.body.mockRemote).toBeNull();
+        const otherOn = await request(app(ADMIN)).get('/api/remote/viewer/123456789?mock=1');
+        expect(otherOn.body.mockRemote).toEqual({ scenario: 'ok' });
+        // The seed scripts' demo devices need no ?mock=1; ?mock=0 opts out
+        const demo = await request(app(ADMIN)).get('/api/remote/viewer/900100012');
+        expect(demo.body.mockRemote).toEqual({ scenario: 'ok' });
+        const demoOff = await request(app(ADMIN)).get('/api/remote/viewer/900100012?mock=0');
+        expect(demoOff.body.mockRemote).toBeNull();
         const on = await request(app(ADMIN)).get('/api/remote/viewer/900100012?mock=1&scenario=refused');
         expect(on.body.mockRemote).toEqual({ scenario: 'refused' });
         const odd = await request(app(ADMIN)).get('/api/remote/viewer/900100012?mock=1&scenario=%3Cscript%3E');

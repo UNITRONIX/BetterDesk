@@ -55,6 +55,23 @@ describe('dev mock remote session guard', () => {
         expect(devMockRemote.forRequest({ query: { mock: '1' } }, { [FLAG]: '0' })).toBeNull();
     });
 
+    it('gives the seeded demo and perf devices the mock without ?mock=1, only with the flag', () => {
+        const env = { [FLAG]: '1' };
+        // scripts/dev/seed-ui-data.js and seed-many-devices.js
+        expect(devMockRemote.forRequest({ query: {} }, env, '900100012')).toEqual({ scenario: 'ok' });
+        expect(devMockRemote.forRequest({ query: {} }, env, '950004321')).toEqual({ scenario: 'ok' });
+        expect(devMockRemote.forRequest({ query: { scenario: 'password' } }, env, '900100001')).toEqual({ scenario: 'password' });
+        // ?mock=0 reaches the real connection path
+        expect(devMockRemote.forRequest({ query: { mock: '0' } }, env, '900100012')).toBeNull();
+        // Other devices still need ?mock=1
+        expect(devMockRemote.forRequest({ query: {} }, env, '123456789')).toBeNull();
+        expect(devMockRemote.forRequest({ query: {} }, env, '9001000120')).toBeNull();
+        expect(devMockRemote.forRequest({ query: {} }, env, 'rt_900100012')).toBeNull();
+        // Never without the flag
+        expect(devMockRemote.forRequest({ query: {} }, {}, '900100012')).toBeNull();
+        expect(devMockRemote.forRequest({ query: { mock: '1' } }, {}, '950000001')).toBeNull();
+    });
+
     it('turns the mock on with the flag and ?mock=1, with a known scenario', () => {
         const env = { [FLAG]: '1' };
         expect(devMockRemote.forRequest({ query: {} }, env)).toBeNull();
@@ -65,7 +82,7 @@ describe('dev mock remote session guard', () => {
 
     it('passes the request through the guard in the viewer route', () => {
         const src = fs.readFileSync(path.join(ROOT, 'routes', 'remote.routes.js'), 'utf8');
-        expect(src).toMatch(/mockRemote: devMockRemote\.forRequest\(req\)/);
+        expect(src).toMatch(/mockRemote: devMockRemote\.forRequest\(req, process\.env, deviceId\)/);
         expect(src).toMatch(/router\.use\(devMockRemote\.router\)/);
     });
 

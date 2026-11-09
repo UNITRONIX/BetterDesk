@@ -126,6 +126,15 @@ for (const role of ROLES) {
 			await expectNoAxeViolations(page);
 		});
 
+		test('viewer: a seeded demo device uses the mock without ?mock=1; ?mock=0 does not', async ({ page }) => {
+			test.skip(role !== 'admin', 'the rule is the same for every role that may connect');
+			test.skip(!(await mockOn(page)), 'the console runs without BD_DEV_MOCK_REMOTE=1');
+			await page.goto(`${UI}/remote/${MOCK_DEVICE}`);
+			await expect(page.locator('.session-panel.streaming')).toBeVisible({ timeout: 60_000 });
+			const data = await page.request.get(`/api/remote/viewer/${MOCK_DEVICE}?mock=0`);
+			expect((await data.json()).mockRemote).toBeNull();
+		});
+
 		test('viewer: password prompt of the mock device', async ({ page }) => {
 			test.skip(!(await mockOn(page)), 'the console runs without BD_DEV_MOCK_REMOTE=1');
 			await page.goto(`${UI}/devices`);
