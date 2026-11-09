@@ -51,6 +51,18 @@ RUN apk add --no-cache python3 make g++ || { sleep 2 && apk add --no-cache pytho
 COPY web-nodejs/package.json web-nodejs/package-lock.json* ./
 RUN npm ci --omit=dev
 
+# ============= Web UI build (the Svelte console) =============
+FROM node:22.23.2-alpine3.24 AS web-ui-builder
+
+WORKDIR /web-ui
+
+# npm 10 (bundled with Node 22) fails to resolve this dependency tree (web-ui-ci.yml)
+COPY web-ui/package.json web-ui/package-lock.json ./
+RUN npx -y npm@11.6.2 ci --no-audit --no-fund
+
+COPY web-ui/ .
+RUN npm run build
+
 # ============= Stage 3: Production runtime =============
 # Note: supervisord requires root to manage child processes with user= directive.
 # Both betterdesk-server and betterdesk-console run as non-root 'betterdesk' user
@@ -102,6 +114,8 @@ WORKDIR /app
 # properly compiled Alpine/musl native modules from the builder.
 COPY web-nodejs/ .
 COPY --from=node-builder /app/node_modules ./node_modules/
+# The Svelte console's build (lib/webUi.js serves it from ../web-ui/build)
+COPY --from=web-ui-builder /web-ui/build /web-ui/build
 
 ARG BETTERDESK_COMMIT_SHA=unknown
 ARG BETTERDESK_IMAGE_VERSION=unknown

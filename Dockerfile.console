@@ -24,6 +24,18 @@ COPY web-nodejs/package.json web-nodejs/package-lock.json* ./
 RUN npm ci --omit=dev
 
 # ---- Production stage ----
+# ============= Web UI build (the Svelte console) =============
+FROM node:22.23.2-alpine3.24 AS web-ui-builder
+
+WORKDIR /web-ui
+
+# npm 10 (bundled with Node 22) fails to resolve this dependency tree (web-ui-ci.yml)
+COPY web-ui/package.json web-ui/package-lock.json ./
+RUN npx -y npm@11.6.2 ci --no-audit --no-fund
+
+COPY web-ui/ .
+RUN npm run build
+
 FROM node:22.23.2-alpine3.24
 
 LABEL maintainer="UNITRONIX"
@@ -51,6 +63,8 @@ RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 # This prevents local node_modules from overwriting Alpine/musl native modules.
 COPY web-nodejs/ .
 COPY --from=build /app/node_modules ./node_modules/
+# The Svelte console's build (lib/webUi.js serves it from ../web-ui/build)
+COPY --from=web-ui-builder /web-ui/build /web-ui/build
 
 ARG BETTERDESK_COMMIT_SHA=unknown
 ARG BETTERDESK_IMAGE_VERSION=unknown
