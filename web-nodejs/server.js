@@ -319,6 +319,9 @@ app.use(csrfGate);
 
 // ============ Routes ============
 
+// The console API's JSON answers go out compressed when the browser asks
+app.use('/api/', require('./lib/jsonCompression').jsonCompression());
+
 // The Svelte console (web-ui/build), side by side with the old pages under /app
 app.use(require('./lib/webUi').createWebUi({ base: '/app' }));
 
