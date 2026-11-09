@@ -85,7 +85,17 @@
         "remote_open_tab": "Otevřít klienta vzdálené plochy v nové kartě",
         "pairing": "Párování",
         "client_branding": "Client Branding",
-        "agents": "Agenti BetterDesk"
+        "agents": "Agenti BetterDesk",
+        "label": "Hlavní navigace",
+        "section_devices": "Zařízení",
+        "section_support": "Podpora",
+        "section_people": "Lidé",
+        "group_console": "Konzole",
+        "group_clients": "Klienti a agenti",
+        "group_rules": "Pravidla a zásady",
+        "group_server": "Server",
+        "group_billing": "Fakturace",
+        "group_developer": "Vývojář"
     },
     "auth": {
         "login": "Přihlášení",
@@ -4767,7 +4777,6 @@
         "branding_link": "Branding klienta",
         "branding_body": "Vzhled (logo, barvy, popisky) se načítá za běhu z Brandingu klienta — není zabudován do instalátoru."
     },
-
     "pairing": {
         "title": "Párovací kód",
         "subtitle": "Připojte klienta BetterDesk zadáním adresy serveru a krátkého jednorázového kódu místo dlouhého konfiguračního řetězce.",
@@ -4799,5 +4808,19 @@
         "revoke_failed": "Kód se nepodařilo zrušit",
         "created": "Párovací kód vytvořen",
         "create_failed": "Párovací kód se nepodařilo vytvořit"
+    },
+    "ux36": {
+        "beta_badge": "BETA",
+        "beta_hint": "Nové seskupené rozvržení inspirované redesignem komunity. UX 3.5 zůstává výchozí a kdykoli se můžete vrátit.",
+        "switch_to_ux36": "Vyzkoušet UX 3.6 (beta)",
+        "switch_to_ux35": "Vrátit se na UX 3.5",
+        "settings_title": "Rozhraní konzole",
+        "settings_desc": "Vyberte rozvržení konzole pro tento prohlížeč.",
+        "active_shell": "Aktivní rozvržení",
+        "credits": "Rozvržení vychází z redesignu od @rathlinus (issue #493, PR #495).",
+        "switch_failed": "Rozvržení konzole se nepodařilo změnit. Zkuste to znovu.",
+        "switched_to_ux36": "UX 3.6 beta je pro tento prohlížeč zapnuto.",
+        "switched_to_ux35": "UX 3.5 bylo pro tento prohlížeč obnoveno.",
+        "default_hint": "Výchozí rozvržení. Stabilní a plně vybavené."
     }
 }

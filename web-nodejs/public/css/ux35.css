@@ -844,3 +844,106 @@ body.ux35-is-resizing {
 .ux35-sidebar-heading {
     color: var(--text-secondary);
 }
+
+/* ── UX 3.6 beta: shared chrome ─────────────────────────────────────────────
+ * These two pieces must render in BOTH shells: UX 3.5 operators need the
+ * Settings card to opt into the beta, and the badge only appears once they
+ * have. Everything else specific to the new layout lives in ux36.css. */
+
+.ux36-beta-chip {
+    flex-shrink: 0;
+    align-self: center;
+    margin-inline-start: 4px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: var(--ux35-active-bg);
+    color: var(--ux35-primary);
+    font-family: var(--ux35-font-chrome);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    line-height: 1.4;
+    text-transform: uppercase;
+    user-select: none;
+}
+
+@media (max-width: 767px) {
+    .ux36-beta-chip {
+        display: none;
+    }
+}
+
+.ux36-shell-choice {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.ux36-shell-choice-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.ux36-shell-choice-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    flex: 1 1 240px;
+    padding: 12px 14px;
+    border: 1px solid var(--ux35-border);
+    border-radius: var(--ux35-radius);
+    background: var(--bg-secondary);
+    cursor: pointer;
+}
+
+.ux36-shell-choice-option:hover {
+    border-color: var(--ux35-primary);
+}
+
+.ux36-shell-choice-option.is-active {
+    border-color: var(--ux35-primary);
+    box-shadow: inset 0 0 0 1px var(--ux35-primary);
+}
+
+.ux36-shell-choice-option input {
+    margin-top: 2px;
+}
+
+.ux36-shell-choice-label {
+    display: block;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.ux36-shell-choice-hint {
+    display: block;
+    margin-top: 2px;
+    color: var(--text-secondary);
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.ux36-shell-choice-beta {
+    display: inline-block;
+    margin-inline-start: 6px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: var(--ux35-active-bg);
+    color: var(--ux35-primary);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    vertical-align: 1px;
+}
+
+.ux36-shell-choice-credits {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+[data-theme="light"] .ux36-shell-choice-option {
+    border-color: #8c959f;
+}

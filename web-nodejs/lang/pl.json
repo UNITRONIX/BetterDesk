@@ -85,7 +85,17 @@
         "remote_open_tab": "Otwórz klienta pulpitu zdalnego w nowej karcie",
         "pairing": "Parowanie",
         "client_branding": "Branding klienta",
-        "agents": "Agenci BetterDesk"
+        "agents": "Agenci BetterDesk",
+        "label": "Nawigacja główna",
+        "section_devices": "Urządzenia",
+        "section_support": "Wsparcie",
+        "section_people": "Osoby",
+        "group_console": "Konsola",
+        "group_clients": "Klienci i agenci",
+        "group_rules": "Reguły i zasady",
+        "group_server": "Serwer",
+        "group_billing": "Rozliczenia",
+        "group_developer": "Programista"
     },
     "auth": {
         "login": "Zaloguj",
@@ -4825,7 +4835,6 @@
         "branding_link": "Branding klienta",
         "branding_body": "Wygląd (logo, kolory, etykiety) jest ładowany w czasie działania z Brandingu klienta — nie jest wbudowany w instalator."
     },
-
     "pairing": {
         "title": "Kod parowania",
         "subtitle": "Połącz klienta BetterDesk, wpisując adres serwera i krótki jednorazowy kod zamiast długiego ciągu konfiguracji.",
@@ -4857,5 +4866,19 @@
         "revoke_failed": "Nie udało się unieważnić kodu",
         "created": "Kod parowania utworzony",
         "create_failed": "Nie udało się utworzyć kodu parowania"
+    },
+    "ux36": {
+        "beta_badge": "BETA",
+        "beta_hint": "Nowy grupowany układ inspirowany redesignem społeczności. UX 3.5 pozostaje domyślny i możesz w każdej chwili wrócić.",
+        "switch_to_ux36": "Wypróbuj UX 3.6 (beta)",
+        "switch_to_ux35": "Wróć do UX 3.5",
+        "settings_title": "Interfejs konsoli",
+        "settings_desc": "Wybierz układ konsoli dla tej przeglądarki.",
+        "active_shell": "Aktywny układ",
+        "credits": "Układ oparty na redesignie @rathlinus (zgłoszenie #493, PR #495).",
+        "switch_failed": "Nie udało się zmienić układu konsoli. Spróbuj ponownie.",
+        "switched_to_ux36": "Włączono UX 3.6 beta dla tej przeglądarki.",
+        "switched_to_ux35": "Przywrócono UX 3.5 dla tej przeglądarki.",
+        "default_hint": "Układ domyślny. Stabilny, pełny zestaw funkcji."
     }
 }

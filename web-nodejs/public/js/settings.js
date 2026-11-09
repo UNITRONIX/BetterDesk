@@ -418,11 +418,21 @@
             });
         });
         
-        const hash = window.location.hash.replace('#', '');
+        // Deep links: UX 3.6 navigation points at ?tab=<name>, older links and
+        // in-page state use the #hash form. Both map to the same tab.
+        const requestedTab = new URLSearchParams(window.location.search).get('tab');
+        const hash = requestedTab || window.location.hash.replace('#', '');
         if (['general', 'branding', 'server', 'backup', 'updates', 'auth', 'advanced', 'email', 'time'].includes(hash)) {
             const tabName = hash === 'server' ? 'general' : hash;
             const tab = document.querySelector(`.settings-shell-tab[data-tab="${tabName}"], .settings-tab[data-tab="${tabName}"]`);
-            if (tab) tab.click();
+            if (tab) {
+                tab.click();
+                // Clear ?tab= once applied so later hash navigation still works
+                // and switching tabs does not keep stale query state.
+                if (requestedTab) {
+                    window.history.replaceState(null, '', window.location.pathname + '#' + tab.dataset.tab);
+                }
+            }
         }
     }
 

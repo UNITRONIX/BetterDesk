@@ -102,7 +102,9 @@ Wiki source in-repo: [`docs/wiki/`](docs/wiki/) (sync with `scripts/sync-wiki.ps
 
 ## Web console preview
 
-The BetterDesk web console uses the UX 3.5 interface. These preview images show the dark theme in English with fictional device data:
+The BetterDesk web console defaults to the UX 3.5 interface; an opt-in **UX 3.6 beta** layout
+(grouped sidebar, list-first devices, per-topic settings) is available in Settings → General.
+These preview images show the UX 3.5 dark theme in English with fictional device data:
 
 <table>
   <tr>

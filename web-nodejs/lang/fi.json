@@ -91,7 +91,17 @@
         "remote_open_tab": "Avaa etätyöpöytäasiakas uuteen välilehteen",
         "pairing": "Pariliitos",
         "client_branding": "Client Branding",
-        "agents": "BetterDesk-agentit"
+        "agents": "BetterDesk-agentit",
+        "label": "Päänavigointi",
+        "section_devices": "Laitteet",
+        "section_support": "Tuki",
+        "section_people": "Henkilöt",
+        "group_console": "Konsoli",
+        "group_clients": "Asiakkaat ja agentit",
+        "group_rules": "Säännöt ja käytännöt",
+        "group_server": "Palvelin",
+        "group_billing": "Laskutus",
+        "group_developer": "Kehittäjä"
     },
     "auth": {
         "login": "Login",
@@ -4773,7 +4783,6 @@
         "branding_link": "Asiakkaan brändäys",
         "branding_body": "Ulkoasu (logo, värit, tekstit) ladataan ajon aikana Asiakkaan brändäyksestä — sitä ei upoteta asennusohjelmaan."
     },
-
     "pairing": {
         "title": "Pariliitoskoodi",
         "subtitle": "Yhdistä BetterDesk-asiakas kirjoittamalla palvelimen osoite ja lyhyt kertakäyttöinen koodi pitkän asetustekstin sijaan.",
@@ -4805,5 +4814,19 @@
         "revoke_failed": "Koodin peruuttaminen epäonnistui",
         "created": "Pariliitoskoodi luotu",
         "create_failed": "Pariliitoskoodin luominen epäonnistui"
+    },
+    "ux36": {
+        "beta_badge": "BETA",
+        "beta_hint": "Uusi ryhmitelty asettelu yhteisön uudistuksen innoittamana. UX 3.5 on edelleen oletus ja voit palata milloin tahansa.",
+        "switch_to_ux36": "Kokeile UX 3.6 (beta)",
+        "switch_to_ux35": "Palaa UX 3.5:een",
+        "settings_title": "Konsolin käyttöliittymä",
+        "settings_desc": "Valitse konsolin asettelu tälle selaimelle.",
+        "active_shell": "Aktiivinen asettelu",
+        "credits": "Asettelu perustuu @rathlinusin uudistukseen (issue #493, PR #495).",
+        "switch_failed": "Konsolin asettelua ei voitu vaihtaa. Yritä uudelleen.",
+        "switched_to_ux36": "UX 3.6 beta on otettu käyttöön tässä selaimessa.",
+        "switched_to_ux35": "UX 3.5 on palautettu tähän selaimeen.",
+        "default_hint": "Oletusasettelu. vakaa ja täysin varustettu."
     }
 }

@@ -91,7 +91,17 @@
         "remote_open_tab": "Deschide clientul desktop la distanță într-o filă nouă",
         "pairing": "Asociere",
         "client_branding": "Client Branding",
-        "agents": "Agenți BetterDesk"
+        "agents": "Agenți BetterDesk",
+        "label": "Navigare principală",
+        "section_devices": "Dispozitive",
+        "section_support": "Asistență",
+        "section_people": "Persoane",
+        "group_console": "Consolă",
+        "group_clients": "Clienți și agenți",
+        "group_rules": "Reguli și politici",
+        "group_server": "Server",
+        "group_billing": "Facturare",
+        "group_developer": "Dezvoltator"
     },
     "auth": {
         "login": "Login",
@@ -4773,7 +4783,6 @@
         "branding_link": "Branding client",
         "branding_body": "Aspectul (logo, culori, etichete) este încărcat la runtime din Branding client — nu este înglobat în instalator."
     },
-
     "pairing": {
         "title": "Cod de asociere",
         "subtitle": "Conectați un client BetterDesk introducând adresa serverului și un cod scurt de unică folosință în locul unui șir lung de configurare.",
@@ -4805,5 +4814,19 @@
         "revoke_failed": "Codul nu a putut fi revocat",
         "created": "Cod de asociere creat",
         "create_failed": "Codul de asociere nu a putut fi creat"
+    },
+    "ux36": {
+        "beta_badge": "BETA",
+        "beta_hint": "Aspect grupat nou inspirat de redesignul comunității. UX 3.5 rămâne implicit și puteți reveni oricând.",
+        "switch_to_ux36": "Încearcă UX 3.6 (beta)",
+        "switch_to_ux35": "Revenire la UX 3.5",
+        "settings_title": "Interfața consolei",
+        "settings_desc": "Alegeți aspectul consolei pentru acest browser.",
+        "active_shell": "Aspect activ",
+        "credits": "Aspect bazat pe redesignul realizat de @rathlinus (issue #493, PR #495).",
+        "switch_failed": "Aspectul consolei nu a putut fi modificat. Încercați din nou.",
+        "switched_to_ux36": "UX 3.6 beta a fost activat pentru acest browser.",
+        "switched_to_ux35": "UX 3.5 a fost restaurat pentru acest browser.",
+        "default_hint": "Aspect implicit. Stabil și complet funcțional."
     }
 }

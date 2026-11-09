@@ -91,7 +91,17 @@
         "remote_open_tab": "Åbn fjernskrivebordsklient i ny fane",
         "pairing": "Parring",
         "client_branding": "Client Branding",
-        "agents": "BetterDesk-agenter"
+        "agents": "BetterDesk-agenter",
+        "label": "Hovednavigation",
+        "section_devices": "Enheder",
+        "section_support": "Support",
+        "section_people": "Personer",
+        "group_console": "Konsol",
+        "group_clients": "Klienter og agenter",
+        "group_rules": "Regler og politikker",
+        "group_server": "Server",
+        "group_billing": "Fakturering",
+        "group_developer": "Udvikler"
     },
     "auth": {
         "login": "Login",
@@ -4773,7 +4783,6 @@
         "branding_link": "Klientbranding",
         "branding_body": "Udseende (logo, farver, etiketter) indlæses ved kørsel fra Klientbranding — det er ikke indbygget i installeren."
     },
-
     "pairing": {
         "title": "Parringskode",
         "subtitle": "Forbind en BetterDesk-klient ved at indtaste serveradressen og en kort engangskode i stedet for en lang konfigurationsstreng.",
@@ -4805,5 +4814,19 @@
         "revoke_failed": "Kunne ikke tilbagekalde koden",
         "created": "Parringskode oprettet",
         "create_failed": "Kunne ikke oprette en parringskode"
+    },
+    "ux36": {
+        "beta_badge": "BETA",
+        "beta_hint": "Ny grupperet layout inspireret af fællesskabets redesign. UX 3.5 forbliver standard, og du kan skifte tilbage når som helst.",
+        "switch_to_ux36": "Prøv UX 3.6 (beta)",
+        "switch_to_ux35": "Skift tilbage til UX 3.5",
+        "settings_title": "Konsolgrænseflade",
+        "settings_desc": "Vælg konsollayout til denne browser.",
+        "active_shell": "Aktivt layout",
+        "credits": "Layoutet er baseret på redesignet af @rathlinus (issue #493, PR #495).",
+        "switch_failed": "Konsollayoutet kunne ikke ændres. Prøv igen.",
+        "switched_to_ux36": "UX 3.6 beta er aktiveret for denne browser.",
+        "switched_to_ux35": "UX 3.5 er gendannet for denne browser.",
+        "default_hint": "Standardlayout. Stabil og fuldt funktionsdygtigt."
     }
 }

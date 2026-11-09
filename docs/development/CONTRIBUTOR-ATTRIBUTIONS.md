@@ -4,6 +4,44 @@ This register documents external reports, designs, tests, and code that
 informed BetterDesk changes. It is intended to preserve contributor credit and
 make provenance reviewable. It is not a copyright assignment or legal opinion.
 
+## `@rathlinus` — console UX redesign
+
+Contributor profile: <https://github.com/rathlinus>
+Design discussion: [issue #493](https://github.com/UNITRONIX/BetterDesk/issues/493)
+Redesign pull request: [PR #495](https://github.com/UNITRONIX/BetterDesk/pull/495)
+
+Linus Rath (UI/UX designer) reworked the whole web console: every page, the
+grouped sidebar (Devices / Support / People / Activity / Settings), the
+device-list-first layout with side panels, per-topic Settings with search, and
+light/dark support across all 26 locale files. The redesign lives on
+`svelte-rewrite` and was **not** merged as a unit.
+
+BetterDesk's **UX 3.6 beta** is an independent implementation in the existing
+EJS/JavaScript/CSS stack, modelled on that design:
+
+- `web-nodejs/lib/consoleNav.js` — grouped navigation model derived from the
+  contributor's `consoleNav.js` (sections, groups, active-page rules).
+- `web-nodejs/views/partials/ux36-sidebar.ejs`, `public/css/ux36.css`,
+  `public/js/ux36-shell.js` — shell layout and interaction patterns.
+- Settings and Devices layout ideas (topic search, list-first device rail,
+  detail side panel).
+
+The last pre-Svelte commit of the redesign is
+[`d710bdbbb8541f325f6ecf8a24f7027187d475ba`](https://github.com/UNITRONIX/BetterDesk/commit/d710bdbbb8541f325f6ecf8a24f7027187d475ba)
+and is the reference used for this port.
+
+### Attribution rule for UX 3.6 commits
+
+Every commit that ports, adapts, or refines elements of this redesign must keep
+the credit in its body:
+
+```text
+Based-on: @rathlinus UX redesign (Refs #493, #495)
+```
+
+Unrelated commits must not carry that line. Do not describe the redesign as
+merged — it is a design reference, not a merged branch.
+
 ## `@remoover`
 
 Contributor profile: <https://github.com/remoover>

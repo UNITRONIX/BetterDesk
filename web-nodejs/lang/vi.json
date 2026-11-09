@@ -91,7 +91,17 @@
         "remote_open_tab": "Mở client máy tính để bàn từ xa trong tab mới",
         "pairing": "Ghép nối",
         "client_branding": "Client Branding",
-        "agents": "Tác nhân BetterDesk"
+        "agents": "Tác nhân BetterDesk",
+        "label": "Điều hướng chính",
+        "section_devices": "Thiết bị",
+        "section_support": "Hỗ trợ",
+        "section_people": "Nhân sự",
+        "group_console": "Bảng điều khiển",
+        "group_clients": "Máy khách và tác nhân",
+        "group_rules": "Quy tắc và chính sách",
+        "group_server": "Máy chủ",
+        "group_billing": "Thanh toán",
+        "group_developer": "Nhà phát triển"
     },
     "auth": {
         "login": "Login",
@@ -4773,7 +4783,6 @@
         "branding_link": "Thương hiệu máy khách",
         "branding_body": "Giao diện (logo, màu, nhãn) được tải lúc chạy từ Thương hiệu máy khách — không gắn sẵn trong trình cài."
     },
-
     "pairing": {
         "title": "Mã ghép nối",
         "subtitle": "Kết nối ứng dụng khách BetterDesk bằng cách nhập địa chỉ máy chủ và mã dùng một lần ngắn thay vì chuỗi cấu hình dài.",
@@ -4805,5 +4814,19 @@
         "revoke_failed": "Không thể thu hồi mã",
         "created": "Đã tạo mã ghép nối",
         "create_failed": "Không thể tạo mã ghép nối"
+    },
+    "ux36": {
+        "beta_badge": "BETA",
+        "beta_hint": "Bố cục nhóm mới lấy cảm hứng từ thiết kế lại của cộng đồng. UX 3.5 vẫn là mặc định và bạn có thể quay lại bất cứ lúc nào.",
+        "switch_to_ux36": "Dùng thử UX 3.6 (beta)",
+        "switch_to_ux35": "Quay lại UX 3.5",
+        "settings_title": "Giao diện bảng điều khiển",
+        "settings_desc": "Chọn bố cục bảng điều khiển cho trình duyệt này.",
+        "active_shell": "Bố cục đang dùng",
+        "credits": "Bố cục dựa trên thiết kế lại của @rathlinus (issue #493, PR #495).",
+        "switch_failed": "Không thể thay đổi bố cục bảng điều khiển. Vui lòng thử lại.",
+        "switched_to_ux36": "Đã bật UX 3.6 beta cho trình duyệt này.",
+        "switched_to_ux35": "Đã khôi phục UX 3.5 cho trình duyệt này.",
+        "default_hint": "Bố cục mặc định. Ổn định và đầy đủ tính năng."
     }
 }

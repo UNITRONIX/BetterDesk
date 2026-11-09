@@ -1,5 +1,28 @@
 ## [Unreleased]
 
+### Added
+- **UX 3.6 beta console shell (opt-in).** An alternative layout modelled on the
+  community redesign by [@rathlinus](https://github.com/rathlinus)
+  ([issue #493](https://github.com/UNITRONIX/BetterDesk/issues/493),
+  [PR #495](https://github.com/UNITRONIX/BetterDesk/pull/495)) and rebuilt on the
+  current EJS/JavaScript/CSS stack — no Svelte, no merged branch.
+  The sidebar is grouped into **Devices / Support / People / Activity / Settings**
+  (`web-nodejs/lib/consoleNav.js`); every entry keeps its existing route and
+  panel-access section, so roles see exactly the pages they could open before.
+  Devices becomes list-first with folders and device groups in a rail beside the
+  table and details in a side sheet on desktop; Settings keeps its tabs, gains
+  `?tab=` deep links and its search. Only the active group starts expanded.
+  UX 3.5 stays the default and the safe fallback: the shell is resolved once in
+  `web-nodejs/lib/uiShell.js`, stored per browser in the `bd_ui_shell` cookie, and
+  switched from **Settings → General → Console interface** or `?ui=ux36`.
+  Unknown or removed values (including `classic`) fall back to UX 3.5. No database
+  migration and no change to routes, permissions, branding, wallpapers or themes.
+  New `ux36.*` and grouped `nav.*` keys in all 26 locales. Covered by
+  `web-nodejs/tests/ux36-shell.test.js` and the updated
+  `ux35-ui-contract.test.js`. Contributor credit is recorded in
+  `docs/development/CONTRIBUTOR-ATTRIBUTIONS.md` and
+  `.cursor/rules/ux36-attribution.mdc`.
+
 ### Changed
 - _(none yet)_
 

@@ -29,6 +29,8 @@ const {
     getPanelReadMountPaths
 } = require('./middleware/rateLimiter');
 const { csrfTokenProvider, doubleCsrfProtection, downgradeToHttp: csrfDowngradeToHttp } = require('./middleware/csrf');
+const { resolveShell, isBetaShell } = require('./lib/uiShell');
+const { buildNav } = require('./lib/consoleNav');
 const {
     requestHasPermission,
     isSuperAdminRole,
@@ -266,9 +268,15 @@ app.use(initI18n());
 // Used by Desktop Mode to load pages inside floating windows (iframes)
 app.use((req, res, next) => {
     res.locals.embed = req.query.embed === '1';
-    // UX 3.5 is the only supported console shell. Legacy `ui` query
-    // parameters and `bd_ui_shell=classic` cookies are intentionally ignored.
-    res.locals.uiShell = 'ux35';
+    // Shell choice is resolved once (lib/uiShell.js) so SSR markup, CSS/JS
+    // includes and window.BetterDesk.uiShell cannot disagree. UX 3.5 is the
+    // default; UX 3.6 is an opt-in beta. Unknown values (including the removed
+    // `classic` shell) fall back to the default instead of erroring.
+    res.locals.uiShell = resolveShell(req);
+    res.locals.uiShellBeta = isBetaShell(res.locals.uiShell);
+    // Tab name for pages that split by tab (settings deep links, server mgmt,
+    // commercialization) so the grouped navigation can mark the right item.
+    res.locals.consoleTab = typeof req.query.tab === 'string' ? req.query.tab : '';
     res.locals.supporters = loadSupporters();
     // Inject permission helper for EJS templates (sidebar/button visibility)
     const role = req.session?.user?.role;
@@ -278,6 +286,26 @@ app.use((req, res, next) => {
     res.locals.hasSectionAccess = (section, level = 'read') => role
         ? accessAllows(req.panelAccessPolicy, section, level)
         : false;
+    // Grouped navigation model (lib/consoleNav.js) shared by the sidebar,
+    // breadcrumbs and the mobile drawer. Panel access is enforced per page, so
+    // grouping never widens what a role can open.
+    res.locals.buildConsoleNav = (currentPage, currentTab, activateAgentNav) => {
+        if (!role) return { sections: [], activeSection: null, activePage: null };
+        return buildNav({
+            t: (key) => {
+                const value = req.t ? req.t(key) : key;
+                // i18nService already falls back to English; keep the key name
+                // as the last resort so a gap shows up instead of a blank row.
+                return value && value !== key ? value : key;
+            },
+            allows: (page) => accessAllows(req.panelAccessPolicy, page.section, 'read'),
+            can: (perm) => requestHasPermission(req, perm),
+            role,
+            currentPage,
+            currentTab,
+            activateAgentNav: !!activateAgentNav,
+        });
+    };
     res.locals.isSuperAdmin = role ? isSuperAdminRole(role) : false;
     res.locals.sessionPolicy = panelSessionService.getPolicy();
     // Prevent HTML page caching — only static assets should be cached

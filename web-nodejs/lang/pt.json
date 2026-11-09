@@ -85,7 +85,17 @@
         "remote_open_tab": "Abrir cliente de ambiente de trabalho remoto num novo separador",
         "pairing": "Emparelhamento",
         "client_branding": "Client Branding",
-        "agents": "Agentes BetterDesk"
+        "agents": "Agentes BetterDesk",
+        "label": "Navegação principal",
+        "section_devices": "Dispositivos",
+        "section_support": "Suporte",
+        "section_people": "Pessoas",
+        "group_console": "Consola",
+        "group_clients": "Clientes e agentes",
+        "group_rules": "Regras e políticas",
+        "group_server": "Servidor",
+        "group_billing": "Faturação",
+        "group_developer": "Programador"
     },
     "auth": {
         "login": "Entrar",
@@ -4767,7 +4777,6 @@
         "branding_link": "Branding do cliente",
         "branding_body": "A aparência (logótipo, cores, etiquetas) é carregada em tempo de execução a partir do Branding do cliente — não vai embutida no instalador."
     },
-
     "pairing": {
         "title": "Código de emparelhamento",
         "subtitle": "Conecte um cliente BetterDesk digitando o endereço do servidor e um código curto de uso único em vez de uma longa cadeia.",
@@ -4799,5 +4808,19 @@
         "revoke_failed": "Não foi possível revogar o código",
         "created": "Código de emparelhamento criado",
         "create_failed": "Não foi possível criar um código de emparelhamento"
+    },
+    "ux36": {
+        "beta_badge": "BETA",
+        "beta_hint": "Novo layout agrupado inspirado no redesenho da comunidade. O UX 3.5 continua a ser o padrão e pode voltar a qualquer momento.",
+        "switch_to_ux36": "Experimentar UX 3.6 (beta)",
+        "switch_to_ux35": "Voltar ao UX 3.5",
+        "settings_title": "Interface da consola",
+        "settings_desc": "Escolha o layout da consola para este navegador.",
+        "active_shell": "Layout ativo",
+        "credits": "Layout baseado no redesenho de @rathlinus (issue #493, PR #495).",
+        "switch_failed": "Não foi possível alterar o layout da consola. Tente novamente.",
+        "switched_to_ux36": "UX 3.6 beta ativado para este navegador.",
+        "switched_to_ux35": "UX 3.5 restaurado para este navegador.",
+        "default_hint": "Layout predefinido. Estável e completo."
     }
 }

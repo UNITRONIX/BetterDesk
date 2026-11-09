@@ -91,7 +91,17 @@
         "remote_open_tab": "नए टैब में रिमोट डेस्कटॉप क्लाइंट खोलें",
         "pairing": "पेयरिंग",
         "client_branding": "Client Branding",
-        "agents": "BetterDesk एजेंट"
+        "agents": "BetterDesk एजेंट",
+        "label": "मुख्य नेविगेशन",
+        "section_devices": "डिवाइस",
+        "section_support": "सहायता",
+        "section_people": "लोग",
+        "group_console": "कंसोल",
+        "group_clients": "क्लाइंट और एजेंट",
+        "group_rules": "नियम और नीतियाँ",
+        "group_server": "सर्वर",
+        "group_billing": "बिलिंग",
+        "group_developer": "डेवलपर"
     },
     "auth": {
         "login": "Login",
@@ -4773,7 +4783,6 @@
         "branding_link": "क्लाइंट ब्रांडिंग",
         "branding_body": "दिखावट (लोगो, रंग, लेबल) रनटाइम पर क्लाइंट ब्रांडिंग से लोड होती है — इंस्टॉलर में बेक नहीं होती।"
     },
-
     "pairing": {
         "title": "पेयरिंग कोड",
         "subtitle": "लंबे कॉन्फ़िगरेशन स्ट्रिंग के बजाय सर्वर पता और छोटा एक-बार कोड लिखकर BetterDesk क्लाइंट कनेक्ट करें।",
@@ -4805,5 +4814,19 @@
         "revoke_failed": "कोड रद्द नहीं हो सका",
         "created": "पेयरिंग कोड बना",
         "create_failed": "पेयरिंग कोड नहीं बन सका"
+    },
+    "ux36": {
+        "beta_badge": "BETA",
+        "beta_hint": "समुदाय के रीडिज़ाइन से प्रेरित नया समूहित लेआउट। UX 3.5 डिफ़ॉल्ट रहेगा और आप कभी भी वापस जा सकते हैं।",
+        "switch_to_ux36": "UX 3.6 (बीटा) आज़माएँ",
+        "switch_to_ux35": "UX 3.5 पर वापस जाएँ",
+        "settings_title": "कंसोल इंटरफ़ेस",
+        "settings_desc": "इस ब्राउज़र के लिए कंसोल लेआउट चुनें।",
+        "active_shell": "सक्रिय लेआउट",
+        "credits": "लेआउट @rathlinus के रीडिज़ाइन पर आधारित है (issue #493, PR #495)।",
+        "switch_failed": "कंसोल लेआउट बदला नहीं जा सका। कृपया पुनः प्रयास करें।",
+        "switched_to_ux36": "इस ब्राउज़र के लिए UX 3.6 बीटा सक्षम किया गया।",
+        "switched_to_ux35": "इस ब्राउज़र के लिए UX 3.5 बहाल किया गया।",
+        "default_hint": "डिफ़ॉल्ट लेआउट। स्थिर और सभी सुविधाओं सहित।"
     }
 }

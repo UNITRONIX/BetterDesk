@@ -91,7 +91,17 @@
         "remote_open_tab": "Buka klien desktop jarak jauh di tab baru",
         "pairing": "Pemasangan",
         "client_branding": "Client Branding",
-        "agents": "Agen BetterDesk"
+        "agents": "Agen BetterDesk",
+        "label": "Navigasi utama",
+        "section_devices": "Perangkat",
+        "section_support": "Dukungan",
+        "section_people": "Orang",
+        "group_console": "Konsol",
+        "group_clients": "Klien & agen",
+        "group_rules": "Aturan & kebijakan",
+        "group_server": "Server",
+        "group_billing": "Penagihan",
+        "group_developer": "Pengembang"
     },
     "auth": {
         "login": "Login",
@@ -4773,7 +4783,6 @@
         "branding_link": "Branding klien",
         "branding_body": "Tampilan (logo, warna, label) dimuat saat runtime dari Branding klien — tidak dibake ke penginstal."
     },
-
     "pairing": {
         "title": "Kode pemasangan",
         "subtitle": "Hubungkan klien BetterDesk dengan mengetik alamat server dan kode sekali pakai yang singkat, bukan string konfigurasi yang panjang.",
@@ -4805,5 +4814,19 @@
         "revoke_failed": "Tidak dapat mencabut kode",
         "created": "Kode pemasangan dibuat",
         "create_failed": "Tidak dapat membuat kode pemasangan"
+    },
+    "ux36": {
+        "beta_badge": "BETA",
+        "beta_hint": "Tata letak berkelompok baru yang terinspirasi dari redesain komunitas. UX 3.5 tetap default dan Anda dapat kembali kapan saja.",
+        "switch_to_ux36": "Coba UX 3.6 (beta)",
+        "switch_to_ux35": "Kembali ke UX 3.5",
+        "settings_title": "Antarmuka konsol",
+        "settings_desc": "Pilih tata letak konsol untuk peramban ini.",
+        "active_shell": "Tata letak aktif",
+        "credits": "Tata letak berdasarkan redesain oleh @rathlinus (issue #493, PR #495).",
+        "switch_failed": "Tata letak konsol tidak dapat diubah. Silakan coba lagi.",
+        "switched_to_ux36": "UX 3.6 beta diaktifkan untuk peramban ini.",
+        "switched_to_ux35": "UX 3.5 dipulihkan untuk peramban ini.",
+        "default_hint": "Tata letak default. Stabil dan lengkap."
     }
 }

@@ -85,7 +85,17 @@
         "server_management": "Server Management",
         "server_attestation": "Server Attestation",
         "commercialization": "Commercialization",
-        "agents": "BetterDesk Agents"
+        "agents": "BetterDesk Agents",
+        "label": "Main navigation",
+        "section_devices": "Devices",
+        "section_support": "Support",
+        "section_people": "People",
+        "group_console": "Console",
+        "group_clients": "Clients & agents",
+        "group_rules": "Rules & policies",
+        "group_server": "Server",
+        "group_billing": "Billing",
+        "group_developer": "Developer"
     },
     "mobile_nav": {
         "label": "Main navigation",
@@ -4825,7 +4835,6 @@
         "branding_link": "Client Branding",
         "branding_body": "Appearance (logo, colors, labels) is loaded at runtime from Client Branding — it is not baked into the installer."
     },
-
     "pairing": {
         "title": "Pairing code",
         "subtitle": "Connect a BetterDesk client by typing the server address and a short one-time code instead of a long configuration string.",
@@ -4857,5 +4866,19 @@
         "revoke_failed": "Could not revoke the code",
         "created": "Pairing code created",
         "create_failed": "Could not create a pairing code"
+    },
+    "ux36": {
+        "beta_badge": "BETA",
+        "beta_hint": "New grouped layout inspired by the community redesign. UX 3.5 stays the default and you can switch back at any time.",
+        "switch_to_ux36": "Try UX 3.6 (beta)",
+        "switch_to_ux35": "Switch back to UX 3.5",
+        "settings_title": "Console interface",
+        "settings_desc": "Choose the console layout for this browser.",
+        "active_shell": "Active layout",
+        "credits": "Layout modelled on the redesign by @rathlinus (issue #493, PR #495).",
+        "switch_failed": "Could not change the console layout. Please try again.",
+        "switched_to_ux36": "UX 3.6 beta enabled for this browser.",
+        "switched_to_ux35": "UX 3.5 restored for this browser.",
+        "default_hint": "Default layout. Stable, fully featured."
     }
 }

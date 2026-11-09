@@ -85,7 +85,17 @@
         "remote_open_tab": "在新标签页中打开远程桌面客户端",
         "pairing": "配对",
         "client_branding": "Client Branding",
-        "agents": "BetterDesk 代理"
+        "agents": "BetterDesk 代理",
+        "label": "主导航",
+        "section_devices": "设备",
+        "section_support": "支持",
+        "section_people": "人员",
+        "group_console": "控制台",
+        "group_clients": "客户端与代理",
+        "group_rules": "规则与策略",
+        "group_server": "服务器",
+        "group_billing": "计费",
+        "group_developer": "开发者"
     },
     "auth": {
         "login": "登录",
@@ -4767,7 +4777,6 @@
         "branding_link": "客户端品牌",
         "branding_body": "外观（徽标、颜色、标签）在运行时从客户端品牌加载，不会写入安装包。"
     },
-
     "pairing": {
         "title": "配对码",
         "subtitle": "输入服务器地址和短的一次性代码即可连接 BetterDesk 客户端，无需长配置字符串。",
@@ -4799,5 +4808,19 @@
         "revoke_failed": "无法撤销代码",
         "created": "配对码已创建",
         "create_failed": "无法创建配对码"
+    },
+    "ux36": {
+        "beta_badge": "BETA",
+        "beta_hint": "受社区重设计启发的新分组布局。UX 3.5 仍为默认，可随时切回。",
+        "switch_to_ux36": "试用 UX 3.6（测试版）",
+        "switch_to_ux35": "切换回 UX 3.5",
+        "settings_title": "控制台界面",
+        "settings_desc": "为此浏览器选择控制台布局。",
+        "active_shell": "当前布局",
+        "credits": "布局基于 @rathlinus 的重设计（issue #493，PR #495）。",
+        "switch_failed": "无法更改控制台布局，请重试。",
+        "switched_to_ux36": "已为此浏览器启用 UX 3.6 测试版。",
+        "switched_to_ux35": "已为此浏览器恢复 UX 3.5。",
+        "default_hint": "默认布局。稳定且功能完整。"
     }
 }

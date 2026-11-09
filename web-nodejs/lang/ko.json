@@ -85,7 +85,17 @@
         "remote_open_tab": "새 탭에서 원격 데스크톱 클라이언트 열기",
         "pairing": "페어링",
         "client_branding": "Client Branding",
-        "agents": "BetterDesk 에이전트"
+        "agents": "BetterDesk 에이전트",
+        "label": "주요 탐색",
+        "section_devices": "장치",
+        "section_support": "지원",
+        "section_people": "사용자",
+        "group_console": "콘솔",
+        "group_clients": "클라이언트 및 에이전트",
+        "group_rules": "규칙 및 정책",
+        "group_server": "서버",
+        "group_billing": "청구",
+        "group_developer": "개발자"
     },
     "auth": {
         "login": "Login",
@@ -4767,7 +4777,6 @@
         "branding_link": "클라이언트 브랜딩",
         "branding_body": "모양(로고, 색상, 라벨)은 런타임에 클라이언트 브랜딩에서 로드되며 설치 프로그램에 포함되지 않습니다."
     },
-
     "pairing": {
         "title": "페어링 코드",
         "subtitle": "긴 구성 문자열 대신 서버 주소와 짧은 일회용 코드를 입력하여 BetterDesk 클라이언트를 연결합니다.",
@@ -4799,5 +4808,19 @@
         "revoke_failed": "코드를 취소할 수 없습니다",
         "created": "페어링 코드가 생성되었습니다",
         "create_failed": "페어링 코드를 만들 수 없습니다"
+    },
+    "ux36": {
+        "beta_badge": "BETA",
+        "beta_hint": "커뮤니티 재설계에서 영감을 받은 새로운 그룹 레이아웃입니다. UX 3.5가 기본으로 유지되며 언제든지 되돌릴 수 있습니다.",
+        "switch_to_ux36": "UX 3.6(베타) 사용해 보기",
+        "switch_to_ux35": "UX 3.5로 돌아가기",
+        "settings_title": "콘솔 인터페이스",
+        "settings_desc": "이 브라우저의 콘솔 레이아웃을 선택하세요.",
+        "active_shell": "활성 레이아웃",
+        "credits": "레이아웃은 @rathlinus의 재설계를 기반으로 합니다(issue #493, PR #495).",
+        "switch_failed": "콘솔 레이아웃을 변경할 수 없습니다. 다시 시도하세요.",
+        "switched_to_ux36": "이 브라우저에서 UX 3.6 베타를 사용 설정했습니다.",
+        "switched_to_ux35": "이 브라우저에서 UX 3.5를 복원했습니다.",
+        "default_hint": "기본 레이아웃입니다. 안정적이며 모든 기능을 제공합니다."
     }
 }

@@ -65,6 +65,37 @@
         <!-- General Tab -->
         <div class="settings-tab-content active" id="tab-general" role="tabpanel" aria-labelledby="settings-tab-general">
         <div class="settings-stack">
+            <!-- Console interface (per-browser UX 3.5 / UX 3.6 beta) -->
+            <div class="settings-panel" id="ux36-shell-panel">
+                <div class="settings-panel-header">
+                    <h2 class="settings-panel-title">
+                        <span class="material-icons" aria-hidden="true">dashboard</span>
+                        ${_('ux36.settings_title')}
+                    </h2>
+                    <p class="settings-panel-desc">${_('ux36.settings_desc')}</p>
+                </div>
+                <div class="settings-panel-body">
+                    <div class="ux36-shell-choice" data-current-shell="${uiShell || 'ux35'}">
+                        <div class="ux36-shell-choice-options" role="radiogroup" aria-label="${_('ux36.settings_title')}">
+                            <label class="ux36-shell-choice-option ${(uiShell || 'ux35') === 'ux35' ? 'is-active' : ''}" data-shell-option="ux35">
+                                <input type="radio" name="ui-shell" value="ux35" ${(uiShell || 'ux35') === 'ux35' ? 'checked' : ''}>
+                                <span>
+                                    <span class="ux36-shell-choice-label">UX 3.5</span>
+                                    <span class="ux36-shell-choice-hint">${_('ux36.default_hint')}</span>
+                                </span>
+                            </label>
+                            <label class="ux36-shell-choice-option ${(uiShell || 'ux35') === 'ux36' ? 'is-active' : ''}" data-shell-option="ux36">
+                                <input type="radio" name="ui-shell" value="ux36" ${(uiShell || 'ux35') === 'ux36' ? 'checked' : ''}>
+                                <span>
+                                    <span class="ux36-shell-choice-label">UX 3.6<span class="ux36-shell-choice-beta">${_('ux36.beta_badge')}</span></span>
+                                    <span class="ux36-shell-choice-hint">${_('ux36.beta_hint')}</span>
+                                </span>
+                            </label>
+                        </div>
+                        <p class="ux36-shell-choice-credits">${_('ux36.credits')}</p>
+                    </div>
+                </div>
+            </div>
             <!-- Password Change Section -->
             <div class="settings-panel">
                 <div class="settings-panel-header">

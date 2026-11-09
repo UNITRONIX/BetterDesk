@@ -85,7 +85,17 @@
         "remote_open_tab": "Externe-bureaubladclient openen in nieuw tabblad",
         "pairing": "Koppelen",
         "client_branding": "Client Branding",
-        "agents": "BetterDesk-agents"
+        "agents": "BetterDesk-agents",
+        "label": "Hoofdnavigatie",
+        "section_devices": "Apparaten",
+        "section_support": "Ondersteuning",
+        "section_people": "Personen",
+        "group_console": "Console",
+        "group_clients": "Clients en agents",
+        "group_rules": "Regels en beleid",
+        "group_server": "Server",
+        "group_billing": "Facturering",
+        "group_developer": "Ontwikkelaar"
     },
     "auth": {
         "login": "Inloggen",
@@ -4767,7 +4777,6 @@
         "branding_link": "Clientbranding",
         "branding_body": "Uiterlijk (logo, kleuren, labels) wordt tijdens runtime geladen uit Clientbranding — niet in de installer gebakken."
     },
-
     "pairing": {
         "title": "Koppelcode",
         "subtitle": "Verbind een BetterDesk-client met het serveradres en een korte eenmalige code in plaats van een lange configuratiereeks.",
@@ -4799,5 +4808,19 @@
         "revoke_failed": "Code kon niet worden ingetrokken",
         "created": "Koppelcode aangemaakt",
         "create_failed": "Koppelcode kon niet worden aangemaakt"
+    },
+    "ux36": {
+        "beta_badge": "BETA",
+        "beta_hint": "Nieuwe gegroepeerde lay-out geïnspireerd op de herontwerp van de community. UX 3.5 blijft standaard en je kunt altijd terugschakelen.",
+        "switch_to_ux36": "UX 3.6 (bèta) proberen",
+        "switch_to_ux35": "Terug naar UX 3.5",
+        "settings_title": "Console-interface",
+        "settings_desc": "Kies de consolelay-out voor deze browser.",
+        "active_shell": "Actieve lay-out",
+        "credits": "Lay-out gebaseerd op het herontwerp van @rathlinus (issue #493, PR #495).",
+        "switch_failed": "Consolelay-out kon niet worden gewijzigd. Probeer het opnieuw.",
+        "switched_to_ux36": "UX 3.6 bèta is ingeschakeld voor deze browser.",
+        "switched_to_ux35": "UX 3.5 is hersteld voor deze browser.",
+        "default_hint": "Standaardlay-out. Stabiel en volledig."
     }
 }

@@ -89,7 +89,17 @@
         "remote_open_tab": "在新分頁中開啟遠端桌面用戶端",
         "pairing": "配對",
         "client_branding": "Client Branding",
-        "agents": "BetterDesk 代理"
+        "agents": "BetterDesk 代理",
+        "label": "主導覽",
+        "section_devices": "裝置",
+        "section_support": "支援",
+        "section_people": "人員",
+        "group_console": "主控台",
+        "group_clients": "用戶端與代理",
+        "group_rules": "規則與原則",
+        "group_server": "伺服器",
+        "group_billing": "計費",
+        "group_developer": "開發者"
     },
     "auth": {
         "login": "登錄",
@@ -4771,7 +4781,6 @@
         "branding_link": "用戶端品牌",
         "branding_body": "外觀（標誌、顏色、標籤）在執行時從用戶端品牌載入，不會寫入安裝程式。"
     },
-
     "pairing": {
         "title": "配對碼",
         "subtitle": "輸入伺服器位址和短的一次性代碼即可連接 BetterDesk 用戶端，無需長設定字串。",
@@ -4803,5 +4812,19 @@
         "revoke_failed": "無法撤銷代碼",
         "created": "配對碼已建立",
         "create_failed": "無法建立配對碼"
+    },
+    "ux36": {
+        "beta_badge": "BETA",
+        "beta_hint": "受社群重新設計啟發的新分組版面。UX 3.5 仍為預設，可隨時切回。",
+        "switch_to_ux36": "試用 UX 3.6（測試版）",
+        "switch_to_ux35": "切換回 UX 3.5",
+        "settings_title": "主控台介面",
+        "settings_desc": "為此瀏覽器選擇主控台版面。",
+        "active_shell": "目前版面",
+        "credits": "版面依據 @rathlinus 的重新設計（issue #493，PR #495）。",
+        "switch_failed": "無法變更主控台版面，請再試一次。",
+        "switched_to_ux36": "已為此瀏覽器啟用 UX 3.6 測試版。",
+        "switched_to_ux35": "已為此瀏覽器還原 UX 3.5。",
+        "default_hint": "預設版面。穩定且功能完整。"
     }
 }

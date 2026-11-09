@@ -85,7 +85,17 @@
         "remote_open_tab": "新しいタブでリモートデスクトップクライアントを開く",
         "pairing": "ペアリング",
         "client_branding": "Client Branding",
-        "agents": "BetterDeskエージェント"
+        "agents": "BetterDeskエージェント",
+        "label": "メインナビゲーション",
+        "section_devices": "デバイス",
+        "section_support": "サポート",
+        "section_people": "ユーザー",
+        "group_console": "コンソール",
+        "group_clients": "クライアントとエージェント",
+        "group_rules": "ルールとポリシー",
+        "group_server": "サーバー",
+        "group_billing": "請求",
+        "group_developer": "開発者"
     },
     "auth": {
         "login": "Login",
@@ -4767,7 +4777,6 @@
         "branding_link": "クライアントブランディング",
         "branding_body": "外観（ロゴ・色・ラベル）は実行時にクライアントブランディングから読み込まれます。インストーラーには焼き込まれません。"
     },
-
     "pairing": {
         "title": "ペアリングコード",
         "subtitle": "長い設定文字列の代わりに、サーバーアドレスと短いワンタイムコードを入力して BetterDesk クライアントを接続します。",
@@ -4799,5 +4808,19 @@
         "revoke_failed": "コードを取り消せませんでした",
         "created": "ペアリングコードを作成しました",
         "create_failed": "ペアリングコードを作成できませんでした"
+    },
+    "ux36": {
+        "beta_badge": "BETA",
+        "beta_hint": "コミュニティの再設計に着想を得た新しいグループ化レイアウト。UX 3.5 が既定のままで、いつでも戻せます。",
+        "switch_to_ux36": "UX 3.6（ベータ）を試す",
+        "switch_to_ux35": "UX 3.5 に戻す",
+        "settings_title": "コンソールのインターフェース",
+        "settings_desc": "このブラウザーのコンソールレイアウトを選択します。",
+        "active_shell": "使用中のレイアウト",
+        "credits": "レイアウトは @rathlinus の再設計に基づいています（issue #493、PR #495）。",
+        "switch_failed": "コンソールレイアウトを変更できませんでした。もう一度お試しください。",
+        "switched_to_ux36": "このブラウザーで UX 3.6 ベータを有効にしました。",
+        "switched_to_ux35": "このブラウザーで UX 3.5 に戻しました。",
+        "default_hint": "既定のレイアウト。安定しており全機能を利用できます。"
     }
 }

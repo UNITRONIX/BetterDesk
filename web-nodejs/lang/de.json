@@ -85,7 +85,17 @@
         "remote_open_tab": "Remote-Desktop-Client in neuem Tab öffnen",
         "pairing": "Kopplung",
         "client_branding": "Client Branding",
-        "agents": "BetterDesk-Agenten"
+        "agents": "BetterDesk-Agenten",
+        "label": "Hauptnavigation",
+        "section_devices": "Geräte",
+        "section_support": "Support",
+        "section_people": "Personen",
+        "group_console": "Konsole",
+        "group_clients": "Clients & Agenten",
+        "group_rules": "Regeln & Richtlinien",
+        "group_server": "Server",
+        "group_billing": "Abrechnung",
+        "group_developer": "Entwickler"
     },
     "auth": {
         "login": "Anmelden",
@@ -4767,7 +4777,6 @@
         "branding_link": "Client-Branding",
         "branding_body": "Erscheinungsbild (Logo, Farben, Beschriftungen) wird zur Laufzeit aus dem Client-Branding geladen — nicht in den Installer eingebettet."
     },
-
     "pairing": {
         "title": "Kopplungscode",
         "subtitle": "Verbinden Sie einen BetterDesk-Client mit Serveradresse und einem kurzen Einmalcode statt einer langen Konfigurationszeichenfolge.",
@@ -4799,5 +4808,19 @@
         "revoke_failed": "Code konnte nicht widerrufen werden",
         "created": "Kopplungscode erstellt",
         "create_failed": "Kopplungscode konnte nicht erstellt werden"
+    },
+    "ux36": {
+        "beta_badge": "BETA",
+        "beta_hint": "Neues gruppiertes Layout, inspiriert vom Community-Redesign. UX 3.5 bleibt Standard, jederzeit umschaltbar.",
+        "switch_to_ux36": "UX 3.6 (Beta) testen",
+        "switch_to_ux35": "Zurück zu UX 3.5",
+        "settings_title": "Konsolen-Oberfläche",
+        "settings_desc": "Wählen Sie das Konsolenlayout für diesen Browser.",
+        "active_shell": "Aktives Layout",
+        "credits": "Layout basiert auf dem Redesign von @rathlinus (Issue #493, PR #495).",
+        "switch_failed": "Konsolenlayout konnte nicht geändert werden. Bitte erneut versuchen.",
+        "switched_to_ux36": "UX 3.6 Beta ist für diesen Browser aktiviert.",
+        "switched_to_ux35": "UX 3.5 wurde für diesen Browser wiederhergestellt.",
+        "default_hint": "Standardlayout. Stabil, voller Funktionsumfang."
     }
 }

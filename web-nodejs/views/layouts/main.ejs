@@ -1,4 +1,9 @@
-<% const shell = 'ux35'; %>
+<%
+    // Shell contract: resolved once in server.js (lib/uiShell.js). UX 3.5 is the
+    // default; UX 3.6 is the opt-in beta. Anything unknown falls back to UX 3.5.
+    const shell = (typeof uiShell !== 'undefined' && uiShell === 'ux36') ? 'ux36' : 'ux35';
+    const isBetaShell = shell === 'ux36';
+%>
 <!DOCTYPE html>
 <html lang="<%= lang || 'en' %>" data-theme="<%= (branding && branding.themeMode === 'light') ? 'light' : 'dark' %>" data-theme-mode="<%= (branding && branding.themeMode) || 'dark' %>" data-ui-shell="<%= shell %>">
 <head>
@@ -17,9 +22,11 @@
     <link rel="stylesheet" href="/css/transitions.css?v=<%= cacheVersion %>">
     <link rel="stylesheet" href="/css/notif-center.css?v=<%= cacheVersion %>">
     <link rel="stylesheet" href="/css/accessibility.css?v=<%= cacheVersion %>">
-    <% if (shell === 'ux35') { %>
+    <%# UX 3.6 reuses the UX 3.5 token contract (branding, theming, wallpaper) and layers its own layout on top. %>
     <link rel="stylesheet" href="/css/ux35-tokens.css?v=<%= cacheVersion %>">
     <link rel="stylesheet" href="/css/ux35.css?v=<%= cacheVersion %>">
+    <% if (isBetaShell) { %>
+    <link rel="stylesheet" href="/css/ux36.css?v=<%= cacheVersion %>">
     <% } %>
     <% if (!embed) { %>
     <link rel="stylesheet" href="/css/mobile-shell.css?v=<%= cacheVersion %>">
@@ -31,15 +38,15 @@
         <% }); %>
     <% } %>
 </head>
-<body class="app-page<%= shell === 'ux35' ? ' ux35-page' : '' %><%= embed ? ' embed-mode' : '' %>">
-    <% if (shell === 'ux35') { %>
-    <div class="ux35-shell<%= embed ? ' embed-mode' : '' %>" id="app">
+<body class="app-page<%= shell === 'ux35' ? ' ux35-page' : '' %><%= isBetaShell ? ' ux35-page ux36-page' : '' %><%= embed ? ' embed-mode' : '' %>">
+    <% if (shell === 'ux35' || isBetaShell) { %>
+    <div class="ux35-shell<%= isBetaShell ? ' ux36-shell' : '' %><%= embed ? ' embed-mode' : '' %>" id="app">
         <% if (!embed) { %>
         <%- include('../partials/ux35-topbar') %>
         <% } %>
         <div class="ux35-body">
             <% if (!embed) { %>
-            <%- include('../partials/ux35-sidebar') %>
+            <%- include(isBetaShell ? '../partials/ux36-sidebar' : '../partials/ux35-sidebar') %>
             <% } %>
             <div class="ux35-main">
                 <main class="ux35-content main-content" id="ux35-content">
@@ -111,8 +118,11 @@
     <script defer src="/js/app.js?v=<%= cacheVersion %>"></script>
     <script defer src="/js/ui-shell.js?v=<%= cacheVersion %>"></script>
     <% if (!embed) { %>
-    <% if (shell === 'ux35') { %>
+    <% if (shell === 'ux35' || isBetaShell) { %>
     <script defer src="/js/ux35-shell.js?v=<%= cacheVersion %>"></script>
+    <% } %>
+    <% if (isBetaShell) { %>
+    <script defer src="/js/ux36-shell.js?v=<%= cacheVersion %>"></script>
     <% } %>
     <script defer src="/js/mobile-nav.js?v=<%= cacheVersion %>"></script>
     <script defer src="/js/help-panel.js?v=<%= cacheVersion %>"></script>

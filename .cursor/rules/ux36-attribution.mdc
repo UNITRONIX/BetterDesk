@@ -1,0 +1,42 @@
+# UX 3.6 — contributor attribution (mandatory)
+
+The UX 3.6 console layout is modelled on the community redesign by **@rathlinus**
+(Linus Rath, UI/UX designer).
+
+- Issue: <https://github.com/UNITRONIX/BetterDesk/issues/493>
+- PR (design reference, **not** merged as a unit): <https://github.com/UNITRONIX/BetterDesk/pull/495>
+- Last pre-Svelte reference commit: `d710bdbbb8541f325f6ecf8a24f7027187d475ba`
+
+## Rules
+
+1. **Never claim the redesign was merged.** UX 3.6 is an independent
+   implementation in the existing EJS/JavaScript/CSS stack, built from that
+   design as a reference.
+2. **Every commit that ports, adapts, or refines UX 3.6 elements** must carry
+   this line in the commit **body**:
+
+   ```text
+   Based-on: @rathlinus UX redesign (Refs #493, #495)
+   ```
+
+   Do not add it to unrelated commits. If the change also addresses a reporter
+   issue, keep `Reported-by:` and the standard `Thanks:` supporter trailer.
+3. **Keep credit visible in the repository**, not only in git history:
+   - [`docs/development/CONTRIBUTOR-ATTRIBUTIONS.md`](docs/development/CONTRIBUTOR-ATTRIBUTIONS.md)
+     — `@rathlinus` section describing exactly what informed UX 3.6.
+   - [`docs/wiki/UX-3.5.md`](docs/wiki/UX-3.5.md) — operator-facing credit line.
+   - Settings → General → Console interface shows `ux36.credits` in every locale.
+4. **i18n:** the credit string `ux36.credits` must exist in all 26 locale files
+   (see the web-nodejs i18n rule). Keep the `@rathlinus`, `#493` and `#495`
+   tokens inside the translated sentence.
+5. **Attribution scope:** design inspiration and navigation model. Do not
+   attribute unrelated BetterDesk code to the contributor, and do not imply
+   copyright assignment — see the licence section of the attributions file.
+
+## Checklist for UX 3.6 commits
+
+- [ ] Commit body contains `Based-on: @rathlinus UX redesign (Refs #493, #495)`
+- [ ] Commit body still ends with the current `Thanks:` supporter line
+- [ ] `CONTRIBUTOR-ATTRIBUTIONS.md` section updated if the scope of reuse grew
+- [ ] Wiki credit and `ux36.credits` string still present in all locales
+- [ ] No wording that suggests PR #495 was merged or that Svelte was adopted

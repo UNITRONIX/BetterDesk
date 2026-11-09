@@ -91,7 +91,17 @@
         "remote_open_tab": "Öppna fjärrskrivbordsklient i ny flik",
         "pairing": "Parkoppling",
         "client_branding": "Client Branding",
-        "agents": "BetterDesk-agenter"
+        "agents": "BetterDesk-agenter",
+        "label": "Huvudnavigering",
+        "section_devices": "Enheter",
+        "section_support": "Support",
+        "section_people": "Personer",
+        "group_console": "Konsol",
+        "group_clients": "Klienter och agenter",
+        "group_rules": "Regler och policyer",
+        "group_server": "Server",
+        "group_billing": "Fakturering",
+        "group_developer": "Utvecklare"
     },
     "auth": {
         "login": "Login",
@@ -4773,7 +4783,6 @@
         "branding_link": "Klientvarumärke",
         "branding_body": "Utseendet (logotyp, färger, etiketter) laddas vid körning från Klientvarumärke — det bakas inte in i installaren."
     },
-
     "pairing": {
         "title": "Parkopplingskod",
         "subtitle": "Anslut en BetterDesk-klient genom att ange serveradressen och en kort engångskod i stället för en lång konfigurationssträng.",
@@ -4805,5 +4814,19 @@
         "revoke_failed": "Kunde inte återkalla koden",
         "created": "Parkopplingskod skapad",
         "create_failed": "Kunde inte skapa en parkopplingskod"
+    },
+    "ux36": {
+        "beta_badge": "BETA",
+        "beta_hint": "Ny grupperad layout inspirerad av communityns redesign. UX 3.5 förblir standard och du kan byta tillbaka när som helst.",
+        "switch_to_ux36": "Prova UX 3.6 (beta)",
+        "switch_to_ux35": "Byt tillbaka till UX 3.5",
+        "settings_title": "Konsolgränssnitt",
+        "settings_desc": "Välj konsollayout för den här webbläsaren.",
+        "active_shell": "Aktiv layout",
+        "credits": "Layouten bygger på redesignen av @rathlinus (issue #493, PR #495).",
+        "switch_failed": "Konsollayouten kunde inte ändras. Försök igen.",
+        "switched_to_ux36": "UX 3.6 beta har aktiverats för den här webbläsaren.",
+        "switched_to_ux35": "UX 3.5 har återställts för den här webbläsaren.",
+        "default_hint": "Standardlayout. Stabil och fullt utrustad."
     }
 }

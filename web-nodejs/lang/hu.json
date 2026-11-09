@@ -91,7 +91,17 @@
         "remote_open_tab": "Távoli asztal kliens megnyitása új lapon",
         "pairing": "Párosítás",
         "client_branding": "Client Branding",
-        "agents": "BetterDesk ügynökök"
+        "agents": "BetterDesk ügynökök",
+        "label": "Fő navigáció",
+        "section_devices": "Eszközök",
+        "section_support": "Támogatás",
+        "section_people": "Személyek",
+        "group_console": "Konzol",
+        "group_clients": "Kliensek és ügynökök",
+        "group_rules": "Szabályok és irányelvek",
+        "group_server": "Szerver",
+        "group_billing": "Számlázás",
+        "group_developer": "Fejlesztő"
     },
     "auth": {
         "login": "Login",
@@ -4773,7 +4783,6 @@
         "branding_link": "Kliens branding",
         "branding_body": "A megjelenés (logó, színek, címkék) futásidőben a Kliens brandingből töltődik — nincs beágyazva a telepítőbe."
     },
-
     "pairing": {
         "title": "Párosítási kód",
         "subtitle": "Csatlakoztasson BetterDesk klienst a kiszolgáló címe és egy rövid egyszerhasználatos kód megadásával a hosszú konfigurációs szöveg helyett.",
@@ -4805,5 +4814,19 @@
         "revoke_failed": "Nem sikerült visszavonni a kódot",
         "created": "Párosítási kód létrehozva",
         "create_failed": "Nem sikerült párosítási kódot létrehozni"
+    },
+    "ux36": {
+        "beta_badge": "BETA",
+        "beta_hint": "Új csoportosított elrendezés a közösségi újratervezés ihletésére. Az UX 3.5 marad az alapértelmezett, bármikor visszaválthat.",
+        "switch_to_ux36": "UX 3.6 (béta) kipróbálása",
+        "switch_to_ux35": "Vissza az UX 3.5-höz",
+        "settings_title": "Konzol felület",
+        "settings_desc": "Válassza ki a konzol elrendezését ehhez a böngészőhöz.",
+        "active_shell": "Aktív elrendezés",
+        "credits": "Az elrendezés @rathlinus újratervezésén alapul (issue #493, PR #495).",
+        "switch_failed": "A konzol elrendezését nem sikerült módosítani. Próbálja újra.",
+        "switched_to_ux36": "Az UX 3.6 béta engedélyezve ehhez a böngészőhöz.",
+        "switched_to_ux35": "Az UX 3.5 visszaállítva ehhez a böngészőhöz.",
+        "default_hint": "Alapértelmezett elrendezés. Stabil, teljes funkciókészlet."
     }
 }

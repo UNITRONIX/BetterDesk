@@ -91,7 +91,17 @@
         "remote_open_tab": "Uzak masaüstü istemcisini yeni sekmede aç",
         "pairing": "Eşleştirme",
         "client_branding": "Client Branding",
-        "agents": "BetterDesk Aracıları"
+        "agents": "BetterDesk Aracıları",
+        "label": "Ana gezinme",
+        "section_devices": "Cihazlar",
+        "section_support": "Destek",
+        "section_people": "Kişiler",
+        "group_console": "Konsol",
+        "group_clients": "İstemciler ve ajanlar",
+        "group_rules": "Kurallar ve ilkeler",
+        "group_server": "Sunucu",
+        "group_billing": "Faturalama",
+        "group_developer": "Geliştirici"
     },
     "auth": {
         "login": "Login",
@@ -4773,7 +4783,6 @@
         "branding_link": "İstemci markası",
         "branding_body": "Görünüm (logo, renkler, etiketler) çalışma zamanında İstemci markasından yüklenir — yükleyiciye gömülmez."
     },
-
     "pairing": {
         "title": "Eşleştirme kodu",
         "subtitle": "Uzun yapılandırma dizesi yerine sunucu adresini ve kısa, tek kullanımlık bir kodu yazarak BetterDesk istemcisini bağlayın.",
@@ -4805,5 +4814,19 @@
         "revoke_failed": "Kod iptal edilemedi",
         "created": "Eşleştirme kodu oluşturuldu",
         "create_failed": "Eşleştirme kodu oluşturulamadı"
+    },
+    "ux36": {
+        "beta_badge": "BETA",
+        "beta_hint": "Topluluk yeniden tasarımından esinlenen yeni gruplanmış düzen. UX 3.5 varsayılan olarak kalır ve istediğiniz zaman geri dönebilirsiniz.",
+        "switch_to_ux36": "UX 3.6 (beta) deneyin",
+        "switch_to_ux35": "UX 3.5'e geri dön",
+        "settings_title": "Konsol arayüzü",
+        "settings_desc": "Bu tarayıcı için konsol düzenini seçin.",
+        "active_shell": "Etkin düzen",
+        "credits": "Düzen, @rathlinus tarafından yapılan yeniden tasarıma dayanır (issue #493, PR #495).",
+        "switch_failed": "Konsol düzeni değiştirilemedi. Lütfen tekrar deneyin.",
+        "switched_to_ux36": "Bu tarayıcı için UX 3.6 beta etkinleştirildi.",
+        "switched_to_ux35": "Bu tarayıcı için UX 3.5 geri yüklendi.",
+        "default_hint": "Varsayılan düzen. Kararlı ve tüm özelliklerle."
     }
 }

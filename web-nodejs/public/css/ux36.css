@@ -1,0 +1,338 @@
+/**
+ * BetterDesk Console — UX 3.6 (beta)
+ *
+ * Layout and interaction model modelled on the community redesign by
+ * @rathlinus (issue #493 / PR #495), rebuilt on the current EJS stack.
+ *
+ * This sheet only *layers* on top of ux35.css: the UX 3.5 token contract
+ * (`--ux35-*`, branding, wallpaper, fonts) and every page stylesheet stay
+ * untouched, so switching shells cannot regress theming or per-page layouts.
+ * Everything here is scoped under `.ux36-page` / `.ux36-shell`.
+ *
+ * The beta badge and the shell-picker card live in `ux35.css` because they must
+ * render in both shells (UX 3.5 users need the picker to opt in).
+ */
+
+/* ── Shell scale ─────────────────────────────────────────────────────────── */
+.ux36-page {
+    --ux36-radius: 10px;
+    --ux36-radius-sm: 7px;
+    --ux36-row-h: 34px;
+    --ux36-rule: color-mix(in srgb, var(--ux35-border) 70%, transparent);
+    --ux36-nav-active-bg: color-mix(in srgb, var(--ux35-primary) 14%, transparent);
+}
+
+@media (min-width: 1100px) {
+    /* Width stays owned by ux35-shell.js (drag-resize + saved preference);
+       the grouped layout only tightens the rules inside it. */
+    .ux36-shell .ux35-sidebar.ux36-sidebar {
+        border-right: 1px solid var(--ux36-rule);
+    }
+}
+
+/* ── Sidebar navigation ──────────────────────────────────────────────────── */
+.ux36-sidebar .ux36-nav-section {
+    padding: 4px 0 6px;
+    border-bottom: 1px solid var(--ux36-rule);
+}
+
+.ux36-sidebar .ux36-nav-section:last-of-type {
+    border-bottom: none;
+}
+
+.ux36-sidebar .ux36-nav-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 14px 6px;
+    border: 0;
+    background: none;
+    color: var(--ux35-muted);
+    font-size: 11px;
+    font-weight: 650;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.ux36-sidebar .ux36-nav-heading:hover {
+    color: var(--ux35-text);
+}
+
+.ux36-sidebar .ux36-nav-heading-text {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.ux36-sidebar .ux36-nav-heading-icon {
+    font-size: 16px;
+    line-height: 1;
+    width: 16px;
+    height: 16px;
+    opacity: 0.75;
+}
+
+.ux36-sidebar .ux36-nav-group-label {
+    padding: 8px 16px 2px;
+    color: var(--ux35-muted);
+    font-size: 10px;
+    font-weight: 650;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    opacity: 0.85;
+}
+
+.ux36-sidebar .ux36-nav-item {
+    min-height: var(--ux36-row-h);
+    padding: 6px 14px 6px 18px;
+    gap: 10px;
+    border-left: 2px solid transparent;
+    border-radius: 0 var(--ux36-radius-sm) var(--ux36-radius-sm) 0;
+    margin-inline-end: 8px;
+    font-size: 13px;
+}
+
+.ux36-sidebar .ux36-nav-item .material-icons {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+}
+
+.ux36-sidebar .ux36-nav-item:hover {
+    background: var(--ux35-hover);
+}
+
+.ux36-sidebar .ux36-nav-item.active {
+    background: var(--ux36-nav-active-bg);
+    border-left-color: var(--ux35-primary);
+    font-weight: 600;
+}
+
+.ux36-sidebar .ux36-nav-item-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ux36-sidebar .ux36-sidebar-filter {
+    padding: 10px 12px 6px;
+}
+
+.ux36-sidebar .ux35-sidebar-filter-input {
+    min-height: 34px;
+    border-radius: var(--ux36-radius-sm);
+}
+
+.ux36-sidebar .ux36-sidebar-footer {
+    padding: 12px 14px;
+    border-top: 1px solid var(--ux36-rule);
+}
+
+/* ── Content column ──────────────────────────────────────────────────────── */
+.ux36-shell .ux35-content.main-content {
+    padding: 24px 28px 40px;
+}
+
+@media (max-width: 1099px) {
+    .ux36-shell .ux35-content.main-content {
+        padding: 18px 16px 84px;
+    }
+}
+
+/* Cards follow the same solid-surface rule as UX 3.5, one step rounder. */
+.ux36-page .ux35-content :is(.card, .stat-card, .settings-panel, .settings-section) {
+    border-radius: var(--ux36-radius);
+    border-color: var(--ux36-rule);
+}
+
+.ux36-page .ux35-content :is(.btn, .form-input, .form-select, .form-textarea) {
+    border-radius: var(--ux36-radius-sm);
+}
+
+/* Section headings get the redesign's tighter type scale. */
+.ux36-page .ux35-content :is(.page-title, .devices-title h1, .dashboard-hero-copy h1) {
+    font-size: 22px;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+}
+
+.ux36-page .ux35-content :is(.page-subtitle, .dashboard-hero-copy p) {
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+/* ── Devices: list-first with a filter rail beside the table ─────────────── */
+.ux36-page .devices-page.devices-layout {
+    display: block;
+}
+
+.ux36-page .devices-page .devices-tile-bars {
+    display: grid;
+    grid-template-columns: minmax(180px, 220px) minmax(0, 1fr);
+    align-items: start;
+    gap: 18px;
+    margin-bottom: 14px;
+}
+
+.ux36-page .devices-page .devices-chip-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+}
+
+.ux36-page .devices-page .folders-bar,
+.ux36-page .devices-page .groups-bar {
+    border: 1px solid var(--ux36-rule);
+    border-radius: var(--ux36-radius);
+    background: var(--bg-secondary);
+    padding: 8px;
+}
+
+.ux36-page .devices-page .folders-chips,
+.ux36-page .devices-page .groups-chips {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow: visible;
+    white-space: normal;
+}
+
+.ux36-page .devices-page .folder-chip,
+.ux36-page .devices-page .group-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-height: var(--ux36-row-h);
+    padding: 6px 8px;
+    border: 0;
+    border-radius: var(--ux36-radius-sm);
+    background: transparent;
+    color: var(--text-primary);
+    font-size: 13px;
+    text-align: start;
+    cursor: pointer;
+}
+
+.ux36-page .devices-page .folder-chip:hover,
+.ux36-page .devices-page .group-chip:hover {
+    background: var(--bg-hover);
+}
+
+.ux36-page .devices-page .folder-chip.active,
+.ux36-page .devices-page .group-chip.active {
+    background: var(--ux36-nav-active-bg);
+    color: var(--ux35-primary);
+    font-weight: 600;
+}
+
+.ux36-page .devices-page .chip-count,
+.ux36-page .devices-page .group-count {
+    margin-inline-start: auto;
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+.ux36-page .devices-page .devices-strategies-card {
+    margin-top: 0;
+}
+
+@media (max-width: 1099px) {
+    .ux36-page .devices-page .devices-tile-bars {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .ux36-page .devices-page .devices-chip-bars {
+        position: static;
+        flex-direction: row;
+        gap: 8px;
+    }
+
+    .ux36-page .devices-page .folders-chips,
+    .ux36-page .devices-page .groups-chips {
+        flex-direction: row;
+        overflow-x: auto;
+        padding-bottom: 2px;
+    }
+
+    .ux36-page .devices-page .folder-chip,
+    .ux36-page .devices-page .group-chip {
+        width: auto;
+        white-space: nowrap;
+    }
+}
+
+/* Device details open as a sheet beside the list instead of a full workspace. */
+@media (min-width: 1100px) {
+    .ux36-page .device-panel-overlay {
+        background: rgba(0, 0, 0, 0.28);
+        justify-content: flex-end;
+    }
+
+    .ux36-page .device-panel-overlay .device-panel {
+        flex: 0 0 auto;
+        width: min(720px, 72vw);
+        max-width: 720px;
+        height: 100%;
+        border-inline-start: 1px solid var(--ux36-rule);
+        transform: translateX(24px);
+    }
+
+    .ux36-page .device-panel-overlay.open .device-panel {
+        transform: translateX(0);
+    }
+}
+
+/* ── Dashboard: hero + two-column body ──────────────────────────────────── */
+.ux36-page .dashboard-shell {
+    gap: 18px;
+}
+
+.ux36-page .dashboard-hero {
+    border: 1px solid var(--ux36-rule);
+    border-radius: var(--ux36-radius);
+    padding: 20px 22px;
+    background: var(--bg-secondary);
+}
+
+.ux36-page .dashboard-stats {
+    gap: 14px;
+}
+
+.ux36-page .dashboard-stat-card {
+    border-radius: var(--ux36-radius);
+    border: 1px solid var(--ux36-rule);
+}
+
+/* ── Settings: topic rail stays reachable, panels read as blocks ─────────── */
+.ux36-page .settings-shell {
+    gap: 18px;
+}
+
+.ux36-page .settings-shell-nav {
+    border-bottom: 1px solid var(--ux36-rule);
+}
+
+.ux36-page .settings-shell-tab {
+    border-radius: var(--ux36-radius-sm) var(--ux36-radius-sm) 0 0;
+}
+
+.ux36-page .settings-panel {
+    border: 1px solid var(--ux36-rule);
+    border-radius: var(--ux36-radius);
+    padding: 18px 20px;
+}
+
+/* Reduced motion: the shell adds no motion of its own. */
+@media (prefers-reduced-motion: reduce) {
+    .ux36-page .ux36-sidebar * {
+        transition: none !important;
+    }
+}

@@ -85,7 +85,17 @@
         "remote_open_tab": "Apri client desktop remoto in una nuova scheda",
         "pairing": "Abbinamento",
         "client_branding": "Client Branding",
-        "agents": "Agenti BetterDesk"
+        "agents": "Agenti BetterDesk",
+        "label": "Navigazione principale",
+        "section_devices": "Dispositivi",
+        "section_support": "Supporto",
+        "section_people": "Persone",
+        "group_console": "Console",
+        "group_clients": "Client e agenti",
+        "group_rules": "Regole e criteri",
+        "group_server": "Server",
+        "group_billing": "Fatturazione",
+        "group_developer": "Sviluppatore"
     },
     "auth": {
         "login": "Accedi",
@@ -4767,7 +4777,6 @@
         "branding_link": "Branding client",
         "branding_body": "Aspetto (logo, colori, etichette) caricato a runtime dal Branding client — non incorporato nell’installer."
     },
-
     "pairing": {
         "title": "Codice di abbinamento",
         "subtitle": "Connetti un client BetterDesk inserendo l'indirizzo del server e un codice breve monouso invece di una lunga stringa di configurazione.",
@@ -4799,5 +4808,19 @@
         "revoke_failed": "Impossibile revocare il codice",
         "created": "Codice di abbinamento creato",
         "create_failed": "Impossibile creare un codice di abbinamento"
+    },
+    "ux36": {
+        "beta_badge": "BETA",
+        "beta_hint": "Nuovo layout raggruppato ispirato al redesign della community. UX 3.5 resta predefinito e puoi tornare indietro in qualsiasi momento.",
+        "switch_to_ux36": "Prova UX 3.6 (beta)",
+        "switch_to_ux35": "Torna a UX 3.5",
+        "settings_title": "Interfaccia della console",
+        "settings_desc": "Scegli il layout della console per questo browser.",
+        "active_shell": "Layout attivo",
+        "credits": "Layout basato sul redesign di @rathlinus (issue #493, PR #495).",
+        "switch_failed": "Impossibile cambiare il layout della console. Riprova.",
+        "switched_to_ux36": "UX 3.6 beta attivata per questo browser.",
+        "switched_to_ux35": "UX 3.5 ripristinata per questo browser.",
+        "default_hint": "Layout predefinito. Stabile e completo."
     }
 }

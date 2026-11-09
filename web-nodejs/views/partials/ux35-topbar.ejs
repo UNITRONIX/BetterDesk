@@ -21,6 +21,9 @@
         <span><%= appName %></span>
         <% } %>
     </a>
+    <% if (typeof uiShellBeta !== 'undefined' && uiShellBeta) { %>
+    <span class="ux36-beta-chip" title="<%= _('ux36.settings_title') %>"><%= _('ux36.beta_badge') %></span>
+    <% } %>
     <nav class="ux35-topbar-breadcrumb" aria-label="Breadcrumb">
         <% const isDashboardHome = (typeof currentPage !== 'undefined' && currentPage === 'dashboard'); %>
         <% if (isDashboardHome && !(typeof breadcrumb !== 'undefined' && breadcrumb.length)) { %>
