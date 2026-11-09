@@ -126,7 +126,7 @@ describe('RDTouch tablet input', () => {
             },
         };
         const code = fs.readFileSync(
-            path.join(__dirname, '../public/js/rdclient/touch.js'),
+            path.join(__dirname, '../../web-ui/static/rdclient/touch.js'),
             'utf8'
         );
         vm.runInNewContext(code + '\nthis.RDTouch = RDTouch;', sandbox);
@@ -200,7 +200,7 @@ describe('RDRenderer mobile resize', () => {
         };
         sandbox.window = sandbox;
         const code = fs.readFileSync(
-            path.join(__dirname, '../public/js/rdclient/renderer.js'),
+            path.join(__dirname, '../../web-ui/static/rdclient/renderer.js'),
             'utf8'
         );
         vm.runInNewContext(code, sandbox);

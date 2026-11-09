@@ -57,7 +57,7 @@ describe('Security Middleware', () => {
 
     it('ships a protobuf runtime without dynamic code generation', () => {
         const vendor = fs.readFileSync(
-            path.join(__dirname, '..', 'public/js/vendor/protobuf.min.js'),
+            path.join(__dirname, '..', '../web-ui/static/rdclient/vendor/protobuf.min.js'),
             'utf8'
         );
 

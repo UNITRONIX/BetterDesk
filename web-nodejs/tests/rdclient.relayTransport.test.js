@@ -28,7 +28,7 @@ describe('RDProtocol relay WebSocket serialization', () => {
     beforeAll(async () => {
         const root = await protobuf.load(path.join(__dirname, '../protos/rendezvous.proto'));
         RendezvousMessage = root.lookupType('hbb.RendezvousMessage');
-        RDProtocol = loadBrowserScript('public/js/rdclient/protocol.js').RDProtocol;
+        RDProtocol = loadBrowserScript('../web-ui/static/rdclient/protocol.js').RDProtocol;
     });
 
     test('keeps native WS payload raw while retaining TCP framing', () => {
@@ -58,7 +58,7 @@ describe('RDConnection native relay WebSocket transport', () => {
             }
         }
 
-        const sandbox = loadBrowserScript('public/js/rdclient/connection.js', {
+        const sandbox = loadBrowserScript('../web-ui/static/rdclient/connection.js', {
             location: { protocol: 'https:', host: 'console.example.test' },
             WebSocket: MockWebSocket,
         });
@@ -83,7 +83,7 @@ describe('RDConnection native relay WebSocket transport', () => {
             }
         }
 
-        const sandbox = loadBrowserScript('public/js/rdclient/connection.js', {
+        const sandbox = loadBrowserScript('../web-ui/static/rdclient/connection.js', {
             location: {
                 protocol: 'https:',
                 host: 'console.example.test',
@@ -114,7 +114,7 @@ describe('RDConnection native relay WebSocket transport', () => {
             }
         }
 
-        const sandbox = loadBrowserScript('public/js/rdclient/connection.js', {
+        const sandbox = loadBrowserScript('../web-ui/static/rdclient/connection.js', {
             location: { protocol: 'http:', host: 'console.example.test' },
             WebSocket: MockWebSocket,
         });
@@ -140,7 +140,7 @@ describe('RDConnection native relay WebSocket transport', () => {
 
 describe('RDClient raw relay messages', () => {
     test('emits structured diagnostics for peer and relay disconnects', () => {
-        const RDClient = loadBrowserScript('public/js/rdclient/client.js').RDClient;
+        const RDClient = loadBrowserScript('../web-ui/static/rdclient/client.js').RDClient;
         const client = Object.create(RDClient.prototype);
         const emitted = [];
         client._state = 'streaming';
@@ -169,7 +169,7 @@ describe('RDClient raw relay messages', () => {
     });
 
     test('caps initial tablet and HTTP stream FPS at 30', () => {
-        const sandbox = loadBrowserScript('public/js/rdclient/client.js', {
+        const sandbox = loadBrowserScript('../web-ui/static/rdclient/client.js', {
             RDVideo: { isSupported: () => true },
             DeviceCapabilities: {
                 isTouch: () => true,
@@ -189,7 +189,7 @@ describe('RDClient raw relay messages', () => {
     });
 
     test('does not add TCP framing to native WS messages', () => {
-        const RDClient = loadBrowserScript('public/js/rdclient/client.js').RDClient;
+        const RDClient = loadBrowserScript('../web-ui/static/rdclient/client.js').RDClient;
         const client = Object.create(RDClient.prototype);
         const raw = new Uint8Array([0x12, 0x01, 0x01]);
         client.proto = {
@@ -209,7 +209,7 @@ describe('RDClient raw relay messages', () => {
     });
 
     test('treats each incoming WS message as one relay payload', () => {
-        const RDClient = loadBrowserScript('public/js/rdclient/client.js').RDClient;
+        const RDClient = loadBrowserScript('../web-ui/static/rdclient/client.js').RDClient;
         const client = Object.create(RDClient.prototype);
         client._handleRelayMessage = jest.fn();
         const raw = new Uint8Array([0x0a, 0x01, 0x01]);
@@ -222,7 +222,7 @@ describe('RDClient raw relay messages', () => {
     });
 
     test('tolerates legacy input implementations without optional methods', () => {
-        const RDClient = loadBrowserScript('public/js/rdclient/client.js').RDClient;
+        const RDClient = loadBrowserScript('../web-ui/static/rdclient/client.js').RDClient;
         const client = Object.create(RDClient.prototype);
         client.input = {};
         client._parseVirtualDisplaySupport = jest.fn(() => ({ supported: false }));
@@ -265,7 +265,7 @@ describe('RDClient raw relay messages', () => {
                 }
             }
         };
-        sandbox = loadBrowserScript('public/js/rdclient/client.js', {
+        sandbox = loadBrowserScript('../web-ui/static/rdclient/client.js', {
             document,
             location: { href: 'https://console.example.test/remote/device' }
         });

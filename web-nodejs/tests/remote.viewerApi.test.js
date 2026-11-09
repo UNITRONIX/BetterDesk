@@ -1,12 +1,13 @@
 /**
  * The JSON endpoints behind the new remote client pages (web-ui):
  *
- * - GET /api/remote/viewer/:id keeps every access rule of GET /remote/:id
- *   (console session with device.connect or remote_target.connect, guest
- *   grant for the device, mesh share, id check) and answers JSON.
+ * - GET /api/remote/viewer/:id applies the viewer's access rules (console
+ *   session with device.connect or remote_target.connect, guest grant for
+ *   the device, mesh share, id check) and answers JSON.
  * - The dev mock is set only with BD_DEV_MOCK_REMOTE=1 and ?mock=1.
  * - /api/remote/login-info, /api/remote/guest-info and /api/remote/desk
- *   carry the checks of /remote/login, /remote/guest and /remote.
+ *   carry the checks the old /remote/login, /remote/guest and /remote pages
+ *   made.
  */
 
 const request = require('supertest');

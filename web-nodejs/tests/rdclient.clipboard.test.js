@@ -34,7 +34,7 @@ function loadRdclientModules() {
     sandbox.window = sandbox;
     sandbox.globalThis = sandbox;
 
-    const base = path.join(__dirname, '..', 'public/js/rdclient');
+    const base = path.join(__dirname, '..', '../web-ui/static/rdclient');
     vm.runInNewContext(
         fs.readFileSync(path.join(base, 'compress.js'), 'utf8') + '\nglobalThis.RDCompress = RDCompress;',
         sandbox,

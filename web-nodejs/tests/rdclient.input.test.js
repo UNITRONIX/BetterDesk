@@ -67,9 +67,9 @@ function makeInputHarness(extraGlobals) {
     };
 
     const sandbox = loadBrowserScripts([
-        'public/js/rdclient/keyboard-scancode.js',
-        'public/js/rdclient/keyboard-encoder.js',
-        'public/js/rdclient/input.js',
+        '../web-ui/static/rdclient/keyboard-scancode.js',
+        '../web-ui/static/rdclient/keyboard-encoder.js',
+        '../web-ui/static/rdclient/input.js',
     ], {
         document,
         window: win,
@@ -114,7 +114,7 @@ describe('RDKeyboardScancode', () => {
     let RDKeyboardScancode;
 
     beforeAll(() => {
-        const sandbox = loadBrowserScripts(['public/js/rdclient/keyboard-scancode.js'], {});
+        const sandbox = loadBrowserScripts(['../web-ui/static/rdclient/keyboard-scancode.js'], {});
         RDKeyboardScancode = sandbox.RDKeyboardScancode;
     });
 
@@ -129,8 +129,8 @@ describe('RDKeyboardEncoder parity', () => {
 
     beforeAll(() => {
         const sandbox = loadBrowserScripts([
-            'public/js/rdclient/keyboard-scancode.js',
-            'public/js/rdclient/keyboard-encoder.js',
+            '../web-ui/static/rdclient/keyboard-scancode.js',
+            '../web-ui/static/rdclient/keyboard-encoder.js',
         ], {});
         RDKeyboardEncoder = sandbox.RDKeyboardEncoder;
     });
@@ -718,7 +718,7 @@ describe('RDInput keyboard parity (RustDesk contract)', () => {
     });
 
     it('maps Delete and Pause to distinct Linux scancodes', () => {
-        const sc = loadBrowserScripts(['public/js/rdclient/keyboard-scancode.js']);
+        const sc = loadBrowserScripts(['../web-ui/static/rdclient/keyboard-scancode.js']);
         const codeToScancode = sc.RDKeyboardScancode.codeToScancode;
         expect(codeToScancode('Delete', 'Linux')).toBe(111);
         expect(codeToScancode('Pause', 'Linux')).toBe(119);

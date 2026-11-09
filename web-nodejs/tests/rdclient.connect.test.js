@@ -6,12 +6,12 @@ const protobuf = require('protobufjs');
 const {
     interpretPunchHoleResponse,
     FAILURE
-} = require('../public/js/rdclient/punchhole-response');
+} = require('../../web-ui/static/rdclient/punchhole-response');
 const {
     normalizeConnection,
     resolveConnectTimeouts,
     DEFAULTS
-} = require('../public/js/rdclient/connection-params');
+} = require('../../web-ui/static/rdclient/connection-params');
 
 describe('RDPunchHoleResponse.interpretPunchHoleResponse (#405)', () => {
     it('treats OFFLINE + relay_server as error (not success)', () => {

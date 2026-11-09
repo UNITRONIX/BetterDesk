@@ -10,17 +10,15 @@ const { spawnSync } = require('child_process');
 
 const root = path.join(__dirname, '..');
 const pbjs = path.join(root, 'node_modules', 'protobufjs-cli', 'bin', 'pbjs');
-const outDir = path.join(root, 'public', 'js', 'rdclient', 'generated');
+const outDir = path.join(root, '..', 'web-ui', 'static', 'rdclient', 'generated');
 const rawPath = path.join(outDir, 'protos-static.raw.js');
 const outPath = path.join(outDir, 'protos-static.js');
-const jsonOut = path.join(root, 'public', 'protos', 'bundle.json');
 const protos = [
     path.join(root, 'protos', 'rendezvous.proto'),
     path.join(root, 'protos', 'message.proto'),
 ];
 
 fs.mkdirSync(outDir, { recursive: true });
-fs.mkdirSync(path.dirname(jsonOut), { recursive: true });
 
 function runPbjs(args) {
     const r = spawnSync(process.execPath, [pbjs, ...args], { cwd: root, encoding: 'utf8' });
@@ -30,7 +28,6 @@ function runPbjs(args) {
     }
 }
 
-runPbjs(['-t', 'json', '-o', jsonOut, ...protos]);
 runPbjs(['-t', 'static', '-o', rawPath, ...protos]);
 
 const body = fs.readFileSync(rawPath, 'utf8');
@@ -48,4 +45,3 @@ ${body}
 fs.writeFileSync(outPath, wrapped, 'utf8');
 fs.unlinkSync(rawPath);
 console.log('Wrote', path.relative(root, outPath), `(${fs.statSync(outPath).size} bytes)`);
-console.log('Wrote', path.relative(root, jsonOut), `(${fs.statSync(jsonOut).size} bytes)`);

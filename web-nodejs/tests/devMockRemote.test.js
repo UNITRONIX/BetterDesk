@@ -2,14 +2,13 @@
 
 /**
  * The dev-only mock remote session must be unreachable unless the
- * environment sets BD_DEV_MOCK_REMOTE=1: the script route answers 404,
- * ?mock=1 is ignored, and the viewer template does not load the script.
+ * environment sets BD_DEV_MOCK_REMOTE=1: the script route answers 404 and
+ * ?mock=1 is ignored.
  */
 const fs = require('fs');
 const path = require('path');
 const express = require('express');
 const request = require('supertest');
-const ejs = require('ejs');
 
 const devMockRemote = require('../lib/devMockRemote');
 
@@ -21,30 +20,6 @@ function appWithRouter() {
     app.use(devMockRemote.router);
     app.use((req, res) => res.status(404).send('not found'));
     return app;
-}
-
-function renderViewer(mockRemote) {
-    const file = path.join(ROOT, 'views', 'remote.ejs');
-    return ejs.renderFile(file, {
-        _: (key) => key,
-        title: 'Remote',
-        deviceId: '900100012',
-        device: { id: '900100012', hostname: 'demo-build-server', platform: 'Ubuntu 24.04' },
-        capabilities: { transport: 'rd' },
-        guestToken: '',
-        mockRemote,
-        cspNonce: 'n0nce',
-        cacheVersion: '1',
-        appName: 'BetterDesk',
-        lang: 'en',
-        translations: {},
-        user: null,
-        branding: { themeMode: 'system' },
-        themePalettes: { dark: { bgPrimary: '#141616' }, light: {} },
-        availableLanguageList: [],
-        serverPubKey: '',
-        connection: {},
-    }, { views: [path.join(ROOT, 'views')] });
 }
 
 describe('dev mock remote session guard', () => {
@@ -86,15 +61,6 @@ describe('dev mock remote session guard', () => {
         expect(devMockRemote.forRequest({ query: { mock: '1' } }, env)).toEqual({ scenario: 'ok' });
         expect(devMockRemote.forRequest({ query: { mock: '1', scenario: 'fail-relay' } }, env)).toEqual({ scenario: 'fail-relay' });
         expect(devMockRemote.forRequest({ query: { mock: '1', scenario: '<script>' } }, env)).toEqual({ scenario: 'ok' });
-    });
-
-    it('keeps the mock script out of the viewer page unless the route turned it on', async () => {
-        const off = await renderViewer(null);
-        expect(off).not.toMatch(/\/dev\/mock-remote\.js/);
-        expect(off).not.toMatch(/__mockRemote/);
-        const on = await renderViewer({ scenario: 'refused' });
-        expect(on).toMatch(/<script src="\/dev\/mock-remote\.js/);
-        expect(on).toMatch(/window\.__mockRemote = \{"scenario":"refused"\}/);
     });
 
     it('passes the request through the guard in the viewer route', () => {

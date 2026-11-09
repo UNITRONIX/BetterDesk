@@ -80,7 +80,7 @@ query-filters:
   - exclude:
       id: js/insecure-randomness
       paths:
-        - web-nodejs/public/js/rdclient/connection.js
+        - web-ui/static/rdclient/connection.js
 
   # --- SSL certificate inspection tool: reads peer cert metadata only (admin-only route) ---
   # --- MeshAgent tunnel: pin-based TLS via checkServerIdentity (self-signed agent certs) ---

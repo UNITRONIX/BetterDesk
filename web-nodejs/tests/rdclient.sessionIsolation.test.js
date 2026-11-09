@@ -99,7 +99,7 @@ describe('RDAudio session isolation', () => {
             close() { this.state = 'closed'; }
         }
 
-        const sandbox = loadBrowserScript('public/js/rdclient/audio.js', {
+        const sandbox = loadBrowserScript('../web-ui/static/rdclient/audio.js', {
             AudioContext: MockAudioContext,
             webkitAudioContext: MockAudioContext,
             AudioDecoder: undefined,
@@ -171,9 +171,9 @@ describe('RDInput multi-session keyboard isolation', () => {
         };
 
         const sandbox = loadBrowserScripts([
-            'public/js/rdclient/keyboard-scancode.js',
-            'public/js/rdclient/keyboard-encoder.js',
-            'public/js/rdclient/input.js',
+            '../web-ui/static/rdclient/keyboard-scancode.js',
+            '../web-ui/static/rdclient/keyboard-encoder.js',
+            '../web-ui/static/rdclient/input.js',
         ], {
             document,
             window: windowStub,
