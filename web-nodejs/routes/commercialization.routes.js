@@ -2,7 +2,7 @@
 
 const express = require('express');
 const router = express.Router();
-const { requireAuth, requirePermission } = require('../middleware/auth');
+const { requireAuth, requirePermission, requestHasPermission } = require('../middleware/auth');
 const { apiClient } = require('../services/betterdeskApi');
 const { proxyToGo, proxyBinaryToGo, safeSegment } = require('../lib/goApiProxy');
 const db = require('../services/database');
@@ -44,7 +44,16 @@ router.get('/commercialization', requireAuth, requirePermission('billing.view'),
     });
 });
 
-router.get('/api/panel/billing/timesync/status', requireAuth, requirePermission('billing.view'), (req, res) => {
+/**
+ * Reading the clock settings: billing.view (the billing pages) or
+ * server.config (Settings > Time zones, which saves them with server.config).
+ */
+function requireClockRead(req, res, next) {
+    const permission = requestHasPermission(req, 'server.config') ? 'server.config' : 'billing.view';
+    return requirePermission(permission)(req, res, next);
+}
+
+router.get('/api/panel/billing/timesync/status', requireAuth, requireClockRead, (req, res) => {
     proxyToGo(apiClient, req, res, 'GET', '/timesync/status');
 });
 
@@ -52,7 +61,7 @@ router.post('/api/panel/billing/timesync/check', requireAuth, requirePermission(
     proxyToGo(apiClient, req, res, 'POST', '/timesync/check');
 });
 
-router.get('/api/panel/billing/clock/settings', requireAuth, requirePermission('billing.view'), async (req, res) => {
+router.get('/api/panel/billing/clock/settings', requireAuth, requireClockRead, async (req, res) => {
     try {
         res.json({
             success: true,
@@ -108,7 +117,7 @@ router.put('/api/panel/billing/clock/settings', requireAuth, requirePermission('
     }
 });
 
-router.get('/api/panel/billing/clock/detect-timezone', requireAuth, requirePermission('billing.view'), (req, res) => {
+router.get('/api/panel/billing/clock/detect-timezone', requireAuth, requireClockRead, (req, res) => {
     res.json({
         success: true,
         timezone: billingClockConfig.detectOsTimezone(),

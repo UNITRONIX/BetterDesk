@@ -154,7 +154,7 @@ router.get('/api/settings/info', requireAuth, async (req, res) => {
                     memoryUsage: process.memoryUsage().heapUsed
                 },
                 goServer: serverHealth,
-                backend: serverBackend.getActiveBackend(),
+                backend: await serverBackend.getActiveBackend(),
                 paths: {
                     database: config.dbPath,
                     publicKey: config.pubKeyPath,
