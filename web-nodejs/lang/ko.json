@@ -4468,7 +4468,8 @@
         "related_policies_sub": "이 조직의 기기에서 원격 세션이 작동하는 방식입니다.",
         "billing_for_org": "조직에 할당됨",
         "billing_for_group": "기기 그룹 {name}에 할당됨",
-        "billing_package": "청구 패키지"
+        "billing_package": "청구 패키지",
+        "max_session_invalid": "0 이상의 정수로 분을 입력하세요."
     },
     "chat": {
         "e2e_enabled": "종단 간 암호화",

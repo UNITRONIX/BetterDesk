@@ -4474,7 +4474,8 @@
         "related_policies_sub": "Miten etäistunnot toimivat tämän organisaation laitteilla.",
         "billing_for_org": "Määritetty organisaatiolle",
         "billing_for_group": "Määritetty laiteryhmälle {name}",
-        "billing_package": "Laskutuspaketti"
+        "billing_package": "Laskutuspaketti",
+        "max_session_invalid": "Anna kokonainen minuuttimäärä, 0 tai enemmän."
     },
     "chat": {
         "e2e_enabled": "Päästä päähän salattu",

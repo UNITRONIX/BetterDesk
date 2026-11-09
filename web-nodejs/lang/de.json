@@ -4468,7 +4468,8 @@
         "related_policies_sub": "Wie Fernsitzungen auf den Geräten dieser Organisation ablaufen.",
         "billing_for_org": "Der Organisation zugewiesen",
         "billing_for_group": "Der Gerätegruppe {name} zugewiesen",
-        "billing_package": "Abrechnungspaket"
+        "billing_package": "Abrechnungspaket",
+        "max_session_invalid": "Geben Sie eine ganze Zahl von Minuten ein, 0 oder mehr."
     },
     "chat": {
         "e2e_enabled": "Ende-zu-Ende verschlüsselt",

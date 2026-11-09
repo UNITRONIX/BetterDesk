@@ -4468,7 +4468,8 @@
         "related_policies_sub": "この組織のデバイスでリモートセッションがどう動作するか。",
         "billing_for_org": "組織に割り当て済み",
         "billing_for_group": "デバイスグループ {name} に割り当て済み",
-        "billing_package": "請求パッケージ"
+        "billing_package": "請求パッケージ",
+        "max_session_invalid": "分を 0 以上の整数で入力してください。"
     },
     "chat": {
         "e2e_enabled": "エンドツーエンド暗号化",

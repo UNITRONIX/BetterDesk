@@ -4658,7 +4658,8 @@
         "related_policies_sub": "How remote sessions work on this organization's devices.",
         "billing_for_org": "Assigned to the organization",
         "billing_for_group": "Assigned to device group {name}",
-        "billing_package": "Billing package"
+        "billing_package": "Billing package",
+        "max_session_invalid": "Enter a whole number of minutes, 0 or more."
     },
     "chat": {
         "e2e_enabled": "End-to-end encrypted",

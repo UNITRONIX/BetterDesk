@@ -4474,7 +4474,8 @@
         "related_policies_sub": "Cách phiên từ xa hoạt động trên thiết bị của tổ chức này.",
         "billing_for_org": "Đã gán cho tổ chức",
         "billing_for_group": "Đã gán cho nhóm thiết bị {name}",
-        "billing_package": "Gói thanh toán"
+        "billing_package": "Gói thanh toán",
+        "max_session_invalid": "Nhập số phút là số nguyên, từ 0 trở lên."
     },
     "chat": {
         "e2e_enabled": "Mã hóa đầu cuối",

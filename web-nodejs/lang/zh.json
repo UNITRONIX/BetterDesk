@@ -4579,7 +4579,8 @@
         "related_policies_sub": "此组织设备上的远程会话如何运行。",
         "billing_for_org": "已分配给组织",
         "billing_for_group": "已分配给设备组 {name}",
-        "billing_package": "计费套餐"
+        "billing_package": "计费套餐",
+        "max_session_invalid": "请输入 0 或以上的整数分钟数。"
     },
     "chat": {
         "e2e_enabled": "端到端加密",

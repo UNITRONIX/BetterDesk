@@ -4474,7 +4474,8 @@
         "related_policies_sub": "Cara kerja sesi jarak jauh di perangkat organisasi ini.",
         "billing_for_org": "Ditetapkan ke organisasi",
         "billing_for_group": "Ditetapkan ke grup perangkat {name}",
-        "billing_package": "Paket penagihan"
+        "billing_package": "Paket penagihan",
+        "max_session_invalid": "Masukkan jumlah menit berupa bilangan bulat, 0 atau lebih."
     },
     "chat": {
         "e2e_enabled": "Dienkripsi ujung ke ujung",

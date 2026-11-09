@@ -4474,7 +4474,8 @@
         "related_policies_sub": "Hvordan fjernsessioner fungerer på organisationens enheder.",
         "billing_for_org": "Tildelt organisationen",
         "billing_for_group": "Tildelt enhedsgruppen {name}",
-        "billing_package": "Faktureringspakke"
+        "billing_package": "Faktureringspakke",
+        "max_session_invalid": "Angiv et helt antal minutter, 0 eller flere."
     },
     "chat": {
         "e2e_enabled": "End-to-end krypteret",

@@ -4468,7 +4468,8 @@
         "related_policies_sub": "Jak fungují vzdálené relace na zařízeních této organizace.",
         "billing_for_org": "Přiřazeno organizaci",
         "billing_for_group": "Přiřazeno skupině zařízení {name}",
-        "billing_package": "Fakturační balíček"
+        "billing_package": "Fakturační balíček",
+        "max_session_invalid": "Zadejte celé číslo minut, 0 nebo více."
     },
     "chat": {
         "e2e_enabled": "Koncové šifrování aktivní",

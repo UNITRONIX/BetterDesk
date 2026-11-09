@@ -4597,7 +4597,8 @@
         "related_policies_sub": "Jak działają sesje zdalne na urządzeniach tej organizacji.",
         "billing_for_org": "Przypisano do organizacji",
         "billing_for_group": "Przypisano do grupy urządzeń {name}",
-        "billing_package": "Pakiet rozliczeniowy"
+        "billing_package": "Pakiet rozliczeniowy",
+        "max_session_invalid": "Wpisz całkowitą liczbę minut, 0 lub więcej."
     },
     "chat": {
         "e2e_enabled": "Szyfrowanie end-to-end",

@@ -4474,7 +4474,8 @@
         "related_policies_sub": "Hogyan működnek a távoli munkamenetek a szervezet eszközein.",
         "billing_for_org": "A szervezethez rendelve",
         "billing_for_group": "A(z) {name} eszközcsoporthoz rendelve",
-        "billing_package": "Számlázási csomag"
+        "billing_package": "Számlázási csomag",
+        "max_session_invalid": "Adjon meg egész számú percet, 0-t vagy többet."
     },
     "chat": {
         "e2e_enabled": "Végponttól végpontig titkosítva",

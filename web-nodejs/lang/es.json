@@ -4468,7 +4468,8 @@
         "related_policies_sub": "Cómo funcionan las sesiones remotas en los dispositivos de esta organización.",
         "billing_for_org": "Asignado a la organización",
         "billing_for_group": "Asignado al grupo de dispositivos {name}",
-        "billing_package": "Paquete de facturación"
+        "billing_package": "Paquete de facturación",
+        "max_session_invalid": "Introduzca un número entero de minutos, 0 o más."
     },
     "chat": {
         "e2e_enabled": "Cifrado de extremo a extremo",

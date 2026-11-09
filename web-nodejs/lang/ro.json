@@ -4474,7 +4474,8 @@
         "related_policies_sub": "Cum funcționează sesiunile la distanță pe dispozitivele acestei organizații.",
         "billing_for_org": "Atribuit organizației",
         "billing_for_group": "Atribuit grupului de dispozitive {name}",
-        "billing_package": "Pachet de facturare"
+        "billing_package": "Pachet de facturare",
+        "max_session_invalid": "Introduceți un număr întreg de minute, 0 sau mai mult."
     },
     "chat": {
         "e2e_enabled": "Criptat de la capăt la capăt",

@@ -4468,7 +4468,8 @@
         "related_policies_sub": "Hoe externe sessies werken op de apparaten van deze organisatie.",
         "billing_for_org": "Toegewezen aan de organisatie",
         "billing_for_group": "Toegewezen aan apparaatgroep {name}",
-        "billing_package": "Factureringspakket"
+        "billing_package": "Factureringspakket",
+        "max_session_invalid": "Voer een geheel aantal minuten in, 0 of meer."
     },
     "chat": {
         "e2e_enabled": "End-to-end versleuteld",

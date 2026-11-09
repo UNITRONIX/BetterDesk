@@ -4475,7 +4475,8 @@
         "related_policies_sub": "كيف تعمل الجلسات البعيدة على أجهزة هذه المؤسسة.",
         "billing_for_org": "مخصصة للمؤسسة",
         "billing_for_group": "مخصصة لمجموعة الأجهزة {name}",
-        "billing_package": "باقة الفوترة"
+        "billing_package": "باقة الفوترة",
+        "max_session_invalid": "أدخل عددًا صحيحًا من الدقائق، 0 أو أكثر."
     },
     "chat": {
         "e2e_enabled": "مشفرة من طرف إلى طرف",

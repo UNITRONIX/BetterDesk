@@ -4601,7 +4601,8 @@
         "related_policies_sub": "此組織裝置上的遠端工作階段如何運作。",
         "billing_for_org": "已指派給組織",
         "billing_for_group": "已指派給裝置群組 {name}",
-        "billing_package": "計費方案"
+        "billing_package": "計費方案",
+        "max_session_invalid": "請輸入 0 或以上的整數分鐘數。"
     },
     "chat": {
         "e2e_enabled": "端到端加密",

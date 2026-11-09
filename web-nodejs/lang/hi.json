@@ -4474,7 +4474,8 @@
         "related_policies_sub": "इस संगठन के डिवाइस पर रिमोट सत्र कैसे काम करते हैं।",
         "billing_for_org": "संगठन को असाइन किया गया",
         "billing_for_group": "डिवाइस समूह {name} को असाइन किया गया",
-        "billing_package": "बिलिंग पैकेज"
+        "billing_package": "बिलिंग पैकेज",
+        "max_session_invalid": "मिनटों की पूर्ण संख्या दर्ज करें, 0 या अधिक।"
     },
     "chat": {
         "e2e_enabled": "एंड-टू-एंड एन्क्रिप्टेड",

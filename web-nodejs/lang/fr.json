@@ -4601,7 +4601,8 @@
         "related_policies_sub": "Le fonctionnement des sessions à distance sur les appareils de cette organisation.",
         "billing_for_org": "Attribué à l'organisation",
         "billing_for_group": "Attribué au groupe d'appareils {name}",
-        "billing_package": "Forfait de facturation"
+        "billing_package": "Forfait de facturation",
+        "max_session_invalid": "Saisissez un nombre entier de minutes, 0 ou plus."
     },
     "chat": {
         "e2e_enabled": "Chiffré de bout en bout",
