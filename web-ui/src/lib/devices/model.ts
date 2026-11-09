@@ -11,6 +11,9 @@ import { parseDate } from '#lib/i18n/format.ts';
 /** The fields these helpers read; the list and the panel both have them */
 export type DeviceLike = Pick<Device, 'id'> & Partial<Device>;
 
+/** Show deleted devices in the list (same storage key as the old page) */
+export const PREF_SHOW_DELETED = 'bd_devices_show_deleted';
+
 /* ── Status, name, type ── */
 
 export type DeviceState = 'deleted' | 'banned' | 'online' | 'no_signal' | 'offline';

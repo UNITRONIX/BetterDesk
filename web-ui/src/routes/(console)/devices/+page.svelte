@@ -15,6 +15,7 @@
 -->
 <script lang="ts">
 	import { tick, untrack } from 'svelte';
+	import type { PageData } from './$types';
 	import { page } from '$app/state';
 	import { pushState, replaceState } from '$app/navigation';
 	import {
@@ -43,6 +44,7 @@
 		isFiltered,
 		isStatusFilter,
 		lastSeenValue,
+		PREF_SHOW_DELETED,
 		searchText,
 		stateLabelKey,
 		stateTone,
@@ -87,7 +89,6 @@
 	import TagFilter from './TagFilter.svelte';
 
 	/** Same storage keys as the old page, so switching back and forth keeps the choices */
-	const PREF_DELETED = 'bd_devices_show_deleted';
 	const PREF_COLUMNS = 'devices-visible-columns';
 	/** Above this many rows the table renders only what is on screen, rows stay one line high */
 	const LONG = 200;
@@ -102,16 +103,25 @@
 	let knownTags = $state.raw<string[]>([]);
 	let syncing = $state(false);
 
-	let showDeleted = $state(readPref(PREF_DELETED) === '1');
+	let showDeleted = $state(readPref(PREF_SHOW_DELETED) === '1');
 
 	let inflight: AbortController | null = null;
+
+	// The answers +page.ts asked for while the console started, each used once
+	let { data }: { data: PageData } = $props();
+	const early = untrack(() => new Map<string, Promise<unknown>>(Object.entries(data.early)));
+	function first<T>(name: keyof PageData['early'], fresh: () => Promise<T>): Promise<T> {
+		const p = early.get(name) as Promise<T | null> | undefined;
+		early.delete(name);
+		return p ? p.then((v) => v ?? fresh()) : fresh();
+	}
 
 	async function loadDevices(): Promise<void> {
 		inflight?.abort();
 		const ctrl = new AbortController();
 		inflight = ctrl;
 		try {
-			const list = await listDevices({ includeDeleted: showDeleted }, ctrl.signal);
+			const list = await first('devices', () => listDevices({ includeDeleted: showDeleted }, ctrl.signal));
 			if (inflight !== ctrl) return;
 			performance.mark('devices:data');
 			devices = list;
@@ -127,17 +137,19 @@
 	}
 
 	const quiet = (p: Promise<unknown>) => p.catch(() => undefined);
-	const loadFolders = () => quiet(listFolders().then((f) => (folders = f)));
-	const loadGroups = () => quiet(listDeviceGroups().then((g) => (groups = g)));
-	const loadTags = () => quiet(listTags().then((x) => (knownTags = x)));
+	const loadFolders = () => quiet(first('folders', () => listFolders()).then((f) => (folders = f)));
+	const loadGroups = () => quiet(first('groups', () => listDeviceGroups()).then((g) => (groups = g)));
+	const loadTags = () => quiet(first('tags', () => listTags()).then((x) => (knownTags = x)));
 
 	// The list: now, every 60 s while the tab is visible, once when it is shown again
 	$effect(() => poll(loadDevices, { every: 60_000 }));
 	// What filters and menus need, in parallel with the list
+	// The folder and group list is drawn once both have answered (or failed),
+	// so the groups don't move down when the folders arrive
+	let scopesReady = $state(false);
 	$effect(() => {
 		untrack(() => {
-			void loadFolders();
-			void loadGroups();
+			void Promise.all([loadFolders(), loadGroups()]).then(() => (scopesReady = true));
 			void loadTags();
 		});
 	});
@@ -227,7 +239,7 @@
 
 	function setShowDeleted(on: boolean) {
 		showDeleted = on;
-		writePref(PREF_DELETED, on ? '1' : '0');
+		writePref(PREF_SHOW_DELETED, on ? '1' : '0');
 		void quiet(loadDevices());
 	}
 
@@ -703,24 +715,24 @@
 		</div>
 
 		<aside class="devices-filters">
-			<ScopeList
-				{folders}
-				{groups}
-				{counts}
-				{scope}
-				canManage={canEdit}
-				canBilling={can('billing.manage')}
-				dragging={!!dragId}
-				onscope={(s) => (scope = s)}
-				onnewfolder={() => (folderDialog = { folder: null })}
-				oneditfolder={(f) => (folderDialog = { folder: f })}
-				ondeletefolder={removeFolder}
-				onnewgroup={() => (groupSheet = { group: null })}
-				oneditgroup={(g) => (groupSheet = { group: g })}
-				ondeletegroup={removeGroup}
-				onbilling={(g) => (billingFor = g)}
-				ondrop={onDrop}
-			/>
+			{#if scopesReady}<ScopeList
+					{folders}
+					{groups}
+					{counts}
+					{scope}
+					canManage={canEdit}
+					canBilling={can('billing.manage')}
+					dragging={!!dragId}
+					onscope={(s) => (scope = s)}
+					onnewfolder={() => (folderDialog = { folder: null })}
+					oneditfolder={(f) => (folderDialog = { folder: f })}
+					ondeletefolder={removeFolder}
+					onnewgroup={() => (groupSheet = { group: null })}
+					oneditgroup={(g) => (groupSheet = { group: g })}
+					ondeletegroup={removeGroup}
+					onbilling={(g) => (billingFor = g)}
+					ondrop={onDrop}
+				/>{/if}
 		</aside>
 
 		<section class="devices-list" aria-label={t('devices.title')}>
