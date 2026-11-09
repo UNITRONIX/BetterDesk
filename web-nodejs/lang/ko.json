@@ -2926,7 +2926,7 @@
         "rule_name": "규칙 이름",
         "description": "설명",
         "condition_type": "조건 유형",
-        "condition_op": "Operator",
+        "condition_op": "비교",
         "condition_value": "임계값",
         "severity": "심각도",
         "scope_device": "대상 장치",
@@ -2940,9 +2940,9 @@
         "delete_rule": "규칙 삭제",
         "acknowledge": "확인",
         "acknowledged": "확인됨",
-        "unacknowledged": "Unacknowledged",
+        "unacknowledged": "확인 안 됨",
         "triggered_at": "트리거된 시간",
-        "severity_info": "Info",
+        "severity_info": "정보",
         "severity_warning": "경고",
         "severity_critical": "심각",
         "op_gt": "보다 큼",
@@ -3056,7 +3056,9 @@
         "rule_sheet_desc": "장치가 설정한 한도를 넘는 값을 보고하면 알림을 발생시킵니다.",
         "section_condition": "감시 대상",
         "section_alert": "알림",
-        "saving": "저장 중…"
+        "saving": "저장 중…",
+        "rules_checked": "값이 들어올 때 규칙을 확인합니다. CPU와 메모리는 장치의 사용량 보고서마다, 디스크 사용량은 인벤토리와 함께, 유휴 시간은 활동 보고서와 함께, 오프라인 시간은 1분마다 확인합니다. 사용자 지정 규칙은 확인하지 않습니다.",
+        "custom_not_checked": "사용자 지정 규칙에는 서버가 측정할 수 있는 값이 없으므로 스스로 알림을 만들지 않습니다."
     },
     "file_transfer": {
         "title": "파일 전송",

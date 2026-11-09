@@ -2926,7 +2926,7 @@
         "rule_name": "ルール名",
         "description": "説明",
         "condition_type": "条件タイプ",
-        "condition_op": "Operator",
+        "condition_op": "比較",
         "condition_value": "しきい値",
         "severity": "重要度",
         "scope_device": "ターゲットデバイス",
@@ -2940,9 +2940,9 @@
         "delete_rule": "ルールの削除",
         "acknowledge": "確認済みにする",
         "acknowledged": "確認済み",
-        "unacknowledged": "Unacknowledged",
+        "unacknowledged": "未確認",
         "triggered_at": "トリガー条件",
-        "severity_info": "Info",
+        "severity_info": "情報",
         "severity_warning": "警告",
         "severity_critical": "重大",
         "op_gt": "より大きい",
@@ -3056,7 +3056,9 @@
         "rule_sheet_desc": "デバイスが設定した上限を超える値を報告すると、アラートを出します。",
         "section_condition": "監視する内容",
         "section_alert": "アラート",
-        "saving": "保存中…"
+        "saving": "保存中…",
+        "rules_checked": "ルールは値が届いた時点で確認されます。CPU とメモリはデバイスの使用状況レポートごとに、ディスク使用量はインベントリと一緒に、アイドル時間はアクティビティレポートと一緒に、オフライン時間は 1 分ごとに確認されます。カスタムルールは確認されません。",
+        "custom_not_checked": "カスタムルールにはサーバーが測れる値がないため、それ自体ではアラートを出しません。"
     },
     "file_transfer": {
         "title": "ファイル転送",

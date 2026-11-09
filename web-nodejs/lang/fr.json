@@ -2948,7 +2948,7 @@
         "rule_name": "Nom de la règle",
         "description": "Description",
         "condition_type": "Type de condition",
-        "condition_op": "Opérateur",
+        "condition_op": "Comparaison",
         "condition_value": "Seuil",
         "severity": "Sévérité",
         "scope_device": "Appareil cible",
@@ -3078,7 +3078,9 @@
         "rule_sheet_desc": "Déclenche une alerte quand un appareil signale une valeur au-delà de la limite que vous fixez.",
         "section_condition": "Ce qu’elle surveille",
         "section_alert": "Alerte",
-        "saving": "Enregistrement…"
+        "saving": "Enregistrement…",
+        "rules_checked": "Les règles sont vérifiées à l'arrivée des valeurs : processeur et mémoire à chaque rapport d'utilisation d'un appareil, disque avec son inventaire, temps d'inactivité avec son rapport d'activité et temps hors ligne une fois par minute. Les règles personnalisées ne sont pas vérifiées.",
+        "custom_not_checked": "Une règle personnalisée n'a aucune valeur que le serveur peut mesurer, elle ne déclenche donc pas d'alerte par elle-même."
     },
     "file_transfer": {
         "title": "Tableau de bord",

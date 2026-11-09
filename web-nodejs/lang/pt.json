@@ -2926,7 +2926,7 @@
         "rule_name": "Nome da regra",
         "description": "Descrição",
         "condition_type": "Tipo de condição",
-        "condition_op": "Operador",
+        "condition_op": "Comparação",
         "condition_value": "Limiar",
         "severity": "Gravidade",
         "scope_device": "Dispositivo alvo",
@@ -3056,7 +3056,9 @@
         "rule_sheet_desc": "Gera um alerta quando um dispositivo comunica um valor acima do limite que definir.",
         "section_condition": "O que vigia",
         "section_alert": "Alerta",
-        "saving": "A guardar…"
+        "saving": "A guardar…",
+        "rules_checked": "As regras são verificadas à medida que os valores chegam: CPU e memória a cada relatório de uso de um dispositivo, uso de disco com o seu inventário, tempo ocioso com o seu relatório de atividade e tempo offline uma vez por minuto. As regras personalizadas não são verificadas.",
+        "custom_not_checked": "Uma regra personalizada não tem um valor que o servidor possa medir, por isso não gera alertas por si só."
     },
     "file_transfer": {
         "title": "Transferência de ficheiros",

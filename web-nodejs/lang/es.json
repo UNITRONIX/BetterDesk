@@ -2926,7 +2926,7 @@
         "rule_name": "Nombre de la regla",
         "description": "Descripción",
         "condition_type": "Tipo de condición",
-        "condition_op": "Operador",
+        "condition_op": "Comparación",
         "condition_value": "Umbral",
         "severity": "Severidad",
         "scope_device": "Dispositivo objetivo",
@@ -3056,7 +3056,9 @@
         "rule_sheet_desc": "Genera una alerta cuando un dispositivo informa un valor que supera el límite que usted fija.",
         "section_condition": "Qué vigila",
         "section_alert": "Alerta",
-        "saving": "Guardando…"
+        "saving": "Guardando…",
+        "rules_checked": "Las reglas se comprueban a medida que llegan los valores: CPU y memoria con cada informe de uso de un dispositivo, uso de disco con su inventario, tiempo inactivo con su informe de actividad y tiempo sin conexión una vez por minuto. Las reglas personalizadas no se comprueban.",
+        "custom_not_checked": "Una regla personalizada no tiene ningún valor que el servidor pueda medir, así que no genera alertas por sí sola."
     },
     "file_transfer": {
         "title": "Panel",

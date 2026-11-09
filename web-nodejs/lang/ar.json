@@ -2933,7 +2933,7 @@
         "rule_name": "اسم القاعدة",
         "description": "الوصف",
         "condition_type": "نوع الحالة",
-        "condition_op": "Operator",
+        "condition_op": "المقارنة",
         "condition_value": "الحد",
         "severity": "الخطورة",
         "scope_device": "الجهاز المستهدف",
@@ -2947,9 +2947,9 @@
         "delete_rule": "حذف القاعدة",
         "acknowledge": "تأكيد",
         "acknowledged": "مؤكَّد",
-        "unacknowledged": "Unacknowledged",
+        "unacknowledged": "غير مؤكَّد",
         "triggered_at": "تم التشغيل عند",
-        "severity_info": "Info",
+        "severity_info": "معلومات",
         "severity_warning": "تحذير",
         "severity_critical": "حرج",
         "op_gt": "أعظم من",
@@ -3063,7 +3063,9 @@
         "rule_sheet_desc": "ينشئ تنبيهًا عندما يبلغ جهاز عن قيمة تتجاوز الحد الذي تحدده.",
         "section_condition": "ما الذي تراقبه",
         "section_alert": "التنبيه",
-        "saving": "جارٍ الحفظ…"
+        "saving": "جارٍ الحفظ…",
+        "rules_checked": "تُفحص القواعد عند وصول القيم: المعالج والذاكرة مع كل تقرير استخدام من الجهاز، واستخدام القرص مع جرده، ووقت الخمول مع تقرير نشاطه، ووقت عدم الاتصال مرة كل دقيقة. القواعد المخصصة لا تُفحص.",
+        "custom_not_checked": "القاعدة المخصصة ليس لها قيمة يستطيع الخادم قياسها، لذلك لا تُطلق تنبيهات بنفسها."
     },
     "file_transfer": {
         "title": "نقل الملفات",

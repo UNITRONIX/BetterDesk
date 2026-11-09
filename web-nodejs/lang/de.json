@@ -3056,7 +3056,9 @@
         "rule_sheet_desc": "Löst eine Warnung aus, wenn ein Gerät einen Wert jenseits der von Ihnen gesetzten Grenze meldet.",
         "section_condition": "Was sie überwacht",
         "section_alert": "Warnung",
-        "saving": "Wird gespeichert…"
+        "saving": "Wird gespeichert…",
+        "rules_checked": "Regeln werden geprüft, sobald Werte eintreffen: CPU und Arbeitsspeicher mit jedem Nutzungsbericht eines Geräts, Speicherplatz mit seinem Inventar, Leerlaufzeit mit seinem Aktivitätsbericht und die Zeit offline einmal pro Minute. Benutzerdefinierte Regeln werden nicht geprüft.",
+        "custom_not_checked": "Eine benutzerdefinierte Regel hat keinen Wert, den der Server messen kann. Sie löst deshalb selbst keine Warnungen aus."
     },
     "file_transfer": {
         "title": "Dashboard",

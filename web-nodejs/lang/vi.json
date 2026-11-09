@@ -2932,7 +2932,7 @@
         "rule_name": "Tên quy tắc",
         "description": "Mô tả",
         "condition_type": "Loại tình trạng",
-        "condition_op": "Operator",
+        "condition_op": "So sánh",
         "condition_value": "Ngưỡng",
         "severity": "Mức độ",
         "scope_device": "Thiết bị mục tiêu",
@@ -2946,9 +2946,9 @@
         "delete_rule": "Xóa quy tắc",
         "acknowledge": "Xác nhận",
         "acknowledged": "Đã xác nhận",
-        "unacknowledged": "Unacknowledged",
+        "unacknowledged": "Chưa xác nhận",
         "triggered_at": "Kích hoạt vào lúc",
-        "severity_info": "Info",
+        "severity_info": "Thông tin",
         "severity_warning": "Cảnh báo",
         "severity_critical": "Nghiêm trọng",
         "op_gt": "Lớn hơn",
@@ -3062,7 +3062,9 @@
         "rule_sheet_desc": "Tạo cảnh báo khi một thiết bị báo cáo giá trị vượt quá giới hạn bạn đặt.",
         "section_condition": "Theo dõi gì",
         "section_alert": "Cảnh báo",
-        "saving": "Đang lưu…"
+        "saving": "Đang lưu…",
+        "rules_checked": "Quy tắc được kiểm tra khi giá trị đến: CPU và bộ nhớ với mỗi báo cáo sử dụng từ thiết bị, dung lượng đĩa với bản kiểm kê, thời gian không hoạt động với báo cáo hoạt động, và thời gian ngoại tuyến mỗi phút một lần. Quy tắc tùy chỉnh không được kiểm tra.",
+        "custom_not_checked": "Quy tắc tùy chỉnh không có giá trị nào máy chủ đo được, nên tự nó không tạo cảnh báo."
     },
     "file_transfer": {
         "title": "Truyền tệp",

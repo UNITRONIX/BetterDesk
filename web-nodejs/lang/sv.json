@@ -2932,7 +2932,7 @@
         "rule_name": "Regelnamn",
         "description": "Beskrivning",
         "condition_type": "Skick Typ",
-        "condition_op": "Operator",
+        "condition_op": "Jämförelse",
         "condition_value": "Tröskel",
         "severity": "Allvarlighetsgrad",
         "scope_device": "Målenhet",
@@ -2946,7 +2946,7 @@
         "delete_rule": "Ta bort regel",
         "acknowledge": "Kvittera",
         "acknowledged": "Kvitterat",
-        "unacknowledged": "Unacknowledged",
+        "unacknowledged": "Ej kvitterat",
         "triggered_at": "Utlöst vid",
         "severity_info": "Info",
         "severity_warning": "Varning",
@@ -3062,7 +3062,9 @@
         "rule_sheet_desc": "Ger en varning när en enhet rapporterar ett värde bortom gränsen du anger.",
         "section_condition": "Vad den bevakar",
         "section_alert": "Varning",
-        "saving": "Sparar…"
+        "saving": "Sparar…",
+        "rules_checked": "Reglerna kontrolleras när värdena kommer in: processor och minne vid varje användningsrapport från en enhet, diskanvändning med dess inventering, inaktiv tid med dess aktivitetsrapport och tid offline en gång i minuten. Anpassade regler kontrolleras inte.",
+        "custom_not_checked": "En anpassad regel har inget värde som servern kan mäta, så den ger inga varningar av sig själv."
     },
     "file_transfer": {
         "title": "Filöverföring",

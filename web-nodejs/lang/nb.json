@@ -2932,7 +2932,7 @@
         "rule_name": "Regelnavn",
         "description": "Beskrivelse",
         "condition_type": "Tilstandstype",
-        "condition_op": "Operator",
+        "condition_op": "Sammenligning",
         "condition_value": "Terskel",
         "severity": "Alvorlighetsgrad",
         "scope_device": "Målenhet",
@@ -2946,7 +2946,7 @@
         "delete_rule": "Slett regel",
         "acknowledge": "Bekreft",
         "acknowledged": "Bekreftet",
-        "unacknowledged": "Unacknowledged",
+        "unacknowledged": "Ikke bekreftet",
         "triggered_at": "Utløst kl",
         "severity_info": "Info",
         "severity_warning": "Advarsel",
@@ -3062,7 +3062,9 @@
         "rule_sheet_desc": "Gir et varsel når en enhet rapporterer en verdi utover grensen du angir.",
         "section_condition": "Hva den overvåker",
         "section_alert": "Varsel",
-        "saving": "Lagrer…"
+        "saving": "Lagrer…",
+        "rules_checked": "Reglene kontrolleres når verdiene kommer inn: CPU og minne med hver bruksrapport fra en enhet, diskbruk med inventaret, inaktiv tid med aktivitetsrapporten og tid frakoblet én gang i minuttet. Egendefinerte regler kontrolleres ikke.",
+        "custom_not_checked": "En egendefinert regel har ingen verdi serveren kan måle, så den utløser ingen varsler selv."
     },
     "file_transfer": {
         "title": "Filoverføring",

@@ -2932,7 +2932,7 @@
         "rule_name": "नियम का नाम",
         "description": "विवरण",
         "condition_type": "शर्त प्रकार",
-        "condition_op": "Operator",
+        "condition_op": "तुलना",
         "condition_value": "सीमा",
         "severity": "गंभीरता",
         "scope_device": "लक्ष्य डिवाइस",
@@ -2946,9 +2946,9 @@
         "delete_rule": "नियम हटाएँ",
         "acknowledge": "स्वीकार करें",
         "acknowledged": "स्वीकार किया गया",
-        "unacknowledged": "Unacknowledged",
+        "unacknowledged": "स्वीकार नहीं किया गया",
         "triggered_at": "पर ट्रिगर किया गया",
-        "severity_info": "Info",
+        "severity_info": "जानकारी",
         "severity_warning": "चेतावनी",
         "severity_critical": "गंभीर",
         "op_gt": "से अधिक",
@@ -3062,7 +3062,9 @@
         "rule_sheet_desc": "जब कोई डिवाइस आपकी तय सीमा से आगे का मान बताता है, तो अलर्ट बनाता है।",
         "section_condition": "यह किस पर नज़र रखता है",
         "section_alert": "अलर्ट",
-        "saving": "सहेजा जा रहा है…"
+        "saving": "सहेजा जा रहा है…",
+        "rules_checked": "मान आते ही नियम जाँचे जाते हैं: डिवाइस की हर उपयोग रिपोर्ट के साथ CPU और मेमोरी, उसकी इन्वेंटरी के साथ डिस्क उपयोग, उसकी गतिविधि रिपोर्ट के साथ निष्क्रिय समय, और ऑफ़लाइन समय हर मिनट एक बार। कस्टम नियम नहीं जाँचे जाते।",
+        "custom_not_checked": "कस्टम नियम का कोई ऐसा मान नहीं होता जिसे सर्वर माप सके, इसलिए वह अपने आप कोई अलर्ट नहीं बनाता।"
     },
     "file_transfer": {
         "title": "दस्तावेज हस्तांतरण",

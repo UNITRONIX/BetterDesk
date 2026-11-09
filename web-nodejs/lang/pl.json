@@ -2944,7 +2944,7 @@
         "rule_name": "Nazwa reguły",
         "description": "Opis",
         "condition_type": "Typ warunku",
-        "condition_op": "Operator",
+        "condition_op": "Porównanie",
         "condition_value": "Próg",
         "severity": "Ważność",
         "scope_device": "Urządzenie docelowe",
@@ -3074,7 +3074,9 @@
         "rule_sheet_desc": "Zgłasza alert, gdy urządzenie poda wartość przekraczającą ustawiony limit.",
         "section_condition": "Co monitoruje",
         "section_alert": "Alert",
-        "saving": "Zapisywanie…"
+        "saving": "Zapisywanie…",
+        "rules_checked": "Reguły są sprawdzane, gdy przychodzą wartości: procesor i pamięć przy każdym raporcie użycia z urządzenia, użycie dysku przy jego inwentarzu, czas bezczynności przy raporcie aktywności, a czas offline raz na minutę. Reguły niestandardowe nie są sprawdzane.",
+        "custom_not_checked": "Reguła niestandardowa nie ma wartości, którą serwer mógłby zmierzyć, więc sama nie wywołuje alertów."
     },
     "file_transfer": {
         "title": "Przesyłanie plików",

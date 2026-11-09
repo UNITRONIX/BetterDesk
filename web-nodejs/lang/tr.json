@@ -2932,7 +2932,7 @@
         "rule_name": "Kural adı",
         "description": "Açıklama",
         "condition_type": "Koşul Türü",
-        "condition_op": "Operator",
+        "condition_op": "Karşılaştırma",
         "condition_value": "Eşik",
         "severity": "Önem",
         "scope_device": "Hedef Cihaz",
@@ -2946,9 +2946,9 @@
         "delete_rule": "Kuralı Sil",
         "acknowledge": "Onayla",
         "acknowledged": "Onaylandı",
-        "unacknowledged": "Unacknowledged",
+        "unacknowledged": "Onaylanmadı",
         "triggered_at": "Tetiklenme Tarihi",
-        "severity_info": "Info",
+        "severity_info": "Bilgi",
         "severity_warning": "Uyarı",
         "severity_critical": "Kritik",
         "op_gt": "Şundan büyük:",
@@ -3062,7 +3062,9 @@
         "rule_sheet_desc": "Bir cihaz belirlediğiniz sınırı aşan bir değer bildirdiğinde uyarı oluşturur.",
         "section_condition": "Neyi izler",
         "section_alert": "Uyarı",
-        "saving": "Kaydediliyor…"
+        "saving": "Kaydediliyor…",
+        "rules_checked": "Kurallar değerler geldikçe denetlenir: CPU ve bellek bir cihazın her kullanım raporuyla, disk kullanımı envanteriyle, boşta kalma süresi etkinlik raporuyla, çevrimdışı süre ise dakikada bir. Özel kurallar denetlenmez.",
+        "custom_not_checked": "Özel bir kuralın sunucunun ölçebileceği bir değeri yoktur, bu yüzden kendi başına uyarı oluşturmaz."
     },
     "file_transfer": {
         "title": "Dosya Aktarımı",

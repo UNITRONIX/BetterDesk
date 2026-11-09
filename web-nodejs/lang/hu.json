@@ -2932,7 +2932,7 @@
         "rule_name": "Szabály neve",
         "description": "Leírás",
         "condition_type": "Állapot típusa",
-        "condition_op": "Operator",
+        "condition_op": "Összehasonlítás",
         "condition_value": "Küszöbérték",
         "severity": "Súlyosság",
         "scope_device": "Céleszköz",
@@ -2946,9 +2946,9 @@
         "delete_rule": "Szabály törlése",
         "acknowledge": "Nyugtázás",
         "acknowledged": "Nyugtázva",
-        "unacknowledged": "Unacknowledged",
+        "unacknowledged": "Nincs nyugtázva",
         "triggered_at": "Kiváltva:",
-        "severity_info": "Info",
+        "severity_info": "Információ",
         "severity_warning": "Figyelmeztetés",
         "severity_critical": "Kritikus",
         "op_gt": "Nagyobb mint",
@@ -3062,7 +3062,9 @@
         "rule_sheet_desc": "Riasztást ad, ha egy eszköz az Ön által megadott határon túli értéket jelent.",
         "section_condition": "Mit figyel",
         "section_alert": "Riasztás",
-        "saving": "Mentés…"
+        "saving": "Mentés…",
+        "rules_checked": "A szabályokat az értékek beérkezésekor ellenőrzi a szerver: a processzort és a memóriát az eszköz minden használati jelentésekor, a lemezhasználatot a leltárával, a tétlen időt a tevékenységi jelentésével, az offline időt pedig percenként egyszer. Az egyéni szabályokat nem ellenőrzi.",
+        "custom_not_checked": "Az egyéni szabálynak nincs olyan értéke, amelyet a szerver mérni tudna, ezért magától nem vált ki riasztást."
     },
     "file_transfer": {
         "title": "Fájlátvitel",

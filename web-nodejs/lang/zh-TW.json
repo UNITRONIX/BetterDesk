@@ -2948,7 +2948,7 @@
         "rule_name": "規則名稱",
         "description": "描述",
         "condition_type": "條件類型",
-        "condition_op": "運算符",
+        "condition_op": "比較",
         "condition_value": "閾值",
         "severity": "嚴重程度",
         "scope_device": "目標設備",
@@ -2964,7 +2964,7 @@
         "acknowledged": "已確認",
         "unacknowledged": "未確認",
         "triggered_at": "觸發時間",
-        "severity_info": "信息",
+        "severity_info": "資訊",
         "severity_warning": "警告",
         "severity_critical": "嚴重",
         "op_gt": "大於",
@@ -3078,7 +3078,9 @@
         "rule_sheet_desc": "當裝置回報超過您設定上限的值時發出警示。",
         "section_condition": "監看內容",
         "section_alert": "警示",
-        "saving": "正在儲存…"
+        "saving": "正在儲存…",
+        "rules_checked": "數值一送達就會檢查規則：CPU 和記憶體在裝置每次回報使用量時檢查，磁碟使用量隨其清單檢查，閒置時間隨其活動報告檢查，離線時間每分鐘檢查一次。自訂規則不會檢查。",
+        "custom_not_checked": "自訂規則沒有伺服器能測量的數值，因此本身不會發出警示。"
     },
     "file_transfer": {
         "title": "文件傳輸",

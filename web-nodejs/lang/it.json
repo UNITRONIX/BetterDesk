@@ -2926,7 +2926,7 @@
         "rule_name": "Nome regola",
         "description": "Descrizione",
         "condition_type": "Tipo condizione",
-        "condition_op": "Operatore",
+        "condition_op": "Confronto",
         "condition_value": "Soglia",
         "severity": "Gravità",
         "scope_device": "Dispositivo target",
@@ -3056,7 +3056,9 @@
         "rule_sheet_desc": "Genera un avviso quando un dispositivo segnala un valore oltre il limite impostato.",
         "section_condition": "Cosa controlla",
         "section_alert": "Avviso",
-        "saving": "Salvataggio…"
+        "saving": "Salvataggio…",
+        "rules_checked": "Le regole vengono controllate quando arrivano i valori: CPU e memoria a ogni rapporto di utilizzo di un dispositivo, uso del disco con il suo inventario, tempo di inattività con il suo rapporto di attività e tempo offline una volta al minuto. Le regole personalizzate non vengono controllate.",
+        "custom_not_checked": "Una regola personalizzata non ha un valore che il server possa misurare, quindi da sola non genera avvisi."
     },
     "file_transfer": {
         "title": "Trasferimento file",

@@ -2932,7 +2932,7 @@
         "rule_name": "Nama aturan",
         "description": "Deskripsi",
         "condition_type": "Tipe Kondisi",
-        "condition_op": "Operator",
+        "condition_op": "Perbandingan",
         "condition_value": "Ambang batas",
         "severity": "Tingkat",
         "scope_device": "Perangkat Sasaran",
@@ -2946,7 +2946,7 @@
         "delete_rule": "Hapus Aturan",
         "acknowledge": "Konfirmasi",
         "acknowledged": "Dikonfirmasi",
-        "unacknowledged": "Unacknowledged",
+        "unacknowledged": "Belum dikonfirmasi",
         "triggered_at": "Dipicu Pada",
         "severity_info": "Info",
         "severity_warning": "Peringatan",
@@ -3062,7 +3062,9 @@
         "rule_sheet_desc": "Memunculkan peringatan saat perangkat melaporkan nilai yang melewati batas yang Anda tetapkan.",
         "section_condition": "Yang dipantau",
         "section_alert": "Peringatan",
-        "saving": "Menyimpan…"
+        "saving": "Menyimpan…",
+        "rules_checked": "Aturan diperiksa saat nilai masuk: CPU dan memori pada setiap laporan penggunaan dari perangkat, penggunaan disk dengan inventarisnya, waktu diam dengan laporan aktivitasnya, dan waktu offline sekali per menit. Aturan kustom tidak diperiksa.",
+        "custom_not_checked": "Aturan kustom tidak punya nilai yang bisa diukur server, jadi aturan ini tidak memicu peringatan sendiri."
     },
     "file_transfer": {
         "title": "Pemindahan Berkas",

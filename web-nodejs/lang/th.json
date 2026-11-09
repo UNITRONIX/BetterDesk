@@ -2932,7 +2932,7 @@
         "rule_name": "ชื่อกฎ",
         "description": "คำอธิบาย",
         "condition_type": "ประเภทเงื่อนไข",
-        "condition_op": "Operator",
+        "condition_op": "การเปรียบเทียบ",
         "condition_value": "เกณฑ์",
         "severity": "ระดับความรุนแรง",
         "scope_device": "อุปกรณ์เป้าหมาย",
@@ -2946,9 +2946,9 @@
         "delete_rule": "ลบกฎ",
         "acknowledge": "รับทราบ",
         "acknowledged": "รับทราบแล้ว",
-        "unacknowledged": "Unacknowledged",
+        "unacknowledged": "ยังไม่รับทราบ",
         "triggered_at": "ทริกเกอร์ที่",
-        "severity_info": "Info",
+        "severity_info": "ข้อมูล",
         "severity_warning": "คำเตือน",
         "severity_critical": "วิกฤต",
         "op_gt": "มากกว่า",
@@ -3062,7 +3062,9 @@
         "rule_sheet_desc": "สร้างการแจ้งเตือนเมื่ออุปกรณ์รายงานค่าที่เกินขีดจำกัดที่คุณตั้งไว้",
         "section_condition": "สิ่งที่เฝ้าดู",
         "section_alert": "การแจ้งเตือน",
-        "saving": "กำลังบันทึก…"
+        "saving": "กำลังบันทึก…",
+        "rules_checked": "กฎจะถูกตรวจเมื่อค่ามาถึง: CPU และหน่วยความจำทุกครั้งที่อุปกรณ์รายงานการใช้งาน การใช้ดิสก์พร้อมรายการทรัพย์สิน เวลาว่างพร้อมรายงานกิจกรรม และเวลาออฟไลน์นาทีละครั้ง กฎแบบกำหนดเองจะไม่ถูกตรวจ",
+        "custom_not_checked": "กฎแบบกำหนดเองไม่มีค่าที่เซิร์ฟเวอร์วัดได้ จึงไม่สร้างการแจ้งเตือนเอง"
     },
     "file_transfer": {
         "title": "การถ่ายโอนไฟล์",

@@ -2926,7 +2926,7 @@
         "rule_name": "Název pravidla",
         "description": "Popis",
         "condition_type": "Typ podmínky",
-        "condition_op": "Operátor",
+        "condition_op": "Porovnání",
         "condition_value": "Prahová hodnota",
         "severity": "Závažnost",
         "scope_device": "Cílové zařízení",
@@ -3056,7 +3056,9 @@
         "rule_sheet_desc": "Vyvolá upozornění, když zařízení nahlásí hodnotu za nastaveným limitem.",
         "section_condition": "Co sleduje",
         "section_alert": "Upozornění",
-        "saving": "Ukládání…"
+        "saving": "Ukládání…",
+        "rules_checked": "Pravidla se kontrolují, jakmile dorazí hodnoty: procesor a paměť s každým hlášením o využití ze zařízení, využití disku s jeho inventářem, doba nečinnosti s hlášením o aktivitě a doba offline jednou za minutu. Vlastní pravidla se nekontrolují.",
+        "custom_not_checked": "Vlastní pravidlo nemá hodnotu, kterou by server mohl měřit, takže samo žádná upozornění nevyvolá."
     },
     "file_transfer": {
         "title": "Přenos souborů",

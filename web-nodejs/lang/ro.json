@@ -2932,7 +2932,7 @@
         "rule_name": "Numele regulii",
         "description": "Descriere",
         "condition_type": "Tip condiție",
-        "condition_op": "Operator",
+        "condition_op": "Comparație",
         "condition_value": "Prag",
         "severity": "Severitate",
         "scope_device": "Dispozitivul țintă",
@@ -2946,9 +2946,9 @@
         "delete_rule": "Ștergeți regula",
         "acknowledge": "Confirmă",
         "acknowledged": "Confirmată",
-        "unacknowledged": "Unacknowledged",
+        "unacknowledged": "Neconfirmată",
         "triggered_at": "Declanșat la",
-        "severity_info": "Info",
+        "severity_info": "Informare",
         "severity_warning": "Avertisment",
         "severity_critical": "Critic",
         "op_gt": "Mai mare decât",
@@ -3062,7 +3062,9 @@
         "rule_sheet_desc": "Generează o alertă când un dispozitiv raportează o valoare peste limita setată.",
         "section_condition": "Ce urmărește",
         "section_alert": "Alertă",
-        "saving": "Se salvează…"
+        "saving": "Se salvează…",
+        "rules_checked": "Regulile sunt verificate pe măsură ce sosesc valorile: procesorul și memoria la fiecare raport de utilizare de la un dispozitiv, utilizarea discului cu inventarul său, timpul de inactivitate cu raportul de activitate și timpul offline o dată pe minut. Regulile personalizate nu sunt verificate.",
+        "custom_not_checked": "O regulă personalizată nu are o valoare pe care serverul să o poată măsura, deci nu declanșează singură alerte."
     },
     "file_transfer": {
         "title": "Transfer de fișiere",

@@ -2926,7 +2926,7 @@
         "rule_name": "Regelnaam",
         "description": "Beschrijving",
         "condition_type": "Voorwaardetype",
-        "condition_op": "Operator",
+        "condition_op": "Vergelijking",
         "condition_value": "Drempelwaarde",
         "severity": "Ernst",
         "scope_device": "Doelapparaat",
@@ -3056,7 +3056,9 @@
         "rule_sheet_desc": "Geeft een melding wanneer een apparaat een waarde voorbij de ingestelde grens meldt.",
         "section_condition": "Wat de regel bewaakt",
         "section_alert": "Melding",
-        "saving": "Opslaan…"
+        "saving": "Opslaan…",
+        "rules_checked": "Regels worden gecontroleerd zodra waarden binnenkomen: CPU en geheugen bij elk gebruiksrapport van een apparaat, schijfgebruik bij de inventaris, inactieve tijd bij het activiteitenrapport en tijd offline één keer per minuut. Aangepaste regels worden niet gecontroleerd.",
+        "custom_not_checked": "Een aangepaste regel heeft geen waarde die de server kan meten, dus hij geeft zelf geen meldingen."
     },
     "file_transfer": {
         "title": "Bestandsoverdracht",

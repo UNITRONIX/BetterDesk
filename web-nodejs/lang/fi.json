@@ -2932,7 +2932,7 @@
         "rule_name": "Säännön nimi",
         "description": "Kuvaus",
         "condition_type": "Kuntotyyppi",
-        "condition_op": "Operator",
+        "condition_op": "Vertailu",
         "condition_value": "Raja-arvo",
         "severity": "Vakavuus",
         "scope_device": "Kohdelaite",
@@ -2946,7 +2946,7 @@
         "delete_rule": "Poista sääntö",
         "acknowledge": "Kuittaa",
         "acknowledged": "Kuitattu",
-        "unacknowledged": "Unacknowledged",
+        "unacknowledged": "Kuittaamatta",
         "triggered_at": "Laukaistiin klo",
         "severity_info": "Info",
         "severity_warning": "Varoitus",
@@ -3062,7 +3062,9 @@
         "rule_sheet_desc": "Luo hälytyksen, kun laite ilmoittaa asettamasi rajan ylittävän arvon.",
         "section_condition": "Mitä se valvoo",
         "section_alert": "Hälytys",
-        "saving": "Tallennetaan…"
+        "saving": "Tallennetaan…",
+        "rules_checked": "Säännöt tarkistetaan arvojen saapuessa: suoritin ja muisti jokaisen laitteen käyttöraportin yhteydessä, levyn käyttö sen inventaarion yhteydessä, joutoaika sen aktiivisuusraportin yhteydessä ja offline-aika kerran minuutissa. Mukautettuja sääntöjä ei tarkisteta.",
+        "custom_not_checked": "Mukautetulla säännöllä ei ole arvoa, jonka palvelin voisi mitata, joten se ei itse nosta hälytyksiä."
     },
     "file_transfer": {
         "title": "Tiedoston siirto",

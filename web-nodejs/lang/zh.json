@@ -2926,7 +2926,7 @@
         "rule_name": "规则名称",
         "description": "描述",
         "condition_type": "条件类型",
-        "condition_op": "运算符",
+        "condition_op": "比较",
         "condition_value": "阈值",
         "severity": "严重程度",
         "scope_device": "目标设备",
@@ -3056,7 +3056,9 @@
         "rule_sheet_desc": "当设备报告超过您设定限值的数值时发出警报。",
         "section_condition": "监视内容",
         "section_alert": "警报",
-        "saving": "正在保存…"
+        "saving": "正在保存…",
+        "rules_checked": "数值一到就会检查规则：CPU 和内存在设备每次报告使用情况时检查，磁盘使用随其清单检查，空闲时间随其活动报告检查，离线时间每分钟检查一次。自定义规则不会检查。",
+        "custom_not_checked": "自定义规则没有服务器能测量的数值，因此本身不会发出警报。"
     },
     "file_transfer": {
         "title": "文件传输",
