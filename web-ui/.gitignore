@@ -4,3 +4,4 @@ node_modules
 /test-results
 /playwright-report
 /coverage
+/e2e/.auth
