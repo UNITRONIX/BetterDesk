@@ -1,0 +1,271 @@
+/*
+ * Effects of the accessibility panel's settings (shell/a11y.svelte.ts and
+ * /console-boot.js put data-a11y-* attributes and --bd-a11y-* variables on
+ * <html>). Ported from web-nodejs/public/css/accessibility.css.
+ *
+ * These are the person's own overrides, so they must win over component
+ * styles. Instead of important flags, the rules that compete with
+ * components add :not(#bd-a11y-never) (no element has that id), which
+ * gives them an id's weight; strong focus adds it twice so it also wins
+ * over "Highlight actions". Font size needs nothing here: --font-scale in
+ * tokens.css follows --bd-a11y-font-scale.
+ */
+
+:root {
+	--bd-a11y-font-scale: 1;
+	--bd-a11y-line-height: var(--leading);
+	--bd-a11y-letter-spacing: 0em;
+	--bd-a11y-word-spacing: 0em;
+	--bd-a11y-visual-filter: none;
+}
+
+/* ── Reading ── */
+
+html[data-a11y-active='true'] :is(.main-content, .bd-a11y-modal) {
+	line-height: var(--bd-a11y-line-height, var(--leading));
+}
+
+html[data-a11y-active='true']
+	:is(.main-content, .bd-a11y-modal, .shell-breadcrumb)
+	:not(.material-icons, .material-symbols-outlined):not(#bd-a11y-never) {
+	letter-spacing: var(--bd-a11y-letter-spacing, 0);
+	word-spacing: var(--bd-a11y-word-spacing, 0);
+}
+
+html[data-a11y-readable-font='true'] {
+	--font: Verdana, Tahoma, Arial, sans-serif;
+}
+
+html[data-a11y-readable-font='true'] :is(body, button, input, select, textarea):not(#bd-a11y-never) {
+	font-family: Verdana, Tahoma, Arial, sans-serif;
+}
+
+html[data-a11y-dyslexia='true'] {
+	--font: 'Trebuchet MS', Verdana, Arial, sans-serif;
+}
+
+html[data-a11y-dyslexia='true'] :is(body, button, input, select, textarea):not(#bd-a11y-never) {
+	font-family: 'Trebuchet MS', Verdana, Arial, sans-serif;
+}
+
+html[data-a11y-dyslexia='true']
+	:is(.main-content, .bd-a11y-modal, .shell-breadcrumb)
+	:not(.material-icons, .material-symbols-outlined):not(#bd-a11y-never) {
+	letter-spacing: max(var(--bd-a11y-letter-spacing, 0em), 0.035em);
+	word-spacing: max(var(--bd-a11y-word-spacing, 0em), 0.08em);
+}
+
+/* ── Contrast modes: the console's tokens (tokens.css) and the palette
+   variables behind them. Setting the tokens themselves means a palette
+   written inline on <html> (the per-browser theme choice) cannot win over
+   the mode. ── */
+
+:root[data-a11y-contrast='high-dark'] {
+	--bg-primary: #000000;
+	--bg-secondary: #050505;
+	--bg-tertiary: #111111;
+	--bg-elevated: #1c1c1c;
+	--text-primary: #ffffff;
+	--text-secondary: #f2f2f2;
+	--border-primary: #ffffff;
+	--border-secondary: #bdbdbd;
+	--accent-blue: #80d4ff;
+	--accent-blue-hover: #bdefff;
+	--accent-green: #7cff95;
+	--accent-yellow: #ffe66d;
+	--accent-red: #ff8585;
+
+	--bg: #000000;
+	--bg-subtle: #050505;
+	--hover: rgba(255, 255, 255, 0.18);
+	--bg-float: #1c1c1c;
+	--text: #ffffff;
+	--text-muted: #f2f2f2;
+	--border: #ffffff;
+	--rule: #bdbdbd;
+	--accent: #80d4ff;
+	--accent-hover: #bdefff;
+	--success: #7cff95;
+	--warning: #ffe66d;
+	--danger: #ff8585;
+	--danger-hover: #ffb3b3;
+}
+
+:root[data-a11y-contrast='high-light'] {
+	--bg-primary: #ffffff;
+	--bg-secondary: #ffffff;
+	--bg-tertiary: #f2f4f7;
+	--bg-elevated: #e5e7eb;
+	--text-primary: #000000;
+	--text-secondary: #1f2937;
+	--border-primary: #000000;
+	--border-secondary: #4b5563;
+	--accent-blue: #003f9e;
+	--accent-blue-hover: #002a6b;
+	--accent-green: #006b2e;
+	--accent-yellow: #8a5a00;
+	--accent-red: #a40000;
+
+	--bg: #ffffff;
+	--bg-subtle: #ffffff;
+	--hover: rgba(0, 0, 0, 0.08);
+	--bg-float: #e5e7eb;
+	--text: #000000;
+	--text-muted: #1f2937;
+	--border: #000000;
+	--rule: #4b5563;
+	--accent: #003f9e;
+	--accent-hover: #002a6b;
+	--success: #006b2e;
+	--warning: #8a5a00;
+	--danger: #a40000;
+	--danger-hover: #7a0000;
+}
+
+:root[data-a11y-contrast='yellow-black'] {
+	--bg-primary: #000000;
+	--bg-secondary: #000000;
+	--bg-tertiary: #161200;
+	--bg-elevated: #241f00;
+	--text-primary: #fff36d;
+	--text-secondary: #ffe66d;
+	--border-primary: #fff36d;
+	--border-secondary: #d9c957;
+	--accent-blue: #00e5ff;
+	--accent-blue-hover: #8ef5ff;
+	--accent-green: #8dff8d;
+	--accent-yellow: #fff36d;
+	--accent-red: #ff8a80;
+
+	--bg: #000000;
+	--bg-subtle: #000000;
+	--hover: rgba(255, 243, 109, 0.16);
+	--bg-float: #241f00;
+	--text: #fff36d;
+	--text-muted: #ffe66d;
+	--border: #fff36d;
+	--rule: #d9c957;
+	--accent: #00e5ff;
+	--accent-hover: #8ef5ff;
+	--success: #8dff8d;
+	--warning: #fff36d;
+	--danger: #ff8a80;
+	--danger-hover: #ffb3ad;
+}
+
+/* Colour filters go on the root element: a filter on any other element
+   becomes the containing block of its position: fixed descendants, which
+   pushes dialogs, toasts and the bottom bar off screen once the page is
+   scrolled. The root is exempt from that rule. */
+html[data-a11y-filtered='true'] {
+	filter: var(--bd-a11y-visual-filter, none);
+}
+
+/* ── Visual ── */
+
+html[data-a11y-underline-links='true'] a:not(#bd-a11y-never) {
+	text-decoration: underline;
+	text-decoration-thickness: 0.12em;
+	text-underline-offset: 0.18em;
+}
+
+html[data-a11y-highlight-links='true']
+	:is(.main-content, .shell-sidebar, .shell-topbar, .bd-a11y-modal)
+	:is(a, button):not(#bd-a11y-never) {
+	outline: 2px solid var(--accent);
+	outline-offset: 2px;
+}
+
+html[data-a11y-highlight-headings='true'] :is(h1, h2, h3, h4, h5, h6, .page-title):not(#bd-a11y-never) {
+	border-inline-start: 4px solid var(--accent);
+	padding-inline-start: var(--space-2);
+	background: var(--accent-tint);
+}
+
+html[data-a11y-hide-media='true']
+	:is(img, picture, video, canvas, svg:not(.bd-a11y-filter-defs)):not(#bd-a11y-never) {
+	opacity: 0.08;
+	filter: grayscale(1);
+}
+
+/* ── Interaction ── */
+
+html[data-a11y-strong-focus='true']
+	:is(:focus-visible, button:focus, input:focus, select:focus, textarea:focus, [tabindex]:focus):not(
+		#bd-a11y-never
+	):not(#bd-a11y-never-2) {
+	outline: 4px solid var(--warning);
+	outline-offset: 3px;
+	box-shadow: 0 0 0 7px rgba(210, 153, 34, 0.25);
+}
+
+html[data-a11y-large-cursor='true'],
+html[data-a11y-large-cursor='true'] *:not(#bd-a11y-never) {
+	cursor:
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 36 36'%3E%3Cpath d='M5 3 L29 20 L18 22 L13 33 L5 3 Z' fill='%23ffffff' stroke='%23000000' stroke-width='3'/%3E%3C/svg%3E")
+			5 3,
+		auto;
+}
+
+html[data-a11y-large-cursor='true']
+	:is(a, button, [role='button']):not(#bd-a11y-never):not(#bd-a11y-never-2) {
+	cursor:
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cpath d='M6 4 L32 22 L20 24 L15 36 L6 4 Z' fill='%23fff36d' stroke='%23000000' stroke-width='3'/%3E%3C/svg%3E")
+			6 4,
+		pointer;
+}
+
+html[data-a11y-reduce-motion='true'] {
+	--motion: 0ms;
+}
+
+html[data-a11y-reduce-motion='true'] *:not(#bd-a11y-never),
+html[data-a11y-reduce-motion='true'] *:not(#bd-a11y-never)::before,
+html[data-a11y-reduce-motion='true'] *:not(#bd-a11y-never)::after {
+	animation-duration: 0.001ms;
+	animation-iteration-count: 1;
+	scroll-behavior: auto;
+	transition-duration: 0.001ms;
+}
+
+html[data-a11y-pause-animations='true'] *:not(#bd-a11y-never),
+html[data-a11y-pause-animations='true'] *:not(#bd-a11y-never)::before,
+html[data-a11y-pause-animations='true'] *:not(#bd-a11y-never)::after {
+	animation-play-state: paused;
+}
+
+/* ── Reading guide and mask (A11yEffects.svelte moves them with the pointer) ── */
+
+.bd-a11y-reading-guide {
+	position: fixed;
+	inset-inline: 0;
+	z-index: var(--layer-reading);
+	display: none;
+	height: 4px;
+	background: var(--warning);
+	box-shadow:
+		0 0 0 2px rgba(0, 0, 0, 0.45),
+		0 0 18px rgba(210, 153, 34, 0.65);
+	pointer-events: none;
+}
+
+.bd-a11y-reading-mask {
+	position: fixed;
+	inset-inline: 0;
+	z-index: calc(var(--layer-reading) - 1);
+	display: none;
+	background: rgba(0, 0, 0, 0.58);
+	pointer-events: none;
+}
+
+html[data-a11y-reading-guide='true'] .bd-a11y-reading-guide,
+html[data-a11y-reading-mask='true'] .bd-a11y-reading-mask {
+	display: block;
+}
+
+.bd-a11y-filter-defs {
+	position: absolute;
+	width: 0;
+	height: 0;
+	overflow: hidden;
+}

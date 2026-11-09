@@ -1,0 +1,517 @@
+[
+	{
+		"id": "devices",
+		"icon": "devices",
+		"text": "Devices",
+		"pages": [
+			{
+				"page": "dashboard",
+				"href": "/",
+				"text": "Overview",
+				"group": "",
+				"core": true,
+				"keywords": "home dashboard start",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "devices",
+				"href": "/devices",
+				"text": "All devices",
+				"group": "",
+				"core": true,
+				"keywords": "computers peers machines connect",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "registrations",
+				"href": "/registrations",
+				"text": "Enrollment requests",
+				"group": "",
+				"core": true,
+				"keywords": "enrollment approve new device registration pending",
+				"external": false,
+				"countId": "reg-sidebar-badge"
+			},
+			{
+				"page": "activate-agent",
+				"href": "/?activateAgent=1",
+				"text": "Activate support agent",
+				"group": "",
+				"core": false,
+				"keywords": "qr agent activation",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "remote",
+				"href": "/remote",
+				"text": "Remote desktop in browser",
+				"group": "",
+				"core": true,
+				"keywords": "web client browser remote control",
+				"external": true,
+				"countId": null
+			},
+			{
+				"page": "inventory",
+				"href": "/inventory",
+				"text": "Inventory",
+				"group": "",
+				"core": false,
+				"keywords": "hardware software",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "network",
+				"href": "/network",
+				"text": "Network monitoring",
+				"group": "",
+				"core": false,
+				"keywords": "ping monitor latency targets",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "fleet",
+				"href": "/fleet",
+				"text": "Fleet tasks",
+				"group": "",
+				"core": false,
+				"keywords": "fleet bulk tasks workflows compliance",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "cross-platform",
+				"href": "/cross-platform",
+				"text": "Platform support",
+				"group": "",
+				"core": false,
+				"keywords": "cross-platform matrix features os",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "cdap",
+				"href": "/cdap",
+				"text": "IoT devices (CDAP)",
+				"group": "",
+				"core": false,
+				"keywords": "cdap iot scada sensors gateway",
+				"external": false,
+				"countId": null
+			}
+		]
+	},
+	{
+		"id": "support",
+		"icon": "support_agent",
+		"text": "Support",
+		"pages": [
+			{
+				"page": "help-requests",
+				"href": "/help-requests",
+				"text": "Help requests",
+				"group": "",
+				"core": true,
+				"keywords": "help support requests",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "tickets",
+				"href": "/tickets",
+				"text": "Tickets",
+				"group": "",
+				"core": true,
+				"keywords": "issues",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "chat",
+				"href": "/chat",
+				"text": "Chat",
+				"group": "",
+				"core": true,
+				"keywords": "messages",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "toolkit",
+				"href": "/toolkit",
+				"text": "Network tools",
+				"group": "",
+				"core": false,
+				"keywords": "toolkit ping dns port ssl diagnostics",
+				"external": false,
+				"countId": null
+			}
+		]
+	},
+	{
+		"id": "people",
+		"icon": "group",
+		"text": "People",
+		"pages": [
+			{
+				"page": "users",
+				"href": "/users",
+				"text": "Users",
+				"group": "",
+				"core": true,
+				"keywords": "accounts people operators",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "organizations",
+				"href": "/organizations",
+				"text": "Organizations",
+				"group": "",
+				"core": false,
+				"keywords": "tenants customers",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "permissions",
+				"href": "/permissions",
+				"text": "Roles and permissions",
+				"group": "",
+				"core": false,
+				"keywords": "roles rights access",
+				"external": false,
+				"countId": null
+			}
+		]
+	},
+	{
+		"id": "activity",
+		"icon": "history",
+		"text": "Activity",
+		"pages": [
+			{
+				"page": "security-audit",
+				"href": "/security-audit",
+				"text": "Security and audit",
+				"group": "",
+				"core": true,
+				"keywords": "audit log who banned security events",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "activity",
+				"href": "/activity",
+				"text": "App usage",
+				"group": "",
+				"core": false,
+				"keywords": "app usage activity monitoring",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "reports",
+				"href": "/reports",
+				"text": "Reports",
+				"group": "",
+				"core": true,
+				"keywords": "reports export trends",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "commercialization:sessions",
+				"href": "/commercialization?tab=sessions",
+				"text": "Billable sessions",
+				"group": "",
+				"core": false,
+				"keywords": "sessions billing minutes work reports",
+				"external": false,
+				"countId": null
+			}
+		]
+	},
+	{
+		"id": "settings",
+		"icon": "settings",
+		"text": "Settings",
+		"pages": [
+			{
+				"page": "settings:general",
+				"href": "/settings",
+				"text": "General",
+				"group": "Console",
+				"core": true,
+				"keywords": "settings relay address public endpoints connection strategy meshcentral",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "settings:branding",
+				"href": "/settings?tab=branding",
+				"text": "Appearance",
+				"group": "Console",
+				"core": false,
+				"keywords": "branding theme colours colors logo dark mode",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "settings:auth",
+				"href": "/settings?tab=auth",
+				"text": "Sign-in",
+				"group": "Console",
+				"core": false,
+				"keywords": "authentication 2fa two-factor totp password ldap sso oidc",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "settings:backup",
+				"href": "/settings?tab=backup",
+				"text": "Backup",
+				"group": "Console",
+				"core": false,
+				"keywords": "backup restore",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "settings:updates",
+				"href": "/settings?tab=updates",
+				"text": "Updates",
+				"group": "Console",
+				"core": false,
+				"keywords": "updates version upgrade",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "settings:email",
+				"href": "/settings?tab=email",
+				"text": "Email",
+				"group": "Console",
+				"core": false,
+				"keywords": "email smtp mail",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "settings:time",
+				"href": "/settings?tab=time",
+				"text": "Time zones",
+				"group": "Console",
+				"core": false,
+				"keywords": "time zone timezone ntp clock",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "settings:advanced",
+				"href": "/settings?tab=advanced",
+				"text": "Advanced",
+				"group": "Console",
+				"core": false,
+				"keywords": "advanced config files restart",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "languages",
+				"href": "/languages",
+				"text": "Translations",
+				"group": "Console",
+				"core": false,
+				"keywords": "languages translations i18n",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "keys",
+				"href": "/keys",
+				"text": "Client setup",
+				"group": "Clients and enrollment",
+				"core": true,
+				"keywords": "keys public key qr client setup rustdesk config",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "tokens",
+				"href": "/tokens",
+				"text": "Device tokens",
+				"group": "Clients and enrollment",
+				"core": false,
+				"keywords": "tokens enrollment mode",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "pairing",
+				"href": "/pairing",
+				"text": "Pairing codes",
+				"group": "Clients and enrollment",
+				"core": false,
+				"keywords": "pairing code",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "agents",
+				"href": "/agents",
+				"text": "Support agents",
+				"group": "Clients and enrollment",
+				"core": false,
+				"keywords": "agents installers generator",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "client-branding",
+				"href": "/client-branding",
+				"text": "Client app branding",
+				"group": "Clients and enrollment",
+				"core": false,
+				"keywords": "client branding white label",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "policies",
+				"href": "/policies",
+				"text": "Policies",
+				"group": "Rules",
+				"core": false,
+				"keywords": "policies rules",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "automation",
+				"href": "/automation",
+				"text": "Alerts and automation",
+				"group": "Rules",
+				"core": false,
+				"keywords": "automation alerts commands",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "resource-control",
+				"href": "/resource-control",
+				"text": "USB and drive access",
+				"group": "Rules",
+				"core": false,
+				"keywords": "resource control usb drives disks",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "dataguard",
+				"href": "/dataguard",
+				"text": "Data loss prevention",
+				"group": "Rules",
+				"core": false,
+				"keywords": "dataguard dlp data loss",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "attestation",
+				"href": "/attestation",
+				"text": "Device identity",
+				"group": "Rules",
+				"core": false,
+				"keywords": "attestation fingerprint hardware identity",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "server-management:overview",
+				"href": "/server-management?tab=overview",
+				"text": "Server status",
+				"group": "Server",
+				"core": true,
+				"keywords": "server management status health cpu memory uptime",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "server-management:terminal",
+				"href": "/server-management?tab=terminal",
+				"text": "Terminal",
+				"group": "Server",
+				"core": false,
+				"keywords": "shell console ssh",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "server-management:files",
+				"href": "/server-management?tab=files",
+				"text": "Files",
+				"group": "Server",
+				"core": false,
+				"keywords": "file browser",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "server-management:services",
+				"href": "/server-management?tab=services",
+				"text": "Services",
+				"group": "Server",
+				"core": false,
+				"keywords": "systemd services",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "scaling",
+				"href": "/scaling",
+				"text": "Relay servers",
+				"group": "Server",
+				"core": false,
+				"keywords": "scaling relays",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "server-attestation",
+				"href": "/server-attestation",
+				"text": "Capacity test",
+				"group": "Server",
+				"core": false,
+				"keywords": "server attestation benchmark load test badge",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "commercialization:packages",
+				"href": "/commercialization?tab=packages",
+				"text": "Billing packages",
+				"group": "Billing",
+				"core": false,
+				"keywords": "packages contracts billing",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "cdap-studio",
+				"href": "/cdap-studio",
+				"text": "Flow builder (SDK)",
+				"group": "Developer tools",
+				"core": false,
+				"keywords": "sdk studio flows widgets",
+				"external": false,
+				"countId": null
+			}
+		]
+	}
+]
