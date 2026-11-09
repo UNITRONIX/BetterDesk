@@ -5819,7 +5819,7 @@
         "policy_allowed": "Engedélyezve",
         "policy_blocked": "Letiltva",
         "policy_whitelist": "Csak fehérlista",
-        "policy_any": "Any",
+        "policy_any": "Bármelyik",
         "page_description": "Engedélyezze vagy tiltsa az USB-meghajtókat, az optikai meghajtókat, a további monitorokat és a lemezhozzáférést eszközönként, és korlátozza a processzort, a memóriát és a sávszélességet. Az eszköz akkor kapja meg a szabályait, amikor a BetterDesk-ügynöke legközelebb letölti őket a szerverről.",
         "devices_title": "Eszközök",
         "search_label": "Eszközök keresése",
@@ -5915,7 +5915,9 @@
         "save_unavailable": "Nem sikerült menteni: ez a szerververzió még nem tudja tárolni ezeket a szabályokat.",
         "device_facts_title": "Ez az eszköz",
         "fact_id": "Eszközazonosító",
-        "tabs_save_hint": "Minden szabálytípusnak saját Mentés gombja van, és külön mentődik."
+        "tabs_save_hint": "Minden szabálytípusnak saját Mentés gombja van, és külön mentődik.",
+        "save_rules": "Szabályok mentése",
+        "save_all_hint": "A Mentés minden módosított szabályfajtát elment. Minden fajta külön mentődik."
     },
     "sdk_studio": {
         "title": "SDK Studio",

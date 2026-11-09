@@ -5909,7 +5909,9 @@
         "save_unavailable": "Nelze uložit: tato verze serveru zatím tato pravidla ukládat neumí.",
         "device_facts_title": "Toto zařízení",
         "fact_id": "ID zařízení",
-        "tabs_save_hint": "Každý druh pravidla má vlastní tlačítko Uložit a ukládá se samostatně."
+        "tabs_save_hint": "Každý druh pravidla má vlastní tlačítko Uložit a ukládá se samostatně.",
+        "save_rules": "Uložit pravidla",
+        "save_all_hint": "Uložení uloží každý druh pravidel, který jste změnili. Každý druh se ukládá zvlášť."
     },
     "sdk_studio": {
         "title": "SDK Studio",

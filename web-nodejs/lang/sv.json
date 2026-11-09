@@ -5819,7 +5819,7 @@
         "policy_allowed": "Tillåtet",
         "policy_blocked": "Blockerat",
         "policy_whitelist": "Endast vitlista",
-        "policy_any": "Any",
+        "policy_any": "Alla",
         "page_description": "Tillåt eller blockera USB-enheter, optiska enheter, extra skärmar och diskåtkomst på varje enhet och begränsa dess processor, minne och bandbredd. En enhet får sina regler nästa gång dess BetterDesk-agent hämtar dem från servern.",
         "devices_title": "Enheter",
         "search_label": "Sök enheter",
@@ -5915,7 +5915,9 @@
         "save_unavailable": "Kunde inte spara: den här serverversionen kan ännu inte spara de här reglerna.",
         "device_facts_title": "Den här enheten",
         "fact_id": "Enhets-ID",
-        "tabs_save_hint": "Varje typ av regel har en egen Spara-knapp och sparas för sig."
+        "tabs_save_hint": "Varje typ av regel har en egen Spara-knapp och sparas för sig.",
+        "save_rules": "Spara regler",
+        "save_all_hint": "Spara sparar varje typ av regel som du har ändrat. Varje typ sparas för sig."
     },
     "sdk_studio": {
         "title": "SDK Studio",

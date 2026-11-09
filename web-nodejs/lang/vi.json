@@ -5819,7 +5819,7 @@
         "policy_allowed": "Được phép",
         "policy_blocked": "Bị chặn",
         "policy_whitelist": "Chỉ danh sách trắng",
-        "policy_any": "Any",
+        "policy_any": "Bất kỳ",
         "page_description": "Cho phép hoặc chặn ổ USB, ổ quang, màn hình phụ và quyền truy cập ổ đĩa trên từng thiết bị, đồng thời giới hạn CPU, bộ nhớ và băng thông. Thiết bị nhận quy tắc vào lần tới tác nhân BetterDesk của nó lấy chúng từ máy chủ.",
         "devices_title": "Thiết bị",
         "search_label": "Tìm thiết bị",
@@ -5915,7 +5915,9 @@
         "save_unavailable": "Không lưu được: phiên bản máy chủ này chưa lưu được các quy tắc này.",
         "device_facts_title": "Thiết bị này",
         "fact_id": "ID thiết bị",
-        "tabs_save_hint": "Mỗi loại quy tắc có nút Lưu riêng và được lưu riêng."
+        "tabs_save_hint": "Mỗi loại quy tắc có nút Lưu riêng và được lưu riêng.",
+        "save_rules": "Lưu quy tắc",
+        "save_all_hint": "Lưu sẽ lưu mọi loại quy tắc bạn đã thay đổi. Mỗi loại được lưu riêng."
     },
     "sdk_studio": {
         "title": "SDK Studio",

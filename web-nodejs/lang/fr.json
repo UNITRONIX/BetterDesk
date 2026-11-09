@@ -5946,7 +5946,7 @@
         "policy_allowed": "Autorisé",
         "policy_blocked": "Bloqué",
         "policy_whitelist": "Whitelist Only",
-        "policy_any": "Any",
+        "policy_any": "Toutes",
         "page_description": "Autorisez ou bloquez les clés USB, les lecteurs optiques, les écrans supplémentaires et l'accès aux disques sur chaque appareil, et limitez son processeur, sa mémoire et sa bande passante. Un appareil reçoit ses règles la prochaine fois que son agent BetterDesk les récupère sur le serveur.",
         "devices_title": "Appareils",
         "search_label": "Rechercher des appareils",
@@ -6042,7 +6042,9 @@
         "save_unavailable": "Enregistrement impossible : cette version du serveur ne peut pas encore enregistrer ces règles.",
         "device_facts_title": "Cet appareil",
         "fact_id": "ID de l'appareil",
-        "tabs_save_hint": "Chaque type de règle a son propre bouton Enregistrer et s'enregistre séparément."
+        "tabs_save_hint": "Chaque type de règle a son propre bouton Enregistrer et s'enregistre séparément.",
+        "save_rules": "Enregistrer les règles",
+        "save_all_hint": "Enregistrer conserve chaque type de règle que vous avez modifié. Chaque type est enregistré séparément."
     },
     "sdk_studio": {
         "title": "Tableau de bord",

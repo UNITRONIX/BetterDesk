@@ -6111,7 +6111,9 @@
         "save_unavailable": "Could not save: this server version can't store these rules yet.",
         "device_facts_title": "This device",
         "fact_id": "Device ID",
-        "tabs_save_hint": "Each kind of rule has its own Save button and is saved on its own."
+        "tabs_save_hint": "Each kind of rule has its own Save button and is saved on its own.",
+        "save_rules": "Save rules",
+        "save_all_hint": "Save stores every kind of rule you changed. Each kind is saved on its own."
     },
     "sdk_studio": {
         "title": "SDK Studio",

@@ -5819,7 +5819,7 @@
         "policy_allowed": "Permis",
         "policy_blocked": "Blocat",
         "policy_whitelist": "Numai pe lista albă",
-        "policy_any": "Any",
+        "policy_any": "Oricare",
         "page_description": "Permiteți sau blocați unitățile USB, unitățile optice, monitoarele suplimentare și accesul la discuri pe fiecare dispozitiv și limitați procesorul, memoria și lățimea de bandă. Un dispozitiv își primește regulile data viitoare când agentul BetterDesk le preia de pe server.",
         "devices_title": "Dispozitive",
         "search_label": "Căutați dispozitive",
@@ -5915,7 +5915,9 @@
         "save_unavailable": "Nu s-a putut salva: această versiune de server nu poate încă salva aceste reguli.",
         "device_facts_title": "Acest dispozitiv",
         "fact_id": "ID dispozitiv",
-        "tabs_save_hint": "Fiecare tip de regulă are propriul buton Salvare și se salvează separat."
+        "tabs_save_hint": "Fiecare tip de regulă are propriul buton Salvare și se salvează separat.",
+        "save_rules": "Salvează regulile",
+        "save_all_hint": "Salvarea păstrează fiecare tip de regulă pe care l-ați modificat. Fiecare tip se salvează separat."
     },
     "sdk_studio": {
         "title": "SDK Studio",

@@ -5813,7 +5813,7 @@
         "policy_allowed": "Permitido",
         "policy_blocked": "Bloqueado",
         "policy_whitelist": "Somente lista permitida",
-        "policy_any": "Any",
+        "policy_any": "Qualquer",
         "page_description": "Permita ou bloqueie unidades USB, unidades ópticas, monitores extras e o acesso a discos em cada dispositivo, e limite a CPU, a memória e a largura de banda. Um dispositivo recebe as suas regras na próxima vez que o agente BetterDesk as busca no servidor.",
         "devices_title": "Dispositivos",
         "search_label": "Pesquisar dispositivos",
@@ -5909,7 +5909,9 @@
         "save_unavailable": "Não foi possível guardar: esta versão do servidor ainda não consegue guardar estas regras.",
         "device_facts_title": "Este dispositivo",
         "fact_id": "ID do dispositivo",
-        "tabs_save_hint": "Cada tipo de regra tem o seu próprio botão Guardar e é guardado à parte."
+        "tabs_save_hint": "Cada tipo de regra tem o seu próprio botão Guardar e é guardado à parte.",
+        "save_rules": "Guardar regras",
+        "save_all_hint": "Guardar grava cada tipo de regra que alterou. Cada tipo é guardado à parte."
     },
     "sdk_studio": {
         "title": "SDK Studio",

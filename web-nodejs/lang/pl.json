@@ -6038,7 +6038,9 @@
         "save_unavailable": "Nie można zapisać: ta wersja serwera nie potrafi jeszcze zapisywać tych reguł.",
         "device_facts_title": "To urządzenie",
         "fact_id": "ID urządzenia",
-        "tabs_save_hint": "Każdy rodzaj reguły ma własny przycisk Zapisz i zapisuje się osobno."
+        "tabs_save_hint": "Każdy rodzaj reguły ma własny przycisk Zapisz i zapisuje się osobno.",
+        "save_rules": "Zapisz reguły",
+        "save_all_hint": "Zapisz zapisuje każdy rodzaj reguł, który został zmieniony. Każdy rodzaj zapisuje się osobno."
     },
     "sdk_studio": {
         "title": "SDK Studio",

@@ -5819,7 +5819,7 @@
         "policy_allowed": "Diizinkan",
         "policy_blocked": "Diblokir",
         "policy_whitelist": "Hanya Daftar Putih",
-        "policy_any": "Any",
+        "policy_any": "Apa saja",
         "page_description": "Izinkan atau blokir drive USB, drive optik, monitor tambahan, dan akses disk di setiap perangkat, serta batasi CPU, memori, dan bandwidth-nya. Perangkat mendapat aturannya saat agen BetterDesk-nya berikutnya mengambilnya dari server.",
         "devices_title": "Perangkat",
         "search_label": "Cari perangkat",
@@ -5915,7 +5915,9 @@
         "save_unavailable": "Tidak bisa menyimpan: versi server ini belum bisa menyimpan aturan ini.",
         "device_facts_title": "Perangkat ini",
         "fact_id": "ID perangkat",
-        "tabs_save_hint": "Setiap jenis aturan punya tombol Simpan sendiri dan disimpan terpisah."
+        "tabs_save_hint": "Setiap jenis aturan punya tombol Simpan sendiri dan disimpan terpisah.",
+        "save_rules": "Simpan aturan",
+        "save_all_hint": "Simpan menyimpan setiap jenis aturan yang Anda ubah. Setiap jenis disimpan sendiri-sendiri."
     },
     "sdk_studio": {
         "title": "SDK Studio",

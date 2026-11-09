@@ -5924,7 +5924,7 @@
         "policy_allowed": "允许",
         "policy_blocked": "阻止",
         "policy_whitelist": "仅白名单",
-        "policy_any": "Any",
+        "policy_any": "不限",
         "page_description": "在每台设备上允许或阻止 USB 驱动器、光驱、额外显示器和磁盘访问，并限制其 CPU、内存和带宽。设备的 BetterDesk 代理下次从服务器获取规则时，设备就会得到这些规则。",
         "devices_title": "设备",
         "search_label": "搜索设备",
@@ -6020,7 +6020,9 @@
         "save_unavailable": "无法保存：此服务器版本还无法保存这些规则。",
         "device_facts_title": "此设备",
         "fact_id": "设备 ID",
-        "tabs_save_hint": "每种规则都有自己的保存按钮，会分别保存。"
+        "tabs_save_hint": "每种规则都有自己的保存按钮，会分别保存。",
+        "save_rules": "保存规则",
+        "save_all_hint": "保存会存储您更改的每一类规则。每一类单独保存。"
     },
     "sdk_studio": {
         "title": "SDK Studio",

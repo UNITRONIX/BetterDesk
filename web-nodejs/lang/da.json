@@ -5819,7 +5819,7 @@
         "policy_allowed": "Tilladt",
         "policy_blocked": "Blokeret",
         "policy_whitelist": "Kun hvidliste",
-        "policy_any": "Any",
+        "policy_any": "Alle",
         "page_description": "Tillad eller bloker USB-drev, optiske drev, ekstra skærme og diskadgang på hver enhed, og begræns dens CPU, hukommelse og båndbredde. En enhed får sine regler, næste gang dens BetterDesk-agent henter dem fra serveren.",
         "devices_title": "Enheder",
         "search_label": "Søg i enheder",
@@ -5915,7 +5915,9 @@
         "save_unavailable": "Kunne ikke gemme: denne serverversion kan endnu ikke gemme disse regler.",
         "device_facts_title": "Denne enhed",
         "fact_id": "Enheds-id",
-        "tabs_save_hint": "Hver slags regel har sin egen Gem-knap og gemmes for sig."
+        "tabs_save_hint": "Hver slags regel har sin egen Gem-knap og gemmes for sig.",
+        "save_rules": "Gem regler",
+        "save_all_hint": "Gem gemmer hver type regel, du har ændret. Hver type gemmes for sig."
     },
     "sdk_studio": {
         "title": "SDK Studio",

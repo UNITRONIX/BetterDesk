@@ -5813,7 +5813,7 @@
         "policy_allowed": "許可",
         "policy_blocked": "ブロック",
         "policy_whitelist": "ホワイトリストのみ",
-        "policy_any": "Any",
+        "policy_any": "制限なし",
         "page_description": "各デバイスで USB ドライブ、光学ドライブ、追加モニター、ディスクへのアクセスを許可またはブロックし、CPU、メモリ、帯域幅を制限します。デバイスは、BetterDesk エージェントが次にサーバーからルールを取得したときにルールを受け取ります。",
         "devices_title": "デバイス",
         "search_label": "デバイスを検索",
@@ -5909,7 +5909,9 @@
         "save_unavailable": "保存できませんでした: このバージョンのサーバーはまだこれらのルールを保存できません。",
         "device_facts_title": "このデバイス",
         "fact_id": "デバイスID",
-        "tabs_save_hint": "ルールの種類ごとに保存ボタンがあり、個別に保存されます。"
+        "tabs_save_hint": "ルールの種類ごとに保存ボタンがあり、個別に保存されます。",
+        "save_rules": "ルールを保存",
+        "save_all_hint": "保存すると、変更した種類のルールがすべて保存されます。種類ごとに別々に保存されます。"
     },
     "sdk_studio": {
         "title": "SDK Studio",

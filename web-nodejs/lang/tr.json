@@ -5819,7 +5819,7 @@
         "policy_allowed": "İzin verildi",
         "policy_blocked": "Engellendi",
         "policy_whitelist": "Yalnızca Beyaz Liste",
-        "policy_any": "Any",
+        "policy_any": "Herhangi",
         "page_description": "Her cihazda USB sürücülerine, optik sürücülere, ek monitörlere ve disk erişimine izin verin veya engelleyin; CPU, bellek ve bant genişliğini sınırlayın. Cihaz, kurallarını BetterDesk aracısı onları sunucudan bir sonraki alışında alır.",
         "devices_title": "Cihazlar",
         "search_label": "Cihaz ara",
@@ -5915,7 +5915,9 @@
         "save_unavailable": "Kaydedilemedi: bu sunucu sürümü bu kuralları henüz kaydedemiyor.",
         "device_facts_title": "Bu cihaz",
         "fact_id": "Cihaz kimliği",
-        "tabs_save_hint": "Her kural türünün kendi Kaydet düğmesi vardır ve ayrı kaydedilir."
+        "tabs_save_hint": "Her kural türünün kendi Kaydet düğmesi vardır ve ayrı kaydedilir.",
+        "save_rules": "Kuralları kaydet",
+        "save_all_hint": "Kaydet, değiştirdiğiniz her kural türünü kaydeder. Her tür ayrı kaydedilir."
     },
     "sdk_studio": {
         "title": "SDK Studio",

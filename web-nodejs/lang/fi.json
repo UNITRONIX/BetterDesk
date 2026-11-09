@@ -5819,7 +5819,7 @@
         "policy_allowed": "Sallittu",
         "policy_blocked": "Estetty",
         "policy_whitelist": "Vain valkoinen lista",
-        "policy_any": "Any",
+        "policy_any": "Mikä tahansa",
         "page_description": "Salli tai estä USB-asemat, optiset asemat, lisänäytöt ja levyjen käyttö kullakin laitteella ja rajoita sen suoritinta, muistia ja kaistaa. Laite saa sääntönsä, kun sen BetterDesk-agentti seuraavan kerran hakee ne palvelimelta.",
         "devices_title": "Laitteet",
         "search_label": "Hae laitteita",
@@ -5915,7 +5915,9 @@
         "save_unavailable": "Tallennus epäonnistui: tämä palvelinversio ei vielä pysty tallentamaan näitä sääntöjä.",
         "device_facts_title": "Tämä laite",
         "fact_id": "Laitteen tunnus",
-        "tabs_save_hint": "Jokaisella sääntötyypillä on oma Tallenna-painike, ja se tallennetaan erikseen."
+        "tabs_save_hint": "Jokaisella sääntötyypillä on oma Tallenna-painike, ja se tallennetaan erikseen.",
+        "save_rules": "Tallenna säännöt",
+        "save_all_hint": "Tallenna tallentaa jokaisen muuttamasi sääntötyypin. Jokainen tyyppi tallennetaan erikseen."
     },
     "sdk_studio": {
         "title": "SDK Studio",

@@ -5813,7 +5813,7 @@
         "policy_allowed": "허용",
         "policy_blocked": "차단",
         "policy_whitelist": "화이트리스트만",
-        "policy_any": "Any",
+        "policy_any": "제한 없음",
         "page_description": "각 장치에서 USB 드라이브, 광학 드라이브, 추가 모니터, 디스크 접근을 허용하거나 차단하고 CPU, 메모리, 대역폭을 제한합니다. 장치는 BetterDesk 에이전트가 다음에 서버에서 규칙을 가져올 때 규칙을 받습니다.",
         "devices_title": "장치",
         "search_label": "장치 검색",
@@ -5909,7 +5909,9 @@
         "save_unavailable": "저장하지 못했습니다: 이 서버 버전은 아직 이 규칙을 저장할 수 없습니다.",
         "device_facts_title": "이 장치",
         "fact_id": "장치 ID",
-        "tabs_save_hint": "규칙 종류마다 저장 버튼이 따로 있으며 각각 저장됩니다."
+        "tabs_save_hint": "규칙 종류마다 저장 버튼이 따로 있으며 각각 저장됩니다.",
+        "save_rules": "규칙 저장",
+        "save_all_hint": "저장하면 변경한 모든 종류의 규칙이 저장됩니다. 종류마다 따로 저장됩니다."
     },
     "sdk_studio": {
         "title": "SDK Studio",
