@@ -2,7 +2,13 @@ import { session, startSession, clearSession } from '#lib/state/session.svelte.t
 
 const boot = {
 	success: true,
-	user: { id: 1, username: 'demo_ui_admin', role: 'admin', preferredLanguage: null, avatarVersion: 'pic-1' },
+	user: {
+		id: 1,
+		username: 'demo_ui_admin',
+		role: 'admin',
+		preferredLanguage: null as string | null,
+		avatarVersion: 'pic-1'
+	},
 	permissions: ['device.view'],
 	isSuperAdmin: true,
 	emergencyMode: false,
