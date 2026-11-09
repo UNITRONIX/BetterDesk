@@ -4371,7 +4371,8 @@
         "trend_day": "日期",
         "trend_summary": "最近 14 天新開 {opened} 個，已解決 {resolved} 個。",
         "trend_summary_opened": "最近 14 天新開 {opened} 個。",
-        "trend_capped": "僅統計最新的 {count} 個請求。"
+        "trend_capped": "僅統計最新的 {count} 個請求。",
+        "needs_chat": "只有具備聊天權限的角色才能看到求助請求。如有需要，請洽詢管理員。"
     },
     "organizations": {
         "title": "組織管理",

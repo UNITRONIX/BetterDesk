@@ -4371,7 +4371,8 @@
         "trend_day": "Jour",
         "trend_summary": "{opened} ouvertes et {resolved} résolues ces 14 derniers jours.",
         "trend_summary_opened": "{opened} ouvertes ces 14 derniers jours.",
-        "trend_capped": "Seules les {count} demandes les plus récentes sont comptées."
+        "trend_capped": "Seules les {count} demandes les plus récentes sont comptées.",
+        "needs_chat": "Les demandes d'aide ne s'affichent que pour les rôles qui ont accès au chat. Demandez à un administrateur si vous en avez besoin."
     },
     "organizations": {
         "title": "Tableau de bord",

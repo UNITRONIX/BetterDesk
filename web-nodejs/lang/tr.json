@@ -4244,7 +4244,8 @@
         "trend_day": "Gün",
         "trend_summary": "Son 14 günde {opened} açıldı, {resolved} çözüldü.",
         "trend_summary_opened": "Son 14 günde {opened} açıldı.",
-        "trend_capped": "Yalnızca en yeni {count} istek sayılır."
+        "trend_capped": "Yalnızca en yeni {count} istek sayılır.",
+        "needs_chat": "Yardım istekleri yalnızca sohbet erişimi olan rollere gösterilir. Gerekirse bir yöneticiye başvurun."
     },
     "organizations": {
         "title": "Organizasyonlar",

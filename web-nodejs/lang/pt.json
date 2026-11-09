@@ -4238,7 +4238,8 @@
         "trend_day": "Dia",
         "trend_summary": "{opened} abertos e {resolved} resolvidos nos últimos 14 dias.",
         "trend_summary_opened": "{opened} abertos nos últimos 14 dias.",
-        "trend_capped": "Só são contados os {count} pedidos mais recentes."
+        "trend_capped": "Só são contados os {count} pedidos mais recentes.",
+        "needs_chat": "Os pedidos de ajuda só aparecem para funções com acesso ao chat. Peça a um administrador se precisar deles."
     },
     "organizations": {
         "title": "Organizações",

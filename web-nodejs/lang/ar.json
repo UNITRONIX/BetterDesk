@@ -4245,7 +4245,8 @@
         "trend_day": "اليوم",
         "trend_summary": "{opened} مفتوحة و{resolved} محلولة في آخر 14 يومًا.",
         "trend_summary_opened": "{opened} مفتوحة في آخر 14 يومًا.",
-        "trend_capped": "تُحتسب أحدث {count} طلب فقط."
+        "trend_capped": "تُحتسب أحدث {count} طلب فقط.",
+        "needs_chat": "تظهر طلبات المساعدة للأدوار التي لديها صلاحية الدردشة فقط. اطلب ذلك من المسؤول إذا كنت تحتاجها."
     },
     "organizations": {
         "title": "المنظمات",

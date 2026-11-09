@@ -4238,7 +4238,8 @@
         "trend_day": "날짜",
         "trend_summary": "최근 14일 동안 {opened}건 접수, {resolved}건 해결.",
         "trend_summary_opened": "최근 14일 동안 {opened}건 접수.",
-        "trend_capped": "최신 요청 {count}건만 집계됩니다."
+        "trend_capped": "최신 요청 {count}건만 집계됩니다.",
+        "needs_chat": "도움 요청은 채팅 권한이 있는 역할에만 표시됩니다. 필요하면 관리자에게 요청하세요."
     },
     "organizations": {
         "title": "조직",

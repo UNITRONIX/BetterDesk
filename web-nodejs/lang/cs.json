@@ -4238,7 +4238,8 @@
         "trend_day": "Den",
         "trend_summary": "{opened} otevřených a {resolved} vyřešených za posledních 14 dní.",
         "trend_summary_opened": "{opened} otevřených za posledních 14 dní.",
-        "trend_capped": "Počítá se jen {count} nejnovějších žádostí."
+        "trend_capped": "Počítá se jen {count} nejnovějších žádostí.",
+        "needs_chat": "Žádosti o pomoc vidí jen role s přístupem k chatu. Pokud je potřebujete, požádejte správce."
     },
     "organizations": {
         "title": "Organizace",

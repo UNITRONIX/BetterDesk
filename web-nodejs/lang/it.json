@@ -4238,7 +4238,8 @@
         "trend_day": "Giorno",
         "trend_summary": "{opened} aperte e {resolved} risolte negli ultimi 14 giorni.",
         "trend_summary_opened": "{opened} aperte negli ultimi 14 giorni.",
-        "trend_capped": "Vengono contate solo le {count} richieste più recenti."
+        "trend_capped": "Vengono contate solo le {count} richieste più recenti.",
+        "needs_chat": "Le richieste di aiuto sono visibili solo ai ruoli con accesso alla chat. Chieda a un amministratore se le servono."
     },
     "organizations": {
         "title": "Organizzazioni",

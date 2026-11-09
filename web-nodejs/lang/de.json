@@ -4238,7 +4238,8 @@
         "trend_day": "Tag",
         "trend_summary": "{opened} neu und {resolved} erledigt in den letzten 14 Tagen.",
         "trend_summary_opened": "{opened} neu in den letzten 14 Tagen.",
-        "trend_capped": "Gezählt werden nur die neuesten {count} Anfragen."
+        "trend_capped": "Gezählt werden nur die neuesten {count} Anfragen.",
+        "needs_chat": "Hilfeanfragen sehen nur Rollen mit Chat-Zugriff. Fragen Sie einen Administrator, wenn Sie sie brauchen."
     },
     "organizations": {
         "title": "Dashboard",

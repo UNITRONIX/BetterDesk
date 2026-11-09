@@ -4428,7 +4428,8 @@
         "trend_day": "Day",
         "trend_summary": "{opened} opened and {resolved} resolved in the last 14 days.",
         "trend_summary_opened": "{opened} opened in the last 14 days.",
-        "trend_capped": "Only the newest {count} requests are counted."
+        "trend_capped": "Only the newest {count} requests are counted.",
+        "needs_chat": "Help requests are shown to roles with chat access. Ask an administrator if you need them."
     },
     "organizations": {
         "title": "Organizations",

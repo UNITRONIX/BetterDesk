@@ -4244,7 +4244,8 @@
         "trend_day": "Ngày",
         "trend_summary": "{opened} yêu cầu mở và {resolved} đã giải quyết trong 14 ngày qua.",
         "trend_summary_opened": "{opened} yêu cầu mở trong 14 ngày qua.",
-        "trend_capped": "Chỉ tính {count} yêu cầu mới nhất."
+        "trend_capped": "Chỉ tính {count} yêu cầu mới nhất.",
+        "needs_chat": "Yêu cầu trợ giúp chỉ hiển thị cho các vai trò có quyền trò chuyện. Hãy hỏi quản trị viên nếu bạn cần."
     },
     "organizations": {
         "title": "Tổ chức",

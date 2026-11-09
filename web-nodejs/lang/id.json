@@ -4244,7 +4244,8 @@
         "trend_day": "Hari",
         "trend_summary": "{opened} dibuka dan {resolved} diselesaikan dalam 14 hari terakhir.",
         "trend_summary_opened": "{opened} dibuka dalam 14 hari terakhir.",
-        "trend_capped": "Hanya {count} permintaan terbaru yang dihitung."
+        "trend_capped": "Hanya {count} permintaan terbaru yang dihitung.",
+        "needs_chat": "Permintaan bantuan hanya ditampilkan untuk peran yang punya akses chat. Minta kepada administrator jika Anda membutuhkannya."
     },
     "organizations": {
         "title": "Organisasi",

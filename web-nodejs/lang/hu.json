@@ -4244,7 +4244,8 @@
         "trend_day": "Nap",
         "trend_summary": "Az elmúlt 14 napban {opened} kérés érkezett és {resolved} megoldódott.",
         "trend_summary_opened": "Az elmúlt 14 napban {opened} kérés érkezett.",
-        "trend_capped": "Csak a legújabb {count} kérést számoljuk."
+        "trend_capped": "Csak a legújabb {count} kérést számoljuk.",
+        "needs_chat": "A segítségkéréseket csak a csevegéshez hozzáféréssel rendelkező szerepkörök látják. Ha szüksége van rájuk, kérdezzen meg egy rendszergazdát."
     },
     "organizations": {
         "title": "Szervezetek",

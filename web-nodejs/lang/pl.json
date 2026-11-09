@@ -4367,7 +4367,8 @@
         "trend_day": "Dzień",
         "trend_summary": "{opened} otwartych i {resolved} rozwiązanych w ostatnich 14 dniach.",
         "trend_summary_opened": "{opened} otwartych w ostatnich 14 dniach.",
-        "trend_capped": "Liczone są tylko {count} najnowsze prośby."
+        "trend_capped": "Liczone są tylko {count} najnowsze prośby.",
+        "needs_chat": "Prośby o pomoc widzą tylko role z dostępem do czatu. Jeśli ich potrzebujesz, poproś administratora."
     },
     "organizations": {
         "title": "Organizacje",

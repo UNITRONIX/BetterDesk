@@ -4244,7 +4244,8 @@
         "trend_day": "Päivä",
         "trend_summary": "{opened} avattu ja {resolved} ratkaistu viimeisten 14 päivän aikana.",
         "trend_summary_opened": "{opened} avattu viimeisten 14 päivän aikana.",
-        "trend_capped": "Vain {count} uusinta pyyntöä lasketaan."
+        "trend_capped": "Vain {count} uusinta pyyntöä lasketaan.",
+        "needs_chat": "Avunpyynnöt näkyvät vain rooleille, joilla on pääsy chattiin. Pyydä ylläpitäjältä, jos tarvitset niitä."
     },
     "organizations": {
         "title": "Organisaatiot",

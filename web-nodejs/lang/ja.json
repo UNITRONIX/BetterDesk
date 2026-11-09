@@ -4238,7 +4238,8 @@
         "trend_day": "日付",
         "trend_summary": "過去 14 日間に {opened} 件受信、{resolved} 件解決。",
         "trend_summary_opened": "過去 14 日間に {opened} 件受信。",
-        "trend_capped": "数えているのは最新の {count} 件のみです。"
+        "trend_capped": "数えているのは最新の {count} 件のみです。",
+        "needs_chat": "ヘルプ要求はチャットへのアクセス権があるロールにのみ表示されます。必要な場合は管理者に依頼してください。"
     },
     "organizations": {
         "title": "組織",

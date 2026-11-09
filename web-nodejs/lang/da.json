@@ -4244,7 +4244,8 @@
         "trend_day": "Dag",
         "trend_summary": "{opened} åbnet og {resolved} løst de seneste 14 dage.",
         "trend_summary_opened": "{opened} åbnet de seneste 14 dage.",
-        "trend_capped": "Kun de nyeste {count} anmodninger tælles med."
+        "trend_capped": "Kun de nyeste {count} anmodninger tælles med.",
+        "needs_chat": "Hjælpeanmodninger vises kun for roller med adgang til chat. Spørg en administrator, hvis du har brug for dem."
     },
     "organizations": {
         "title": "Organisationer",

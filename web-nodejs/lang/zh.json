@@ -4349,7 +4349,8 @@
         "trend_day": "日期",
         "trend_summary": "最近 14 天新开 {opened} 个，已解决 {resolved} 个。",
         "trend_summary_opened": "最近 14 天新开 {opened} 个。",
-        "trend_capped": "仅统计最新的 {count} 个请求。"
+        "trend_capped": "仅统计最新的 {count} 个请求。",
+        "needs_chat": "只有具有聊天权限的角色才能看到求助请求。如有需要，请联系管理员。"
     },
     "organizations": {
         "title": "组织管理",

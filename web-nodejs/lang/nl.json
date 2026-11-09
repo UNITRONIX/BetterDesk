@@ -4238,7 +4238,8 @@
         "trend_day": "Dag",
         "trend_summary": "{opened} geopend en {resolved} opgelost in de laatste 14 dagen.",
         "trend_summary_opened": "{opened} geopend in de laatste 14 dagen.",
-        "trend_capped": "Alleen de nieuwste {count} verzoeken worden geteld."
+        "trend_capped": "Alleen de nieuwste {count} verzoeken worden geteld.",
+        "needs_chat": "Hulpverzoeken zijn alleen zichtbaar voor rollen met toegang tot chat. Vraag een beheerder als u ze nodig hebt."
     },
     "organizations": {
         "title": "Organisaties",

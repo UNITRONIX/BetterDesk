@@ -4244,7 +4244,8 @@
         "trend_day": "Zi",
         "trend_summary": "{opened} deschise și {resolved} rezolvate în ultimele 14 zile.",
         "trend_summary_opened": "{opened} deschise în ultimele 14 zile.",
-        "trend_capped": "Se numără doar cele mai noi {count} cereri."
+        "trend_capped": "Se numără doar cele mai noi {count} cereri.",
+        "needs_chat": "Cererile de ajutor apar doar pentru rolurile cu acces la chat. Cereți-le unui administrator dacă aveți nevoie de ele."
     },
     "organizations": {
         "title": "Organizații",
