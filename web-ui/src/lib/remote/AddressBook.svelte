@@ -126,8 +126,8 @@
 		onviewchange?.(v);
 	}
 
+	// The filter headings come before the list's title, so they share its level
 	const H = $derived(`h${headingLevel}`);
-	const H2 = $derived(`h${headingLevel + 1}`);
 
 	const columns: Column<BookDevice>[] = $derived([
 		{ id: 'name', label: tf('remote_dashboard.col_name', 'Name'), cell: nameCell, primary: true },
@@ -205,7 +205,7 @@
 <div class={['book', compact && 'compact']}>
 	<aside class="book-side" aria-label={tf('remote_dashboard.filters_label', 'Filters')}>
 		<div class="filter-block">
-			<svelte:element this={H2} class="filter-head"
+			<svelte:element this={H} class="filter-head"
 				>{tf('remote_dashboard.nav_folders', 'Folders')}</svelte:element
 			>
 			<ul class="filter-list">
@@ -225,7 +225,7 @@
 			</ul>
 		</div>
 		<div class="filter-block">
-			<svelte:element this={H2} class="filter-head"
+			<svelte:element this={H} class="filter-head"
 				>{tf('remote_dashboard.nav_groups', 'Groups')}</svelte:element
 			>
 			{#if groups.length}
@@ -239,7 +239,7 @@
 			{/if}
 		</div>
 		<div class="filter-block">
-			<svelte:element this={H2} class="filter-head">{tf('remote_dashboard.nav_tags', 'Tags')}</svelte:element>
+			<svelte:element this={H} class="filter-head">{tf('remote_dashboard.nav_tags', 'Tags')}</svelte:element>
 			{#if tags.length}
 				<ul class="filter-list">
 					{#each tags as tag (tag)}
