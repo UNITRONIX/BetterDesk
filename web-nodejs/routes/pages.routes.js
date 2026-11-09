@@ -30,9 +30,9 @@ router.get('/tickets', requireAuth, (req, res) => {
     });
 });
 
-// ── Automation (Alerts + Remote Commands) ──
+// ── Automation (Alerts + Remote Commands) — server.config, like its API ──
 
-router.get('/automation', requireAuth, (req, res) => {
+router.get('/automation', requireAuth, requirePermission('server.config'), (req, res) => {
     res.render('automation', {
         title: req.t('automation.title'),
         activePage: 'automation',

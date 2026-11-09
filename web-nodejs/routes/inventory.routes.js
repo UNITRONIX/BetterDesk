@@ -23,7 +23,10 @@ const router = express.Router();
 const db = require('../services/database');
 const { getAdapter } = require('../services/dbAdapter');
 const betterdeskApi = require('../services/betterdeskApi');
+const alertRulesEngine = require('../services/alertRulesEngine');
 const { requireAuth, requirePermission } = require('../middleware/auth');
+// Also mounted at /api/bd: the admin routes leave device paths to the device routes
+const { notOnDeviceMount } = require('../lib/adminMount');
 
 // ---------------------------------------------------------------------------
 //  Helpers (shared with bd-api.routes.js)
@@ -172,6 +175,12 @@ router.post('/inventory', requireDeviceToken, async (req, res) => {
             console.warn('[Inventory] Failed to update peer info:', dbErr.message);
         }
 
+        // Disk alert rules, on the fullest disk
+        const disk = fullestDisk(hardware.disks).disk_max_used_percent;
+        if (disk !== undefined) {
+            alertRulesEngine.evaluateInBackground(() => alertRulesEngine.evaluateRules(device_id, 'disk_usage', disk));
+        }
+
         console.log(`[Inventory] Full inventory received from ${device_id} (HW + ${software?.apps?.length || 0} apps)`);
 
         res.json({ success: true });
@@ -212,6 +221,10 @@ router.post('/telemetry', requireDeviceToken, async (req, res) => {
             timestamp: timestamp || new Date().toISOString(),
         });
 
+        // CPU and memory alert rules
+        alertRulesEngine.evaluateInBackground(() =>
+            alertRulesEngine.evaluateTelemetry(device_id, { cpu_usage_percent, memory_used_bytes, memory_total_bytes }));
+
         res.json({ success: true });
     } catch (err) {
         console.error('[Telemetry] Upload error:', err.message);
@@ -248,7 +261,7 @@ router.get('/inventory/:id', requireDeviceToken, async (req, res) => {
 /**
  * GET /api/inventory — List all device inventories (admin only).
  */
-router.get('/', requireAuth, requirePermission('device.view'), async (req, res) => {
+router.get('/', notOnDeviceMount, requireAuth, requirePermission('device.view'), async (req, res) => {
     try {
         const pagination = parsePagination(req);
         if (!pagination) {
@@ -332,7 +345,7 @@ router.get('/', requireAuth, requirePermission('device.view'), async (req, res) 
 /**
  * GET /api/inventory/:id — Full inventory detail for one device (admin only).
  */
-router.get('/:id', requireAuth, requirePermission('device.view'), async (req, res) => {
+router.get('/:id', notOnDeviceMount, requireAuth, requirePermission('device.view'), async (req, res) => {
     try {
         const deviceId = req.params.id;
         const adapter = getAdapter();

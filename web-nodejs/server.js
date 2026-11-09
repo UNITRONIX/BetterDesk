@@ -725,7 +725,9 @@ async function startServer() {
             }
         }, 60 * 60 * 1000); // Every hour
         scheduledBackupService.start();
-        
+        // Offline-time alert rules, checked once a minute
+        const stopAlertSweep = require('./services/alertRulesEngine').start();
+
         // ============ Periodic Online Status Sync ============
         const syncInterval = parseInt(process.env.STATUS_SYNC_INTERVAL, 10) || 15; // seconds
         const heartbeatStaleThreshold = parseInt(process.env.HEARTBEAT_STALE_THRESHOLD, 10) || 90; // seconds
@@ -763,7 +765,8 @@ async function startServer() {
             clearInterval(housekeepingInterval);
             clearInterval(statusSyncInterval);
             scheduledBackupService.stop();
-            
+            stopAlertSweep();
+
             const closePromises = [new Promise(r => server.close(r))];
             if (apiServer) {
                 closePromises.push(new Promise(r => apiServer.close(r)));

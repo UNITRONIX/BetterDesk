@@ -2,15 +2,16 @@
  * BetterDesk Console — Alert Rules Engine
  *
  * Evaluates alert rules against incoming telemetry / activity data
- * and triggers notifications when conditions are met.
+ * and triggers notifications when conditions are met. The device uploads
+ * call it (telemetry, inventory, activity); start() runs the offline sweep.
  *
  * Supported condition types:
- *   - cpu_usage        (threshold on cpu_usage_percent)
- *   - memory_usage     (threshold on memory_used_bytes / memory_total_bytes ratio)
- *   - disk_usage       (threshold on disk usage percent)
- *   - offline_duration (device offline > N seconds)
- *   - idle_duration    (user idle > N seconds)
- *   - custom           (always triggers — used for scheduled checks)
+ *   - cpu_usage        (threshold on cpu_usage_percent, POST /api/bd/telemetry)
+ *   - memory_usage     (threshold on memory_used_bytes / memory_total_bytes ratio, telemetry)
+ *   - disk_usage       (threshold on the fullest disk's usage percent, POST /api/bd/inventory)
+ *   - offline_duration (device offline > N seconds, the sweep every minute)
+ *   - idle_duration    (user idle > N seconds, POST /api/bd/activity)
+ *   - custom           (not checked: it has no value to compare)
  *
  * Condition operators: gt, gte, lt, lte, eq, neq
  *
@@ -49,23 +50,23 @@ function evalCondition(value, op, threshold) {
 //  Evaluation
 // ---------------------------------------------------------------------------
 
-/**
- * Evaluate all enabled alert rules against a specific metric push.
- *
- * @param {string} deviceId
- * @param {string} metricType - e.g. 'cpu_usage', 'memory_usage', 'offline_duration'
- * @param {number} metricValue
- */
-async function evaluateRules(deviceId, metricType, metricValue) {
-    const adapter = getAdapter();
-    let rules;
+async function loadRules(metricType) {
     try {
-        rules = await adapter.getAlertRules({ enabled: true, condition_type: metricType });
+        return await getAdapter().getAlertRules({ enabled: true, condition_type: metricType });
     } catch (err) {
         console.error('[AlertEngine] Failed to load rules:', err.message);
-        return;
+        return [];
     }
+}
 
+/**
+ * Check one value against rules already loaded (all of one condition type).
+ * `minCooldownSecs` stretches the cooldown: an offline device stays over its
+ * limit for as long as it is offline, so its alert counts for that whole
+ * time instead of firing again every few minutes.
+ */
+async function evaluateAgainst(rules, deviceId, metricType, metricValue, { minCooldownSecs = 0 } = {}) {
+    const adapter = getAdapter();
     for (const rule of rules) {
         // Scope check: rule.scope_device_id can be null (all devices) or specific
         if (rule.scope_device_id && rule.scope_device_id !== deviceId) continue;
@@ -74,7 +75,7 @@ async function evaluateRules(deviceId, metricType, metricValue) {
         if (!triggered) continue;
 
         // Cooldown check
-        const cooldown = rule.cooldown_secs || DEFAULT_COOLDOWN_SECS;
+        const cooldown = Math.max(rule.cooldown_secs || DEFAULT_COOLDOWN_SECS, minCooldownSecs);
         try {
             const recent = await adapter.getRecentAlert(rule.id, deviceId, cooldown);
             if (recent) continue; // Still in cooldown
@@ -107,11 +108,26 @@ async function evaluateRules(deviceId, metricType, metricValue) {
 }
 
 /**
+ * Evaluate all enabled alert rules against a specific metric push.
+ *
+ * @param {string} deviceId
+ * @param {string} metricType - e.g. 'cpu_usage', 'memory_usage', 'offline_duration'
+ * @param {number} metricValue
+ */
+async function evaluateRules(deviceId, metricType, metricValue, opts) {
+    if (!deviceId || metricValue === null || metricValue === undefined || metricValue === '') return;
+    const value = Number(metricValue);
+    if (!Number.isFinite(value)) return;
+    const rules = await loadRules(metricType);
+    if (rules.length) await evaluateAgainst(rules, deviceId, metricType, value, opts);
+}
+
+/**
  * Evaluate telemetry data against all applicable rules.
  * Called when a device sends a telemetry update.
  */
 async function evaluateTelemetry(deviceId, telemetry) {
-    if (telemetry.cpu_usage_percent !== undefined) {
+    if (telemetry.cpu_usage_percent !== undefined && telemetry.cpu_usage_percent !== null) {
         await evaluateRules(deviceId, 'cpu_usage', telemetry.cpu_usage_percent);
     }
     if (telemetry.memory_used_bytes && telemetry.memory_total_bytes) {
@@ -121,17 +137,64 @@ async function evaluateTelemetry(deviceId, telemetry) {
 }
 
 /**
- * Periodic sweep: check offline devices, scheduled tasks, etc.
- * Should be called on a timer (e.g. every 60s).
+ * Run an evaluation without holding up the device's request. A failure is
+ * logged, never thrown into the route.
  */
-async function periodicCheck() {
-    // Placeholder: offline duration checks, scheduled rule evaluations
-    // Can be extended to query all peers and check heartbeat timestamps.
+function evaluateInBackground(fn) {
+    Promise.resolve().then(fn).catch((err) => {
+        console.error('[AlertEngine] Evaluation failed:', err.message);
+    });
+}
+
+/**
+ * Periodic sweep: devices offline longer than an offline rule allows.
+ * Reads the device list only when such a rule is on. Online, banned and
+ * deleted devices, RDP/VNC targets and devices never seen are left out.
+ */
+async function periodicCheck({ now = Date.now() } = {}) {
+    const rules = await loadRules('offline_duration');
+    if (!rules.length) return;
+    let devices;
+    try {
+        // Required here: the backend pulls in the database and the Go API client
+        devices = await require('./serverBackend').getAllDevices();
+    } catch (err) {
+        console.error('[AlertEngine] Device list failed:', err.message);
+        return;
+    }
+    for (const d of Array.isArray(devices) ? devices : []) {
+        if (!d || !d.id || d.online || d.banned || d.soft_deleted || d.remote_target) continue;
+        const last = Date.parse(d.last_online || '');
+        if (!Number.isFinite(last)) continue;
+        const secs = Math.floor((now - last) / 1000);
+        if (secs <= 0) continue;
+        await evaluateAgainst(rules, d.id, 'offline_duration', secs, { minCooldownSecs: secs });
+    }
+}
+
+/** Run the offline sweep every `every` ms (one at a time); returns stop() */
+function start({ every = 60 * 1000 } = {}) {
+    let running = false;
+    const timer = setInterval(async () => {
+        if (running) return;
+        running = true;
+        try {
+            await module.exports.periodicCheck();
+        } catch (err) {
+            console.error('[AlertEngine] Sweep failed:', err.message);
+        } finally {
+            running = false;
+        }
+    }, every);
+    if (typeof timer.unref === 'function') timer.unref();
+    return () => clearInterval(timer);
 }
 
 module.exports = {
     evaluateRules,
     evaluateTelemetry,
+    evaluateInBackground,
     periodicCheck,
+    start,
     evalCondition,
 };
