@@ -1,6 +1,10 @@
 # BetterDesk Console v2.0 (Node.js)
 
-Modern web management console for RustDesk/BetterDesk server.
+Modern web management console for RustDesk/BetterDesk server. This folder
+is the Express server: the JSON API, the sockets and the server's own
+addresses. The console's pages are the Svelte app in `../web-ui`, whose
+build (`web-ui/build`, or `WEB_UI_DIR`) the server serves at the root
+(`lib/webUi.js`).
 
 ## Features
 
@@ -72,10 +76,13 @@ web-nodejs/
 │   ├── i18n.js          # Language detection
 │   ├── rateLimiter.js   # Rate limiting
 │   └── security.js      # Security headers
+├── lib/
+│   ├── webUi.js         # Serves the console build (web-ui)
+│   └── mountRoutes.js   # Routes, then the console, then the error handlers
 ├── public/
-│   ├── css/             # Stylesheets
-│   ├── js/              # Client-side JavaScript
-│   └── favicon.svg      # App icon
+│   ├── fonts/           # Fonts downloaded or uploaded in Branding
+│   ├── img/             # Login slides, supporter logos
+│   └── favicon.svg      # Default favicon
 ├── routes/
 │   ├── auth.routes.js   # Login/logout endpoints
 │   ├── dashboard.routes.js
@@ -91,11 +98,6 @@ web-nodejs/
 │   ├── betterdeskApi.js  # BetterDesk Go server REST API client
 │   ├── i18nService.js   # Translation manager
 │   └── keyService.js    # Key file operations
-├── views/
-│   ├── errors/          # Error pages
-│   ├── layouts/         # Base templates
-│   ├── partials/        # Reusable components
-│   └── *.ejs            # Page templates
 ├── package.json
 └── server.js            # Application entry point
 ```

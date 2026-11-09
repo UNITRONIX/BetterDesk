@@ -303,7 +303,7 @@ To enable: Click the monitor icon (🖥️) in the top navigation bar.
 | Component | Technology | Version |
 |-----------|-----------|---------|
 | Server | Go | 1.21+ |
-| Web Console | Node.js + Express.js + EJS | 18+ |
+| Web Console | Node.js + Express.js (API), Svelte 5 + SvelteKit (pages) | 22+ |
 | Database | SQLite / PostgreSQL | 3.x / 14+ |
 | Protocol | Protobuf (RustDesk wire format) | 3.x |
 | CDAP | WebSocket + JSON | 1.0 |
