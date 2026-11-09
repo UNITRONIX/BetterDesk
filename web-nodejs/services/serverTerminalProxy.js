@@ -14,7 +14,8 @@
  *
  * SECURITY:
  *   • Authentication via session cookie (express-session).
- *   • Authorization: only `super_admin` and `server_admin` may open a session.
+ *   • Authorization: the server.config permission, as for the Server
+ *     management page and its HTTP routes, with the role overrides applied.
  *   • The shell runs as the user that owns the Node.js process — typically
  *     `betterdesk-console` (systemd) which has no sudo by default.
  *     Document this in the install scripts.
@@ -28,6 +29,10 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { spawn } = require('child_process');
+const { roleHasEffectivePermission } = require('../middleware/auth');
+
+// The same permission as the Server management page and its HTTP routes
+const REQUIRED_PERMISSION = 'server.config';
 
 let pty = null;
 try {
@@ -259,7 +264,7 @@ function initServerTerminalProxy(server, sessionMiddleware, opts) {
         (pathname) => pathname === '/ws/server-management/terminal',
         (req, socket, head) => {
             if (!enforceOrigin(req, socket, 'server-management-terminal')) return;
-            sessionMiddleware(req, {}, () => {
+            sessionMiddleware(req, {}, async () => {
                 if (!req.session || !req.session.userId) {
                     socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
                     return socket.destroy();
@@ -267,8 +272,14 @@ function initServerTerminalProxy(server, sessionMiddleware, opts) {
                 const sessUser = req.session.user || {};
                 const role = sessUser.role || req.session.role || '';
                 const username = sessUser.username || `user#${req.session.userId}`;
-                // RBAC: only super_admin / admin / server_admin
-                if (!(role === 'super_admin' || role === 'admin' || role === 'server_admin')) {
+                // The page's permission, with the role overrides; a failed lookup refuses
+                let allowed = false;
+                try {
+                    allowed = await roleHasEffectivePermission(role, REQUIRED_PERMISSION);
+                } catch (_) {
+                    allowed = false;
+                }
+                if (!allowed) {
                     console.warn(`[srv-term] 403 upgrade rejected (user=${username} role=${role})`);
                     socket.write('HTTP/1.1 403 Forbidden\r\n\r\n');
                     return socket.destroy();
