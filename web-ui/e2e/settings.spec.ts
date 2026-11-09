@@ -43,9 +43,14 @@ for (const role of ROLES) {
 			await page.goto(`${UI}/settings?tab=branding`);
 			await expect(h1(page)).toHaveText('Appearance');
 			await expect(page.locator('#branding-theme')).toBeVisible();
-			const fieldset = page.locator('fieldset.settings-fieldset').first();
-			if (branding) await expect(fieldset).toBeEnabled();
-			else await expect(fieldset).toBeDisabled();
+			// The form is one disabled fieldset without branding.edit; Playwright reads
+			// that on the controls inside it, not on the fieldset itself
+			const name = page.locator('#brand-name');
+			if (branding) await expect(name).toBeEnabled();
+			else await expect(name).toBeDisabled();
+			await expect(page.locator('#branding-theme input[type="radio"]').first()).toBeEnabled({
+				enabled: branding
+			});
 			await expect(page.locator('#branding-profiles')).toHaveCount(branding ? 1 : 0);
 			await expect(page.locator('#branding-import-export')).toHaveCount(branding ? 1 : 0);
 			await expect(page.getByRole('button', { name: /Reset appearance/ })).toHaveCount(branding ? 1 : 0);
@@ -127,15 +132,21 @@ test.describe('settings links and search (admin)', () => {
 	});
 
 	test('leaving a tab with unsaved changes asks first', async ({ page }) => {
+		// The form counts changes once its four parts have loaded; wait for them
+		// (listening before the page asks, so no answer is missed)
+		const parts = ['public-endpoints', 'connection-mode', 'device-scope', 'availability-history'].map(
+			(part) => page.waitForResponse((r) => r.url().includes(`/api/settings/${part}`))
+		);
 		await page.goto(`${UI}/settings`);
+		await Promise.all(parts);
 		const field = page.locator('#public-server-id');
-		await expect(field).toBeVisible();
-		await page
-			.waitForResponse((r) => r.url().includes('/api/settings/public-endpoints'))
-			.catch(() => undefined);
 		await field.fill('changed.example.com');
 		await expect(page.locator('.save-bar.is-dirty')).toBeVisible();
-		await page.getByRole('link', { name: 'Appearance' }).first().click();
+		// Another tab in the app: Appearance sits under "More" in the sidebar,
+		// so go there through the settings search
+		const search = page.getByRole('searchbox', { name: 'Search all settings' });
+		await search.fill('footer text');
+		await search.press('Enter');
 		const dialog = page.getByRole('dialog');
 		await expect(dialog).toBeVisible();
 		await expectNoAxeViolations(page);
