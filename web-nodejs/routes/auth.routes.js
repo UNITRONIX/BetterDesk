@@ -41,14 +41,6 @@ function returnPathOr(raw, fallback = '/') {
     return safeReturnPath(raw) || fallback;
 }
 
-/** The sign-in page is for people who aren't signed in; someone who is goes back (R3) */
-function loginGuestOnly(req, res, next) {
-    if (req.session && req.session.userId) {
-        return res.redirect(returnPathOr(req.query.return));
-    }
-    next();
-}
-
 /** The sign-in page's capacity badge (Settings › Server attestation), or one that says nothing */
 async function attestationSummary(req) {
     try {
@@ -87,34 +79,6 @@ async function bestEffortUserSync(action, label) {
         console.warn(`[auth] ${label} sync failed:`, err.message);
     }
 }
-
-/**
- * GET /login - Login page
- * Serves desktop-style login when user previously had desktop mode active
- * (detected via localStorage preference or explicit ?desktop=1 query param).
- */
-router.get('/login', loginGuestOnly, async (req, res) => {
-    const useDesktop = req.query.desktop === '1' || (req.cookies && req.cookies.betterdesk_desktop_mode === 'true');
-    const attestationBadge = await attestationSummary(req);
-
-    if (useDesktop) {
-        // No list of the server's accounts: visitors who aren't signed in must
-        // not learn usernames and roles (S4). The browser's own saved
-        // sign-ins fill the username field (autocomplete="username").
-        return res.render('desktop-login', {
-            title: req.t('nav.login'),
-            activePage: 'login',
-            loginUsers: [],
-            attestationBadge
-        });
-    }
-
-    res.render('login', {
-        title: req.t('nav.login'),
-        activePage: 'login',
-        attestationBadge
-    });
-});
 
 const PROMO_MODES = new Set(['classic', 'single', 'slides']);
 

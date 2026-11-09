@@ -4,7 +4,8 @@
  * Provides:
  *   - /generator, which redirects to the agents page (/agents, in the new console)
  *   - Legacy module/bundle APIs (/api/generator/*) for embedded maintainer mode
- *   - Public download portal per legacy bundle (/d/:slug)
+ *   - The data of the public download page per legacy bundle (/api/d/:slug/*);
+ *     the page (/d/:slug) is in the new console
  */
 
 'use strict';
@@ -690,47 +691,6 @@ router.get('/api/generator/platforms', requireAuth, requireAdmin, (req, res) => 
 //  Public download portal
 // =========================================================================
 
-router.get('/d/:publicId', async (req, res) => {
-    try {
-        const row = await resolvePublicBundle(req.params.publicId);
-        if (!row || row.revoked) {
-            return res.status(404).render('errors/404', {
-                title: req.t('errors.not_found'),
-                layout: false,
-            });
-        }
-        const bundle = serializeBundle(row);
-        const builds = filterAvailableBuilds(
-            await db.listAgentBundleBuildsForHash(activeBuildHash(row))
-        );
-        const buildMap = {};
-        for (const b of (builds || [])) {
-            buildMap[`${b.platform}/${b.arch}/${b.format}`] = b.status;
-        }
-        const platforms = clientTemplateWorker.getAvailablePlatforms().map(p => ({
-            ...p,
-            status: buildMap[`${p.platform}/${p.arch}/${p.format}`] || 'pending',
-        }));
-        const gb = brandingService.getBranding();
-        const globalBranding = {
-            background: brandingService.buildBackgroundValue(gb.agentBgType, gb.agentBgColor, gb.agentBgGradient, gb.agentBgImageUrl),
-            showPoweredBy: gb.agentShowPoweredBy !== 'false',
-            appName: gb.appName || 'BetterDesk',
-            logoUrl: gb.logoType === 'image' ? gb.logoUrl : '',
-        };
-        res.render('agent-download', {
-            bundle,
-            platforms,
-            globalBranding,
-            productType: normalizeProductType(row.product_type),
-            t: req.t.bind(req),
-        });
-    } catch (err) {
-        console.error('[generator] portal error:', err);
-        res.status(500).render('errors/500', { title: req.t('errors.server_error'), layout: false });
-    }
-});
-
 router.get('/api/d/:publicId/manifest', async (req, res) => {
     try {
         const row = await resolvePublicBundle(req.params.publicId);
@@ -788,8 +748,8 @@ function httpUrlOrEmpty(value) {
 
 /**
  * GET /api/d/:publicId/page - What the agent download page (web-ui /d/<id>)
- * shows: the values views/agent-download.ejs rendered. Public like the page
- * (the bundle id is the access token); unknown or revoked answers 404.
+ * shows. Public like the page (the bundle id is the access token); unknown
+ * or revoked answers 404.
  */
 router.get('/api/d/:publicId/page', async (req, res) => {
     try {

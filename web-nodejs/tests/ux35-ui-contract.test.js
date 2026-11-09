@@ -24,10 +24,6 @@ describe('UX 3.5 mobile and accessibility contracts', () => {
     const notifCenter = read('public', 'js', 'notif-center.js');
     const uiShell = read('public', 'js', 'ui-shell.js');
     const classicNavbar = read('views', 'partials', 'navbar.ejs');
-    const loginJs = read('public', 'js', 'login.js');
-    const loginView = read('views', 'login.ejs');
-    const desktopLoginJs = read('public', 'js', 'desktop-login.js');
-    const desktopLoginView = read('views', 'desktop-login.ejs');
 
     it('keeps classic mobile height rules out of the UX 3.5 scroll region', () => {
         assert.match(mobileCss, /\.app-layout \.main-content/);
@@ -105,27 +101,5 @@ describe('UX 3.5 mobile and accessibility contracts', () => {
         assert.doesNotMatch(topbar, /ux35-beta-chip|data-ui-shell-switch/);
         assert.doesNotMatch(topbar, /beta_tooltip|beta_badge/);
         assert.doesNotMatch(classicNavbar, /navbar-btn--shell-beta|ui-shell-beta-badge|data-ui-shell-switch/);
-    });
-
-    it('keeps OIDC password recovery explicit on the login page', () => {
-        assert.match(loginJs, /params\.get\('autoLaunch'\) === '0'/);
-        assert.match(loginJs, /data\.prefer_sso && !passwordBypass && !data\.local_bypass && !hasOidcError/);
-        assert.match(loginJs, /window\.location\.replace\('\/api\/auth\/oidc\/authorize'\)/);
-    });
-
-    it('shows session-expired as a toast instead of stretching the login card', () => {
-        assert.match(loginView, /\/js\/notifications\.js/);
-        assert.match(loginJs, /function showSessionExpiredNotice/);
-        assert.match(loginJs, /Notifications\.error\(message\)/);
-        assert.match(loginJs, /params\.get\('expired'\) !== '1'/);
-        assert.match(desktopLoginView, /\/js\/notifications\.js/);
-        assert.match(desktopLoginJs, /params\.get\('expired'\) === '1'/);
-        assert.match(desktopLoginJs, /Notifications\.error\(message\)/);
-    });
-
-    it('supports split login promo modes', () => {
-        assert.match(loginView, /login-layout-<%= promoMode %>/);
-        assert.match(loginView, /login-promo-slide/);
-        assert.match(loginJs, /function initLoginPromoCarousel/);
     });
 });

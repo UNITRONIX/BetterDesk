@@ -53,7 +53,10 @@ const PORTED_PAGES = Object.freeze([
     '/cdap/devices',
     '/cdap/devices/*',
     '/remote',
-    '/remote/*'
+    '/remote/*',
+    '/login',
+    '/portal',
+    '/d/*'
 ]);
 
 function isPortedPath(pathname, list = PORTED_PAGES) {

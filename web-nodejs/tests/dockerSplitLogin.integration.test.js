@@ -159,8 +159,10 @@ describeDocker('split Docker bootstrap and panel login', () => {
 
         const loginProbe = [
             'set -eu',
-            'curl -fsS -c /tmp/bd-cookies http://127.0.0.1:5000/login > /tmp/bd-login.html',
-            "csrf=$(sed -n \"s/.*csrfToken: '\\([^']*\\)'.*/\\1/p\" /tmp/bd-login.html | head -n 1)",
+            // The sign-in page answers (after the redirect to the new console)
+            'curl -fsSL -o /dev/null http://127.0.0.1:5000/login',
+            'curl -fsS -c /tmp/bd-cookies http://127.0.0.1:5000/api/auth/login-page > /tmp/bd-login.json',
+            "csrf=$(sed -n 's/.*\"csrfToken\":\"\\([^\"]*\\)\".*/\\1/p' /tmp/bd-login.json | head -n 1)",
             'test -n "$csrf"',
             `printf '%s' '${Buffer.from(JSON.stringify({ username: 'admin', password })).toString('base64')}' | base64 -d > /tmp/bd-body.json`,
             'login=$(curl -fsS -b /tmp/bd-cookies -c /tmp/bd-cookies -H "Content-Type: application/json" -H "X-CSRF-Token: $csrf" --data-binary @/tmp/bd-body.json http://127.0.0.1:5000/api/auth/login)',

@@ -357,17 +357,6 @@ router.post('/api/bd/enroll', async (req, res) => {
 });
 
 /**
- * GET /portal — branded public download page.
- * No auth required. Lists available installers + enrollment instructions.
- */
-router.get('/portal', (req, res) => {
-    res.render('downloads-portal', {
-        title: req.t ? req.t('portal.title') : 'Download BetterDesk',
-        layout: false, // standalone page
-    });
-});
-
-/**
  * GET /api/portal/installers — list available installers (JSON).
  * The actual binaries are served from /downloads/ (static). This endpoint
  * just enumerates metadata.

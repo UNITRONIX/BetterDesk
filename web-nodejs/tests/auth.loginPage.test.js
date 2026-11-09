@@ -1,10 +1,9 @@
 /**
  * The sign-in page's server side (routes/auth.routes.js):
- * - S4: /login?desktop=1 must not list the server's accounts to visitors;
- * - R3: after sign-in (password, two-factor, already signed in) the way back
- *   is the ?return= path when it is a console path;
+ * - R3: after sign-in (password, two-factor) the way back is the ?return=
+ *   path when it is a console path;
  * - GET /api/auth/login-page: what the new sign-in page shows before
- *   anyone is signed in (no user data).
+ *   anyone is signed in (no user data, so no list of accounts either: S4).
  */
 
 const request = require('supertest');
@@ -68,24 +67,6 @@ function app(user) {
     a.use('/', authRoutes);
     return a;
 }
-
-describe('GET /login', () => {
-    test('the desktop sign-in lists no accounts to visitors (S4)', async () => {
-        const res = await request(app(null)).get('/login?desktop=1');
-        expect(res.status).toBe(200);
-        expect(res.body.view).toBe('desktop-login');
-        expect(JSON.stringify(res.body)).not.toMatch(/alice-the-admin|bob-operator|super_admin/);
-    });
-
-    test('someone signed in goes to the return path (R3), or to the start', async () => {
-        const admin = { id: 1, username: 'admin', role: 'admin' };
-        const back = await request(app(admin)).get('/login?return=%2Fdevices%3Fopen%3D5');
-        expect(back.status).toBe(302);
-        expect(back.headers.location).toBe('/devices?open=5');
-        const evil = await request(app(admin)).get('/login?return=%2F%2Fevil.example');
-        expect(evil.headers.location).toBe('/');
-    });
-});
 
 describe('POST /api/auth/login and /api/auth/totp/verify', () => {
     beforeEach(() => jest.clearAllMocks());
