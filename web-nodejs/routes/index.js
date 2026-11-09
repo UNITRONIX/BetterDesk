@@ -106,6 +106,7 @@ router.get('/health', (req, res) => {
 
 // Mount routes
 router.use('/', authRoutes);
+router.use('/', require('./console.routes'));   // Svelte console: /console-boot.js, /api/console/*
 router.use('/', dashboardRoutes);
 router.use('/', devicesRoutes);
 router.use('/', keysRoutes);

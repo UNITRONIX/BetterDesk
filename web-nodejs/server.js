@@ -323,6 +323,9 @@ app.use((req, res, next) => {
 
 // ============ Routes ============
 
+// The Svelte console (web-ui/build), side by side with the old pages under /app
+app.use(require('./lib/webUi').createWebUi({ base: '/app' }));
+
 app.use('/', routes);
 
 // ============ Error Handlers ============
