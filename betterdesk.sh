@@ -3928,6 +3928,119 @@ install_nodejs() {
     return 1
 }
 
+# The new web console (web-ui/, SvelteKit) is built on this server. Its
+# sources go to $CONSOLE_PATH/web-ui and the console serves web-ui/build
+# through WEB_UI_DIR in .env. The in-app updater keeps the same layout.
+WEB_UI_NODE_MIN="22.17"        # engines.node in web-ui/package.json
+WEB_UI_NPM="npm@11.6.2"        # npm 10 (bundled with Node 22) can't resolve web-ui's dependency tree
+WEB_UI_STEP_TIMEOUT="${WEB_UI_STEP_TIMEOUT:-1800}"  # seconds for npm ci, and again for the build
+
+web_ui_node_supported() {
+    local version major minor need_major need_minor
+    version=$(node --version 2>/dev/null) || return 1
+    version="${version#v}"
+    major="${version%%.*}"
+    minor="${version#*.}"
+    minor="${minor%%.*}"
+    need_major="${WEB_UI_NODE_MIN%%.*}"
+    need_minor="${WEB_UI_NODE_MIN#*.}"
+    case "$major" in ''|*[!0-9]*) return 1 ;; esac
+    case "$minor" in ''|*[!0-9]*) return 1 ;; esac
+    [ "$major" -gt "$need_major" ] || { [ "$major" -eq "$need_major" ] && [ "$minor" -ge "$need_minor" ]; }
+}
+
+# Copy web-ui sources from $1 to $CONSOLE_PATH/web-ui and build them.
+# A failed build never stops the console: the previous build is put back
+# (or, without one, the old pages stay) and a warning names the log.
+# Returns 1 when the new console was not built.
+install_web_ui() {
+    local src="$1"
+    local dest="$CONSOLE_PATH/web-ui"
+    local log="$CONSOLE_PATH/data/web-ui-build.log"
+    local had_build=false
+    local keeps="the old pages"
+    local limit=""
+
+    if [ ! -f "$src/package.json" ] || [ ! -f "$src/package-lock.json" ]; then
+        print_info "No web-ui/ in $(dirname "$src"); the new web console is not installed"
+        return 0
+    fi
+
+    print_step "Installing the new web console (web-ui)..."
+    mkdir -p "$dest" "$CONSOLE_PATH/data"
+
+    # An interrupted earlier build left the good copy in .build-prev
+    if [ -d "$dest/.build-prev" ] && [ ! -f "$dest/build/index.html" ]; then
+        rm -rf "$dest/build" && mv "$dest/.build-prev" "$dest/build"
+    fi
+    # Replace the sources but keep the build dependencies and the current build.
+    # Generated folders and the test suites are not copied.
+    find "$dest" -mindepth 1 -maxdepth 1 ! -name node_modules ! -name build -exec rm -rf {} +
+    if ! ( set -o pipefail
+           tar -C "$src" \
+               --exclude=node_modules --exclude=./build --exclude=./.svelte-kit \
+               --exclude=./test-results --exclude=./playwright-report --exclude=./coverage \
+               --exclude=./e2e --exclude=./tests \
+               -cf - . | tar -C "$dest" --no-same-owner -xf - ); then
+        print_warning "Could not copy web-ui sources to $dest; the new web console was not updated"
+        return 1
+    fi
+    if [ -f "$CONSOLE_PATH/.env" ]; then
+        _upsert_env_line "$CONSOLE_PATH/.env" WEB_UI_DIR "$dest/build"
+    fi
+
+    if [ -f "$dest/build/index.html" ]; then
+        had_build=true
+        keeps="its previous build"
+    fi
+
+    if ! web_ui_node_supported; then
+        print_warning "The new web console needs Node.js ${WEB_UI_NODE_MIN} or newer to build (found $(node --version 2>/dev/null || echo none)); skipping it"
+        print_info "The console keeps running with ${keeps}. Upgrade Node.js, then run the update again."
+        return 1
+    fi
+
+    local free_mb
+    free_mb=$(df -Pm "$dest" 2>/dev/null | awk 'NR==2 {print $4}')
+    print_info "The build downloads its dependencies to $dest/node_modules (about 220 MB, kept for the next build)"
+    if [ -n "$free_mb" ] && [ "$free_mb" -lt 500 ] 2>/dev/null; then
+        print_warning "Only ${free_mb} MB free on $(df -P "$dest" | awk 'NR==2 {print $6}'); the build needs about 400 MB (dependencies and npm cache)"
+    fi
+
+    print_step "Building the new web console (a few minutes; output in $log)..."
+    command -v timeout >/dev/null 2>&1 && limit="timeout $WEB_UI_STEP_TIMEOUT"
+    rm -rf "$dest/.build-prev"
+    # The static adapter empties build/ before it writes the new one, so a
+    # failure late in the build would leave it half written: keep a copy.
+    if [ "$had_build" = true ] && ! cp -a "$dest/build" "$dest/.build-prev"; then
+        print_warning "Could not copy the current web-ui build aside; not rebuilding it"
+        return 1
+    fi
+
+    if ( cd "$dest" \
+         && $limit npx -y "$WEB_UI_NPM" ci --include=dev --no-audit --no-fund \
+         && $limit npm run build ) >"$log" 2>&1 \
+       && [ -f "$dest/build/index.html" ]; then
+        rm -rf "$dest/.build-prev"
+        print_success "New web console built ($dest/build)"
+        local deps_size
+        deps_size=$(du -sh "$dest/node_modules" 2>/dev/null | cut -f1)
+        if [ -n "$deps_size" ]; then
+            print_info "Its build dependencies use ${deps_size} in $dest/node_modules. Only builds need them, and every update reinstalls them, so the folder can be deleted to free the space."
+        fi
+        return 0
+    fi
+
+    rm -rf "$dest/build"
+    if [ "$had_build" = true ]; then
+        mv "$dest/.build-prev" "$dest/build"
+    fi
+    print_warning "The new web console could not be built. The console keeps running with ${keeps}."
+    print_warning "Build log: $log"
+    tail -n 15 "$log" 2>/dev/null | sed 's/^/    /'
+    return 1
+}
+
 install_nodejs_console() {
     print_step "Installing Node.js Web Console..."
     
@@ -3989,7 +4102,7 @@ install_nodejs_console() {
     if npm install --no-audit --no-fund --no-save node-pty >>"$npm_log" 2>&1; then
         print_success "node-pty installed (real PTY available)"
     else
-        print_warn "node-pty install failed — Server Management terminal will use pipe fallback"
+        print_warning "node-pty install failed — Server Management terminal will use pipe fallback"
     fi
     rm -f "$npm_log"
 
@@ -4041,7 +4154,10 @@ Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)
 CREDEOF
         chmod 600 "$CONSOLE_PATH/data/.admin_credentials"
     fi
-    
+
+    # The new web console; a failed build leaves the old pages in place
+    install_web_ui "$SCRIPT_DIR/web-ui" || true
+
     # Set permissions
     chown -R root:root "$CONSOLE_PATH"
     chmod -R 755 "$CONSOLE_PATH"
@@ -5523,6 +5639,7 @@ update_from_github() {
             --exclude='.api_key' \
             --exclude='.admin_credentials' \
             --exclude='.force_password_update' \
+            --exclude='/web-ui/' \
             "$clone_dir/web-nodejs/" "$CONSOLE_PATH/"
     else
         # cp fallback: copy everything then restore state (glob * skips dotfiles — #166)
@@ -5557,6 +5674,9 @@ update_from_github() {
         tail -5 "$npm_log"
     fi
     rm -f "$npm_log"
+
+    # The new web console; a failed build keeps the previous one (non-critical)
+    install_web_ui "$clone_dir/web-ui" || true
 
     # Stage Go support-agent source for the Generator build worker
     print_step "Staging support-agent source for Generator builds..."

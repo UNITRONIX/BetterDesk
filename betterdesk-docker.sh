@@ -1709,6 +1709,16 @@ update_docker_from_github() {
     rm -rf "$SCRIPT_DIR/betterdesk-server.pre-update" 2>/dev/null || true
     files_updated=$((files_updated + 1))
 
+    # Update the new web console's source: the images build it (web-ui-builder
+    # stage), so the Dockerfiles below fail without it. Stale files would be
+    # built too, so the old tree goes; a local node_modules/ stays.
+    if [ -f "$clone_dir/web-ui/package.json" ]; then
+        mkdir -p "$SCRIPT_DIR/web-ui"
+        find "$SCRIPT_DIR/web-ui" -mindepth 1 -maxdepth 1 ! -name node_modules -exec rm -rf {} +
+        cp -rf "$clone_dir/web-ui/." "$SCRIPT_DIR/web-ui/"
+        files_updated=$((files_updated + 1))
+    fi
+
     # Update Dockerfiles and compose files
     for df in Dockerfile Dockerfile.server Dockerfile.console \
               docker-compose.yml docker-compose.single.yml docker-compose.quick.yml \

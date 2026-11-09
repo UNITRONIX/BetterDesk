@@ -1517,6 +1517,147 @@ function Migrate-SQLiteToPostgreSQL {
     }
 }
 
+# The new web console (web-ui\, SvelteKit) is built on this server. Its
+# sources go to $CONSOLE_PATH\web-ui and the console serves web-ui\build
+# through WEB_UI_DIR in .env. The in-app updater keeps the same layout.
+$script:WEB_UI_NODE_MIN = [version]"22.17"   # engines.node in web-ui\package.json
+$script:WEB_UI_NPM = "npm@11.6.2"            # npm 10 (bundled with Node 22) can't resolve web-ui's dependency tree
+
+function Set-ConsoleEnvValue {
+    param([string]$Key, [string]$Value)
+    $envFile = Join-Path $script:CONSOLE_PATH ".env"
+    if (-not (Test-Path $envFile)) { return }
+    $lines = @(Get-Content $envFile -ErrorAction SilentlyContinue)
+    $found = $false
+    $updated = @(foreach ($line in $lines) {
+        if ($line -match "^\s*$([regex]::Escape($Key))=") {
+            $found = $true
+            "$Key=$Value"
+        } else {
+            $line
+        }
+    })
+    if (-not $found) { $updated += "$Key=$Value" }
+    # UTF-8 without BOM: the console reads the first key literally
+    [System.IO.File]::WriteAllLines($envFile, [string[]]$updated, (New-Object System.Text.UTF8Encoding($false)))
+}
+
+# Copy web-ui sources from -Source to $CONSOLE_PATH\web-ui and build them.
+# A failed build never stops the console: the previous build is put back
+# (or, without one, the old pages stay) and a warning names the log.
+# Returns $false when the new console was not built.
+function Install-WebUi {
+    param([string]$Source)
+
+    $dest = Join-Path $script:CONSOLE_PATH "web-ui"
+    $buildDir = Join-Path $dest "build"
+    $prevDir = Join-Path $dest ".build-prev"
+    $dataDir = Join-Path $script:CONSOLE_PATH "data"
+    $log = Join-Path $dataDir "web-ui-build.log"
+
+    if (-not (Test-Path (Join-Path $Source "package.json")) -or -not (Test-Path (Join-Path $Source "package-lock.json"))) {
+        Print-Info "No web-ui\ in $(Split-Path $Source -Parent); the new web console is not installed"
+        return $true
+    }
+
+    Print-Step "Installing the new web console (web-ui)..."
+    New-Item -ItemType Directory -Path $dest, $dataDir -Force | Out-Null
+
+    # An interrupted earlier build left the good copy in .build-prev
+    if ((Test-Path $prevDir) -and -not (Test-Path (Join-Path $buildDir "index.html"))) {
+        Remove-Item -Path $buildDir -Recurse -Force -ErrorAction SilentlyContinue
+        Rename-Item -Path $prevDir -NewName "build" -ErrorAction SilentlyContinue
+    }
+    # Replace the sources but keep the build dependencies and the current build.
+    # Generated folders and the test suites are not copied.
+    @(Get-ChildItem -Path $dest -Force) | Where-Object { @("node_modules", "build") -notcontains $_.Name } |
+        Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+    $skipDirs = @("build", ".svelte-kit", "test-results", "playwright-report", "coverage", "e2e", "tests") |
+        ForEach-Object { Join-Path $Source $_ }
+    & robocopy $Source $dest /E /XD node_modules @skipDirs /NFL /NDL /NJH /NJS /NP | Out-Null
+    if ($LASTEXITCODE -ge 8) {
+        Print-Warning "Could not copy web-ui sources to $dest (robocopy exit code $LASTEXITCODE); the new web console was not updated"
+        return $false
+    }
+    try {
+        Set-ConsoleEnvValue -Key "WEB_UI_DIR" -Value $buildDir
+    } catch {
+        Print-Warning "Could not set WEB_UI_DIR in $($script:CONSOLE_PATH)\.env: $($_.Exception.Message)"
+    }
+
+    $hadBuild = Test-Path (Join-Path $buildDir "index.html")
+    $keeps = if ($hadBuild) { "its previous build" } else { "the old pages" }
+
+    $nodeVersion = $null
+    try { $nodeVersion = [version]((& node --version) -replace '^v', '' -replace '-.*$', '') } catch { }
+    if (-not $nodeVersion -or $nodeVersion -lt $script:WEB_UI_NODE_MIN) {
+        Print-Warning "The new web console needs Node.js $($script:WEB_UI_NODE_MIN) or newer to build (found $(if ($nodeVersion) { $nodeVersion } else { 'none' })); skipping it"
+        Print-Info "The console keeps running with $keeps. Upgrade Node.js, then run the update again."
+        return $false
+    }
+
+    Print-Info "The build downloads its dependencies to $dest\node_modules (about 220 MB, kept for the next build)"
+    try {
+        $drive = New-Object System.IO.DriveInfo((Split-Path -Qualifier $dest))
+        $freeMb = [math]::Floor($drive.AvailableFreeSpace / 1MB)
+        if ($freeMb -lt 500) {
+            Print-Warning "Only $freeMb MB free on $($drive.Name); the build needs about 400 MB (dependencies and npm cache)"
+        }
+    } catch { }
+
+    Print-Step "Building the new web console (a few minutes; output in $log)..."
+    if (Test-Path $prevDir) { Remove-Item -Path $prevDir -Recurse -Force -ErrorAction SilentlyContinue }
+    # The static adapter empties build\ before it writes the new one, so a
+    # failure late in the build would leave it half written: keep a copy.
+    if ($hadBuild) {
+        try {
+            Copy-Item -Path $buildDir -Destination $prevDir -Recurse -Force -ErrorAction Stop
+        } catch {
+            Print-Warning "Could not copy the current web-ui build aside; not rebuilding it"
+            return $false
+        }
+    }
+
+    $built = $false
+    Push-Location $dest
+    try {
+        & npx -y $script:WEB_UI_NPM ci --include=dev --no-audit --no-fund 2>&1 |
+            ForEach-Object { "$_" } | Out-File -FilePath $log -Encoding UTF8
+        if ($LASTEXITCODE -eq 0) {
+            & npm run build 2>&1 | ForEach-Object { "$_" } | Out-File -FilePath $log -Append -Encoding UTF8
+            $built = ($LASTEXITCODE -eq 0) -and (Test-Path (Join-Path $buildDir "index.html"))
+        }
+    } catch {
+        "$_" | Out-File -FilePath $log -Append -Encoding UTF8
+    } finally {
+        Pop-Location
+    }
+
+    if ($built) {
+        Remove-Item -Path $prevDir -Recurse -Force -ErrorAction SilentlyContinue
+        Print-Success "New web console built ($buildDir)"
+        try {
+            $depsBytes = (Get-ChildItem -Path (Join-Path $dest "node_modules") -Recurse -File -Force -ErrorAction SilentlyContinue |
+                Measure-Object -Property Length -Sum).Sum
+            Print-Info "Its build dependencies use $([math]::Round($depsBytes / 1MB)) MB in $dest\node_modules. Only builds need them, and every update reinstalls them, so the folder can be deleted to free the space."
+        } catch { }
+        return $true
+    }
+
+    Remove-Item -Path $buildDir -Recurse -Force -ErrorAction SilentlyContinue
+    if ($hadBuild) {
+        try {
+            Rename-Item -Path $prevDir -NewName "build" -ErrorAction Stop
+        } catch {
+            Print-Warning "Could not put the previous web-ui build back from $prevDir"
+        }
+    }
+    Print-Warning "The new web console could not be built. The console keeps running with $keeps."
+    Print-Warning "Build log: $log"
+    Get-Content -Path $log -Tail 15 -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "    $_" }
+    return $false
+}
+
 function Install-NodeJsConsole {
     Print-Step "Installing Node.js Web Console..."
     
@@ -1634,7 +1775,10 @@ function Install-NodeJsConsole {
             $timestamp = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
             @("Admin Username: admin", "Admin Password: $nodejsAdminPassword", "Generated by: BetterDesk installer", "Timestamp: $timestamp") | Out-File -FilePath $credsFile -Encoding UTF8
         }
-        
+
+        # The new web console; a failed build leaves the old pages in place
+        $null = Install-WebUi -Source (Join-Path $script:ScriptDir "web-ui")
+
         $script:CONSOLE_TYPE = "nodejs"
         Print-Success "Node.js Web Console installed"
         return $true
@@ -3568,6 +3712,9 @@ function Update-FromGitHub {
         Print-Warning "npm install failed (non-critical): $($_.Exception.Message)"
     }
     Pop-Location
+
+    # The new web console; a failed build keeps the previous one (non-critical)
+    $null = Install-WebUi -Source (Join-Path $cloneDir "web-ui")
 
     # Merge any new .env keys from .env.example (preserve operator settings — issue #158)
     Print-Step "Merging new .env configuration keys..."
