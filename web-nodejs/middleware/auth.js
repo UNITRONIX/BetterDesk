@@ -89,6 +89,15 @@ function proRoleBlocksPermission(role, permission) {
 const SUPER_ADMIN_ROLES = new Set(['super_admin', 'admin']);
 
 /**
+ * API requests get JSON answers, pages a redirect or an error page. The
+ * original URL, because req.path inside a router mounted at a prefix
+ * (app.use('/api/files', router)) has lost that prefix.
+ */
+function isApiRequest(req) {
+    return String(req.originalUrl || req.url || '').startsWith('/api/');
+}
+
+/**
  * Check if a role is a super admin (or legacy admin).
  */
 function isSuperAdminRole(role) {
@@ -177,7 +186,7 @@ function rdClientLoginRedirect(req) {
 function requireRdClientAuth(permission) {
     return function (req, res, next) {
         if (!req.session || !req.session.userId) {
-            if (req.path.startsWith('/api/')) {
+            if (isApiRequest(req)) {
                 return res.status(401).json({ success: false, error: 'Unauthorized. Please log in.' });
             }
             return res.redirect(rdClientLoginRedirect(req));
@@ -185,7 +194,7 @@ function requireRdClientAuth(permission) {
 
         if (req.session.user && req.session.user.role === 'pro') {
             req.session.destroy();
-            if (req.path.startsWith('/api/')) {
+            if (isApiRequest(req)) {
                 return res.status(403).json({
                     success: false,
                     error: 'Pro accounts can only access the RustDesk desktop client API'
@@ -197,7 +206,7 @@ function requireRdClientAuth(permission) {
         if (permission) {
             const role = req.session.user && req.session.user.role;
             if (!requestHasPermission(req, permission)) {
-                if (req.path.startsWith('/api/')) {
+                if (isApiRequest(req)) {
                     return res.status(403).json({ success: false, error: `Permission denied: ${permission}` });
                 }
                 return res.status(403).render('errors/403', {
@@ -232,7 +241,7 @@ function rdClientGuestOnly(req, res, next) {
 function requireAuth(req, res, next) {
     if (!req.session || !req.session.userId) {
         // API request
-        if (req.path.startsWith('/api/')) {
+        if (isApiRequest(req)) {
             return res.status(401).json({
                 success: false,
                 error: 'Unauthorized. Please log in.',
@@ -247,7 +256,7 @@ function requireAuth(req, res, next) {
     // Block pro-only users from web panel (API-only role)
     if (req.session.user && req.session.user.role === 'pro') {
         req.session.destroy();
-        if (req.path.startsWith('/api/')) {
+        if (isApiRequest(req)) {
             return res.status(403).json({
                 success: false,
                 error: 'Pro accounts can only access the RustDesk desktop client API'
@@ -270,7 +279,7 @@ function requireAuth(req, res, next) {
 function requireRole(role) {
     return function(req, res, next) {
         if (!req.session || !req.session.userId) {
-            if (req.path.startsWith('/api/')) {
+            if (isApiRequest(req)) {
                 return res.status(401).json({ success: false, error: 'Unauthorized' });
             }
             return res.redirect('/login');
@@ -285,7 +294,7 @@ function requireRole(role) {
         }
 
         if (userRole !== role) {
-            if (req.path.startsWith('/api/')) {
+            if (isApiRequest(req)) {
                 return res.status(403).json({ success: false, error: 'Forbidden' });
             }
             return res.status(403).render('errors/403', {
@@ -327,7 +336,7 @@ function guestOnly(req, res, next) {
  */
 function requireAdmin(req, res, next) {
     if (!req.session || !req.session.userId) {
-        if (req.path.startsWith('/api/')) {
+        if (isApiRequest(req)) {
             return res.status(401).json({ success: false, error: 'Unauthorized' });
         }
         return res.redirect('/login');
@@ -338,7 +347,7 @@ function requireAdmin(req, res, next) {
         || userRole === 'global_admin'
         || userRole === 'server_admin';
     if (!allowed) {
-        if (req.path.startsWith('/api/')) {
+        if (isApiRequest(req)) {
             return res.status(403).json({ success: false, error: 'Admin access required' });
         }
         return res.status(403).render('errors/403', {
@@ -359,7 +368,7 @@ function requireAdmin(req, res, next) {
 function requirePermission(permission) {
     return function(req, res, next) {
         if (!req.session || !req.session.userId) {
-            if (req.path.startsWith('/api/')) {
+            if (isApiRequest(req)) {
                 return res.status(401).json({ success: false, error: 'Unauthorized' });
             }
             return res.redirect('/login');
@@ -367,7 +376,7 @@ function requirePermission(permission) {
 
         const role = req.session.user && req.session.user.role;
         if (req.permissionContextLoaded && req.permissionLoadError) {
-            if (req.path.startsWith('/api/')) {
+            if (isApiRequest(req)) {
                 return res.status(503).json({
                     success: false,
                     error: 'Permission service unavailable',
@@ -380,7 +389,7 @@ function requirePermission(permission) {
             });
         }
         if (!requestHasPermission(req, permission)) {
-            if (req.path.startsWith('/api/')) {
+            if (isApiRequest(req)) {
                 return res.status(403).json({ success: false, error: `Permission denied: ${permission}` });
             }
             return res.status(403).render('errors/403', {
