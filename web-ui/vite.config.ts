@@ -1,6 +1,7 @@
 import adapter from '@sveltejs/adapter-static';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vitest/config';
+import { licenses } from './vite-plugins/licenses.ts';
 
 // Where the console is served from. "/app" while old and new pages run side
 // by side; "" once every page has moved over.
@@ -10,6 +11,8 @@ const backend = process.env.BD_BACKEND ?? 'http://localhost:5000';
 
 export default defineConfig({
 	plugins: [
+		// licenses.txt next to the code; fails the build on a license the console may not ship
+		licenses(),
 		sveltekit({
 			adapter: adapter({
 				pages: 'build',
