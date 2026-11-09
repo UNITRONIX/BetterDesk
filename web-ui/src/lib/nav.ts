@@ -9,7 +9,7 @@
 import { resolve } from '$app/paths';
 
 /** The app's base path ('/app' now, '' after switch-over) */
-export const base = resolve('/').replace(/\/$/, '');
+export const base = resolve('').replace(/\/$/, '');
 
 /**
  * Pages the new console serves (path without query). Add a page here in the

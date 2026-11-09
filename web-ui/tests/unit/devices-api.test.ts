@@ -15,8 +15,22 @@ describe('device list schema', () => {
 	});
 
 	test('SQLite booleans, null text and comma tags become clean values', () => {
-		const d = v.parse(Device, { id: 9001, online: 1, banned: '0', note: null, tags: 'office, finance', folder_id: '3' });
-		expect(d).toMatchObject({ id: '9001', online: true, banned: false, note: '', tags: ['office', 'finance'], folder_id: 3 });
+		const d = v.parse(Device, {
+			id: 9001,
+			online: 1,
+			banned: '0',
+			note: null,
+			tags: 'office, finance',
+			folder_id: '3'
+		});
+		expect(d).toMatchObject({
+			id: '9001',
+			online: true,
+			banned: false,
+			note: '',
+			tags: ['office', 'finance'],
+			folder_id: 3
+		});
 	});
 
 	test('a device without an id is refused', () => {
@@ -25,7 +39,10 @@ describe('device list schema', () => {
 
 	test('5,000 devices validate fast enough for the list budget', () => {
 		const base = fixture.data.devices;
-		const devices = Array.from({ length: 5000 }, (_, i) => ({ ...base[i % base.length], id: String(100000 + i) }));
+		const devices = Array.from({ length: 5000 }, (_, i) => ({
+			...base[i % base.length],
+			id: String(100000 + i)
+		}));
 		const t0 = performance.now();
 		const out = v.parse(DeviceList, { success: true, data: { devices, total: 5000 } });
 		const ms = performance.now() - t0;

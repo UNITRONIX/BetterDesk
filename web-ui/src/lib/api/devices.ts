@@ -147,10 +147,14 @@ export function changeDeviceId(id: string, newId: string) {
 }
 
 export function setDeviceTags(id: string, tags: string[]) {
-	return api(wrapped(v.looseObject({ tags: v.array(v.string()) })), `/api/devices/${encodeURIComponent(id)}/tags`, {
-		method: 'PUT',
-		body: { tags }
-	});
+	return api(
+		wrapped(v.looseObject({ tags: v.array(v.string()) })),
+		`/api/devices/${encodeURIComponent(id)}/tags`,
+		{
+			method: 'PUT',
+			body: { tags }
+		}
+	);
 }
 
 /* ── Folders ── */
@@ -205,6 +209,8 @@ export const DeviceGroup = v.looseObject({
 export type DeviceGroup = v.InferOutput<typeof DeviceGroup>;
 
 export async function listDeviceGroups(signal?: AbortSignal): Promise<DeviceGroup[]> {
-	const out = await api(wrapped(v.looseObject({ groups: v.array(DeviceGroup) })), '/api/device-groups', { signal });
+	const out = await api(wrapped(v.looseObject({ groups: v.array(DeviceGroup) })), '/api/device-groups', {
+		signal
+	});
 	return out.groups;
 }

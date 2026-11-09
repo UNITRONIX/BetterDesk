@@ -204,7 +204,7 @@ export const Ok = v.looseObject({ success: v.optional(v.boolean()) });
 /**
  * Many endpoints answer `{ success: true, data: X }`. Unwrap X and check it.
  */
-export function wrapped<S extends v.GenericSchema>(inner: S) {
+export function wrapped<S extends v.GenericSchema>(inner: S): v.GenericSchema<unknown, v.InferOutput<S>> {
 	return v.pipe(
 		v.looseObject({ success: v.optional(v.boolean()), data: inner }),
 		v.transform((o) => o.data as v.InferOutput<S>)

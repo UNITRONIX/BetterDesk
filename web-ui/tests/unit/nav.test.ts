@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
 
-vi.mock('$app/paths', () => ({ resolve: (p: string) => '/app' + p }));
+vi.mock('$app/paths', () => ({ resolve: (p: string) => '/app' + (p || '/') }));
 
 const { link, appPath, isPorted } = await import('../../src/lib/nav.ts');
 
