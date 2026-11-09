@@ -63,11 +63,14 @@ describe('session guard', () => {
 		const g = await import('../../../src/lib/shell/session-guard.svelte.ts');
 		const client = await import('../../../src/lib/api/client.ts');
 		g.startGuard(null);
-		vi.mocked(fetch).mockResolvedValue(
-			new Response('{"code":"session_idle"}', {
-				status: 401,
-				headers: { 'Content-Type': 'application/json' }
-			})
+		// A fresh response per request, as fetch gives (a body can be read once)
+		vi.mocked(fetch).mockImplementation(() =>
+			Promise.resolve(
+				new Response('{"code":"session_idle"}', {
+					status: 401,
+					headers: { 'Content-Type': 'application/json' }
+				})
+			)
 		);
 		await expect(client.request('/api/x')).rejects.toMatchObject({ status: 401 });
 		await expect(client.request('/api/y')).rejects.toMatchObject({ status: 401 });

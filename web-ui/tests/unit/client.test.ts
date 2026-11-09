@@ -136,6 +136,27 @@ describe('request', () => {
 		expect(err.message).toBe(clientMessages.network);
 	});
 
+	test('a body cut off on the way is a network failure (reads retry), not an empty answer', async () => {
+		const cutOff = () =>
+			Object.assign(json({ ok: true }), { text: () => Promise.reject(new TypeError('NetworkError')) });
+		replies.push(cutOff, () => json({ devices: [] }));
+		await expect(request('/api/devices')).resolves.toEqual({ devices: [] });
+		expect(calls).toHaveLength(2);
+
+		replies.push(cutOff);
+		const err = (await request('/api/x/do', { method: 'POST' }).catch((e: unknown) => e)) as ApiError;
+		expect(err.isNetwork).toBe(true);
+	});
+
+	test('an empty or broken JSON body is no data', async () => {
+		replies.push(
+			() => new Response('', { status: 200, headers: { 'content-type': 'application/json' } }),
+			() => new Response('{"cut', { status: 200, headers: { 'content-type': 'application/json' } })
+		);
+		expect(await request('/api/x')).toBeNull();
+		expect(await request('/api/y')).toBeNull();
+	});
+
 	test('server error text is passed through', async () => {
 		replies.push(() => json({ success: false, error: 'Device not found' }, 404));
 		await expect(request('/api/devices/9')).rejects.toMatchObject({

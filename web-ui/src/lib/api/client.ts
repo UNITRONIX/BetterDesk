@@ -163,11 +163,22 @@ export async function request(path: string, opts: RequestOptions = {}): Promise<
 			throw last;
 		}
 		const type = res.headers.get('content-type') ?? '';
-		let data: unknown;
+		// A body cut off on the way (connection lost, page left) is a network
+		// failure, not an empty answer; an unparseable one is no data
+		let text: string;
 		try {
-			data = type.includes('application/json') ? await res.json() : await res.text();
+			text = await res.text();
 		} catch {
-			data = null;
+			last = new ApiError(clientMessages.network, 0);
+			continue;
+		}
+		let data: unknown = text;
+		if (type.includes('application/json')) {
+			try {
+				data = text ? JSON.parse(text) : null;
+			} catch {
+				data = null;
+			}
 		}
 		if (res.ok) return data;
 		const { message, code, permission } = errorMessage(res.status, data);
