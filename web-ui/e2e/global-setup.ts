@@ -32,14 +32,32 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
 				continue;
 			}
 		}
-		await page.goto('/login?autoLaunch=0');
-		await page.fill('#username', username);
-		await page.fill('#password', password);
-		await Promise.all([
-			page.waitForURL((u) => !u.pathname.startsWith('/login'), { timeout: 15_000 }).catch(() => null),
-			page.press('#password', 'Enter')
-		]);
-		if (!new URL(page.url()).pathname.startsWith('/login')) {
+		// /login redirects to the new console's sign-in page (/app/login while the base is /app)
+		const onSignIn = (u: URL) => /(^|\/)login$/.test(u.pathname);
+		// The server allows a few sign-ins a minute per address (LOGIN_RATE_LIMIT_MAX, 5 by
+		// default) and there are six accounts: after a 429, wait as long as it says, once
+		for (let attempt = 0; attempt < 2; attempt++) {
+			await page.goto('/login?autoLaunch=0');
+			await page.fill('#username', username);
+			await page.fill('#password', password);
+			const [answer] = await Promise.all([
+				page
+					.waitForResponse((r) => r.request().method() === 'POST' && r.url().includes('/api/auth/login'), {
+						timeout: 15_000
+					})
+					.catch(() => null),
+				page.press('#password', 'Enter')
+			]);
+			if (answer?.status() !== 429) break;
+			const wait = Number(answer.headers()['retry-after']) || 60;
+			await new Promise((done) => setTimeout(done, Math.min(wait, 70) * 1000));
+		}
+		await page.waitForURL((u) => !onSignIn(u), { timeout: 15_000 }).catch(() => null);
+		// Saved only once the server knows the session (a page that left the sign-in page early has none)
+		const signedIn =
+			!onSignIn(new URL(page.url())) &&
+			(await ctx.request.get('/api/console/bootstrap', { headers: { Accept: 'application/json' } })).ok();
+		if (signedIn) {
 			await ctx.storageState({ path: authFile(role) });
 			available.push(role);
 		} else if (fs.existsSync(authFile(role))) {
