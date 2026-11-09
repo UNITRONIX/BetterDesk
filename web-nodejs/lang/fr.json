@@ -4646,7 +4646,17 @@
         "search_min": "Saisissez au moins 2 caractères pour trouver des messages.",
         "react_with": "Réagir avec {emoji}",
         "more_reactions": "Plus de réactions",
-        "no_contacts_match": "Aucun nom ne correspond. Les messages correspondants sont listés au-dessus."
+        "no_contacts_match": "Aucun nom ne correspond. Les messages correspondants sont listés au-dessus.",
+        "needs_access": "Votre rôle ne peut pas utiliser le chat. Demandez à un administrateur si vous en avez besoin.",
+        "command_result": "Résultat de {action} : {result}",
+        "command_done": "terminé",
+        "command_sent": "Commande envoyée : {command}",
+        "cmd_screenshot": "Capture d'écran",
+        "cmd_restart": "Redémarrer",
+        "cmd_lock": "Verrouiller l'écran",
+        "cmd_shutdown": "Éteindre",
+        "cmd_deploy": "Déployer un script",
+        "cmd_info": "Infos sur l'appareil"
     },
     "toast": {
         "device_connected": "Device connected",

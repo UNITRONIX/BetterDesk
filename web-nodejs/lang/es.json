@@ -4513,7 +4513,17 @@
         "search_min": "Escriba al menos 2 caracteres para buscar mensajes.",
         "react_with": "Reaccionar con {emoji}",
         "more_reactions": "Más reacciones",
-        "no_contacts_match": "Ningún nombre coincide. Los mensajes que coinciden aparecen arriba."
+        "no_contacts_match": "Ningún nombre coincide. Los mensajes que coinciden aparecen arriba.",
+        "needs_access": "Su rol no puede usar el chat. Pídaselo a un administrador si lo necesita.",
+        "command_result": "Resultado de {action}: {result}",
+        "command_done": "hecho",
+        "command_sent": "Comando enviado: {command}",
+        "cmd_screenshot": "Captura de pantalla",
+        "cmd_restart": "Reiniciar",
+        "cmd_lock": "Bloquear pantalla",
+        "cmd_shutdown": "Apagar",
+        "cmd_deploy": "Desplegar script",
+        "cmd_info": "Información del dispositivo"
     },
     "toast": {
         "device_connected": "Dispositivo conectado",

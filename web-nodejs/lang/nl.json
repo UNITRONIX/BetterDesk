@@ -4513,7 +4513,17 @@
         "search_min": "Typ minstens 2 tekens om berichten te vinden.",
         "react_with": "Reageren met {emoji}",
         "more_reactions": "Meer reacties",
-        "no_contacts_match": "Geen namen komen overeen. Overeenkomende berichten staan hierboven."
+        "no_contacts_match": "Geen namen komen overeen. Overeenkomende berichten staan hierboven.",
+        "needs_access": "Uw rol kan chat niet gebruiken. Vraag een beheerder als u het nodig hebt.",
+        "command_result": "Resultaat van {action}: {result}",
+        "command_done": "klaar",
+        "command_sent": "Opdracht verzonden: {command}",
+        "cmd_screenshot": "Schermafbeelding",
+        "cmd_restart": "Opnieuw opstarten",
+        "cmd_lock": "Scherm vergrendelen",
+        "cmd_shutdown": "Afsluiten",
+        "cmd_deploy": "Script uitrollen",
+        "cmd_info": "Apparaatgegevens"
     },
     "toast": {
         "device_connected": "Apparaat verbonden",

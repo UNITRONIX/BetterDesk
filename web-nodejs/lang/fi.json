@@ -4519,7 +4519,17 @@
         "search_min": "Kirjoita vähintään 2 merkkiä löytääksesi viestejä.",
         "react_with": "Reagoi: {emoji}",
         "more_reactions": "Lisää reaktioita",
-        "no_contacts_match": "Mikään nimi ei vastaa hakua. Vastaavat viestit näkyvät yllä."
+        "no_contacts_match": "Mikään nimi ei vastaa hakua. Vastaavat viestit näkyvät yllä.",
+        "needs_access": "Roolisi ei voi käyttää chattia. Pyydä ylläpitäjältä, jos tarvitset sitä.",
+        "command_result": "Komennon {action} tulos: {result}",
+        "command_done": "valmis",
+        "command_sent": "Komento lähetetty: {command}",
+        "cmd_screenshot": "Kuvakaappaus",
+        "cmd_restart": "Käynnistä uudelleen",
+        "cmd_lock": "Lukitse näyttö",
+        "cmd_shutdown": "Sammuta",
+        "cmd_deploy": "Ota skripti käyttöön",
+        "cmd_info": "Laitteen tiedot"
     },
     "toast": {
         "device_connected": "Laite yhdistetty",

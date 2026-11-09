@@ -4519,7 +4519,17 @@
         "search_min": "Nhập ít nhất 2 ký tự để tìm tin nhắn.",
         "react_with": "Bày tỏ cảm xúc {emoji}",
         "more_reactions": "Thêm cảm xúc",
-        "no_contacts_match": "Không có tên nào khớp. Các tin nhắn khớp được liệt kê ở trên."
+        "no_contacts_match": "Không có tên nào khớp. Các tin nhắn khớp được liệt kê ở trên.",
+        "needs_access": "Vai trò của bạn không dùng được trò chuyện. Hãy hỏi quản trị viên nếu bạn cần.",
+        "command_result": "Kết quả của {action}: {result}",
+        "command_done": "xong",
+        "command_sent": "Đã gửi lệnh: {command}",
+        "cmd_screenshot": "Ảnh chụp màn hình",
+        "cmd_restart": "Khởi động lại",
+        "cmd_lock": "Khóa màn hình",
+        "cmd_shutdown": "Tắt máy",
+        "cmd_deploy": "Triển khai tập lệnh",
+        "cmd_info": "Thông tin thiết bị"
     },
     "toast": {
         "device_connected": "Đã kết nối thiết bị",

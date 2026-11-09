@@ -4513,7 +4513,17 @@
         "search_min": "Geben Sie mindestens 2 Zeichen ein, um Nachrichten zu finden.",
         "react_with": "Mit {emoji} reagieren",
         "more_reactions": "Weitere Reaktionen",
-        "no_contacts_match": "Keine Namen passen. Passende Nachrichten stehen darüber."
+        "no_contacts_match": "Keine Namen passen. Passende Nachrichten stehen darüber.",
+        "needs_access": "Ihre Rolle kann den Chat nicht nutzen. Fragen Sie einen Administrator, wenn Sie ihn brauchen.",
+        "command_result": "Ergebnis von {action}: {result}",
+        "command_done": "erledigt",
+        "command_sent": "Befehl gesendet: {command}",
+        "cmd_screenshot": "Bildschirmfoto",
+        "cmd_restart": "Neu starten",
+        "cmd_lock": "Bildschirm sperren",
+        "cmd_shutdown": "Herunterfahren",
+        "cmd_deploy": "Skript verteilen",
+        "cmd_info": "Geräteinfo"
     },
     "toast": {
         "device_connected": "Gerät verbunden",

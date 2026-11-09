@@ -4513,7 +4513,17 @@
         "search_min": "Digiti almeno 2 caratteri per trovare i messaggi.",
         "react_with": "Reagisci con {emoji}",
         "more_reactions": "Altre reazioni",
-        "no_contacts_match": "Nessun nome corrisponde. I messaggi corrispondenti sono elencati sopra."
+        "no_contacts_match": "Nessun nome corrisponde. I messaggi corrispondenti sono elencati sopra.",
+        "needs_access": "Il suo ruolo non può usare la chat. Chieda a un amministratore se le serve.",
+        "command_result": "Risultato di {action}: {result}",
+        "command_done": "fatto",
+        "command_sent": "Comando inviato: {command}",
+        "cmd_screenshot": "Screenshot",
+        "cmd_restart": "Riavvia",
+        "cmd_lock": "Blocca schermo",
+        "cmd_shutdown": "Spegni",
+        "cmd_deploy": "Distribuisci script",
+        "cmd_info": "Informazioni sul dispositivo"
     },
     "toast": {
         "device_connected": "Dispositivo connesso",

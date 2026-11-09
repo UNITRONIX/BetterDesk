@@ -4519,7 +4519,17 @@
         "search_min": "Ketik minimal 2 karakter untuk mencari pesan.",
         "react_with": "Beri reaksi {emoji}",
         "more_reactions": "Reaksi lainnya",
-        "no_contacts_match": "Tidak ada nama yang cocok. Pesan yang cocok tercantum di atas."
+        "no_contacts_match": "Tidak ada nama yang cocok. Pesan yang cocok tercantum di atas.",
+        "needs_access": "Peran Anda tidak dapat memakai chat. Minta kepada administrator jika Anda membutuhkannya.",
+        "command_result": "Hasil {action}: {result}",
+        "command_done": "selesai",
+        "command_sent": "Perintah dikirim: {command}",
+        "cmd_screenshot": "Tangkapan layar",
+        "cmd_restart": "Mulai ulang",
+        "cmd_lock": "Kunci layar",
+        "cmd_shutdown": "Matikan",
+        "cmd_deploy": "Terapkan skrip",
+        "cmd_info": "Info perangkat"
     },
     "toast": {
         "device_connected": "Perangkat terhubung",

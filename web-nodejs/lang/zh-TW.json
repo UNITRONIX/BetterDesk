@@ -4646,7 +4646,17 @@
         "search_min": "請輸入至少 2 個字元以搜尋訊息。",
         "react_with": "以 {emoji} 回應",
         "more_reactions": "更多回應",
-        "no_contacts_match": "沒有符合的名稱。符合的訊息列在上方。"
+        "no_contacts_match": "沒有符合的名稱。符合的訊息列在上方。",
+        "needs_access": "您的角色無法使用聊天。如有需要，請洽詢管理員。",
+        "command_result": "{action} 的結果：{result}",
+        "command_done": "完成",
+        "command_sent": "已傳送指令：{command}",
+        "cmd_screenshot": "螢幕截圖",
+        "cmd_restart": "重新啟動",
+        "cmd_lock": "鎖定螢幕",
+        "cmd_shutdown": "關機",
+        "cmd_deploy": "部署腳本",
+        "cmd_info": "裝置資訊"
     },
     "toast": {
         "device_connected": "設備已連接",

@@ -4624,7 +4624,17 @@
         "search_min": "请输入至少 2 个字符以查找消息。",
         "react_with": "用 {emoji} 回应",
         "more_reactions": "更多回应",
-        "no_contacts_match": "没有匹配的名称。匹配的消息列在上方。"
+        "no_contacts_match": "没有匹配的名称。匹配的消息列在上方。",
+        "needs_access": "您的角色无法使用聊天。如有需要，请联系管理员。",
+        "command_result": "{action} 的结果：{result}",
+        "command_done": "完成",
+        "command_sent": "已发送命令：{command}",
+        "cmd_screenshot": "屏幕截图",
+        "cmd_restart": "重启",
+        "cmd_lock": "锁定屏幕",
+        "cmd_shutdown": "关机",
+        "cmd_deploy": "部署脚本",
+        "cmd_info": "设备信息"
     },
     "toast": {
         "device_connected": "设备已连接",

@@ -4519,7 +4519,17 @@
         "search_min": "Üzenetek kereséséhez írjon be legalább 2 karaktert.",
         "react_with": "Reagálás: {emoji}",
         "more_reactions": "További reakciók",
-        "no_contacts_match": "Egy név sem egyezik. Az egyező üzenetek fent láthatók."
+        "no_contacts_match": "Egy név sem egyezik. Az egyező üzenetek fent láthatók.",
+        "needs_access": "A szerepköre nem használhatja a csevegést. Ha szüksége van rá, kérdezzen meg egy rendszergazdát.",
+        "command_result": "{action} eredménye: {result}",
+        "command_done": "kész",
+        "command_sent": "Parancs elküldve: {command}",
+        "cmd_screenshot": "Képernyőkép",
+        "cmd_restart": "Újraindítás",
+        "cmd_lock": "Képernyő zárolása",
+        "cmd_shutdown": "Leállítás",
+        "cmd_deploy": "Parancsfájl telepítése",
+        "cmd_info": "Eszközadatok"
     },
     "toast": {
         "device_connected": "Eszköz csatlakoztatva",

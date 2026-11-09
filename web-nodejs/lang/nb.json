@@ -4519,7 +4519,17 @@
         "search_min": "Skriv minst 2 tegn for å finne meldinger.",
         "react_with": "Reager med {emoji}",
         "more_reactions": "Flere reaksjoner",
-        "no_contacts_match": "Ingen navn passer. Meldinger som passer, står over."
+        "no_contacts_match": "Ingen navn passer. Meldinger som passer, står over.",
+        "needs_access": "Rollen din kan ikke bruke chat. Spør en administrator hvis du trenger det.",
+        "command_result": "Resultat av {action}: {result}",
+        "command_done": "utført",
+        "command_sent": "Kommando sendt: {command}",
+        "cmd_screenshot": "Skjermbilde",
+        "cmd_restart": "Start på nytt",
+        "cmd_lock": "Lås skjermen",
+        "cmd_shutdown": "Slå av",
+        "cmd_deploy": "Rull ut skript",
+        "cmd_info": "Enhetsinformasjon"
     },
     "toast": {
         "device_connected": "Enhet tilkoblet",

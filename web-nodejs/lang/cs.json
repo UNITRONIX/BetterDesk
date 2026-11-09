@@ -4513,7 +4513,17 @@
         "search_min": "Pro hledání ve zprávách zadejte alespoň 2 znaky.",
         "react_with": "Reagovat {emoji}",
         "more_reactions": "Další reakce",
-        "no_contacts_match": "Žádné jméno neodpovídá. Odpovídající zprávy jsou uvedeny výše."
+        "no_contacts_match": "Žádné jméno neodpovídá. Odpovídající zprávy jsou uvedeny výše.",
+        "needs_access": "Vaše role nemůže používat chat. Pokud ho potřebujete, požádejte správce.",
+        "command_result": "Výsledek {action}: {result}",
+        "command_done": "hotovo",
+        "command_sent": "Příkaz odeslán: {command}",
+        "cmd_screenshot": "Snímek obrazovky",
+        "cmd_restart": "Restartovat",
+        "cmd_lock": "Zamknout obrazovku",
+        "cmd_shutdown": "Vypnout",
+        "cmd_deploy": "Nasadit skript",
+        "cmd_info": "Informace o zařízení"
     },
     "toast": {
         "device_connected": "Zařízení připojeno",

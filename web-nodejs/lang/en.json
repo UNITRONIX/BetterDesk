@@ -4703,7 +4703,17 @@
         "search_min": "Type at least 2 characters to find messages.",
         "react_with": "React with {emoji}",
         "more_reactions": "More reactions",
-        "no_contacts_match": "No names match. Matching messages are listed above."
+        "no_contacts_match": "No names match. Matching messages are listed above.",
+        "needs_access": "Your role cannot use chat. Ask an administrator if you need it.",
+        "command_result": "Result of {action}: {result}",
+        "command_done": "done",
+        "command_sent": "Command sent: {command}",
+        "cmd_screenshot": "Screenshot",
+        "cmd_restart": "Restart",
+        "cmd_lock": "Lock screen",
+        "cmd_shutdown": "Shut down",
+        "cmd_deploy": "Deploy script",
+        "cmd_info": "Device info"
     },
     "toast": {
         "device_connected": "Device connected",

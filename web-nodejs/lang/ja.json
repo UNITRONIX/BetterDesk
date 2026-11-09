@@ -4513,7 +4513,17 @@
         "search_min": "メッセージを探すには 2 文字以上入力してください。",
         "react_with": "{emoji} でリアクション",
         "more_reactions": "その他のリアクション",
-        "no_contacts_match": "一致する名前はありません。一致するメッセージは上に表示されます。"
+        "no_contacts_match": "一致する名前はありません。一致するメッセージは上に表示されます。",
+        "needs_access": "このロールではチャットを使用できません。必要な場合は管理者に依頼してください。",
+        "command_result": "{action} の結果: {result}",
+        "command_done": "完了",
+        "command_sent": "コマンドを送信しました: {command}",
+        "cmd_screenshot": "スクリーンショット",
+        "cmd_restart": "再起動",
+        "cmd_lock": "画面をロック",
+        "cmd_shutdown": "シャットダウン",
+        "cmd_deploy": "スクリプトを配布",
+        "cmd_info": "デバイス情報"
     },
     "toast": {
         "device_connected": "接続されたデバイス",

@@ -4519,7 +4519,17 @@
         "search_min": "Skriv mindst 2 tegn for at finde beskeder.",
         "react_with": "Reagér med {emoji}",
         "more_reactions": "Flere reaktioner",
-        "no_contacts_match": "Ingen navne passer. Beskeder, der passer, står ovenfor."
+        "no_contacts_match": "Ingen navne passer. Beskeder, der passer, står ovenfor.",
+        "needs_access": "Din rolle kan ikke bruge chat. Spørg en administrator, hvis du har brug for det.",
+        "command_result": "Resultat af {action}: {result}",
+        "command_done": "udført",
+        "command_sent": "Kommando sendt: {command}",
+        "cmd_screenshot": "Skærmbillede",
+        "cmd_restart": "Genstart",
+        "cmd_lock": "Lås skærmen",
+        "cmd_shutdown": "Luk ned",
+        "cmd_deploy": "Udrul script",
+        "cmd_info": "Enhedsoplysninger"
     },
     "toast": {
         "device_connected": "Enhed tilsluttet",

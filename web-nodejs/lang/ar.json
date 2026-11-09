@@ -4520,7 +4520,17 @@
         "search_min": "اكتب حرفين على الأقل للعثور على الرسائل.",
         "react_with": "التفاعل بـ {emoji}",
         "more_reactions": "تفاعلات أخرى",
-        "no_contacts_match": "لا توجد أسماء مطابقة. الرسائل المطابقة مدرجة في الأعلى."
+        "no_contacts_match": "لا توجد أسماء مطابقة. الرسائل المطابقة مدرجة في الأعلى.",
+        "needs_access": "لا يمكن لدورك استخدام الدردشة. اطلب ذلك من المسؤول إذا كنت تحتاجها.",
+        "command_result": "نتيجة {action}: {result}",
+        "command_done": "تم",
+        "command_sent": "تم إرسال الأمر: {command}",
+        "cmd_screenshot": "لقطة شاشة",
+        "cmd_restart": "إعادة التشغيل",
+        "cmd_lock": "قفل الشاشة",
+        "cmd_shutdown": "إيقاف التشغيل",
+        "cmd_deploy": "نشر برنامج نصي",
+        "cmd_info": "معلومات الجهاز"
     },
     "toast": {
         "device_connected": "الجهاز متصل",

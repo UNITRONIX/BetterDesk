@@ -4519,7 +4519,17 @@
         "search_min": "Tastați cel puțin 2 caractere pentru a găsi mesaje.",
         "react_with": "Reacționați cu {emoji}",
         "more_reactions": "Mai multe reacții",
-        "no_contacts_match": "Niciun nume nu se potrivește. Mesajele potrivite sunt listate mai sus."
+        "no_contacts_match": "Niciun nume nu se potrivește. Mesajele potrivite sunt listate mai sus.",
+        "needs_access": "Rolul dvs. nu poate folosi chatul. Cereți-l unui administrator dacă aveți nevoie de el.",
+        "command_result": "Rezultatul pentru {action}: {result}",
+        "command_done": "gata",
+        "command_sent": "Comandă trimisă: {command}",
+        "cmd_screenshot": "Captură de ecran",
+        "cmd_restart": "Repornire",
+        "cmd_lock": "Blocare ecran",
+        "cmd_shutdown": "Oprire",
+        "cmd_deploy": "Implementare script",
+        "cmd_info": "Informații despre dispozitiv"
     },
     "toast": {
         "device_connected": "Dispozitiv conectat",

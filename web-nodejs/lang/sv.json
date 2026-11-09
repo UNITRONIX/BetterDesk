@@ -4519,7 +4519,17 @@
         "search_min": "Skriv minst 2 tecken för att hitta meddelanden.",
         "react_with": "Reagera med {emoji}",
         "more_reactions": "Fler reaktioner",
-        "no_contacts_match": "Inga namn matchar. Meddelanden som matchar visas ovanför."
+        "no_contacts_match": "Inga namn matchar. Meddelanden som matchar visas ovanför.",
+        "needs_access": "Din roll kan inte använda chatten. Fråga en administratör om du behöver den.",
+        "command_result": "Resultat av {action}: {result}",
+        "command_done": "klart",
+        "command_sent": "Kommando skickat: {command}",
+        "cmd_screenshot": "Skärmbild",
+        "cmd_restart": "Starta om",
+        "cmd_lock": "Lås skärmen",
+        "cmd_shutdown": "Stäng av",
+        "cmd_deploy": "Distribuera skript",
+        "cmd_info": "Enhetsinformation"
     },
     "toast": {
         "device_connected": "Enhet ansluten",

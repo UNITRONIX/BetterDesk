@@ -4642,7 +4642,17 @@
         "search_min": "Wpisz co najmniej 2 znaki, aby znaleźć wiadomości.",
         "react_with": "Zareaguj: {emoji}",
         "more_reactions": "Więcej reakcji",
-        "no_contacts_match": "Żadna nazwa nie pasuje. Pasujące wiadomości są wymienione wyżej."
+        "no_contacts_match": "Żadna nazwa nie pasuje. Pasujące wiadomości są wymienione wyżej.",
+        "needs_access": "Twoja rola nie może korzystać z czatu. Jeśli go potrzebujesz, poproś administratora.",
+        "command_result": "Wynik {action}: {result}",
+        "command_done": "gotowe",
+        "command_sent": "Wysłano polecenie: {command}",
+        "cmd_screenshot": "Zrzut ekranu",
+        "cmd_restart": "Uruchom ponownie",
+        "cmd_lock": "Zablokuj ekran",
+        "cmd_shutdown": "Wyłącz",
+        "cmd_deploy": "Wdróż skrypt",
+        "cmd_info": "Informacje o urządzeniu"
     },
     "toast": {
         "device_connected": "Urządzenie połączone",

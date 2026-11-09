@@ -4513,7 +4513,17 @@
         "search_min": "메시지를 찾으려면 2자 이상 입력하세요.",
         "react_with": "{emoji}(으)로 반응",
         "more_reactions": "다른 반응",
-        "no_contacts_match": "일치하는 이름이 없습니다. 일치하는 메시지는 위에 있습니다."
+        "no_contacts_match": "일치하는 이름이 없습니다. 일치하는 메시지는 위에 있습니다.",
+        "needs_access": "현재 역할로는 채팅을 사용할 수 없습니다. 필요하면 관리자에게 요청하세요.",
+        "command_result": "{action} 결과: {result}",
+        "command_done": "완료",
+        "command_sent": "명령을 보냈습니다: {command}",
+        "cmd_screenshot": "스크린샷",
+        "cmd_restart": "다시 시작",
+        "cmd_lock": "화면 잠금",
+        "cmd_shutdown": "시스템 종료",
+        "cmd_deploy": "스크립트 배포",
+        "cmd_info": "장치 정보"
     },
     "toast": {
         "device_connected": "장치가 연결됨",

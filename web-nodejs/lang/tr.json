@@ -4519,7 +4519,17 @@
         "search_min": "Mesaj bulmak için en az 2 karakter yazın.",
         "react_with": "{emoji} ile tepki ver",
         "more_reactions": "Diğer tepkiler",
-        "no_contacts_match": "Eşleşen ad yok. Eşleşen mesajlar yukarıda listelenir."
+        "no_contacts_match": "Eşleşen ad yok. Eşleşen mesajlar yukarıda listelenir.",
+        "needs_access": "Rolünüz sohbeti kullanamaz. Gerekirse bir yöneticiye başvurun.",
+        "command_result": "{action} sonucu: {result}",
+        "command_done": "tamamlandı",
+        "command_sent": "Komut gönderildi: {command}",
+        "cmd_screenshot": "Ekran görüntüsü",
+        "cmd_restart": "Yeniden başlat",
+        "cmd_lock": "Ekranı kilitle",
+        "cmd_shutdown": "Kapat",
+        "cmd_deploy": "Betik dağıt",
+        "cmd_info": "Cihaz bilgisi"
     },
     "toast": {
         "device_connected": "Cihaz bağlandı",
