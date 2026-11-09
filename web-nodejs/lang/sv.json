@@ -4798,7 +4798,7 @@
         "select_org": "Organisation",
         "select_org_placeholder": "Välj en organisation...",
         "select_org_first": "Välj en organisation för att visa policygranskningsloggen.",
-        "configured": "Konfigurerad",
+        "configured": "Angiven för den här organisationen",
         "connection_title": "Anslutningspolicy",
         "connection_desc": "Styr hur fjärrsessioner upprättas",
         "connection_mode": "Anslutningsläge",
@@ -4826,7 +4826,7 @@
         "allowed_operators": "Tillåtna operatörsroller (kommaseparerade)",
         "network_title": "Nätverkspolicy",
         "network_desc": "Styr reläservrar och direktanslutningar",
-        "block_direct_p2p": "Block Direct P2P (kraftrelä)",
+        "block_direct_p2p": "Anslut alltid via en reläserver",
         "allowed_relays": "Tillåtna reläservrar (en per rad)",
         "ip_allowlist": "IP-tillåtelselista (CIDR, en per rad)",
         "update_title": "Uppdatera policy",
@@ -4880,7 +4880,10 @@
         "groups_default_hint": "En grupp räknas som angiven när den har sparats för den här organisationen.",
         "open_org": "Öppna organisationen",
         "count_unknown": "Inte tillgängligt",
-        "save_failed_groups": "Inte sparat: {groups}."
+        "save_failed_groups": "Inte sparat: {groups}.",
+        "allowed_operators_example": "admin, helpdesk",
+        "allowed_relays_example": "relay1.example.com:21117",
+        "ip_allowlist_example": "192.168.1.0/24"
     },
     "attestation": {
         "title": "Enhetsbekräftelse",

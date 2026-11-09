@@ -4798,7 +4798,7 @@
         "select_org": "Organisaatio",
         "select_org_placeholder": "Valitse organisaatio...",
         "select_org_first": "Valitse organisaatio nähdäksesi käytännön tarkastuslokin.",
-        "configured": "Määritetty",
+        "configured": "Asetettu tälle organisaatiolle",
         "connection_title": "Yhteyskäytäntö",
         "connection_desc": "Hallitse kuinka etäistunnot muodostetaan",
         "connection_mode": "Yhteystila",
@@ -4826,7 +4826,7 @@
         "allowed_operators": "Sallitut operaattoriroolit (pilkuilla erotettu)",
         "network_title": "Verkkokäytäntö",
         "network_desc": "Ohjaa välityspalvelimia ja suoria yhteyksiä",
-        "block_direct_p2p": "Estä suora P2P (force relay)",
+        "block_direct_p2p": "Yhdistä aina välityspalvelimen kautta",
         "allowed_relays": "Sallitut välityspalvelimet (yksi per rivi)",
         "ip_allowlist": "IP-salliluettelo (CIDR, yksi riviä kohden)",
         "update_title": "Päivitä käytäntö",
@@ -4880,7 +4880,10 @@
         "groups_default_hint": "Ryhmä on asetettu, kun se on tallennettu tälle organisaatiolle.",
         "open_org": "Avaa organisaatio",
         "count_unknown": "Ei saatavilla",
-        "save_failed_groups": "Ei tallennettu: {groups}."
+        "save_failed_groups": "Ei tallennettu: {groups}.",
+        "allowed_operators_example": "admin, helpdesk",
+        "allowed_relays_example": "relay1.example.com:21117",
+        "ip_allowlist_example": "192.168.1.0/24"
     },
     "attestation": {
         "title": "Laitteen todistus",

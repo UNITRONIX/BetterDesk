@@ -4792,7 +4792,7 @@
         "select_org": "Organização",
         "select_org_placeholder": "Selecionar organização...",
         "select_org_first": "Selecione uma organização para ver o registo de auditoria de políticas.",
-        "configured": "Configurado",
+        "configured": "Definido para esta organização",
         "connection_title": "Política de conexão",
         "connection_desc": "Controlar como as sessões remotas são estabelecidas",
         "connection_mode": "Modo de conexão",
@@ -4820,7 +4820,7 @@
         "allowed_operators": "Funções de operador permitidas (separadas por vírgula)",
         "network_title": "Política de rede",
         "network_desc": "Controlar servidores relay e conexões diretas",
-        "block_direct_p2p": "Bloquear P2P direto (forçar relay)",
+        "block_direct_p2p": "Ligar sempre através de um servidor de retransmissão",
         "allowed_relays": "Servidores relay permitidos (um por linha)",
         "ip_allowlist": "Lista branca IP (CIDR, um por linha)",
         "update_title": "Política de atualização",
@@ -4874,7 +4874,10 @@
         "groups_default_hint": "Um grupo conta como definido assim que é guardado para esta organização.",
         "open_org": "Abrir a organização",
         "count_unknown": "Não disponível",
-        "save_failed_groups": "Não guardado: {groups}."
+        "save_failed_groups": "Não guardado: {groups}.",
+        "allowed_operators_example": "admin, helpdesk",
+        "allowed_relays_example": "relay1.example.com:21117",
+        "ip_allowlist_example": "192.168.1.0/24"
     },
     "attestation": {
         "title": "Atestação de dispositivos",

@@ -4792,7 +4792,7 @@
         "select_org": "Organizzazione",
         "select_org_placeholder": "Seleziona un'organizzazione...",
         "select_org_first": "Seleziona un'organizzazione per visualizzare il registro di audit dei criteri.",
-        "configured": "Configurato",
+        "configured": "Impostato per questa organizzazione",
         "connection_title": "Criterio di connessione",
         "connection_desc": "Controlla come vengono stabilite le sessioni remote",
         "connection_mode": "Modalità connessione",
@@ -4820,7 +4820,7 @@
         "allowed_operators": "Ruoli operatore consentiti (separati da virgola)",
         "network_title": "Criterio di rete",
         "network_desc": "Controlla server relay e connessioni dirette",
-        "block_direct_p2p": "Blocca P2P diretto (forza relay)",
+        "block_direct_p2p": "Connetti sempre tramite un server relay",
         "allowed_relays": "Server relay consentiti (uno per riga)",
         "ip_allowlist": "Whitelist IP (CIDR, uno per riga)",
         "update_title": "Criterio aggiornamento",
@@ -4874,7 +4874,10 @@
         "groups_default_hint": "Un gruppo risulta impostato non appena è stato salvato per questa organizzazione.",
         "open_org": "Apri l'organizzazione",
         "count_unknown": "Non disponibile",
-        "save_failed_groups": "Non salvato: {groups}."
+        "save_failed_groups": "Non salvato: {groups}.",
+        "allowed_operators_example": "admin, helpdesk",
+        "allowed_relays_example": "relay1.example.com:21117",
+        "ip_allowlist_example": "192.168.1.0/24"
     },
     "attestation": {
         "title": "Attestazione dispositivi",

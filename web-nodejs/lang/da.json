@@ -4798,7 +4798,7 @@
         "select_org": "Organisation",
         "select_org_placeholder": "Vælg en organisation...",
         "select_org_first": "Vælg en organisation for at se politikrevisionslog.",
-        "configured": "Konfigureret",
+        "configured": "Angivet for denne organisation",
         "connection_title": "Forbindelsespolitik",
         "connection_desc": "Styr, hvordan fjernsessioner etableres",
         "connection_mode": "Tilslutningstilstand",
@@ -4826,7 +4826,7 @@
         "allowed_operators": "Tilladte operatørroller (kommasepareret)",
         "network_title": "Netværkspolitik",
         "network_desc": "Styr relæservere og direkte forbindelser",
-        "block_direct_p2p": "Bloker direkte P2P (kraftrelæ)",
+        "block_direct_p2p": "Forbind altid via en relay-server",
         "allowed_relays": "Tilladte relæservere (én pr. linje)",
         "ip_allowlist": "IP-tilladelsesliste (CIDR, én pr. linje)",
         "update_title": "Opdater politik",
@@ -4880,7 +4880,10 @@
         "groups_default_hint": "En gruppe tæller som angivet, når den er gemt for denne organisation.",
         "open_org": "Åbn organisationen",
         "count_unknown": "Ikke tilgængelig",
-        "save_failed_groups": "Ikke gemt: {groups}."
+        "save_failed_groups": "Ikke gemt: {groups}.",
+        "allowed_operators_example": "admin, helpdesk",
+        "allowed_relays_example": "relay1.example.com:21117",
+        "ip_allowlist_example": "192.168.1.0/24"
     },
     "attestation": {
         "title": "Enhedsattest",

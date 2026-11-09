@@ -4921,7 +4921,7 @@
         "select_org": "Organizacja",
         "select_org_placeholder": "Wybierz organizację...",
         "select_org_first": "Wybierz organizację, aby zobaczyć dziennik zmian polityk.",
-        "configured": "Skonfigurowano",
+        "configured": "Ustawione dla tej organizacji",
         "connection_title": "Polityka połączeń",
         "connection_desc": "Kontroluj sposób nawiązywania sesji zdalnych",
         "connection_mode": "Tryb połączenia",
@@ -4949,7 +4949,7 @@
         "allowed_operators": "Dozwolone role operatorów (po przecinku)",
         "network_title": "Polityka sieciowa",
         "network_desc": "Kontroluj serwery relay i bezpośrednie połączenia",
-        "block_direct_p2p": "Blokuj bezpośrednie P2P (wymuszaj relay)",
+        "block_direct_p2p": "Zawsze łącz przez serwer przekaźnikowy",
         "block_direct_p2p_hint": "Dotyczy urządzeń w tej organizacji. Domyślny tryb globalny ustawiasz w Ustawienia → Strategia połączeń.",
         "allowed_relays": "Dozwolone serwery relay (po jednym w linii)",
         "ip_allowlist": "Lista dozwolonych IP (CIDR, po jednym w linii)",
@@ -5003,7 +5003,10 @@
         "groups_default_hint": "Grupa jest ustawiona, gdy zostanie zapisana dla tej organizacji.",
         "open_org": "Otwórz organizację",
         "count_unknown": "Niedostępne",
-        "save_failed_groups": "Nie zapisano: {groups}."
+        "save_failed_groups": "Nie zapisano: {groups}.",
+        "allowed_operators_example": "admin, helpdesk",
+        "allowed_relays_example": "relay1.example.com:21117",
+        "ip_allowlist_example": "192.168.1.0/24"
     },
     "attestation": {
         "title": "Atestacja urządzeń",

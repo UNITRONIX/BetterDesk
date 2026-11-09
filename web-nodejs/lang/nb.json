@@ -4798,7 +4798,7 @@
         "select_org": "Organisasjon",
         "select_org_placeholder": "Velg en organisasjon...",
         "select_org_first": "Velg en organisasjon for å se revisjonslogg for retningslinjer.",
-        "configured": "Konfigurert",
+        "configured": "Angitt for denne organisasjonen",
         "connection_title": "Tilkoblingspolicy",
         "connection_desc": "Kontroller hvordan eksterne økter opprettes",
         "connection_mode": "Tilkoblingsmodus",
@@ -4826,7 +4826,7 @@
         "allowed_operators": "Tillatte operatørroller (kommaseparert)",
         "network_title": "Nettverkspolicy",
         "network_desc": "Kontroller reléservere og direkte tilkoblinger",
-        "block_direct_p2p": "Blokker direkte P2P (kraftrelé)",
+        "block_direct_p2p": "Koble alltid til via en relay-server",
         "allowed_relays": "Tillatte reléservere (én per linje)",
         "ip_allowlist": "IP-tillatelsesliste (CIDR, én per linje)",
         "update_title": "Oppdater policy",
@@ -4880,7 +4880,10 @@
         "groups_default_hint": "En gruppe regnes som angitt når den er lagret for denne organisasjonen.",
         "open_org": "Åpne organisasjonen",
         "count_unknown": "Ikke tilgjengelig",
-        "save_failed_groups": "Ikke lagret: {groups}."
+        "save_failed_groups": "Ikke lagret: {groups}.",
+        "allowed_operators_example": "admin, helpdesk",
+        "allowed_relays_example": "relay1.example.com:21117",
+        "ip_allowlist_example": "192.168.1.0/24"
     },
     "attestation": {
         "title": "Enhetsattest",

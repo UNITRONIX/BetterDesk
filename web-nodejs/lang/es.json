@@ -17,7 +17,7 @@
         "success": "Éxito",
         "warning": "Advertencia",
         "info": "Información",
-        "all": "All",
+        "all": "Todos",
         "cancel": "Cancelar",
         "delete": "Eliminar",
         "actions": "Acciones",
@@ -4792,7 +4792,7 @@
         "select_org": "Organización",
         "select_org_placeholder": "Seleccionar organización...",
         "select_org_first": "Seleccione una organización para ver el registro de auditoría de políticas.",
-        "configured": "Configurado",
+        "configured": "Definido para esta organización",
         "connection_title": "Política de conexión",
         "connection_desc": "Controlar cómo se establecen las sesiones remotas",
         "connection_mode": "Modo de conexión",
@@ -4820,7 +4820,7 @@
         "allowed_operators": "Allowed Operators",
         "network_title": "Política de red",
         "network_desc": "Controlar servidores relay y conexiones directas",
-        "block_direct_p2p": "Bloquear P2P directo (forzar relay)",
+        "block_direct_p2p": "Conectar siempre a través de un servidor de retransmisión",
         "allowed_relays": "Servidores relay permitidos (uno por línea)",
         "ip_allowlist": "Lista blanca IP (CIDR, uno por línea)",
         "update_title": "Política de actualización",
@@ -4874,7 +4874,10 @@
         "groups_default_hint": "Un grupo cuenta como definido en cuanto se ha guardado para esta organización.",
         "open_org": "Abrir la organización",
         "count_unknown": "No disponible",
-        "save_failed_groups": "No guardado: {groups}."
+        "save_failed_groups": "No guardado: {groups}.",
+        "allowed_operators_example": "admin, helpdesk",
+        "allowed_relays_example": "relay1.example.com:21117",
+        "ip_allowlist_example": "192.168.1.0/24"
     },
     "attestation": {
         "title": "Panel",

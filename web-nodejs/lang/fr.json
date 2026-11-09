@@ -4925,7 +4925,7 @@
         "select_org": "Organisation",
         "select_org_placeholder": "Sélectionner une organisation...",
         "select_org_first": "Sélectionnez une organisation pour voir le journal d'audit des politiques.",
-        "configured": "Configuré",
+        "configured": "Défini pour cette organisation",
         "connection_title": "Politique de connexion",
         "connection_desc": "Contrôler l'établissement des sessions distantes",
         "connection_mode": "Mode de connexion",
@@ -4953,7 +4953,7 @@
         "allowed_operators": "Allowed Operators",
         "network_title": "Politique réseau",
         "network_desc": "Contrôler les serveurs relais et les connexions directes",
-        "block_direct_p2p": "Bloquer P2P direct (forcer relais)",
+        "block_direct_p2p": "Toujours se connecter via un serveur relais",
         "block_direct_p2p_hint": "Gilt für Geräte in dieser Organisation. Der globale Standard wird unter Einstellungen → Verbindungsstrategie festgelegt.",
         "allowed_relays": "Serveurs relais autorisés (un par ligne)",
         "ip_allowlist": "Liste blanche IP (CIDR, un par ligne)",
@@ -5007,7 +5007,10 @@
         "groups_default_hint": "Un groupe est considéré comme défini dès qu'il a été enregistré pour cette organisation.",
         "open_org": "Ouvrir l'organisation",
         "count_unknown": "Non disponible",
-        "save_failed_groups": "Non enregistré : {groups}."
+        "save_failed_groups": "Non enregistré : {groups}.",
+        "allowed_operators_example": "admin, helpdesk",
+        "allowed_relays_example": "relay1.example.com:21117",
+        "ip_allowlist_example": "192.168.1.0/24"
     },
     "attestation": {
         "title": "Tableau de bord",

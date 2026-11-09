@@ -5076,7 +5076,10 @@
         "groups_default_hint": "A group counts as set once it has been saved for this organization.",
         "open_org": "Open the organization",
         "count_unknown": "Not available",
-        "save_failed_groups": "Not saved: {groups}."
+        "save_failed_groups": "Not saved: {groups}.",
+        "allowed_operators_example": "admin, helpdesk",
+        "allowed_relays_example": "relay1.example.com:21117",
+        "ip_allowlist_example": "192.168.1.0/24"
     },
     "attestation": {
         "title": "Device Attestation",

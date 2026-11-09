@@ -4903,7 +4903,7 @@
         "select_org": "组织",
         "select_org_placeholder": "选择组织...",
         "select_org_first": "选择组织以查看策略审计日志。",
-        "configured": "已配置",
+        "configured": "已为此组织设置",
         "connection_title": "连接策略",
         "connection_desc": "控制远程会话的建立方式",
         "connection_mode": "连接模式",
@@ -4931,7 +4931,7 @@
         "allowed_operators": "允许的操作员角色（逗号分隔）",
         "network_title": "网络策略",
         "network_desc": "控制中继服务器和直接连接",
-        "block_direct_p2p": "阻止直接P2P（强制中继）",
+        "block_direct_p2p": "始终通过中继服务器连接",
         "allowed_relays": "允许的中继服务器（每行一个）",
         "ip_allowlist": "IP白名单（CIDR，每行一个）",
         "update_title": "更新策略",
@@ -4985,7 +4985,10 @@
         "groups_default_hint": "为此组织保存后，该组即算作已设置。",
         "open_org": "打开组织",
         "count_unknown": "不可用",
-        "save_failed_groups": "未保存：{groups}。"
+        "save_failed_groups": "未保存：{groups}。",
+        "allowed_operators_example": "admin, helpdesk",
+        "allowed_relays_example": "relay1.example.com:21117",
+        "ip_allowlist_example": "192.168.1.0/24"
     },
     "attestation": {
         "title": "设备认证",

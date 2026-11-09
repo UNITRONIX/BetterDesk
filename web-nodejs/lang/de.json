@@ -17,7 +17,7 @@
         "success": "Erfolg",
         "warning": "Warnung",
         "info": "Informationen",
-        "all": "All",
+        "all": "Alle",
         "cancel": "Abbrechen",
         "delete": "Löschen",
         "actions": "Aktionen",
@@ -4874,7 +4874,10 @@
         "groups_default_hint": "Eine Gruppe gilt als festgelegt, sobald sie für diese Organisation gespeichert wurde.",
         "open_org": "Organisation öffnen",
         "count_unknown": "Nicht verfügbar",
-        "save_failed_groups": "Nicht gespeichert: {groups}."
+        "save_failed_groups": "Nicht gespeichert: {groups}.",
+        "allowed_operators_example": "admin, helpdesk",
+        "allowed_relays_example": "relay1.example.com:21117",
+        "ip_allowlist_example": "192.168.1.0/24"
     },
     "attestation": {
         "title": "Dashboard",

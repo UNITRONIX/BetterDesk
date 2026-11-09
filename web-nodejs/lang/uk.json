@@ -4798,7 +4798,7 @@
         "select_org": "організація",
         "select_org_placeholder": "Виберіть організацію...",
         "select_org_first": "Виберіть організацію, щоб переглянути журнал аудиту політики.",
-        "configured": "Налаштовано",
+        "configured": "Задано для цієї організації",
         "connection_title": "Політика підключення",
         "connection_desc": "Керуйте встановленням віддалених сеансів",
         "connection_mode": "Режим підключення",
@@ -4826,7 +4826,7 @@
         "allowed_operators": "Дозволені ролі оператора (розділені комами)",
         "network_title": "Мережева політика",
         "network_desc": "Керуйте серверами ретрансляції та прямими з’єднаннями",
-        "block_direct_p2p": "Block Direct P2P (примусове реле)",
+        "block_direct_p2p": "Завжди підключатися через сервер-ретранслятор",
         "allowed_relays": "Дозволені сервери ретрансляції (по одному на рядок)",
         "ip_allowlist": "Білий список IP-адрес (CIDR, по одному на рядок)",
         "update_title": "Політика оновлення",
@@ -4880,7 +4880,10 @@
         "groups_default_hint": "Група вважається заданою, щойно її збережено для цієї організації.",
         "open_org": "Відкрити організацію",
         "count_unknown": "Недоступно",
-        "save_failed_groups": "Не збережено: {groups}."
+        "save_failed_groups": "Не збережено: {groups}.",
+        "allowed_operators_example": "admin, helpdesk",
+        "allowed_relays_example": "relay1.example.com:21117",
+        "ip_allowlist_example": "192.168.1.0/24"
     },
     "attestation": {
         "title": "Атестація пристрою",

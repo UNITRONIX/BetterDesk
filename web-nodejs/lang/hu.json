@@ -4798,7 +4798,7 @@
         "select_org": "Szervezet",
         "select_org_placeholder": "Válasszon egy szervezetet...",
         "select_org_first": "Válasszon ki egy szervezetet a házirend-napló megtekintéséhez.",
-        "configured": "Konfigurálva",
+        "configured": "Beállítva ehhez a szervezethez",
         "connection_title": "Csatlakozási szabályzat",
         "connection_desc": "A távoli munkamenetek létrehozásának szabályozása",
         "connection_mode": "Csatlakozási mód",
@@ -4826,7 +4826,7 @@
         "allowed_operators": "Engedélyezett operátori szerepkörök (vesszővel elválasztva)",
         "network_title": "Hálózati szabályzat",
         "network_desc": "Vezérelje a közvetítő szervereket és a közvetlen kapcsolatokat",
-        "block_direct_p2p": "Közvetlen P2P blokkolása (force relay)",
+        "block_direct_p2p": "Mindig továbbítószerveren keresztül csatlakozzon",
         "allowed_relays": "Engedélyezett közvetítő szerverek (soronként egy)",
         "ip_allowlist": "IP engedélyezési lista (CIDR, soronként egy)",
         "update_title": "Irányelv frissítése",
@@ -4880,7 +4880,10 @@
         "groups_default_hint": "Egy csoport akkor számít beállítottnak, ha ehhez a szervezethez mentették.",
         "open_org": "Szervezet megnyitása",
         "count_unknown": "Nem érhető el",
-        "save_failed_groups": "Nincs mentve: {groups}."
+        "save_failed_groups": "Nincs mentve: {groups}.",
+        "allowed_operators_example": "admin, helpdesk",
+        "allowed_relays_example": "relay1.example.com:21117",
+        "ip_allowlist_example": "192.168.1.0/24"
     },
     "attestation": {
         "title": "Eszköz tanúsítvány",

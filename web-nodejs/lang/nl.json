@@ -4792,7 +4792,7 @@
         "select_org": "Organisatie",
         "select_org_placeholder": "Selecteer een organisatie...",
         "select_org_first": "Selecteer een organisatie om het beleidsauditlogboek te bekijken.",
-        "configured": "Geconfigureerd",
+        "configured": "Ingesteld voor deze organisatie",
         "connection_title": "Verbindingsbeleid",
         "connection_desc": "Beheer hoe externe sessies worden opgezet",
         "connection_mode": "Verbindingsmodus",
@@ -4820,7 +4820,7 @@
         "allowed_operators": "Toegestane operatorrollen (kommagescheiden)",
         "network_title": "Netwerkbeleid",
         "network_desc": "Relay-servers en directe verbindingen beheren",
-        "block_direct_p2p": "Direct P2P blokkeren (relay afdwingen)",
+        "block_direct_p2p": "Altijd verbinden via een relayserver",
         "allowed_relays": "Toegestane relay-servers (één per regel)",
         "ip_allowlist": "IP-whitelist (CIDR, één per regel)",
         "update_title": "Updatebeleid",
@@ -4874,7 +4874,10 @@
         "groups_default_hint": "Een groep telt als ingesteld zodra die voor deze organisatie is opgeslagen.",
         "open_org": "Organisatie openen",
         "count_unknown": "Niet beschikbaar",
-        "save_failed_groups": "Niet opgeslagen: {groups}."
+        "save_failed_groups": "Niet opgeslagen: {groups}.",
+        "allowed_operators_example": "admin, helpdesk",
+        "allowed_relays_example": "relay1.example.com:21117",
+        "ip_allowlist_example": "192.168.1.0/24"
     },
     "attestation": {
         "title": "Apparaatattestatie",
