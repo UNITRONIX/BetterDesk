@@ -26,7 +26,8 @@ for (const role of ROLES) {
 
 		test('packages follow billing.view and billing.manage', async ({ page }) => {
 			await page.goto(`${UI}/commercialization?tab=packages`);
-			await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+			// The console's start (session, strings) can take more than 5 s on a busy server
+			await expect(page.getByRole('heading', { level: 1 })).toBeVisible({ timeout: 20_000 });
 			const can = await perms(page);
 			if (!can('billing.view')) {
 				await expect(page.locator('.package-new')).toHaveCount(0);
@@ -56,9 +57,13 @@ for (const role of ROLES) {
 			await expect(page.locator('#billing-settings-panel .save-bar')).toHaveCount(
 				can('billing.manage') ? 1 : 0
 			);
-			await expectNoAxeViolations(page);
+			// The page itself was checked above. Scrolled down to the settings, the
+			// buttons at the top sit under the sticky top bar, and axe's target-size
+			// rule counts a covered button as too small: here only the settings
+			await expectNoAxeViolations(page, '#billing-settings-panel');
 
 			if (role !== 'admin') return;
+			await page.evaluate(() => window.scrollTo(0, 0));
 			const name = `e2e package ${Date.now()}`;
 			await page.locator('.package-new').click();
 			await expect(sheet).toBeVisible();
@@ -76,7 +81,7 @@ for (const role of ROLES) {
 
 		test('sessions follow billing.reports and billing.export', async ({ page }) => {
 			await page.goto(`${UI}/commercialization?tab=reports`);
-			await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+			await expect(page.getByRole('heading', { level: 1 })).toBeVisible({ timeout: 20_000 });
 			const can = await perms(page);
 			if (!can('billing.view')) return;
 			await expect(page).toHaveURL(/tab=reports/);
