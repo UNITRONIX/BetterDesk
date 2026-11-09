@@ -22,7 +22,8 @@ test.describe('security headers and CSRF', () => {
 		const ctx = await browser.newContext({ storageState: undefined });
 		const res = await ctx.request.get(`${UI}/devices?open=1`, { maxRedirects: 0 });
 		expect(res.status()).toBe(302);
-		expect(res.headers()['location']).toContain('/login?expired=1&return=');
+		// A first visit (no session cookie) isn't told its session expired (R4)
+		expect(res.headers()['location']).toBe('/login?return=' + encodeURIComponent(`${UI}/devices?open=1`));
 		await ctx.close();
 	});
 
