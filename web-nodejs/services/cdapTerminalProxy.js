@@ -9,6 +9,12 @@
 
 const WebSocket = require('ws');
 const config = require('../config/config');
+const { roleHasEffectivePermission } = require('../middleware/auth');
+
+// The permission for a shell on the device, with the role overrides applied
+const REQUIRED_PERMISSION = 'cdap.terminal';
+// Device IDs as the other CDAP sockets and the gateway accept them
+const TERMINAL_PATH = /^\/api\/cdap\/devices\/([A-Za-z0-9_-]{1,64})\/terminal$/;
 
 /**
  * Initialize the CDAP terminal WebSocket proxy and attach to HTTP server.
@@ -22,13 +28,13 @@ function initCdapTerminalProxy(server, sessionMiddleware) {
 
     registerUpgradeHandler(
         server,
-        (pathname) => /^\/api\/cdap\/devices\/[A-Za-z0-9_-]{6,30}\/terminal$/.test(pathname),
+        (pathname) => TERMINAL_PATH.test(pathname),
         (req, socket, head) => {
             const url = new URL(req.url, `http://${req.headers.host}`);
             const pathname = url.pathname;
 
             // Match /api/cdap/devices/:id/terminal
-            const match = pathname.match(/^\/api\/cdap\/devices\/([A-Za-z0-9_-]{6,30})\/terminal$/);
+            const match = pathname.match(TERMINAL_PATH);
             if (!match) return;
 
             const deviceId = match[1];
@@ -37,7 +43,7 @@ function initCdapTerminalProxy(server, sessionMiddleware) {
             if (!enforceOrigin(req, socket, `cdap-terminal ${pathname}`)) return;
 
             // Require session authentication
-            sessionMiddleware(req, {}, () => {
+            sessionMiddleware(req, {}, async () => {
                 if (!req.session || !req.session.userId) {
                     socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
                     socket.destroy();
@@ -45,13 +51,19 @@ function initCdapTerminalProxy(server, sessionMiddleware) {
                 }
 
                 // Session may store user under req.session.user (object) or as
-                // flat fields. Accept either; treat super_admin/admin as admin.
+                // flat fields. Accept either.
                 const sessUser = req.session.user || {};
                 const userRole = sessUser.role || req.session.role || '';
                 const userName = sessUser.username || req.session.username || `user#${req.session.userId}`;
 
-                // RBAC: only admin / super_admin users can access terminal
-                if (userRole !== 'admin' && userRole !== 'super_admin') {
+                // cdap.terminal with the role overrides; a failed lookup refuses
+                let allowed = false;
+                try {
+                    allowed = await roleHasEffectivePermission(userRole, REQUIRED_PERMISSION);
+                } catch (_) {
+                    allowed = false;
+                }
+                if (!allowed) {
                     console.warn(`[CDAP Terminal] 403 upgrade rejected (user=${userName} role=${userRole})`);
                     socket.write('HTTP/1.1 403 Forbidden\r\n\r\n');
                     socket.destroy();

@@ -8,6 +8,7 @@
 
 const WebSocket = require('ws');
 const config = require('../config/config');
+const { roleHasEffectivePermission } = require('../middleware/auth');
 
 /**
  * Create a CDAP media proxy for a specific channel type.
@@ -16,28 +17,15 @@ const config = require('../config/config');
  * @param {object} opts
  * @param {string} opts.channel     - URL segment: desktop, video, files
  * @param {string} opts.subprotocol - WebSocket subprotocol name
- * @param {string} opts.minRole     - Minimum required role: admin, operator, viewer
+ * @param {string} opts.permission  - Permission the user's role needs (role overrides applied)
  * @param {string} opts.label       - Log label
  */
 function createCdapMediaProxy(server, sessionMiddleware, opts) {
-    const { channel, subprotocol, minRole, label } = opts;
+    const { channel, subprotocol, permission, label } = opts;
 
     const pattern = new RegExp(
         `^\\/api\\/cdap\\/devices\\/([A-Za-z0-9_-]{1,64})\\/${channel}$`
     );
-
-    // Role levels — keep in sync with middleware/auth.js DEFAULT_ROLE_PERMISSIONS
-    // super_admin and admin (legacy alias) are the highest. global_admin and
-    // server_admin sit just below (parallel branches). operator/viewer/pro below.
-    const roleLevel = {
-        super_admin: 5,
-        admin: 5,
-        global_admin: 4,
-        server_admin: 4,
-        operator: 2,
-        viewer: 1,
-        pro: 1
-    };
 
     const wss = new WebSocket.Server({ noServer: true });
     const { enforceOrigin } = require('../middleware/wsOrigin');
@@ -56,7 +44,7 @@ function createCdapMediaProxy(server, sessionMiddleware, opts) {
             // CSWSH protection — reject before validating session.
             if (!enforceOrigin(req, socket, `cdap-${label} ${url.pathname}`)) return;
 
-            sessionMiddleware(req, {}, () => {
+            sessionMiddleware(req, {}, async () => {
                 if (!req.session || !req.session.userId) {
                     console.warn(`[CDAP ${label}] 401 upgrade rejected for ${url.pathname} (no session; ip=${req.socket?.remoteAddress})`);
                     socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
@@ -70,10 +58,15 @@ function createCdapMediaProxy(server, sessionMiddleware, opts) {
                 const userRole = sessUser.role || req.session.role || '';
                 const userName = sessUser.username || req.session.username || `user#${req.session.userId}`;
 
-                const userLevel = roleLevel[userRole] || 0;
-                const requiredLevel = roleLevel[minRole] || 3;
-                if (userLevel < requiredLevel) {
-                    console.warn(`[CDAP ${label}] 403 upgrade rejected for ${url.pathname} (user=${userName} role=${userRole} level=${userLevel} < required=${requiredLevel})`);
+                // The channel's permission with the role overrides; a failed lookup refuses
+                let allowed = false;
+                try {
+                    allowed = await roleHasEffectivePermission(userRole, permission);
+                } catch (_) {
+                    allowed = false;
+                }
+                if (!allowed) {
+                    console.warn(`[CDAP ${label}] 403 upgrade rejected for ${url.pathname} (user=${userName} role=${userRole} needs ${permission})`);
                     socket.write('HTTP/1.1 403 Forbidden\r\n\r\n');
                     socket.destroy();
                     return;
@@ -186,31 +179,34 @@ function createCdapMediaProxy(server, sessionMiddleware, opts) {
  * @param {Function} sessionMiddleware
  */
 function initCdapMediaProxies(server, sessionMiddleware) {
+    // Desktop is remote control of the device, like its terminal: cdap.terminal.
+    // Video and audio need the operator-level cdap.command (operator and above,
+    // as before, but not server_admin, which has no CDAP permission at all).
     createCdapMediaProxy(server, sessionMiddleware, {
         channel: 'desktop',
         subprotocol: 'cdap-desktop',
-        minRole: 'admin',
+        permission: 'cdap.terminal',
         label: 'Desktop'
     });
 
     createCdapMediaProxy(server, sessionMiddleware, {
         channel: 'video',
         subprotocol: 'cdap-video',
-        minRole: 'operator',
+        permission: 'cdap.command',
         label: 'Video'
     });
 
     createCdapMediaProxy(server, sessionMiddleware, {
         channel: 'files',
         subprotocol: 'cdap-filebrowser',
-        minRole: 'admin',
+        permission: 'cdap.files',
         label: 'FileBrowser'
     });
 
     createCdapMediaProxy(server, sessionMiddleware, {
         channel: 'audio',
         subprotocol: 'cdap-audio',
-        minRole: 'operator',
+        permission: 'cdap.command',
         label: 'Audio'
     });
 

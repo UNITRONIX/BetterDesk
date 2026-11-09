@@ -71,6 +71,14 @@ describe('GET /api/console/bootstrap', () => {
         expect(viewer.body.permissions).not.toContain('device.connect');
     });
 
+    test('the CDAP terminal and file rights reach the browser for the roles that have them', async () => {
+        const global = await request(appWith({ id: 4, username: 'g', role: 'global_admin' })).get('/api/console/bootstrap');
+        const operator = await request(appWith({ id: 5, username: 'o', role: 'operator' })).get('/api/console/bootstrap');
+        expect(global.body.permissions).toEqual(expect.arrayContaining(['cdap.terminal', 'cdap.files']));
+        expect(operator.body.permissions).not.toContain('cdap.terminal');
+        expect(operator.body.permissions).not.toContain('cdap.files');
+    });
+
     test('uses the effective permissions the request loaded (custom roles)', async () => {
         const app = appWith({ id: 3, username: 'c', role: 'viewer' }, {
             effectivePermissions: new Set(['device.view', 'device.delete']),
