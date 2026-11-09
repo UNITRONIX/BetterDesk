@@ -111,8 +111,23 @@ function safeCsrfProtection(req, res, next) {
     });
 }
 
+/**
+ * The app-wide CSRF check. Device agents call /api/bd/* with bearer tokens
+ * and no session, so they skip it. Several admin routers are also mounted
+ * under /api/bd (automation, file transfer, dataguard, inventory, activity,
+ * registration, policies, fleet, scaling, resource control); a request
+ * there that carries a signed-in session is a browser and gets the check.
+ */
+function csrfGate(req, res, next) {
+    if (req.path.startsWith('/api/bd/') && !(req.session && req.session.userId)) {
+        return next();
+    }
+    return safeCsrfProtection(req, res, next);
+}
+
 module.exports = {
     csrfTokenProvider,
+    csrfGate,
     doubleCsrfProtection: safeCsrfProtection,
     /**
      * BD-2026-082: Downgrade CSRF cookie Secure flag to false.

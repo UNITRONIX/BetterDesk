@@ -29,7 +29,7 @@ const {
     getPanelPollMountPaths,
     getPanelReadMountPaths
 } = require('./middleware/rateLimiter');
-const { csrfTokenProvider, doubleCsrfProtection, downgradeToHttp: csrfDowngradeToHttp } = require('./middleware/csrf');
+const { csrfTokenProvider, csrfGate, downgradeToHttp: csrfDowngradeToHttp } = require('./middleware/csrf');
 const {
     requestHasPermission,
     isSuperAdminRole,
@@ -305,8 +305,9 @@ app.use(async (req, res, next) => {
 });
 
 // CSRF protection — validate on POST/PUT/DELETE/PATCH.
-// Skip CSRF for device-facing API routes (/api/bd/*) — these MUST authenticate
-// via Bearer access token (session-cookie fallback is rejected in requireDeviceAuth).
+// Device-facing API routes (/api/bd/*) authenticate via Bearer access token
+// and skip it, unless the request carries a signed-in browser session
+// (admin routers are also mounted under /api/bd; see csrfGate).
 //
 // SECURITY (audit fix C-02, 2026-04-10): the previous Origin-based CSRF skip
 // for Tauri webview origins (`tauri://localhost`, `https://tauri.localhost`,
@@ -314,12 +315,7 @@ app.use(async (req, res, next) => {
 // non-browser HTTP client, so it is unsafe as a CSRF-bypass signal. Tauri
 // desktop clients receive the CSRF token via `csrfTokenProvider` and must
 // echo it back in the `X-CSRF-Token` header (csrf-csrf double-submit).
-app.use((req, res, next) => {
-    if (req.path.startsWith('/api/bd/')) {
-        return next();
-    }
-    doubleCsrfProtection(req, res, next);
-});
+app.use(csrfGate);
 
 // ============ Routes ============
 
