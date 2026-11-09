@@ -2453,7 +2453,8 @@ function createSqliteAdapter(config) {
             return openAuth().prepare(`
                 SELECT * FROM alert_history
                 WHERE rule_id = ? AND device_id = ?
-                  AND triggered_at > datetime('now', '-' || ? || ' seconds')
+                  -- triggered_at is stored as ISO text ("...T...Z"): compare times, not text
+                  AND datetime(triggered_at) > datetime('now', '-' || ? || ' seconds')
                 ORDER BY triggered_at DESC LIMIT 1
             `).get(ruleId, deviceId, cooldownSecs) || null;
         },
