@@ -32,6 +32,9 @@ async function boot(page: Page): Promise<{ can: (p: string) => boolean; nav: Set
 	};
 }
 
+/** The page itself, without the shell (the sidebar has its own "More" and page links) */
+const main = (page: Page) => page.locator('#main-content');
+
 for (const role of ROLES) {
 	test.describe(`devices area as ${role}`, () => {
 		test.use({ role });
@@ -40,26 +43,28 @@ for (const role of ROLES) {
 			await page.goto(`${UI}/`);
 			await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 			const { can, nav } = await boot(page);
-			await expect(page.getByRole('heading', { name: /Client setup/ })).toBeVisible();
-			await expect(page.getByRole('search')).toHaveCount(can('device.view') ? 1 : 0);
+			await expect(main(page).getByRole('heading', { name: /Client setup/ })).toBeVisible();
+			await expect(main(page).getByRole('search')).toHaveCount(can('device.view') ? 1 : 0);
 			await expect(page.locator('.devices-now')).toHaveCount(can('device.view') ? 1 : 0);
-			await expect(page.getByRole('button', { name: 'Activate support agent' })).toHaveCount(
+			await expect(main(page).getByRole('button', { name: 'Activate support agent' })).toHaveCount(
 				can('enrollment.approve') ? 1 : 0
 			);
-			await expect(page.getByRole('link', { name: 'Open server status' })).toHaveCount(
+			await expect(main(page).getByRole('link', { name: 'Open server status' })).toHaveCount(
 				nav.has('server-management:overview') ? 1 : 0
 			);
-			await expect(page.getByRole('link', { name: /^Support agents/ })).toHaveCount(
+			await expect(main(page).getByRole('link', { name: /^Support agents/ })).toHaveCount(
 				nav.has('agents') ? 1 : 0
 			);
-			await expect(page.getByRole('link', { name: 'Server key and QR code' })).toHaveCount(
+			await expect(main(page).getByRole('link', { name: 'Server key and QR code' })).toHaveCount(
 				nav.has('keys') ? 1 : 0
 			);
-			await expect(page.getByRole('heading', { name: 'Trends' })).toHaveCount(can('audit.view') ? 1 : 0);
+			await expect(main(page).getByRole('heading', { name: 'Trends' })).toHaveCount(
+				can('audit.view') ? 1 : 0
+			);
 			await expectNoAxeViolations(page);
 
 			// More: copy the deploy string, or open the Windows install script
-			await page.getByRole('button', { name: 'More' }).click();
+			await main(page).getByRole('button', { name: 'More', exact: true }).click();
 			await expect(page.getByRole('menu')).toBeVisible();
 			await expectNoAxeViolations(page);
 			await page.getByRole('menuitem', { name: /Windows install script/ }).click();
@@ -71,15 +76,15 @@ for (const role of ROLES) {
 			await expect(sheet).toBeHidden();
 
 			// The configuration as a QR code
-			await page.getByRole('button', { name: 'Show QR' }).click();
+			await main(page).getByRole('button', { name: 'Show QR' }).click();
 			await expect(page.getByRole('dialog').getByRole('img')).toBeVisible();
 			await expectNoAxeViolations(page);
 			await page.keyboard.press('Escape');
 
 			// Find a device goes to the device list with the search
 			if (can('device.view')) {
-				await page.getByRole('searchbox').fill('demo');
-				await page.getByRole('button', { name: 'Search', exact: true }).click();
+				await main(page).getByRole('searchbox').fill('demo');
+				await main(page).getByRole('button', { name: 'Search', exact: true }).click();
 				await expect(page).toHaveURL(/\/devices\?search=demo/);
 			}
 		});
@@ -120,17 +125,17 @@ for (const role of ROLES) {
 			await page.goto(`${UI}/network`);
 			const { can } = await boot(page);
 			test.skip(!can('device.view'), 'no device.view');
-			await expect(page.getByRole('heading', { name: 'Automatic checks' })).toBeVisible();
-			await expect(page.getByRole('button', { name: 'Add target' })).toHaveCount(
+			await expect(main(page).getByRole('heading', { name: 'Automatic checks' })).toBeVisible();
+			await expect(main(page).getByRole('button', { name: 'Add target' })).toHaveCount(
 				can('server.config') ? 1 : 0
 			);
 			await expect(page.locator('.monitor-bar button')).toHaveCount(can('server.config') ? 1 : 0);
-			await expect(page.getByRole('link', { name: 'Network tools' })).toHaveCount(
+			await expect(main(page).getByRole('link', { name: 'Network tools' })).toHaveCount(
 				can('device.connect') ? 1 : 0
 			);
 			await expectNoAxeViolations(page);
 			if (can('server.config')) {
-				await page.getByRole('button', { name: 'Add target' }).click();
+				await main(page).getByRole('button', { name: 'Add target' }).click();
 				const sheet = page.getByRole('dialog');
 				await expect(sheet).toBeVisible();
 				// Nothing typed: refused at the fields, nothing sent
@@ -166,14 +171,14 @@ for (const role of ROLES) {
 			await page.goto(`${UI}/cross-platform?tab=protocols`);
 			const { can } = await boot(page);
 			test.skip(!can('device.view'), 'no device.view');
-			await expect(page.getByRole('tab', { name: 'Protocols', selected: true })).toBeVisible();
+			await expect(main(page).getByRole('tab', { name: 'Protocols', selected: true })).toBeVisible();
 			await expectNoAxeViolations(page);
-			await page.getByRole('tab', { name: 'Your devices' }).click();
+			await main(page).getByRole('tab', { name: 'Your devices' }).click();
 			await expect(page).toHaveURL(/tab=distribution/);
-			await expect(page.getByRole('heading', { name: 'Operating systems' })).toBeVisible();
+			await expect(main(page).getByRole('heading', { name: 'Operating systems' })).toBeVisible();
 			await expectNoAxeViolations(page);
-			await page.getByRole('tab', { name: 'Limitations' }).press('Home');
-			await expect(page.getByRole('tab', { name: 'Features', selected: true })).toBeVisible();
+			await main(page).getByRole('tab', { name: 'Limitations' }).press('Home');
+			await expect(main(page).getByRole('tab', { name: 'Features', selected: true })).toBeVisible();
 			await expect(page).toHaveURL(/tab=matrix/);
 			await expectNoAxeViolations(page);
 		});

@@ -172,7 +172,8 @@ for (const role of ROLES) {
 		test('an unknown device says so', async ({ page }) => {
 			await mock(page);
 			await page.goto(`${UI}/cdap/devices/CDAP-NOPE01`);
-			await expect(page.getByRole('alert')).toContainText('CDAP-NOPE01');
+			// The page's own message (the shell's toast region is an alert too)
+			await expect(page.locator('#main-content').getByRole('alert')).toContainText('CDAP-NOPE01');
 		});
 	});
 }
