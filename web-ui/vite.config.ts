@@ -25,8 +25,20 @@ export default defineConfig({
 				directives: {
 					'default-src': ['self'],
 					'script-src': ['self'],
+					'style-src': ['self'],
+					// Only SvelteKit's route announcer (a visually hidden live region)
+					// carries a style attribute; allow exactly that value. Our own
+					// markup uses style: directives, which go through CSSOM.
+					'style-src-attr': ['unsafe-hashes', 'sha256-S8qMpvofolR8Mpjy4kQvEm7m1q8clzU4dfDH0AmvZjo='],
+					'img-src': ['self', 'data:', 'blob:'],
+					'font-src': ['self'],
+					'connect-src': ['self'],
+					'media-src': ['self', 'blob:'],
+					'worker-src': ['self', 'blob:'],
+					'frame-src': ['none'],
 					'object-src': ['none'],
-					'base-uri': ['self']
+					'base-uri': ['self'],
+					'form-action': ['self']
 				}
 			},
 			version: { pollInterval: 0 },
@@ -51,6 +63,7 @@ export default defineConfig({
 	test: {
 		include: ['tests/unit/**/*.test.ts', 'src/**/*.test.ts'],
 		environment: 'jsdom',
+		globals: true,
 		setupFiles: ['tests/unit/setup.ts'],
 		restoreMocks: true
 	},
