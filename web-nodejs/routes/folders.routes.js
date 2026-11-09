@@ -78,8 +78,14 @@ router.get('/api/folders', requireAuth, requirePermission('device.view'), async 
         // Enrich each folder with device_count from assignments table
         try {
             const assignments = await db.getAllFolderAssignments();
+            // A person limited to some devices counts only those
+            let scope = await deviceGroupService.getDeviceScopeForUser(db, req.session.user, []);
+            if (scope) {
+                scope = await deviceGroupService.getDeviceScopeForUser(db, req.session.user, await serverBackend.getAllDevices());
+            }
             const countMap = {};
-            for (const [, folderIdRaw] of Object.entries(assignments)) {
+            for (const [deviceId, folderIdRaw] of Object.entries(assignments)) {
+                if (scope && !scope.has(String(deviceId))) continue;
                 const folderId = Number(folderIdRaw);
                 if (!Number.isFinite(folderId)) continue;
                 countMap[folderId] = (countMap[folderId] || 0) + 1;
@@ -290,6 +296,20 @@ router.post('/api/folders/:id/devices', requireAuth, requirePermission('device.e
             }
         }
         
+        // Every device must exist and be in the person's scope, like other device writes
+        const devices = [];
+        for (const id of deviceIds) {
+            const device = await serverBackend.getDeviceById(String(id));
+            if (!device) {
+                return res.status(404).json({ success: false, error: req.t('devices.not_found'), id: String(id) });
+            }
+            devices.push(device);
+        }
+        const scope = await deviceGroupService.getDeviceScopeForUser(db, req.session.user, devices);
+        if (scope && devices.some((d) => !scope.has(String(d.id)))) {
+            return res.status(403).json({ success: false, error: req.t('errors.forbidden') });
+        }
+
         const assignFolderId = folderId === 0 ? null : folderId;
         
         await db.assignDevicesToFolder(deviceIds, assignFolderId);
@@ -326,6 +346,9 @@ router.patch('/api/devices/:id/folder', requireAuth, requirePermission('device.e
                 success: false,
                 error: req.t('devices.not_found')
             });
+        }
+        if (!(await deviceGroupService.userCanAccessDevice(db, req.session.user, device))) {
+            return res.status(403).json({ success: false, error: req.t('errors.forbidden') });
         }
         
         // Verify folder exists (null to unassign)
