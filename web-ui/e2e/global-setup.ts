@@ -8,8 +8,10 @@ import { ROLES, authFile, type Role } from './roles.ts';
  * Accounts missing on the server are skipped; tests for that role skip too.
  */
 export default async function globalSetup(config: FullConfig): Promise<void> {
-	const password = process.env.E2E_PASSWORD;
-	if (!password) throw new Error('E2E_PASSWORD is not set');
+	// A file keeps the password out of a container's settings (docker inspect shows environment variables)
+	const file = process.env.E2E_PASSWORD_FILE;
+	const password = process.env.E2E_PASSWORD || (file ? fs.readFileSync(file, 'utf8').trim() : '');
+	if (!password) throw new Error('Set E2E_PASSWORD_FILE (a file with the password) or E2E_PASSWORD');
 	const baseURL = config.projects[0]?.use.baseURL ?? 'http://host.docker.internal:5000';
 	fs.mkdirSync('e2e/.auth', { recursive: true });
 	const browser = await chromium.launch();

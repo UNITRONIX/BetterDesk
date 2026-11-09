@@ -4,7 +4,9 @@ import { defineConfig, devices } from '@playwright/test';
  * End-to-end tests against a running console (the dev container, or the
  * production image in CI). BD_URL is the console's origin; the app is under
  * BD_UI_BASE (default /app while old and new run side by side).
- * E2E_PASSWORD is the shared password of the e2e accounts (see e2e/roles.ts).
+ * The e2e accounts share one password (see e2e/roles.ts): E2E_PASSWORD_FILE
+ * names a file that holds it (in a container, a read-only mount), or
+ * E2E_PASSWORD has it (CI secrets).
  */
 export default defineConfig({
 	testDir: 'e2e',
