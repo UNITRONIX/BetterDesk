@@ -37,9 +37,9 @@ for (const role of ROLES) {
 		// Roles without device.connect: the viewer's data endpoint is the one that decides (guests too)
 		test.use({
 			role,
+			// One RegExp: Playwright reads [value, object] as [value, options]
 			allowProblems: [
-				/http 403: GET .*\/api\/remote\/viewer\//,
-				/console: Failed to load resource: the server responded with a status of 403/
+				/http 403: GET .*\/api\/remote\/viewer\/|console: Failed to load resource: the server responded with a status of 403/
 			]
 		});
 
@@ -56,11 +56,14 @@ for (const role of ROLES) {
 			await expectNoAxeViolations(page);
 			// Filters, status, view
 			await page.getByRole('group', { name: 'Status' }).getByRole('button', { name: 'Online' }).click();
-			await page.getByRole('group', { name: 'View' }).getByRole('button', { name: 'Tiles' }).click();
+			await page
+				.getByRole('group', { name: 'View' })
+				.getByRole('button', { name: 'Grid', exact: true })
+				.click();
 			await expect(page.locator('.book-grid')).toBeVisible();
 			await expectNoAxeViolations(page);
 			// Quick connect checks the ID first
-			await page.getByLabel('ID', { exact: true }).fill('ab');
+			await page.getByLabel('Device ID', { exact: true }).fill('ab');
 			await page.getByRole('button', { name: 'Connect', exact: true }).click();
 			await expect(page.locator('.quick-status.is-error')).toBeVisible();
 		});
@@ -86,18 +89,18 @@ for (const role of ROLES) {
 			const controls = page.getByRole('group', { name: 'Session controls' });
 			await expect(controls).toBeVisible();
 			for (const name of ['Actions', 'Display']) {
-				await controls.getByRole('button', { name }).click();
+				await controls.getByRole('button', { name, exact: true }).click();
 				await expect(page.getByRole('menu')).toBeVisible();
 				await expectNoAxeViolations(page, '.session-bar, .controls, [role="menu"]');
 				await page.keyboard.press('Escape');
 				await expect(page.getByRole('menu')).toHaveCount(0);
-				await expect(controls.getByRole('button', { name })).toBeFocused();
+				await expect(controls.getByRole('button', { name, exact: true })).toBeFocused();
 			}
-			await controls.getByRole('button', { name: 'Session info' }).click();
+			await controls.getByRole('button', { name: 'Session info', exact: true }).click();
 			await expect(page.locator('.rd-sheet')).toBeVisible();
 			await expectNoAxeViolations(page, '.rd-sheet');
 			await page.locator('.rd-sheet').getByRole('button', { name: 'Close session info' }).click();
-			await expect(controls.getByRole('button', { name: 'Session info' })).toBeFocused();
+			await expect(controls.getByRole('button', { name: 'Session info', exact: true })).toBeFocused();
 			await page.getByRole('button', { name: 'New connection' }).click();
 			await expect(page.getByRole('dialog')).toBeVisible();
 			await expect(page.getByRole('button', { name: /^Connect to / }).first()).toBeVisible();
@@ -106,7 +109,7 @@ for (const role of ROLES) {
 			await expect(page.getByRole('dialog')).toHaveCount(0);
 			// Disconnect: the session ended by you, Reconnect has focus
 			await page.keyboard.press('F8');
-			await controls.getByRole('button', { name: 'Disconnect' }).click();
+			await controls.getByRole('button', { name: 'Disconnect', exact: true }).click();
 			await expect(page.locator('.overlay-status')).toHaveText(/You ended the session/);
 			await expectNoAxeViolations(page, '.session-panel');
 		});
@@ -128,7 +131,7 @@ for (const role of ROLES) {
 			await page.goto(`${UI}/devices`);
 			test.skip(!(await canConnect(page)), 'needs device.connect');
 			await page.goto(`${UI}/remote/${MOCK_DEVICE}?mock=1&scenario=password`);
-			const pw = page.getByLabel('Password', { exact: true });
+			const pw = page.getByLabel('Device password', { exact: true });
 			await expect(pw).toBeFocused({ timeout: 60_000 });
 			// "Remember the password" starts off (S5)
 			await expect(page.getByLabel('Remember the password in this browser')).not.toBeChecked();
@@ -148,9 +151,7 @@ test.describe('remote client pages without a session', () => {
 		storageState: { cookies: [], origins: [] },
 		// The page asks; the server answers 401 (no session) and 400 (no guest token)
 		allowProblems: [
-			/http 401: GET .*\/api\/remote\/viewer\//,
-			/http 400: GET .*\/api\/remote\/guest-info/,
-			/console: Failed to load resource: the server responded with a status of 40[01]/
+			/http 401: GET .*\/api\/remote\/viewer\/|http 400: GET .*\/api\/remote\/guest-info|console: Failed to load resource: the server responded with a status of 40[01]/
 		]
 	});
 
