@@ -773,6 +773,77 @@ router.get('/api/d/:publicId/manifest', async (req, res) => {
     }
 });
 
+/** White button text needs 4.5:1 on the bundle's colour; otherwise the console accent stays */
+function readableOnWhite(hex) {
+    const m = /^#([0-9a-f]{6})$/i.exec(String(hex || '').trim());
+    if (!m) return false;
+    const ch = [0, 2, 4].map((i) => parseInt(m[1].slice(i, i + 2), 16) / 255)
+        .map((c) => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)));
+    const lum = 0.2126 * ch[0] + 0.7152 * ch[1] + 0.0722 * ch[2];
+    return 1.05 / (lum + 0.05) >= 4.5;
+}
+
+/** A contact web address the page may link to: http(s) only */
+function httpUrlOrEmpty(value) {
+    try {
+        const u = new URL(String(value || '').trim());
+        return u.protocol === 'http:' || u.protocol === 'https:' ? u.href : '';
+    } catch (_) {
+        return '';
+    }
+}
+
+/**
+ * GET /api/d/:publicId/page - What the agent download page (web-ui /d/<id>)
+ * shows: the values views/agent-download.ejs rendered. Public like the page
+ * (the bundle id is the access token); unknown or revoked answers 404.
+ */
+router.get('/api/d/:publicId/page', async (req, res) => {
+    try {
+        const row = await resolvePublicBundle(req.params.publicId);
+        if (!row || row.revoked) return res.status(404).json({ success: false });
+        const brand = publicBrandingView(parseBranding(row.branding)) || {};
+        const builds = filterAvailableBuilds(await db.listAgentBundleBuildsForHash(activeBuildHash(row)));
+        const statusOf = {};
+        for (const b of (builds || [])) statusOf[`${b.platform}/${b.arch}/${b.format}`] = b.status;
+        const gb = brandingService.getBranding() || {};
+        res.setHeader('Cache-Control', 'no-store');
+        res.json({
+            success: true,
+            data: {
+                publicId: bundleService.publicBundleId(row),
+                companyName: String(brand.company_name || gb.appName || 'BetterDesk Support'),
+                shortText: String(brand.short_text || ''),
+                logo: String(brand.logo_data_url || (gb.logoType === 'image' ? gb.logoUrl || '' : '')),
+                contact: {
+                    email: String(brand.contact_email || ''),
+                    phone: String(brand.contact_phone || ''),
+                    url: httpUrlOrEmpty(brand.contact_url)
+                },
+                accent: readableOnWhite(brand.primary_color) ? String(brand.primary_color).trim() : '',
+                background: brandingService.buildBackgroundValue(gb.agentBgType, gb.agentBgColor, gb.agentBgGradient, gb.agentBgImageUrl) || '',
+                showPoweredBy: gb.agentShowPoweredBy !== 'false',
+                product: {
+                    type: normalizeProductType(row.product_type),
+                    label: String(brand.product_label || ''),
+                    hidden: !!brand.hide_product_type
+                },
+                defaultLang: brand.default_lang ? String(brand.default_lang) : null,
+                platforms: clientTemplateWorker.getAvailablePlatforms().map((p) => ({
+                    platform: p.platform,
+                    arch: p.arch,
+                    format: p.format,
+                    label: p.label || '',
+                    status: statusOf[`${p.platform}/${p.arch}/${p.format}`] || 'pending'
+                }))
+            }
+        });
+    } catch (err) {
+        console.error('[generator] page error:', err);
+        res.status(500).json({ success: false });
+    }
+});
+
 router.get('/api/d/:publicId/download/:platform/:arch/:format', async (req, res) => {
     try {
         const row = await resolvePublicBundle(req.params.publicId);
