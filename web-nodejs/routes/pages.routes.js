@@ -21,15 +21,6 @@ router.get('/inventory', requireAuth, (req, res) => {
     });
 });
 
-// ── Tickets (Helpdesk) ──
-
-router.get('/tickets', requireAuth, (req, res) => {
-    res.render('tickets', {
-        title: req.t('tickets.title'),
-        activePage: 'tickets',
-    });
-});
-
 // ── Network Monitoring ──
 
 router.get('/network', requireAuth, (req, res) => {
@@ -43,15 +34,6 @@ router.get('/network', requireAuth, (req, res) => {
 
 router.get('/tenants', requireAuth, requireRole('admin'), (req, res) => {
     res.redirect('/organizations');
-});
-
-// ── Help Requests — operators and admins ──
-
-router.get('/help-requests', requireAuth, (req, res) => {
-    res.render('help-requests', {
-        title: req.t('help_request.title'),
-        activePage: 'help-requests',
-    });
 });
 
 module.exports = router;

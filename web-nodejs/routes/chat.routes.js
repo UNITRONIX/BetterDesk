@@ -1,6 +1,7 @@
 /**
  * BetterDesk Console — Chat Routes
- * Dedicated chat page + API endpoints for Chat 2.0
+ * API endpoints for Chat 2.0. The chat page (/chat) is in the new console
+ * (web-ui); the old address redirects there (lib/portedPages.js).
  */
 
 'use strict';
@@ -34,18 +35,6 @@ const upload = multer({
         },
     }),
     limits: { fileSize: MAX_FILE_SIZE },
-});
-
-// ========== Page Route ==========
-
-router.get('/chat', requireAuth, (req, res) => {
-    res.render('chat', {
-        title: req.t('nav.chat'),
-        pageStyles: ['chat'],
-        pageScripts: ['chat'],
-        currentPage: 'chat',
-        breadcrumb: [{ label: req.t('nav.chat') }],
-    });
 });
 
 // ========== API Routes ==========
