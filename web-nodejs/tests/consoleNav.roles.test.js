@@ -48,6 +48,15 @@ describe('console navigation follows the route guards', () => {
         expect(pagesFor(role).has('cdap-studio')).toBe(shown);
     });
 
+    test.each([
+        ['operator', true],
+        ['viewer', true],
+        ['global_admin', true],
+        ['server_admin', false]
+    ])('%s sees Chat (chat.access, as the chat socket needs): %s', (role, shown) => {
+        expect(pagesFor(role).has('chat')).toBe(shown);
+    });
+
     test('without a role, role-guarded pages stay hidden', () => {
         const nav = buildNav({ can: () => true, isSuperAdmin: false, t: (k) => k, currentPage: '', currentTab: '' });
         const pages = new Set(nav.sections.flatMap((s) => s.pages.map((p) => p.page)));

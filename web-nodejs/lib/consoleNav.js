@@ -49,7 +49,7 @@ const SECTIONS = [
         pages: [
             { page: 'help-requests', keywords: 'help support requests', core: true, href: '/help-requests', label: 'nav.help_requests', when: perm('device.view') },
             { page: 'tickets', keywords: 'issues', core: true, href: '/tickets', label: 'nav.tickets', when: perm('device.view') },
-            { page: 'chat', keywords: 'messages', core: true, href: '/chat', label: 'nav.chat', when: always },
+            { page: 'chat', keywords: 'messages', core: true, href: '/chat', label: 'nav.chat', when: perm('chat.access') },
             { page: 'toolkit', keywords: 'toolkit ping dns port ssl diagnostics', href: '/toolkit', label: 'nav.toolkit', when: perm('device.connect') },
         ],
     },
