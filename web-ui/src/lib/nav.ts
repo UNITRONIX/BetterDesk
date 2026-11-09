@@ -23,7 +23,8 @@ export const PORTED: readonly string[] = [
 	'/tickets',
 	'/chat',
 	'/toolkit',
-	'/settings'
+	'/settings',
+	'/languages'
 ];
 
 /** Whether a path (no query) is one of the entries */
