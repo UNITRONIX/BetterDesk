@@ -1,6 +1,7 @@
 /**
- * Performance budgets (rewrite brief section 7). Run on a production build:
- *   playwright test --grep @perf --project chromium
+ * Performance budgets (rewrite brief section 7). Run on a production build,
+ * alone (the default run leaves them out):
+ *   PERF=1 playwright test --grep @perf --project chromium --workers=1
  * With PERF_DEVICES=5000 (and that many devices seeded) the large-list
  * checks run too. Numbers go to test-results/perf.json.
  */

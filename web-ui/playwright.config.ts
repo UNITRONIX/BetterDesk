@@ -15,6 +15,9 @@ export default defineConfig({
 	fullyParallel: true,
 	workers: process.env.CI ? 2 : 3,
 	retries: 0,
+	// The performance budgets measure time, so they run alone (PERF=1, see e2e/perf.spec.ts),
+	// never beside other specs that load the same machine
+	grepInvert: process.env.PERF ? undefined : /@perf/,
 	reporter: [['list'], ['json', { outputFile: 'test-results/e2e.json' }]],
 	globalSetup: './e2e/global-setup.ts',
 	use: {
