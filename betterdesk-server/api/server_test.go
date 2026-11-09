@@ -241,6 +241,47 @@ func TestBanUnbanEndpoint(t *testing.T) {
 	}
 }
 
+// TestBanKeepsLastSeenOfOfflinePeer: banning a device that is not connected
+// leaves its last-seen time and address alone. Ban used to stamp both with
+// the ban time, so a device offline for days showed as seen just now.
+func TestBanKeepsLastSeenOfOfflinePeer(t *testing.T) {
+	cfg := config.DefaultConfig()
+	database := testSetupDB(t)
+	defer database.Close()
+
+	seen := time.Now().Add(-72 * time.Hour).UTC().Truncate(time.Second)
+	database.UpsertPeer(&db.Peer{ID: "BANOLD1", Status: "OFFLINE", IP: "10.0.0.7", LastOnline: seen})
+	peerMap := peer.NewMap()
+
+	cfg.APIPort = 19951
+	srv := New(cfg, database, peerMap, nil, "test")
+	srv.Start(t.Context())
+	defer srv.Stop()
+	time.Sleep(100 * time.Millisecond)
+
+	req, _ := http.NewRequest("POST", fmt.Sprintf("http://127.0.0.1:%d/api/peers/BANOLD1/ban", cfg.APIPort), nil)
+	testAuthReq(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp.Body.Close()
+	if resp.StatusCode != 200 {
+		t.Fatalf("ban status: %d", resp.StatusCode)
+	}
+
+	p, _ := database.GetPeer("BANOLD1")
+	if p == nil {
+		t.Fatal("peer missing after ban")
+	}
+	if d := p.LastOnline.Sub(seen); d > time.Second || d < -time.Second {
+		t.Errorf("last seen moved from %v to %v", seen, p.LastOnline)
+	}
+	if p.IP != "10.0.0.7" {
+		t.Errorf("address changed to %q", p.IP)
+	}
+}
+
 // TestBanRemovesPeerFromMap verifies that banning a peer removes it from the
 // in-memory peer map so it can no longer receive heartbeats or be targeted
 // for PunchHole/Relay operations.
