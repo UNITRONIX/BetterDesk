@@ -555,12 +555,30 @@
     // The browser cannot observe clipboard changes, but it can read the
     // clipboard once the tab regains focus (with transient activation), so we
     // push the current local clipboard to the active streaming session then.
+    //
+    // Only when reading is already allowed: Firefox asks "Paste" on every
+    // read, which would put a prompt on every click into the remote screen.
+    // Firefox also throws on querying 'clipboard-read', which counts as not
+    // allowed; the toolbar paste button stays the way to send the clipboard.
     let _lastSyncedClipboard = '';
+    let _clipboardReadGranted = null;
+    async function clipboardReadGranted() {
+        if (_clipboardReadGranted !== null) return _clipboardReadGranted;
+        try {
+            const status = await navigator.permissions.query({ name: 'clipboard-read' });
+            _clipboardReadGranted = status.state === 'granted';
+            status.onchange = () => { _clipboardReadGranted = status.state === 'granted'; };
+        } catch {
+            _clipboardReadGranted = false;
+        }
+        return _clipboardReadGranted;
+    }
     async function syncLocalClipboardToRemote() {
         const session = getActiveSession();
         if (!session || !session.client || session.state !== 'streaming') return;
         if (session.client.viewOnly) return;
         if (!navigator.clipboard || !navigator.clipboard.readText) return;
+        if (!(await clipboardReadGranted())) return;
         try {
             const text = await navigator.clipboard.readText();
             if (text && text !== _lastSyncedClipboard) {
