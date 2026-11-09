@@ -2066,10 +2066,17 @@ router.put('/api/settings/client-sessions', requireAuth, requirePermission('serv
             return res.status(500).json({ success: false, error: failed.error || 'Failed to save client session settings' });
         }
 
+        // The Go server holds the values; the .env copy keeps the expiry after a
+        // console restart. A .env the console may not write (a read-only file in
+        // a container) doesn't undo the save, so it is only logged.
         if (fs.existsSync(CLIENT_SESSIONS_ENV_PATH)) {
-            let content = fs.readFileSync(CLIENT_SESSIONS_ENV_PATH, 'utf8');
-            content = upsertEnvKey(content, 'API_TOKEN_EXPIRY_DAYS', String(expiryDays));
-            fs.writeFileSync(CLIENT_SESSIONS_ENV_PATH, content, { mode: 0o600 });
+            try {
+                let content = fs.readFileSync(CLIENT_SESSIONS_ENV_PATH, 'utf8');
+                content = upsertEnvKey(content, 'API_TOKEN_EXPIRY_DAYS', String(expiryDays));
+                fs.writeFileSync(CLIENT_SESSIONS_ENV_PATH, content, { mode: 0o600 });
+            } catch (envErr) {
+                console.warn('Client sessions: could not update .env:', envErr.message);
+            }
         }
         process.env.API_TOKEN_EXPIRY_DAYS = String(expiryDays);
 
