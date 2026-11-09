@@ -89,9 +89,16 @@ async function json(
 export async function startSession(): Promise<void> {
 	const boot = (window as unknown as BootWindow).__BD_BOOT__;
 	const fallbackLang = document.documentElement.lang || 'en';
+	// A response body can be read once: take the early requests, so a second
+	// start (Try again) asks the server again
+	const early = { strings: boot?.strings, session: boot?.session };
+	if (boot) {
+		boot.strings = undefined;
+		boot.session = undefined;
+	}
 	const [strings, sess] = await Promise.all([
-		json(boot?.strings, boot?.stringsUrl ?? `/api/console/strings/${fallbackLang}`),
-		json(boot?.session, '/api/console/bootstrap')
+		json(early.strings, boot?.stringsUrl ?? `/api/console/strings/${fallbackLang}`),
+		json(early.session, '/api/console/bootstrap')
 	]);
 	if (sess.status === 401) throw new ApiError('Signed out', 401, { code: 'session_required' });
 	if (sess.status !== 200) throw new ApiError(`HTTP ${sess.status}`, sess.status);

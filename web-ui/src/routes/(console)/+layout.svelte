@@ -21,10 +21,6 @@
 
 	let starting = $state(false);
 
-	interface BootWindow {
-		__BD_BOOT__?: { strings?: Promise<Response>; session?: Promise<Response> };
-	}
-
 	async function start() {
 		starting = true;
 		session.error = null;
@@ -48,16 +44,6 @@
 		}
 	}
 
-	function retry() {
-		// The requests /console-boot.js started were used up; fetch again
-		const boot = (window as unknown as BootWindow).__BD_BOOT__;
-		if (boot) {
-			boot.strings = undefined;
-			boot.session = undefined;
-		}
-		void start();
-	}
-
 	onMount(() => void start());
 </script>
 
@@ -66,7 +52,7 @@
 {:else if session.error}
 	<div class="start-error" role="alert">
 		<p>{session.error}</p>
-		<Button onclick={retry} busy={starting}>{tf('errors.try_again', 'Try again')}</Button>
+		<Button onclick={() => void start()} busy={starting}>{tf('errors.try_again', 'Try again')}</Button>
 	</div>
 {:else}
 	<div class="start-frame" aria-busy="true">
