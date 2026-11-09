@@ -5248,7 +5248,16 @@
         "unavailable_notice": "此伺服器尚未提供裝置群任務。這裡無法載入、儲存或執行資源、任務、已儲存的工作流程與合規結果。您仍可開啟表單查看可設定的內容，也可設計工作流程並匯出為檔案。",
         "unavailable_table": "沒有可顯示的內容。此伺服器尚未提供此功能。",
         "unavailable_short": "此伺服器尚未提供裝置群任務。",
-        "unavailable_dialog": "此伺服器尚未提供裝置群任務，因此無法儲存。這些欄位顯示日後可設定的內容。"
+        "unavailable_dialog": "此伺服器尚未提供裝置群任務，因此無法儲存。這些欄位顯示日後可設定的內容。",
+        "res_name_hint": "在資源清單中顯示的名稱。",
+        "scope_label": "接收的裝置",
+        "res_sheet_desc": "{org} 的裝置會收到的印表機、磁碟機或網路設定。",
+        "task_name_hint": "在工作清單中顯示的名稱。",
+        "section_where_when": "裝置與排程",
+        "section_script": "執行內容",
+        "section_failures": "重試與時間上限",
+        "task_sheet_desc": "在您指定的裝置上立即或依排程執行的腳本、安裝、更新或重新啟動。",
+        "run_output_desc": "工作流程 {name} 啟動時回報的內容。"
     },
     "scaling": {
         "title": "擴展與中繼管理",
@@ -5380,7 +5389,16 @@
         "diagram_note": "依此伺服器目前提供給用戶端的位址繪製。",
         "diagram_loading": "正在讀取此伺服器的位址…",
         "diagram_error": "無法讀取此伺服器的位址。",
-        "rules_need_relay_note": "規則會將裝置指向您的某一台中繼伺服器。上方清單中有伺服器後，即可新增規則。"
+        "rules_need_relay_note": "規則會將裝置指向您的某一台中繼伺服器。上方清單中有伺服器後，即可新增規則。",
+        "relay_sheet_desc": "當兩台裝置無法直接連線時，中繼伺服器會轉送遠端工作階段。",
+        "rule_section_match": "哪些裝置",
+        "rule_section_relay": "連線位置",
+        "rule_sheet_desc": "將符合的裝置導向一台中繼伺服器。規則依優先順序檢查，數字小的先。",
+        "rule_match_hint_group": "裝置群組的名稱。",
+        "rule_match_hint_tag": "一個標籤，與裝置上設定的相同。",
+        "rule_match_hint_country": "裝置連線所在的國家。",
+        "rule_match_hint_device_id": "一個裝置 ID。",
+        "saving": "正在儲存…"
     },
     "cross_platform": {
         "title": "跨平臺兼容性",
@@ -6821,7 +6839,22 @@
             "usage_empty": "尚未指派任何套件。將套件指派給裝置群組後，包含的時間會顯示在這裡。",
             "smtp_missing_effect": "尚未設定電子郵件傳送，因此不會寄出通知郵件。",
             "assign_more": "更多選項",
-            "assign_more_hint": "剩餘分鐘、自訂費率及指派的有效日期。空白欄位會使用套件的值，且沒有結束日期。"
+            "assign_more_hint": "剩餘分鐘、自訂費率及指派的有效日期。空白欄位會使用套件的值，且沒有結束日期。",
+            "package_name_hint": "顯示在套件清單中，指派時也會看到。",
+            "package_description_hint": "選填。顯示在清單中的名稱下方。",
+            "section_billing": "進位與超出時數",
+            "assign_target_hint": "工作階段要計費的裝置群組。",
+            "section_rates": "時數與費率",
+            "section_rates_note": "選填。空白欄位使用套件的值。",
+            "remaining_hint": "本月包含時數中剩下的分鐘數。",
+            "hourly_rate_hint": "包含時數內每小時的價格。",
+            "validity_hint": "選填。沒有日期時，指派從現在起生效，沒有結束日期。",
+            "package_sheet_desc": "裝置群組每月可用的支援時數，以及超出部分的價格。",
+            "assign_sheet_desc": "從現在起，此群組裝置上的工作階段會計入套件。",
+            "assignment_edit_desc": "裝置群組與套件不變。可變更本月剩餘時數、費率或日期。",
+            "preview_sheet_desc": "套件在某個月用掉多少包含時數，以及超出後計費的時數。",
+            "save_failed": "無法儲存。請再試一次。",
+            "error_targets": "無法載入裝置群組：{error}"
         }
     },
     "remote_dashboard": {

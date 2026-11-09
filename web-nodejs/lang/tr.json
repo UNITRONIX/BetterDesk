@@ -5121,7 +5121,16 @@
         "unavailable_notice": "Bu sunucu henüz filo görevleri sunmuyor. Kaynaklar, görevler, kayıtlı iş akışları ve uyumluluk sonuçları burada yüklenemez, kaydedilemez veya çalıştırılamaz. Yine de neyin ayarlanabileceğini görmek için formları açabilir, bir iş akışı tasarlayıp dosya olarak dışa aktarabilirsiniz.",
         "unavailable_table": "Gösterilecek bir şey yok. Bu sunucu bunu henüz sunmuyor.",
         "unavailable_short": "Bu sunucu henüz filo görevleri sunmuyor.",
-        "unavailable_dialog": "Bu sunucu henüz filo görevleri sunmuyor, bu yüzden bu kaydedilemez. Alanlar, sunduğunda neleri ayarlayabileceğinizi gösterir."
+        "unavailable_dialog": "Bu sunucu henüz filo görevleri sunmuyor, bu yüzden bu kaydedilemez. Alanlar, sunduğunda neleri ayarlayabileceğinizi gösterir.",
+        "res_name_hint": "Kaynak listesinde nasıl görüneceği.",
+        "scope_label": "Bunu alan cihazlar",
+        "res_sheet_desc": "{org} cihazlarının aldığı bir yazıcı, sürücü veya ağ ayarı.",
+        "task_name_hint": "Görev listesinde nasıl görüneceği.",
+        "section_where_when": "Cihazlar ve zamanlama",
+        "section_script": "Ne çalışır",
+        "section_failures": "Yeniden denemeler ve süre sınırı",
+        "task_sheet_desc": "Belirttiğiniz cihazlarda hemen veya bir zamanlamaya göre çalışan bir betik, kurulum, güncelleme veya yeniden başlatma.",
+        "run_output_desc": "{name} iş akışının başlarken bildirdikleri."
     },
     "scaling": {
         "title": "Ölçeklendirme ve Aktarma Yönetimi",
@@ -5253,7 +5262,16 @@
         "diagram_note": "Bu sunucunun şu anda istemcilere verdiği adreslerle çizildi.",
         "diagram_loading": "Bu sunucunun adresleri okunuyor…",
         "diagram_error": "Bu sunucunun adresleri okunamadı.",
-        "rules_need_relay_note": "Bir kural cihazları aktarma sunucularınızdan birine yönlendirir. Yukarıdaki listede bir sunucu olduğunda kural ekleyebilirsiniz."
+        "rules_need_relay_note": "Bir kural cihazları aktarma sunucularınızdan birine yönlendirir. Yukarıdaki listede bir sunucu olduğunda kural ekleyebilirsiniz.",
+        "relay_sheet_desc": "İki cihaz doğrudan bağlanamadığında aktarma sunucusu uzak oturumları taşır.",
+        "rule_section_match": "Hangi cihazlar",
+        "rule_section_relay": "Nereye bağlanırlar",
+        "rule_sheet_desc": "Eşleşen cihazları tek bir aktarma sunucusuna gönderir. Kurallar önceliğe göre, en küçük sayıdan başlayarak denetlenir.",
+        "rule_match_hint_group": "Bir cihaz grubunun adı.",
+        "rule_match_hint_tag": "Cihazlarda ayarlandığı haliyle bir etiket.",
+        "rule_match_hint_country": "Cihazların bağlandığı ülke.",
+        "rule_match_hint_device_id": "Bir cihaz kimliği.",
+        "saving": "Kaydediliyor…"
     },
     "cross_platform": {
         "title": "Platformlar Arası Uyumluluk",
@@ -6823,7 +6841,22 @@
             "usage_empty": "Henüz paket ataması yok. Bir cihaz grubuna paket atandığında dahil süre burada görünür.",
             "smtp_missing_effect": "E-posta gönderimi henüz ayarlanmadı, bu yüzden bildirim e-postası gitmiyor.",
             "assign_more": "Diğer seçenekler",
-            "assign_more_hint": "Kalan dakikalar, özel ücretler ve atamanın geçerli olduğu tarihler. Boş alanlar paketin değerlerini kullanır, bitiş tarihi olmaz."
+            "assign_more_hint": "Kalan dakikalar, özel ücretler ve atamanın geçerli olduğu tarihler. Boş alanlar paketin değerlerini kullanır, bitiş tarihi olmaz.",
+            "package_name_hint": "Paket listesinde ve atama sırasında görünür.",
+            "package_description_hint": "İsteğe bağlı. Listede adın altında görünür.",
+            "section_billing": "Yuvarlama ve aşım",
+            "assign_target_hint": "Oturumları faturalanan cihaz grubu.",
+            "section_rates": "Süre ve ücretler",
+            "section_rates_note": "İsteğe bağlı. Boş alanlar paketin değerlerini kullanır.",
+            "remaining_hint": "Bu ayın dahil süresinden kalan dakikalar.",
+            "hourly_rate_hint": "Dahil süre içindeki zaman için saatlik ücret.",
+            "validity_hint": "İsteğe bağlı. Tarih yoksa atama şimdiden itibaren, bitiş tarihi olmadan geçerlidir.",
+            "package_sheet_desc": "Bir cihaz grubunun her ay aldığı destek süresi ve bunu aşan sürenin fiyatı.",
+            "assign_sheet_desc": "Bu grubun cihazlarındaki oturumlar bundan sonra pakete sayılır.",
+            "assignment_edit_desc": "Cihaz grubu ve paket aynı kalır. Bu ayın kalan süresini, ücretleri veya tarihleri değiştirin.",
+            "preview_sheet_desc": "Paketin bir ayda dahil süreden ne kadar kullandığı ve bunun dışında faturalanan süre.",
+            "save_failed": "Kaydedilemedi. Yeniden deneyin.",
+            "error_targets": "Cihaz grupları yüklenemedi: {error}"
         }
     },
     "remote_dashboard": {

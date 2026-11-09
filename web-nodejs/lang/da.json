@@ -5121,7 +5121,16 @@
         "unavailable_notice": "Denne server tilbyder endnu ikke flådeopgaver. Ressourcer, opgaver, gemte arbejdsgange og overholdelsesresultater kan ikke indlæses, gemmes eller køres her. Du kan stadig åbne formularerne for at se, hvad der kan indstilles, og tegne en arbejdsgang og eksportere den som fil.",
         "unavailable_table": "Intet at vise. Denne server tilbyder det ikke endnu.",
         "unavailable_short": "Denne server tilbyder endnu ikke flådeopgaver.",
-        "unavailable_dialog": "Denne server tilbyder endnu ikke flådeopgaver, så dette kan ikke gemmes. Felterne viser, hvad du kan indstille, når den gør."
+        "unavailable_dialog": "Denne server tilbyder endnu ikke flådeopgaver, så dette kan ikke gemmes. Felterne viser, hvad du kan indstille, når den gør.",
+        "res_name_hint": "Sådan vises den i listen over ressourcer.",
+        "scope_label": "Enheder, der modtager den",
+        "res_sheet_desc": "En printer, et drev eller en netværksindstilling, som enhederne i {org} modtager.",
+        "task_name_hint": "Sådan vises den i listen over opgaver.",
+        "section_where_when": "Enheder og tidsplan",
+        "section_script": "Hvad der køres",
+        "section_failures": "Genforsøg og tidsgrænse",
+        "task_sheet_desc": "Et script, en installation, en opdatering eller en genstart, der køres på de enheder, du angiver, med det samme eller efter en tidsplan.",
+        "run_output_desc": "Hvad arbejdsgangen {name} rapporterede, da den startede."
     },
     "scaling": {
         "title": "Skalering & Relæstyring",
@@ -5253,7 +5262,16 @@
         "diagram_note": "Tegnet med de adresser, som denne server giver klienter lige nu.",
         "diagram_loading": "Læser denne servers adresser…",
         "diagram_error": "Denne servers adresser kunne ikke læses.",
-        "rules_need_relay_note": "En regel sender enheder til en af dine relay-servere. Du kan tilføje regler, når listen ovenfor har en."
+        "rules_need_relay_note": "En regel sender enheder til en af dine relay-servere. Du kan tilføje regler, når listen ovenfor har en.",
+        "relay_sheet_desc": "En relay-server bærer fjernsessioner, når to enheder ikke kan forbinde direkte.",
+        "rule_section_match": "Hvilke enheder",
+        "rule_section_relay": "Hvor de forbinder",
+        "rule_sheet_desc": "Sender de matchende enheder til én relay-server. Regler kontrolleres efter prioritet, laveste tal først.",
+        "rule_match_hint_group": "Navnet på en enhedsgruppe.",
+        "rule_match_hint_tag": "Ét mærke, som det er sat på enhederne.",
+        "rule_match_hint_country": "Det land, enhederne forbinder fra.",
+        "rule_match_hint_device_id": "Ét enheds-id.",
+        "saving": "Gemmer…"
     },
     "cross_platform": {
         "title": "Kompatibilitet på tværs af platforme",
@@ -6823,7 +6841,22 @@
             "usage_empty": "Ingen pakketildelinger endnu. Inkluderet tid vises her, når en pakke er tildelt en enhedsgruppe.",
             "smtp_missing_effect": "Afsendelse af e-mail er ikke sat op endnu, så der sendes ingen notifikationsmails.",
             "assign_more": "Flere indstillinger",
-            "assign_more_hint": "Resterende minutter, egne takster og datoerne, hvor tildelingen gælder. Tomme felter bruger pakkens værdier uden slutdato."
+            "assign_more_hint": "Resterende minutter, egne takster og datoerne, hvor tildelingen gælder. Tomme felter bruger pakkens værdier uden slutdato.",
+            "package_name_hint": "Vises i listen over pakker og når du tildeler den.",
+            "package_description_hint": "Valgfrit. Vises under navnet i listen.",
+            "section_billing": "Afrunding og overforbrug",
+            "assign_target_hint": "Den enhedsgruppe, hvis sessioner faktureres.",
+            "section_rates": "Tid og takster",
+            "section_rates_note": "Valgfrit. Tomme felter bruger pakkens værdier.",
+            "remaining_hint": "Minutter tilbage af denne måneds inkluderede tid.",
+            "hourly_rate_hint": "Pris pr. time for tid inden for den inkluderede tid.",
+            "validity_hint": "Valgfrit. Uden datoer gælder tildelingen fra nu af uden slutdato.",
+            "package_sheet_desc": "Supporttid, som en enhedsgruppe får hver måned, og prisen for tid ud over den.",
+            "assign_sheet_desc": "Sessioner på denne gruppes enheder tæller mod pakken fra nu af.",
+            "assignment_edit_desc": "Enhedsgruppen og pakken forbliver. Skift den resterende tid i denne måned, taksterne eller datoerne.",
+            "preview_sheet_desc": "Hvor meget af den inkluderede tid pakken brugte i en måned, og tiden faktureret ud over den.",
+            "save_failed": "Kunne ikke gemme. Prøv igen.",
+            "error_targets": "Kunne ikke indlæse enhedsgrupperne: {error}"
         }
     },
     "remote_dashboard": {

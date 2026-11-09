@@ -586,13 +586,19 @@
             status(dryRun ? tr('fleet.dry_run_done', 'Dry run finished. Nothing was changed on the devices.') : tr('fleet.run_started', 'Workflow started.'), 'is-ok');
             if (data.output || data.log) {
                 const pre = document.createElement('pre');
-                pre.className = 'code-block';
+                pre.className = 'code-block fleet-output-log';
+                pre.tabIndex = 0;
+                pre.setAttribute('aria-label', tr('fleet.task_output', 'Output'));
                 pre.textContent = data.output || data.log;
-                Modal.show({
+                // A details sheet: the log beside the workflow it came from
+                Modal.sheet({
                     title: dryRun ? tr('fleet.dry_run_result', 'Dry run result') : tr('fleet.run_result', 'Workflow output'),
+                    subtitle: dryRun
+                        ? tr('fleet.dry_run_done', 'Dry run finished. Nothing was changed on the devices.')
+                        : tr('fleet.run_output_desc', 'What the workflow {name} reported when it started.', { name: _workflowName }).replace('{name}', _workflowName),
                     content: pre.outerHTML,
-                    size: 'large',
-                    buttons: [{ label: tr('fleet.close', 'Close'), class: 'btn-primary', onClick: () => Modal.close() }]
+                    wide: true,
+                    buttons: [{ label: tr('fleet.close', 'Close'), class: 'btn-secondary', onClick: () => Modal.close() }]
                 });
             }
         } catch (e) {

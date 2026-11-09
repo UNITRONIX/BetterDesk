@@ -5226,7 +5226,16 @@
         "unavailable_notice": "此服务器尚未提供设备群任务。这里无法加载、保存或运行资源、任务、已保存的工作流和合规结果。您仍可以打开表单查看可设置的内容，也可以设计工作流并导出为文件。",
         "unavailable_table": "没有可显示的内容。此服务器尚未提供此功能。",
         "unavailable_short": "此服务器尚未提供设备群任务。",
-        "unavailable_dialog": "此服务器尚未提供设备群任务，因此无法保存。这些字段显示以后可以设置的内容。"
+        "unavailable_dialog": "此服务器尚未提供设备群任务，因此无法保存。这些字段显示以后可以设置的内容。",
+        "res_name_hint": "在资源列表中显示的名称。",
+        "scope_label": "接收的设备",
+        "res_sheet_desc": "{org} 的设备会收到的打印机、驱动器或网络设置。",
+        "task_name_hint": "在任务列表中显示的名称。",
+        "section_where_when": "设备与计划",
+        "section_script": "运行内容",
+        "section_failures": "重试与时间上限",
+        "task_sheet_desc": "在您指定的设备上立即或按计划运行的脚本、安装、更新或重启。",
+        "run_output_desc": "工作流 {name} 启动时报告的内容。"
     },
     "scaling": {
         "title": "扩展与中继管理",
@@ -5358,7 +5367,16 @@
         "diagram_note": "按此服务器当前提供给客户端的地址绘制。",
         "diagram_loading": "正在读取此服务器的地址…",
         "diagram_error": "无法读取此服务器的地址。",
-        "rules_need_relay_note": "规则会将设备指向您的某一台中继服务器。上方列表中有服务器后，即可添加规则。"
+        "rules_need_relay_note": "规则会将设备指向您的某一台中继服务器。上方列表中有服务器后，即可添加规则。",
+        "relay_sheet_desc": "当两台设备无法直接连接时，中继服务器会转发远程会话。",
+        "rule_section_match": "哪些设备",
+        "rule_section_relay": "连接位置",
+        "rule_sheet_desc": "将匹配的设备导向一台中继服务器。规则按优先级检查，数字小的优先。",
+        "rule_match_hint_group": "设备组的名称。",
+        "rule_match_hint_tag": "一个标签，与设备上设置的一致。",
+        "rule_match_hint_country": "设备连接所在的国家。",
+        "rule_match_hint_device_id": "一个设备 ID。",
+        "saving": "正在保存…"
     },
     "cross_platform": {
         "title": "跨平台兼容性",
@@ -6817,7 +6835,22 @@
             "usage_empty": "尚未分配任何套餐。将套餐分配给设备组后，包含的时间会显示在这里。",
             "smtp_missing_effect": "尚未设置邮件发送，因此不会发出通知邮件。",
             "assign_more": "更多选项",
-            "assign_more_hint": "剩余分钟、自定义费率及分配的有效日期。空白字段使用套餐的值，且没有结束日期。"
+            "assign_more_hint": "剩余分钟、自定义费率及分配的有效日期。空白字段使用套餐的值，且没有结束日期。",
+            "package_name_hint": "显示在套餐列表中，分配时也会看到。",
+            "package_description_hint": "可选。显示在列表中的名称下方。",
+            "section_billing": "取整与超出时长",
+            "assign_target_hint": "会话需要计费的设备组。",
+            "section_rates": "时长与费率",
+            "section_rates_note": "可选。留空的字段使用套餐的值。",
+            "remaining_hint": "本月包含时长中剩余的分钟数。",
+            "hourly_rate_hint": "包含时长内每小时的价格。",
+            "validity_hint": "可选。没有日期时，分配从现在起生效，没有结束日期。",
+            "package_sheet_desc": "设备组每月可用的支持时长，以及超出部分的价格。",
+            "assign_sheet_desc": "从现在起，此组设备上的会话计入套餐。",
+            "assignment_edit_desc": "设备组和套餐不变。可更改本月剩余时长、费率或日期。",
+            "preview_sheet_desc": "套餐在某个月用掉了多少包含时长，以及超出后计费的时长。",
+            "save_failed": "无法保存。请重试。",
+            "error_targets": "无法加载设备组：{error}"
         }
     },
     "remote_dashboard": {

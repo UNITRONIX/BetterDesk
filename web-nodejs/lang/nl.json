@@ -5115,7 +5115,16 @@
         "unavailable_notice": "Deze server biedt nog geen vlootaken. Bronnen, taken, opgeslagen workflows en nalevingsresultaten kunnen hier niet worden geladen, opgeslagen of uitgevoerd. U kunt wel de formulieren openen om te zien wat u kunt instellen, en een workflow opzetten en als bestand exporteren.",
         "unavailable_table": "Niets te tonen. Deze server biedt dit nog niet.",
         "unavailable_short": "Deze server biedt nog geen vlootaken.",
-        "unavailable_dialog": "Deze server biedt nog geen vlootaken, dus dit kan niet worden opgeslagen. De velden tonen wat u kunt instellen zodra dat wel kan."
+        "unavailable_dialog": "Deze server biedt nog geen vlootaken, dus dit kan niet worden opgeslagen. De velden tonen wat u kunt instellen zodra dat wel kan.",
+        "res_name_hint": "Zo staat het in de lijst met bronnen.",
+        "scope_label": "Apparaten die het krijgen",
+        "res_sheet_desc": "Een printer, schijf of netwerkinstelling die de apparaten van {org} krijgen.",
+        "task_name_hint": "Zo staat het in de lijst met taken.",
+        "section_where_when": "Apparaten en planning",
+        "section_script": "Wat er wordt uitgevoerd",
+        "section_failures": "Herhalingen en tijdslimiet",
+        "task_sheet_desc": "Een script, installatie, update of herstart die op de opgegeven apparaten draait, direct of volgens een planning.",
+        "run_output_desc": "Wat de workflow {name} bij het starten meldde."
     },
     "scaling": {
         "title": "Schaling & Relay-beheer",
@@ -5247,7 +5256,16 @@
         "diagram_note": "Getekend met de adressen die deze server nu aan clients geeft.",
         "diagram_loading": "Adressen van deze server lezen…",
         "diagram_error": "De adressen van deze server konden niet worden gelezen.",
-        "rules_need_relay_note": "Een regel wijst apparaten naar een van uw relay-servers. U kunt regels toevoegen zodra de lijst hierboven er een bevat."
+        "rules_need_relay_note": "Een regel wijst apparaten naar een van uw relay-servers. U kunt regels toevoegen zodra de lijst hierboven er een bevat.",
+        "relay_sheet_desc": "Een relayserver draagt sessies op afstand wanneer twee apparaten niet direct verbinding kunnen maken.",
+        "rule_section_match": "Welke apparaten",
+        "rule_section_relay": "Waarmee ze verbinden",
+        "rule_sheet_desc": "Stuurt de apparaten die overeenkomen naar één relayserver. Regels worden op prioriteit gecontroleerd, laagste nummer eerst.",
+        "rule_match_hint_group": "De naam van een apparaatgroep.",
+        "rule_match_hint_tag": "Eén tag, zoals die op de apparaten staat.",
+        "rule_match_hint_country": "Het land van waaruit de apparaten verbinden.",
+        "rule_match_hint_device_id": "Eén apparaat-ID.",
+        "saving": "Opslaan…"
     },
     "cross_platform": {
         "title": "Platformonafhankelijke compatibiliteit",
@@ -6817,7 +6835,22 @@
             "usage_empty": "Nog geen pakkettoewijzingen. De inbegrepen tijd verschijnt hier zodra een apparaatgroep een pakket heeft.",
             "smtp_missing_effect": "E-mail versturen is nog niet ingesteld, dus er gaan geen meldingsmails uit.",
             "assign_more": "Meer opties",
-            "assign_more_hint": "Resterende minuten, eigen tarieven en de data waarop de toewijzing geldt. Lege velden gebruiken de waarden van het pakket, zonder einddatum."
+            "assign_more_hint": "Resterende minuten, eigen tarieven en de data waarop de toewijzing geldt. Lege velden gebruiken de waarden van het pakket, zonder einddatum.",
+            "package_name_hint": "Staat in de pakketlijst en bij het toewijzen.",
+            "package_description_hint": "Optioneel. Staat in de lijst onder de naam.",
+            "section_billing": "Afronding en overschrijding",
+            "assign_target_hint": "De apparaatgroep waarvan de sessies worden gefactureerd.",
+            "section_rates": "Tijd en tarieven",
+            "section_rates_note": "Optioneel. Lege velden gebruiken de waarden van het pakket.",
+            "remaining_hint": "Resterende minuten van de inbegrepen tijd van deze maand.",
+            "hourly_rate_hint": "Prijs per uur voor tijd binnen de inbegrepen tijd.",
+            "validity_hint": "Optioneel. Zonder datums geldt de toewijzing vanaf nu, zonder einddatum.",
+            "package_sheet_desc": "Supporttijd die een apparaatgroep elke maand krijgt, en de prijs voor tijd daarboven.",
+            "assign_sheet_desc": "Sessies op de apparaten van deze groep tellen vanaf nu mee voor het pakket.",
+            "assignment_edit_desc": "De apparaatgroep en het pakket blijven. Wijzig de resterende tijd deze maand, de tarieven of de datums.",
+            "preview_sheet_desc": "Hoeveel van de inbegrepen tijd het pakket in een maand gebruikte, en de tijd die daarboven is gefactureerd.",
+            "save_failed": "Opslaan is mislukt. Probeer het opnieuw.",
+            "error_targets": "De apparaatgroepen konden niet worden geladen: {error}"
         }
     },
     "remote_dashboard": {

@@ -27,6 +27,16 @@
     width: auto;
 }
 
+/* The same pair with a label over each control (package sheet) */
+.field-pair.has-labels {
+    align-items: flex-end;
+    gap: var(--space-3);
+}
+
+.field-pair.has-labels > .form-group {
+    margin: 0;
+}
+
 /* Long work report summaries wrap instead of widening the table */
 .data-table td.report-cell {
     min-width: 160px;
@@ -40,24 +50,9 @@
     gap: var(--space-3);
 }
 
-.dialog-subhead {
-    margin: var(--space-5) 0 var(--space-2);
-}
-
-.package-preview-period {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-    margin-bottom: var(--space-4);
-}
-
 .package-preview-period .form-select {
     width: auto;
     min-width: 12ch;
-}
-
-#package-preview-stats + .form-hint {
-    margin-top: var(--space-3);
 }
 
 .data-table td.nowrap {
@@ -144,20 +139,10 @@
     display: none;
 }
 
-/* Optional assignment fields and a session's technical details: closed parts of a dialog */
-.assign-more,
-.session-tech {
-    margin-top: var(--space-4);
-}
-
-.assign-more > summary h3,
+/* A session's technical details: a closed part of the details sheet */
 .session-tech > summary h3 {
     margin: 0;
-    font-size: var(--text-base);
-}
-
-.assign-more > .form-hint {
-    margin-bottom: var(--space-3);
+    font-size: var(--text-md);
 }
 
 .usage-list .is-empty a {

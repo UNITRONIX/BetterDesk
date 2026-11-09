@@ -5115,7 +5115,16 @@
         "unavailable_notice": "Este servidor aún no ofrece tareas de flota. Aquí no se pueden cargar, guardar ni ejecutar recursos, tareas, flujos guardados ni resultados de cumplimiento. Aún puede abrir los formularios para ver qué se puede configurar, y diseñar un flujo y exportarlo como archivo.",
         "unavailable_table": "Nada que mostrar. Este servidor aún no lo ofrece.",
         "unavailable_short": "Este servidor aún no ofrece tareas de flota.",
-        "unavailable_dialog": "Este servidor aún no ofrece tareas de flota, así que esto no se puede guardar. Los campos muestran lo que podrá configurar cuando las ofrezca."
+        "unavailable_dialog": "Este servidor aún no ofrece tareas de flota, así que esto no se puede guardar. Los campos muestran lo que podrá configurar cuando las ofrezca.",
+        "res_name_hint": "Cómo aparece en la lista de recursos.",
+        "scope_label": "Dispositivos que lo reciben",
+        "res_sheet_desc": "Una impresora, unidad o ajuste de red que reciben los dispositivos de {org}.",
+        "task_name_hint": "Cómo aparece en la lista de tareas.",
+        "section_where_when": "Dispositivos y programación",
+        "section_script": "Qué se ejecuta",
+        "section_failures": "Reintentos y límite de tiempo",
+        "task_sheet_desc": "Un script, instalación, actualización o reinicio que se ejecuta en los dispositivos que indique, al momento o según una programación.",
+        "run_output_desc": "Lo que informó el flujo de trabajo {name} al iniciarse."
     },
     "scaling": {
         "title": "Panel",
@@ -5247,7 +5256,16 @@
         "diagram_note": "Dibujado con las direcciones que este servidor da ahora a los clientes.",
         "diagram_loading": "Leyendo las direcciones de este servidor…",
         "diagram_error": "No se pudieron leer las direcciones de este servidor.",
-        "rules_need_relay_note": "Una regla dirige los dispositivos a uno de sus servidores de relé. Podrá añadir reglas cuando la lista de arriba tenga uno."
+        "rules_need_relay_note": "Una regla dirige los dispositivos a uno de sus servidores de relé. Podrá añadir reglas cuando la lista de arriba tenga uno.",
+        "relay_sheet_desc": "Un servidor relay transporta las sesiones remotas cuando dos dispositivos no pueden conectarse directamente.",
+        "rule_section_match": "Qué dispositivos",
+        "rule_section_relay": "Dónde se conectan",
+        "rule_sheet_desc": "Envía los dispositivos que coinciden a un servidor relay. Las reglas se comprueban por prioridad, el número más bajo primero.",
+        "rule_match_hint_group": "El nombre de un grupo de dispositivos.",
+        "rule_match_hint_tag": "Una etiqueta, tal como está en los dispositivos.",
+        "rule_match_hint_country": "El país desde el que se conectan los dispositivos.",
+        "rule_match_hint_device_id": "Un ID de dispositivo.",
+        "saving": "Guardando…"
     },
     "cross_platform": {
         "title": "Panel",
@@ -6817,7 +6835,22 @@
             "usage_empty": "Aún no hay paquetes asignados. El tiempo incluido aparece aquí cuando se asigna un paquete a un grupo de dispositivos.",
             "smtp_missing_effect": "El envío de correo aún no está configurado, así que no se envían avisos por correo.",
             "assign_more": "Más opciones",
-            "assign_more_hint": "Minutos restantes, tarifas propias y las fechas de validez de la asignación. Los campos vacíos usan los valores del paquete, sin fecha de fin."
+            "assign_more_hint": "Minutos restantes, tarifas propias y las fechas de validez de la asignación. Los campos vacíos usan los valores del paquete, sin fecha de fin.",
+            "package_name_hint": "Se muestra en la lista de paquetes y al asignarlo.",
+            "package_description_hint": "Opcional. Se muestra bajo el nombre en la lista.",
+            "section_billing": "Redondeo y exceso",
+            "assign_target_hint": "El grupo de dispositivos cuyas sesiones se facturan.",
+            "section_rates": "Tiempo y tarifas",
+            "section_rates_note": "Opcional. Los campos vacíos usan los valores del paquete.",
+            "remaining_hint": "Minutos que quedan del tiempo incluido de este mes.",
+            "hourly_rate_hint": "Precio por hora del tiempo dentro del tiempo incluido.",
+            "validity_hint": "Opcional. Sin fechas, la asignación se aplica desde ahora y sin fecha de fin.",
+            "package_sheet_desc": "Tiempo de soporte que recibe un grupo de dispositivos cada mes y el precio del tiempo adicional.",
+            "assign_sheet_desc": "Las sesiones en los dispositivos de este grupo cuentan para el paquete desde ahora.",
+            "assignment_edit_desc": "El grupo de dispositivos y el paquete se mantienen. Cambie el tiempo restante de este mes, las tarifas o las fechas.",
+            "preview_sheet_desc": "Cuánto del tiempo incluido usó el paquete en un mes y el tiempo facturado aparte.",
+            "save_failed": "No se pudo guardar. Vuelva a intentarlo.",
+            "error_targets": "No se pudieron cargar los grupos de dispositivos: {error}"
         }
     },
     "remote_dashboard": {

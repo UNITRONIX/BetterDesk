@@ -5244,7 +5244,16 @@
         "unavailable_notice": "Ten serwer nie oferuje jeszcze zadań floty. Zasobów, zadań, zapisanych przepływów i wyników zgodności nie można tu wczytać, zapisać ani uruchomić. Nadal można otworzyć formularze, aby zobaczyć, co da się ustawić, oraz zaprojektować przepływ i wyeksportować go do pliku.",
         "unavailable_table": "Nic do pokazania. Ten serwer jeszcze tego nie oferuje.",
         "unavailable_short": "Ten serwer nie oferuje jeszcze zadań floty.",
-        "unavailable_dialog": "Ten serwer nie oferuje jeszcze zadań floty, więc nie można tego zapisać. Pola pokazują, co będzie można ustawić później."
+        "unavailable_dialog": "Ten serwer nie oferuje jeszcze zadań floty, więc nie można tego zapisać. Pola pokazują, co będzie można ustawić później.",
+        "res_name_hint": "Tak będzie widoczny na liście zasobów.",
+        "scope_label": "Urządzenia, które go otrzymują",
+        "res_sheet_desc": "Drukarka, dysk lub ustawienie sieci, które otrzymują urządzenia {org}.",
+        "task_name_hint": "Tak będzie widoczne na liście zadań.",
+        "section_where_when": "Urządzenia i harmonogram",
+        "section_script": "Co zostanie uruchomione",
+        "section_failures": "Ponowienia i limit czasu",
+        "task_sheet_desc": "Skrypt, instalacja, aktualizacja lub ponowne uruchomienie na wskazanych urządzeniach, od razu lub według harmonogramu.",
+        "run_output_desc": "Co przepływ pracy {name} zgłosił przy uruchomieniu."
     },
     "scaling": {
         "title": "Skalowanie i zarządzanie przekaźnikami",
@@ -5376,7 +5385,16 @@
         "diagram_note": "Narysowano z adresami, które ten serwer teraz przekazuje klientom.",
         "diagram_loading": "Odczytywanie adresów tego serwera…",
         "diagram_error": "Nie udało się odczytać adresów tego serwera.",
-        "rules_need_relay_note": "Reguła kieruje urządzenia do jednego z Twoich serwerów przekaźnikowych. Reguły możesz dodać, gdy na liście powyżej będzie serwer."
+        "rules_need_relay_note": "Reguła kieruje urządzenia do jednego z Twoich serwerów przekaźnikowych. Reguły możesz dodać, gdy na liście powyżej będzie serwer.",
+        "relay_sheet_desc": "Serwer przekaźnikowy przenosi sesje zdalne, gdy dwa urządzenia nie mogą połączyć się bezpośrednio.",
+        "rule_section_match": "Które urządzenia",
+        "rule_section_relay": "Dokąd się łączą",
+        "rule_sheet_desc": "Kieruje pasujące urządzenia do jednego serwera przekaźnikowego. Reguły są sprawdzane według priorytetu, od najniższej liczby.",
+        "rule_match_hint_group": "Nazwa grupy urządzeń.",
+        "rule_match_hint_tag": "Jeden tag, tak jak ustawiono go na urządzeniach.",
+        "rule_match_hint_country": "Kraj, z którego łączą się urządzenia.",
+        "rule_match_hint_device_id": "Jeden identyfikator urządzenia.",
+        "saving": "Zapisywanie…"
     },
     "cross_platform": {
         "title": "Kompatybilność wieloplatformowa",
@@ -6817,7 +6835,22 @@
             "usage_empty": "Brak przypisanych pakietów. Wliczony czas pojawi się tutaj po przypisaniu pakietu do grupy urządzeń.",
             "smtp_missing_effect": "Wysyłanie e-maili nie jest jeszcze skonfigurowane, więc powiadomienia e-mail nie są wysyłane.",
             "assign_more": "Więcej opcji",
-            "assign_more_hint": "Pozostałe minuty, własne stawki i daty ważności przypisania. Puste pola używają wartości pakietu, bez daty końcowej."
+            "assign_more_hint": "Pozostałe minuty, własne stawki i daty ważności przypisania. Puste pola używają wartości pakietu, bez daty końcowej.",
+            "package_name_hint": "Widoczna na liście pakietów i przy przypisywaniu.",
+            "package_description_hint": "Opcjonalne. Widoczny na liście pod nazwą.",
+            "section_billing": "Zaokrąglanie i nadwyżka",
+            "assign_target_hint": "Grupa urządzeń, której sesje są rozliczane.",
+            "section_rates": "Czas i stawki",
+            "section_rates_note": "Opcjonalne. Puste pola używają wartości pakietu.",
+            "remaining_hint": "Pozostałe minuty czasu w pakiecie w tym miesiącu.",
+            "hourly_rate_hint": "Cena za godzinę w ramach czasu w pakiecie.",
+            "validity_hint": "Opcjonalne. Bez dat przypisanie obowiązuje od teraz i bez daty końca.",
+            "package_sheet_desc": "Czas wsparcia, który grupa urządzeń dostaje co miesiąc, i cena za czas ponad niego.",
+            "assign_sheet_desc": "Sesje na urządzeniach tej grupy liczą się od teraz do pakietu.",
+            "assignment_edit_desc": "Grupa urządzeń i pakiet pozostają. Zmień pozostały czas w tym miesiącu, stawki lub daty.",
+            "preview_sheet_desc": "Ile czasu w pakiecie wykorzystano w miesiącu i ile czasu rozliczono ponad niego.",
+            "save_failed": "Nie udało się zapisać. Spróbuj ponownie.",
+            "error_targets": "Nie udało się wczytać grup urządzeń: {error}"
         }
     },
     "remote_dashboard": {

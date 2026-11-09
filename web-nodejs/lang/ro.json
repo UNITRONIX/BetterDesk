@@ -5121,7 +5121,16 @@
         "unavailable_notice": "Acest server nu oferă încă sarcini pentru flotă. Resursele, sarcinile, fluxurile salvate și rezultatele de conformitate nu pot fi încărcate, salvate sau rulate aici. Puteți totuși să deschideți formularele pentru a vedea ce se poate seta și să schițați un flux pe care să îl exportați ca fișier.",
         "unavailable_table": "Nimic de afișat. Acest server nu oferă încă acest lucru.",
         "unavailable_short": "Acest server nu oferă încă sarcini pentru flotă.",
-        "unavailable_dialog": "Acest server nu oferă încă sarcini pentru flotă, așa că acest lucru nu poate fi salvat. Câmpurile arată ce veți putea seta atunci."
+        "unavailable_dialog": "Acest server nu oferă încă sarcini pentru flotă, așa că acest lucru nu poate fi salvat. Câmpurile arată ce veți putea seta atunci.",
+        "res_name_hint": "Cum apare în lista de resurse.",
+        "scope_label": "Dispozitive care o primesc",
+        "res_sheet_desc": "O imprimantă, o unitate sau o setare de rețea pe care o primesc dispozitivele din {org}.",
+        "task_name_hint": "Cum apare în lista de sarcini.",
+        "section_where_when": "Dispozitive și programare",
+        "section_script": "Ce se rulează",
+        "section_failures": "Reîncercări și limită de timp",
+        "task_sheet_desc": "Un script, o instalare, o actualizare sau o repornire care rulează pe dispozitivele indicate, imediat sau după un program.",
+        "run_output_desc": "Ce a raportat fluxul de lucru {name} la pornire."
     },
     "scaling": {
         "title": "Scaling & Management Releu",
@@ -5253,7 +5262,16 @@
         "diagram_note": "Desenat cu adresele pe care acest server le dă acum clienților.",
         "diagram_loading": "Se citesc adresele acestui server…",
         "diagram_error": "Adresele acestui server nu au putut fi citite.",
-        "rules_need_relay_note": "O regulă trimite dispozitivele către unul dintre serverele dvs. de releu. Puteți adăuga reguli după ce lista de mai sus conține unul."
+        "rules_need_relay_note": "O regulă trimite dispozitivele către unul dintre serverele dvs. de releu. Puteți adăuga reguli după ce lista de mai sus conține unul.",
+        "relay_sheet_desc": "Un server relay transportă sesiunile la distanță când două dispozitive nu se pot conecta direct.",
+        "rule_section_match": "Ce dispozitive",
+        "rule_section_relay": "Unde se conectează",
+        "rule_sheet_desc": "Trimite dispozitivele care se potrivesc la un server relay. Regulile sunt verificate după prioritate, cel mai mic număr întâi.",
+        "rule_match_hint_group": "Numele unui grup de dispozitive.",
+        "rule_match_hint_tag": "O etichetă, așa cum este setată pe dispozitive.",
+        "rule_match_hint_country": "Țara din care se conectează dispozitivele.",
+        "rule_match_hint_device_id": "Un ID de dispozitiv.",
+        "saving": "Se salvează…"
     },
     "cross_platform": {
         "title": "Compatibilitate între platforme",
@@ -6823,7 +6841,22 @@
             "usage_empty": "Încă nu există pachete atribuite. Timpul inclus apare aici după ce un pachet este atribuit unui grup de dispozitive.",
             "smtp_missing_effect": "Trimiterea de e-mailuri nu este încă configurată, deci nu pleacă e-mailuri de notificare.",
             "assign_more": "Mai multe opțiuni",
-            "assign_more_hint": "Minutele rămase, tarifele proprii și datele de valabilitate ale atribuirii. Câmpurile goale folosesc valorile pachetului, fără dată de încheiere."
+            "assign_more_hint": "Minutele rămase, tarifele proprii și datele de valabilitate ale atribuirii. Câmpurile goale folosesc valorile pachetului, fără dată de încheiere.",
+            "package_name_hint": "Apare în lista de pachete și la atribuire.",
+            "package_description_hint": "Opțional. Apare sub nume în listă.",
+            "section_billing": "Rotunjire și depășire",
+            "assign_target_hint": "Grupul de dispozitive ale cărui sesiuni sunt facturate.",
+            "section_rates": "Timp și tarife",
+            "section_rates_note": "Opțional. Câmpurile goale folosesc valorile pachetului.",
+            "remaining_hint": "Minutele rămase din timpul inclus în această lună.",
+            "hourly_rate_hint": "Preț pe oră pentru timpul din cadrul timpului inclus.",
+            "validity_hint": "Opțional. Fără date, atribuirea se aplică de acum, fără dată de sfârșit.",
+            "package_sheet_desc": "Timpul de suport pe care un grup de dispozitive îl primește lunar și prețul timpului peste el.",
+            "assign_sheet_desc": "Sesiunile de pe dispozitivele acestui grup se socotesc din pachet de acum.",
+            "assignment_edit_desc": "Grupul de dispozitive și pachetul rămân. Modificați timpul rămas luna aceasta, tarifele sau datele.",
+            "preview_sheet_desc": "Cât din timpul inclus a folosit pachetul într-o lună și timpul facturat peste el.",
+            "save_failed": "Nu s-a putut salva. Încercați din nou.",
+            "error_targets": "Nu s-au putut încărca grupurile de dispozitive: {error}"
         }
     },
     "remote_dashboard": {

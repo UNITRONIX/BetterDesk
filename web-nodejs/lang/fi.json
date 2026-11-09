@@ -5121,7 +5121,16 @@
         "unavailable_notice": "Tämä palvelin ei vielä tarjoa laitekannan tehtäviä. Resursseja, tehtäviä, tallennettuja työnkulkuja ja vaatimustenmukaisuuden tuloksia ei voi täällä ladata, tallentaa tai suorittaa. Voit silti avata lomakkeet nähdäksesi, mitä voi asettaa, sekä suunnitella työnkulun ja viedä sen tiedostona.",
         "unavailable_table": "Ei näytettävää. Tämä palvelin ei vielä tarjoa tätä.",
         "unavailable_short": "Tämä palvelin ei vielä tarjoa laitekannan tehtäviä.",
-        "unavailable_dialog": "Tämä palvelin ei vielä tarjoa laitekannan tehtäviä, joten tätä ei voi tallentaa. Kentät näyttävät, mitä voit asettaa, kun ne ovat käytettävissä."
+        "unavailable_dialog": "Tämä palvelin ei vielä tarjoa laitekannan tehtäviä, joten tätä ei voi tallentaa. Kentät näyttävät, mitä voit asettaa, kun ne ovat käytettävissä.",
+        "res_name_hint": "Miten se näkyy resurssiluettelossa.",
+        "scope_label": "Laitteet, jotka saavat sen",
+        "res_sheet_desc": "Tulostin, asema tai verkkoasetus, jonka organisaation {org} laitteet saavat.",
+        "task_name_hint": "Miten se näkyy tehtäväluettelossa.",
+        "section_where_when": "Laitteet ja aikataulu",
+        "section_script": "Mitä ajetaan",
+        "section_failures": "Uusinnat ja aikaraja",
+        "task_sheet_desc": "Komentosarja, asennus, päivitys tai uudelleenkäynnistys, joka ajetaan nimeämilläsi laitteilla heti tai aikataulun mukaan.",
+        "run_output_desc": "Mitä työnkulku {name} ilmoitti käynnistyessään."
     },
     "scaling": {
         "title": "Skaalaus ja releen hallinta",
@@ -5253,7 +5262,16 @@
         "diagram_note": "Piirretty osoitteilla, jotka tämä palvelin antaa asiakkaille juuri nyt.",
         "diagram_loading": "Luetaan tämän palvelimen osoitteita…",
         "diagram_error": "Tämän palvelimen osoitteita ei voitu lukea.",
-        "rules_need_relay_note": "Sääntö ohjaa laitteet yhdelle välityspalvelimistasi. Voit lisätä sääntöjä, kun yllä olevassa luettelossa on palvelin."
+        "rules_need_relay_note": "Sääntö ohjaa laitteet yhdelle välityspalvelimistasi. Voit lisätä sääntöjä, kun yllä olevassa luettelossa on palvelin.",
+        "relay_sheet_desc": "Välityspalvelin välittää etäistunnot, kun kaksi laitetta ei saa suoraa yhteyttä.",
+        "rule_section_match": "Mitkä laitteet",
+        "rule_section_relay": "Mihin ne yhdistävät",
+        "rule_sheet_desc": "Ohjaa vastaavat laitteet yhdelle välityspalvelimelle. Säännöt tarkistetaan prioriteetin mukaan, pienin numero ensin.",
+        "rule_match_hint_group": "Laiteryhmän nimi.",
+        "rule_match_hint_tag": "Yksi tunniste sellaisena kuin se on laitteissa.",
+        "rule_match_hint_country": "Maa, josta laitteet yhdistävät.",
+        "rule_match_hint_device_id": "Yksi laitetunnus.",
+        "saving": "Tallennetaan…"
     },
     "cross_platform": {
         "title": "Eri alustojen yhteensopivuus",
@@ -6823,7 +6841,22 @@
             "usage_empty": "Paketteja ei ole vielä määritetty. Sisältyvä aika näkyy tässä, kun paketti on määritetty laiteryhmälle.",
             "smtp_missing_effect": "Sähköpostin lähetystä ei ole vielä määritetty, joten ilmoitussähköposteja ei lähetetä.",
             "assign_more": "Lisää asetuksia",
-            "assign_more_hint": "Jäljellä olevat minuutit, omat hinnat ja määrityksen voimassaolopäivät. Tyhjät kentät käyttävät paketin arvoja ilman päättymispäivää."
+            "assign_more_hint": "Jäljellä olevat minuutit, omat hinnat ja määrityksen voimassaolopäivät. Tyhjät kentät käyttävät paketin arvoja ilman päättymispäivää.",
+            "package_name_hint": "Näkyy pakettiluettelossa ja paketin määrityksessä.",
+            "package_description_hint": "Valinnainen. Näkyy luettelossa nimen alla.",
+            "section_billing": "Pyöristys ja ylitys",
+            "assign_target_hint": "Laiteryhmä, jonka istunnot laskutetaan.",
+            "section_rates": "Aika ja hinnat",
+            "section_rates_note": "Valinnainen. Tyhjät kentät käyttävät paketin arvoja.",
+            "remaining_hint": "Tämän kuun sisältyvästä ajasta jäljellä olevat minuutit.",
+            "hourly_rate_hint": "Tuntihinta sisältyvän ajan sisällä olevalle ajalle.",
+            "validity_hint": "Valinnainen. Ilman päivämääriä määritys on voimassa nyt alkaen ilman loppua.",
+            "package_sheet_desc": "Tukiaika, jonka laiteryhmä saa joka kuukausi, ja sen ylittävän ajan hinta.",
+            "assign_sheet_desc": "Tämän ryhmän laitteiden istunnot lasketaan pakettiin tästä lähtien.",
+            "assignment_edit_desc": "Laiteryhmä ja paketti pysyvät. Muuta tämän kuun jäljellä olevaa aikaa, hintoja tai päivämääriä.",
+            "preview_sheet_desc": "Kuinka paljon sisältyvästä ajasta paketti käytti kuukaudessa ja sen yli laskutettu aika.",
+            "save_failed": "Tallennus epäonnistui. Yritä uudelleen.",
+            "error_targets": "Laiteryhmiä ei voitu ladata: {error}"
         }
     },
     "remote_dashboard": {

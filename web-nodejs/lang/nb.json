@@ -5121,7 +5121,16 @@
         "unavailable_notice": "Denne serveren tilbyr ikke flåteoppgaver ennå. Ressurser, oppgaver, lagrede arbeidsflyter og samsvarsresultater kan ikke lastes, lagres eller kjøres her. Du kan fortsatt åpne skjemaene for å se hva som kan stilles inn, og tegne en arbeidsflyt og eksportere den som fil.",
         "unavailable_table": "Ingenting å vise. Denne serveren tilbyr det ikke ennå.",
         "unavailable_short": "Denne serveren tilbyr ikke flåteoppgaver ennå.",
-        "unavailable_dialog": "Denne serveren tilbyr ikke flåteoppgaver ennå, så dette kan ikke lagres. Feltene viser hva du kan stille inn når den gjør det."
+        "unavailable_dialog": "Denne serveren tilbyr ikke flåteoppgaver ennå, så dette kan ikke lagres. Feltene viser hva du kan stille inn når den gjør det.",
+        "res_name_hint": "Slik vises den i listen over ressurser.",
+        "scope_label": "Enheter som får den",
+        "res_sheet_desc": "En skriver, stasjon eller nettverksinnstilling som enhetene i {org} får.",
+        "task_name_hint": "Slik vises den i listen over oppgaver.",
+        "section_where_when": "Enheter og tidsplan",
+        "section_script": "Hva som kjøres",
+        "section_failures": "Nye forsøk og tidsgrense",
+        "task_sheet_desc": "Et skript, en installasjon, en oppdatering eller en omstart som kjøres på enhetene du oppgir, med en gang eller etter en tidsplan.",
+        "run_output_desc": "Hva arbeidsflyten {name} rapporterte da den startet."
     },
     "scaling": {
         "title": "Skalering og reléstyring",
@@ -5253,7 +5262,16 @@
         "diagram_note": "Tegnet med adressene denne serveren gir klienter akkurat nå.",
         "diagram_loading": "Leser adressene til denne serveren…",
         "diagram_error": "Kunne ikke lese adressene til denne serveren.",
-        "rules_need_relay_note": "En regel sender enheter til en av reléserverne dine. Du kan legge til regler når listen ovenfor har en."
+        "rules_need_relay_note": "En regel sender enheter til en av reléserverne dine. Du kan legge til regler når listen ovenfor har en.",
+        "relay_sheet_desc": "En relay-server bærer fjernøkter når to enheter ikke kan koble til direkte.",
+        "rule_section_match": "Hvilke enheter",
+        "rule_section_relay": "Hvor de kobler til",
+        "rule_sheet_desc": "Sender enhetene som passer til én relay-server. Regler sjekkes etter prioritet, laveste tall først.",
+        "rule_match_hint_group": "Navnet på en enhetsgruppe.",
+        "rule_match_hint_tag": "Én tagg, slik den er satt på enhetene.",
+        "rule_match_hint_country": "Landet enhetene kobler til fra.",
+        "rule_match_hint_device_id": "Én enhets-ID.",
+        "saving": "Lagrer…"
     },
     "cross_platform": {
         "title": "Kompatibilitet på tvers av plattformer",
@@ -6823,7 +6841,22 @@
             "usage_empty": "Ingen pakketildelinger ennå. Inkludert tid vises her når en pakke er tildelt en enhetsgruppe.",
             "smtp_missing_effect": "E-postsending er ikke satt opp ennå, så ingen varslings-e-poster sendes.",
             "assign_more": "Flere alternativer",
-            "assign_more_hint": "Gjenværende minutter, egne satser og datoene tildelingen gjelder. Tomme felt bruker pakkens verdier, uten sluttdato."
+            "assign_more_hint": "Gjenværende minutter, egne satser og datoene tildelingen gjelder. Tomme felt bruker pakkens verdier, uten sluttdato.",
+            "package_name_hint": "Vises i pakkelisten og når du tildeler den.",
+            "package_description_hint": "Valgfritt. Vises under navnet i listen.",
+            "section_billing": "Avrunding og overforbruk",
+            "assign_target_hint": "Enhetsgruppen som øktene faktureres for.",
+            "section_rates": "Tid og priser",
+            "section_rates_note": "Valgfritt. Tomme felt bruker pakkens verdier.",
+            "remaining_hint": "Minutter igjen av denne månedens inkluderte tid.",
+            "hourly_rate_hint": "Pris per time for tid innenfor den inkluderte tiden.",
+            "validity_hint": "Valgfritt. Uten datoer gjelder tildelingen fra nå av, uten sluttdato.",
+            "package_sheet_desc": "Støttetid en enhetsgruppe får hver måned, og prisen for tid utover den.",
+            "assign_sheet_desc": "Økter på enhetene i denne gruppen telles mot pakken fra nå av.",
+            "assignment_edit_desc": "Enhetsgruppen og pakken blir. Endre gjenværende tid denne måneden, prisene eller datoene.",
+            "preview_sheet_desc": "Hvor mye av den inkluderte tiden pakken brukte i en måned, og tiden fakturert utover den.",
+            "save_failed": "Kunne ikke lagre. Prøv igjen.",
+            "error_targets": "Kunne ikke laste inn enhetsgruppene: {error}"
         }
     },
     "remote_dashboard": {

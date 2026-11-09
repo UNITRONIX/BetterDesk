@@ -5121,7 +5121,16 @@
         "unavailable_notice": "Server ini belum menyediakan tugas armada. Sumber daya, tugas, alur kerja tersimpan, dan hasil kepatuhan tidak dapat dimuat, disimpan, atau dijalankan di sini. Anda tetap dapat membuka formulir untuk melihat apa yang bisa diatur, serta menyusun alur kerja dan mengekspornya sebagai file.",
         "unavailable_table": "Tidak ada yang ditampilkan. Server ini belum menyediakannya.",
         "unavailable_short": "Server ini belum menyediakan tugas armada.",
-        "unavailable_dialog": "Server ini belum menyediakan tugas armada, jadi ini tidak dapat disimpan. Kolom-kolom ini menunjukkan apa yang bisa Anda atur nanti."
+        "unavailable_dialog": "Server ini belum menyediakan tugas armada, jadi ini tidak dapat disimpan. Kolom-kolom ini menunjukkan apa yang bisa Anda atur nanti.",
+        "res_name_hint": "Cara tampilnya di daftar sumber daya.",
+        "scope_label": "Perangkat yang menerimanya",
+        "res_sheet_desc": "Printer, drive, atau pengaturan jaringan yang diterima perangkat {org}.",
+        "task_name_hint": "Cara tampilnya di daftar tugas.",
+        "section_where_when": "Perangkat dan jadwal",
+        "section_script": "Apa yang dijalankan",
+        "section_failures": "Percobaan ulang dan batas waktu",
+        "task_sheet_desc": "Skrip, instalasi, pembaruan, atau mulai ulang yang berjalan di perangkat yang Anda sebut, langsung atau terjadwal.",
+        "run_output_desc": "Apa yang dilaporkan alur kerja {name} saat dimulai."
     },
     "scaling": {
         "title": "Penskalaan & Manajemen Relai",
@@ -5253,7 +5262,16 @@
         "diagram_note": "Digambar dengan alamat yang saat ini diberikan server ini kepada klien.",
         "diagram_loading": "Membaca alamat server ini…",
         "diagram_error": "Alamat server ini tidak dapat dibaca.",
-        "rules_need_relay_note": "Aturan mengarahkan perangkat ke salah satu server relay Anda. Anda dapat menambah aturan setelah daftar di atas berisi satu server."
+        "rules_need_relay_note": "Aturan mengarahkan perangkat ke salah satu server relay Anda. Anda dapat menambah aturan setelah daftar di atas berisi satu server.",
+        "relay_sheet_desc": "Server relay meneruskan sesi jarak jauh saat dua perangkat tidak dapat terhubung langsung.",
+        "rule_section_match": "Perangkat mana",
+        "rule_section_relay": "Ke mana mereka terhubung",
+        "rule_sheet_desc": "Mengirim perangkat yang cocok ke satu server relay. Aturan diperiksa menurut prioritas, angka terkecil lebih dulu.",
+        "rule_match_hint_group": "Nama grup perangkat.",
+        "rule_match_hint_tag": "Satu tag, seperti yang dipasang di perangkat.",
+        "rule_match_hint_country": "Negara asal perangkat terhubung.",
+        "rule_match_hint_device_id": "Satu ID perangkat.",
+        "saving": "Menyimpan…"
     },
     "cross_platform": {
         "title": "Kompatibilitas Lintas Platform",
@@ -6823,7 +6841,22 @@
             "usage_empty": "Belum ada penetapan paket. Waktu yang termasuk akan tampil di sini setelah paket ditetapkan ke grup perangkat.",
             "smtp_missing_effect": "Pengiriman email belum diatur, jadi tidak ada email notifikasi yang terkirim.",
             "assign_more": "Opsi lainnya",
-            "assign_more_hint": "Sisa menit, tarif sendiri, dan tanggal berlakunya penetapan. Kolom kosong memakai nilai paket, tanpa tanggal akhir."
+            "assign_more_hint": "Sisa menit, tarif sendiri, dan tanggal berlakunya penetapan. Kolom kosong memakai nilai paket, tanpa tanggal akhir.",
+            "package_name_hint": "Tampil di daftar paket dan saat Anda menetapkannya.",
+            "package_description_hint": "Opsional. Tampil di bawah nama dalam daftar.",
+            "section_billing": "Pembulatan dan kelebihan",
+            "assign_target_hint": "Grup perangkat yang sesinya ditagih.",
+            "section_rates": "Waktu dan tarif",
+            "section_rates_note": "Opsional. Kolom kosong memakai nilai paket.",
+            "remaining_hint": "Sisa menit dari waktu termasuk bulan ini.",
+            "hourly_rate_hint": "Harga per jam untuk waktu di dalam waktu termasuk.",
+            "validity_hint": "Opsional. Tanpa tanggal, penetapan berlaku mulai sekarang tanpa tanggal akhir.",
+            "package_sheet_desc": "Waktu dukungan yang didapat grup perangkat setiap bulan, dan harga untuk waktu di luar itu.",
+            "assign_sheet_desc": "Sesi di perangkat grup ini dihitung ke paket mulai sekarang.",
+            "assignment_edit_desc": "Grup perangkat dan paket tetap. Ubah sisa waktu bulan ini, tarif, atau tanggal.",
+            "preview_sheet_desc": "Berapa banyak waktu termasuk yang dipakai paket dalam sebulan, dan waktu yang ditagih di luarnya.",
+            "save_failed": "Tidak dapat menyimpan. Coba lagi.",
+            "error_targets": "Tidak dapat memuat grup perangkat: {error}"
         }
     },
     "remote_dashboard": {

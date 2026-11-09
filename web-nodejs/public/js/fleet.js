@@ -55,16 +55,50 @@
         workflowStatus('');
     }
 
-    // Dialogs stay open to look at what can be set; without the server they can't save
-    function unavailableNote() {
-        return _unavailable ? `<p class="notice warning fleet-dialog-note">${esc(_('fleet.unavailable_dialog'))}</p>` : '';
+    // A string added with the sheets: English until the language files are reloaded
+    function tx(key, fallback, params) {
+        const v = _(key, params);
+        if (v && v !== key) return v;
+        return String(fallback).replace(/\{(\w+)\}/g, (m, p) => (params && params[p] !== undefined ? params[p] : m));
     }
 
-    function disableDialogSave() {
+    // Sheets stay open to look at what can be set; without the server they can't save
+    function unavailableNote() {
+        return _unavailable ? `<p class="notice warning fleet-dialog-note" id="fleet-sheet-note">${esc(_('fleet.unavailable_dialog'))}</p>` : '';
+    }
+
+    function disableDialogSave(id) {
         if (!_unavailable) return;
-        const btns = document.querySelectorAll('.modal-overlay .modal-footer .btn-primary');
-        const btn = btns[btns.length - 1];
-        if (btn) btn.disabled = true;
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        btn.disabled = true;
+        btn.setAttribute('aria-describedby', 'fleet-sheet-note');
+    }
+
+    // A refused or failed save: in the sheet's status line, next to the buttons
+    function sheetError(message, fieldId) {
+        Modal.setStatus(message, 'error');
+        const field = fieldId && document.getElementById(fieldId);
+        if (field) {
+            field.setAttribute('aria-invalid', 'true');
+            field.focus();
+        }
+    }
+
+    // Enter in a field saves; a change clears the last result
+    function wireSheetForm(formId, save) {
+        const form = document.getElementById(formId);
+        if (!form) return;
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const btn = document.querySelector('#modal-container .sheet-footer .btn-primary');
+            if (btn && btn.disabled) return;
+            save();
+        });
+        form.addEventListener('input', (e) => {
+            if (e.target && e.target.removeAttribute) e.target.removeAttribute('aria-invalid');
+            Modal.setStatus('');
+        });
     }
 
     // A device ID opens the shared device panel when this role may view devices
@@ -273,35 +307,41 @@
 
     function resourceForm() {
         const opt = (v, k) => `<option value="${v}">${esc(_(k))}</option>`;
-        return `
+        return `<form id="res-form" class="form-stack" novalidate>
+            ${unavailableNote()}
             <input type="hidden" id="res-edit-id">
             <div class="form-group">
                 <label class="form-label" for="res-name">${esc(_('fleet.col_name'))}</label>
-                <input type="text" id="res-name" class="form-input" autocomplete="off">
+                <input type="text" id="res-name" class="form-input" maxlength="120" required autocomplete="off" aria-describedby="res-name-hint">
+                <p class="form-hint" id="res-name-hint">${esc(tx('fleet.res_name_hint', 'How it appears in the list of resources.'))}</p>
             </div>
             <div class="form-group">
                 <label class="form-label" for="res-type">${esc(_('fleet.col_type'))}</label>
-                <select id="res-type" class="form-select" data-bd-call="Fleet.onResTypeChange" data-bd-on="change">
+                <select id="res-type" class="form-select is-medium" data-bd-call="Fleet.onResTypeChange" data-bd-on="change" aria-controls="res-address-group">
                     ${RES_TYPES.map(t => opt(t, 'fleet.type_' + t)).join('')}
                 </select>
             </div>
             <div class="form-group" id="res-address-group">
                 <label class="form-label" for="res-address" id="res-address-label">${esc(_('fleet.address'))}</label>
-                <input type="text" id="res-address" class="form-input mono" autocomplete="off" aria-describedby="res-address-hint">
+                <input type="text" id="res-address" class="form-input mono is-host" autocomplete="off" spellcheck="false" aria-describedby="res-address-hint">
                 <p class="form-hint" id="res-address-hint"></p>
             </div>
-            <div class="form-group">
-                <label class="form-label" for="res-scope">${esc(_('fleet.col_scope'))}</label>
-                <select id="res-scope" class="form-select">
-                    ${opt('org', 'fleet.scope_org')}${opt('group', 'fleet.scope_group')}${opt('device', 'fleet.scope_device')}
-                </select>
-            </div>
-            <div class="form-group">
-                <label class="form-label" for="res-scope-value">${esc(_('fleet.scope_value'))}</label>
-                <input type="text" id="res-scope-value" class="form-input" autocomplete="off" aria-describedby="res-scope-hint">
-                <p class="form-hint" id="res-scope-hint">${esc(_('fleet.scope_value_hint'))}</p>
-            </div>
-            <p class="form-status is-error" id="res-form-status" role="alert"></p>`;
+            <section class="form-section" aria-labelledby="res-section-scope">
+                <h3 class="form-section-title" id="res-section-scope">${esc(_('fleet.col_scope'))}</h3>
+                <div class="form-group">
+                    <label class="form-label" for="res-scope">${esc(tx('fleet.scope_label', 'Devices that receive it'))}</label>
+                    <select id="res-scope" class="form-select is-medium">
+                        ${opt('org', 'fleet.scope_org')}${opt('group', 'fleet.scope_group')}${opt('device', 'fleet.scope_device')}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="res-scope-value">${esc(_('fleet.scope_value'))}</label>
+                    <input type="text" id="res-scope-value" class="form-input is-host" autocomplete="off" aria-describedby="res-scope-hint">
+                    <p class="form-hint" id="res-scope-hint">${esc(_('fleet.scope_value_hint'))}</p>
+                </div>
+            </section>
+            <button type="submit" hidden tabindex="-1" aria-hidden="true"></button>
+        </form>`;
     }
 
     function showResourceModal(resource) {
@@ -312,15 +352,19 @@
             notify('error', _orgs.length ? _('fleet.choose_org') : _('fleet.no_orgs'));
             return;
         }
-        Modal.show({
+        const org = _orgs.find(o => String(o.id || o.name) === String(orgId));
+        Modal.sheet({
             title: resource ? _('fleet.edit_resource') : _('fleet.add_resource'),
-            content: unavailableNote() + resourceForm(),
+            subtitle: tx('fleet.res_sheet_desc', 'A printer, drive or network setting the devices of {org} receive.', { org: org?.name || orgId }),
+            content: resourceForm(),
+            status: true,
             buttons: [
-                { label: _('fleet.cancel'), class: 'btn-secondary', onClick: () => Modal.close() },
-                { label: resource ? _('fleet.save') : _('fleet.add_resource'), class: 'btn-primary', onClick: saveResource }
+                { label: _('fleet.cancel'), class: 'btn-secondary', start: true, onClick: () => Modal.close() },
+                { label: resource ? _('fleet.save') : _('fleet.add_resource'), class: 'btn-primary', id: 'res-save-btn', onClick: saveResource }
             ]
         });
-        disableDialogSave();
+        disableDialogSave('res-save-btn');
+        wireSheetForm('res-form', saveResource);
         document.getElementById('res-edit-id').value = resource?.id || '';
         document.getElementById('res-name').value = resource?.name || '';
         document.getElementById('res-type').value = resource?.type || 'printer';
@@ -351,7 +395,6 @@
 
     async function saveResource() {
         const orgId = document.getElementById('res-org-select')?.value;
-        const status = document.getElementById('res-form-status');
         const editId = document.getElementById('res-edit-id')?.value;
         const body = {
             name: document.getElementById('res-name')?.value?.trim(),
@@ -361,11 +404,10 @@
             scope_value: document.getElementById('res-scope-value')?.value?.trim()
         };
         if (!body.name) {
-            if (status) status.textContent = _('fleet.name_required');
-            document.getElementById('res-name')?.focus();
+            sheetError(_('fleet.name_required'), 'res-name');
             return;
         }
-        if (status) status.textContent = '';
+        Modal.setStatus(tx('fleet.saving', 'Saving…'));
         try {
             const url = editId
                 ? `/api/panel/fleet/resources/${encodeURIComponent(orgId)}/${encodeURIComponent(editId)}`
@@ -375,7 +417,7 @@
             notify('success', editId ? _('fleet.resource_saved', { name: body.name }) : _('fleet.resource_added', { name: body.name }));
             loadResources();
         } catch (e) {
-            if (status) status.textContent = _('fleet.save_failed', { error: e.message });
+            sheetError(_('fleet.save_failed', { error: e.message }));
         }
     }
 
@@ -494,64 +536,78 @@
 
     function taskForm() {
         const opt = (v, k) => `<option value="${v}">${esc(_(k))}</option>`;
-        return `
+        return `<form id="task-form" class="form-stack" novalidate>
+            ${unavailableNote()}
             <input type="hidden" id="task-edit-id">
             <div class="form-group">
                 <label class="form-label" for="task-name">${esc(_('fleet.col_task_name'))}</label>
-                <input type="text" id="task-name" class="form-input" autocomplete="off">
+                <input type="text" id="task-name" class="form-input" maxlength="120" required autocomplete="off" aria-describedby="task-name-hint">
+                <p class="form-hint" id="task-name-hint">${esc(tx('fleet.task_name_hint', 'How it appears in the list of tasks.'))}</p>
             </div>
             <div class="form-group">
                 <label class="form-label" for="task-type">${esc(_('fleet.col_task_type'))}</label>
-                <select id="task-type" class="form-select">
+                <select id="task-type" class="form-select is-medium">
                     ${TASK_TYPES.map(t => opt(t, 'fleet.task_type_' + t)).join('')}
                 </select>
             </div>
-            <div class="form-group">
-                <label class="form-label" for="task-targets">${esc(_('fleet.target_devices'))}</label>
-                <input type="text" id="task-targets" class="form-input mono" autocomplete="off" aria-describedby="task-targets-hint">
-                <p class="form-hint" id="task-targets-hint">${esc(_('fleet.target_hint'))}</p>
-            </div>
-            <div class="form-group">
-                <label class="form-label" for="task-schedule-type">${esc(_('fleet.col_schedule'))}</label>
-                <select id="task-schedule-type" class="form-select" data-bd-call="Fleet.onScheduleTypeChange" data-bd-on="change">
-                    ${opt('immediate', 'fleet.schedule_immediate')}${opt('once', 'fleet.schedule_once')}${opt('cron', 'fleet.schedule_cron')}
-                </select>
-            </div>
-            <div class="form-group" id="task-schedule-value-group" hidden>
-                <label class="form-label" for="task-schedule-value" id="task-schedule-value-label">${esc(_('fleet.schedule_when'))}</label>
-                <input type="text" id="task-schedule-value" class="form-input" autocomplete="off" aria-describedby="task-schedule-hint">
-                <p class="form-hint" id="task-schedule-hint"></p>
-            </div>
-            <div class="form-group">
-                <label class="form-label" for="task-script">${esc(_('fleet.script_content'))}</label>
-                <textarea id="task-script" class="form-input mono" rows="8" spellcheck="false" aria-describedby="task-script-hint"></textarea>
-                <p class="form-hint" id="task-script-hint">${esc(_('fleet.script_hint'))}</p>
-            </div>
-            <div class="form-group">
-                <label class="form-label" for="task-retries">${esc(_('fleet.retry_count'))}</label>
-                <input type="number" id="task-retries" class="form-input is-short" value="0" min="0" max="3" aria-describedby="task-retries-hint">
-                <p class="form-hint" id="task-retries-hint">${esc(_('fleet.retry_hint'))}</p>
-            </div>
-            <div class="form-group">
-                <label class="form-label" for="task-timeout">${esc(_('fleet.timeout_sec'))}</label>
-                <input type="number" id="task-timeout" class="form-input is-short" value="300" min="30" max="3600" aria-describedby="task-timeout-hint">
-                <p class="form-hint" id="task-timeout-hint">${esc(_('fleet.timeout_hint'))}</p>
-            </div>
-            <p class="form-status is-error" id="task-form-status" role="alert"></p>`;
+            <section class="form-section" aria-labelledby="task-section-when">
+                <h3 class="form-section-title" id="task-section-when">${esc(tx('fleet.section_where_when', 'Devices and schedule'))}</h3>
+                <div class="form-group">
+                    <label class="form-label" for="task-targets">${esc(_('fleet.target_devices'))}</label>
+                    <input type="text" id="task-targets" class="form-input mono" required autocomplete="off" spellcheck="false" aria-describedby="task-targets-hint">
+                    <p class="form-hint" id="task-targets-hint">${esc(_('fleet.target_hint'))}</p>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="task-schedule-type">${esc(_('fleet.col_schedule'))}</label>
+                    <select id="task-schedule-type" class="form-select is-host" data-bd-call="Fleet.onScheduleTypeChange" data-bd-on="change" aria-controls="task-schedule-value-group">
+                        ${opt('immediate', 'fleet.schedule_immediate')}${opt('once', 'fleet.schedule_once')}${opt('cron', 'fleet.schedule_cron')}
+                    </select>
+                </div>
+                <div class="form-group" id="task-schedule-value-group" hidden>
+                    <label class="form-label" for="task-schedule-value" id="task-schedule-value-label">${esc(_('fleet.schedule_when'))}</label>
+                    <input type="text" id="task-schedule-value" class="form-input is-medium" autocomplete="off" spellcheck="false" aria-describedby="task-schedule-hint">
+                    <p class="form-hint" id="task-schedule-hint"></p>
+                </div>
+            </section>
+            <section class="form-section" aria-labelledby="task-section-script">
+                <h3 class="form-section-title" id="task-section-script">${esc(tx('fleet.section_script', 'What runs'))}</h3>
+                <div class="form-group">
+                    <label class="form-label" for="task-script">${esc(_('fleet.script_content'))}</label>
+                    <textarea id="task-script" class="form-input mono" rows="8" spellcheck="false" aria-describedby="task-script-hint"></textarea>
+                    <p class="form-hint" id="task-script-hint">${esc(_('fleet.script_hint'))}</p>
+                </div>
+            </section>
+            <section class="form-section" aria-labelledby="task-section-limits">
+                <h3 class="form-section-title" id="task-section-limits">${esc(tx('fleet.section_failures', 'Retries and time limit'))}</h3>
+                <div class="form-group">
+                    <label class="form-label" for="task-retries">${esc(_('fleet.retry_count'))}</label>
+                    <input type="number" id="task-retries" class="form-input is-short" value="0" min="0" max="3" aria-describedby="task-retries-hint">
+                    <p class="form-hint" id="task-retries-hint">${esc(_('fleet.retry_hint'))}</p>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="task-timeout">${esc(_('fleet.timeout_sec'))}</label>
+                    <input type="number" id="task-timeout" class="form-input is-short" value="300" min="30" max="3600" aria-describedby="task-timeout-hint">
+                    <p class="form-hint" id="task-timeout-hint">${esc(_('fleet.timeout_hint'))}</p>
+                </div>
+            </section>
+            <button type="submit" hidden tabindex="-1" aria-hidden="true"></button>
+        </form>`;
     }
 
     function showTaskModal(task) {
         if (!task || typeof task !== 'object' || task instanceof Event) task = null;
-        Modal.show({
+        Modal.sheet({
             title: task ? _('fleet.edit_task') : _('fleet.create_task'),
-            content: unavailableNote() + taskForm(),
-            size: 'large',
+            subtitle: tx('fleet.task_sheet_desc', 'A script, install, update or restart that runs on the devices you name, right away or on a schedule.'),
+            content: taskForm(),
+            status: true,
             buttons: [
-                { label: _('fleet.cancel'), class: 'btn-secondary', onClick: () => Modal.close() },
-                { label: task ? _('fleet.save') : _('fleet.create_task'), class: 'btn-primary', onClick: saveTask }
+                { label: _('fleet.cancel'), class: 'btn-secondary', start: true, onClick: () => Modal.close() },
+                { label: task ? _('fleet.save') : _('fleet.create_task'), class: 'btn-primary', id: 'task-save-btn', onClick: saveTask }
             ]
         });
-        disableDialogSave();
+        disableDialogSave('task-save-btn');
+        wireSheetForm('task-form', saveTask);
         document.getElementById('task-edit-id').value = task?.id || '';
         document.getElementById('task-name').value = task?.name || '';
         document.getElementById('task-type').value = task?.type || task?.task_type || 'script';
@@ -579,18 +635,17 @@
             valInput.type = 'datetime-local';
             valInput.classList.remove('mono');
             if (label) label.textContent = _('fleet.schedule_when');
-            if (hint) hint.textContent = '';
+            if (hint) { hint.textContent = ''; hint.hidden = true; }
         } else {
             valInput.type = 'text';
             valInput.classList.add('mono');
             if (label) label.textContent = _('fleet.schedule_cron_label');
-            if (hint) hint.textContent = _('fleet.cron_hint', { value: _('fleet.cron_placeholder') });
+            if (hint) { hint.textContent = _('fleet.cron_hint', { value: _('fleet.cron_placeholder') }); hint.hidden = false; }
         }
     }
 
     async function saveTask() {
         const editId = document.getElementById('task-edit-id')?.value;
-        const status = document.getElementById('task-form-status');
         const scheduleType = document.getElementById('task-schedule-type')?.value;
         const body = {
             name: document.getElementById('task-name')?.value?.trim(),
@@ -608,11 +663,10 @@
         else if (!body.targets) { problem = _('fleet.targets_required'); field = 'task-targets'; }
         else if (scheduleType !== 'immediate' && !body.schedule_value) { problem = _('fleet.schedule_required'); field = 'task-schedule-value'; }
         if (problem) {
-            if (status) status.textContent = problem;
-            document.getElementById(field)?.focus();
+            sheetError(problem, field);
             return;
         }
-        if (status) status.textContent = '';
+        Modal.setStatus(tx('fleet.saving', 'Saving…'));
         try {
             const url = editId ? `/api/panel/fleet/tasks/${encodeURIComponent(editId)}` : '/api/panel/fleet/tasks';
             await api(url, { method: editId ? 'PUT' : 'POST', body });
@@ -620,7 +674,7 @@
             notify('success', _('fleet.task_created', { name: body.name }));
             loadTasks();
         } catch (e) {
-            if (status) status.textContent = _('fleet.save_failed', { error: e.message });
+            sheetError(_('fleet.save_failed', { error: e.message }));
         }
     }
 

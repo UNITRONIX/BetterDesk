@@ -5248,7 +5248,16 @@
         "unavailable_notice": "Ce serveur ne propose pas encore les tâches de parc. Les ressources, tâches, workflows enregistrés et résultats de conformité ne peuvent pas être chargés, enregistrés ni exécutés ici. Vous pouvez quand même ouvrir les formulaires pour voir ce qui se règle, et concevoir un workflow puis l'exporter dans un fichier.",
         "unavailable_table": "Rien à afficher. Ce serveur ne le propose pas encore.",
         "unavailable_short": "Ce serveur ne propose pas encore les tâches de parc.",
-        "unavailable_dialog": "Ce serveur ne propose pas encore les tâches de parc, cela ne peut donc pas être enregistré. Les champs montrent ce que vous pourrez régler ensuite."
+        "unavailable_dialog": "Ce serveur ne propose pas encore les tâches de parc, cela ne peut donc pas être enregistré. Les champs montrent ce que vous pourrez régler ensuite.",
+        "res_name_hint": "Comment elle apparaît dans la liste des ressources.",
+        "scope_label": "Appareils qui la reçoivent",
+        "res_sheet_desc": "Une imprimante, un lecteur ou un réglage réseau que reçoivent les appareils de {org}.",
+        "task_name_hint": "Comment elle apparaît dans la liste des tâches.",
+        "section_where_when": "Appareils et planification",
+        "section_script": "Ce qui s'exécute",
+        "section_failures": "Nouvelles tentatives et limite de temps",
+        "task_sheet_desc": "Un script, une installation, une mise à jour ou un redémarrage exécuté sur les appareils indiqués, tout de suite ou selon une planification.",
+        "run_output_desc": "Ce que le workflow {name} a signalé au démarrage."
     },
     "scaling": {
         "title": "Tableau de bord",
@@ -5380,7 +5389,16 @@
         "diagram_note": "Dessiné avec les adresses que ce serveur donne actuellement aux clients.",
         "diagram_loading": "Lecture des adresses de ce serveur…",
         "diagram_error": "Impossible de lire les adresses de ce serveur.",
-        "rules_need_relay_note": "Une règle dirige des appareils vers l'un de vos serveurs relais. Vous pourrez ajouter des règles dès que la liste ci-dessus en contient un."
+        "rules_need_relay_note": "Une règle dirige des appareils vers l'un de vos serveurs relais. Vous pourrez ajouter des règles dès que la liste ci-dessus en contient un.",
+        "relay_sheet_desc": "Un serveur relais transporte les sessions à distance quand deux appareils ne peuvent pas se connecter directement.",
+        "rule_section_match": "Quels appareils",
+        "rule_section_relay": "Où ils se connectent",
+        "rule_sheet_desc": "Envoie les appareils correspondants vers un serveur relais. Les règles sont vérifiées par priorité, le plus petit nombre en premier.",
+        "rule_match_hint_group": "Le nom d'un groupe d'appareils.",
+        "rule_match_hint_tag": "Une étiquette, telle qu'elle est définie sur les appareils.",
+        "rule_match_hint_country": "Le pays depuis lequel les appareils se connectent.",
+        "rule_match_hint_device_id": "Un ID d'appareil.",
+        "saving": "Enregistrement…"
     },
     "cross_platform": {
         "title": "Tableau de bord",
@@ -6821,7 +6839,22 @@
             "usage_empty": "Aucune attribution de forfait pour l'instant. Le temps inclus s'affiche ici dès qu'un forfait est attribué à un groupe d'appareils.",
             "smtp_missing_effect": "L'envoi d'e-mails n'est pas encore configuré : aucune notification par e-mail ne part.",
             "assign_more": "Plus d'options",
-            "assign_more_hint": "Minutes restantes, tarifs propres et dates de validité de l'attribution. Les champs vides reprennent les valeurs du forfait, sans date de fin."
+            "assign_more_hint": "Minutes restantes, tarifs propres et dates de validité de l'attribution. Les champs vides reprennent les valeurs du forfait, sans date de fin.",
+            "package_name_hint": "Affiché dans la liste des forfaits et lors de son attribution.",
+            "package_description_hint": "Facultatif. Affiché sous le nom dans la liste.",
+            "section_billing": "Arrondi et dépassement",
+            "assign_target_hint": "Le groupe d'appareils dont les sessions sont facturées.",
+            "section_rates": "Temps et tarifs",
+            "section_rates_note": "Facultatif. Les champs vides reprennent les valeurs du forfait.",
+            "remaining_hint": "Minutes restantes du temps inclus de ce mois.",
+            "hourly_rate_hint": "Prix par heure pour le temps compris dans le temps inclus.",
+            "validity_hint": "Facultatif. Sans dates, l'attribution s'applique dès maintenant, sans date de fin.",
+            "package_sheet_desc": "Temps de support qu'un groupe d'appareils reçoit chaque mois, et le prix du temps au-delà.",
+            "assign_sheet_desc": "Les sessions sur les appareils de ce groupe sont décomptées du forfait dès maintenant.",
+            "assignment_edit_desc": "Le groupe d'appareils et le forfait restent. Modifiez le temps restant ce mois-ci, les tarifs ou les dates.",
+            "preview_sheet_desc": "La part du temps inclus utilisée par le forfait dans un mois, et le temps facturé au-delà.",
+            "save_failed": "Impossible d'enregistrer. Réessayez.",
+            "error_targets": "Impossible de charger les groupes d'appareils : {error}"
         }
     },
     "remote_dashboard": {

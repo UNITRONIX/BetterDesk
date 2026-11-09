@@ -5115,7 +5115,16 @@
         "unavailable_notice": "Tento server zatím nenabízí hromadné úlohy. Prostředky, úlohy, uložené pracovní postupy a výsledky shody zde nelze načíst, uložit ani spustit. Formuláře můžete přesto otevřít a podívat se, co lze nastavit, a pracovní postup navrhnout a exportovat jako soubor.",
         "unavailable_table": "Není co zobrazit. Tento server to zatím nenabízí.",
         "unavailable_short": "Tento server zatím nenabízí hromadné úlohy.",
-        "unavailable_dialog": "Tento server zatím nenabízí hromadné úlohy, takže to nelze uložit. Pole ukazují, co půjde nastavit, až je nabídne."
+        "unavailable_dialog": "Tento server zatím nenabízí hromadné úlohy, takže to nelze uložit. Pole ukazují, co půjde nastavit, až je nabídne.",
+        "res_name_hint": "Jak se zobrazí v seznamu prostředků.",
+        "scope_label": "Zařízení, která ho dostanou",
+        "res_sheet_desc": "Tiskárna, jednotka nebo nastavení sítě, které dostanou zařízení organizace {org}.",
+        "task_name_hint": "Jak se zobrazí v seznamu úloh.",
+        "section_where_when": "Zařízení a plán",
+        "section_script": "Co se spustí",
+        "section_failures": "Opakování a časový limit",
+        "task_sheet_desc": "Skript, instalace, aktualizace nebo restart, který se spustí na zadaných zařízeních, hned nebo podle plánu.",
+        "run_output_desc": "Co pracovní postup {name} hlásil při spuštění."
     },
     "scaling": {
         "title": "Škálování a správa relay uzlů",
@@ -5247,7 +5256,16 @@
         "diagram_note": "Nakresleno s adresami, které tento server právě dává klientům.",
         "diagram_loading": "Načítání adres tohoto serveru…",
         "diagram_error": "Adresy tohoto serveru se nepodařilo načíst.",
-        "rules_need_relay_note": "Pravidlo směruje zařízení na jeden z vašich relay serverů. Pravidla můžete přidat, jakmile bude v seznamu výše nějaký server."
+        "rules_need_relay_note": "Pravidlo směruje zařízení na jeden z vašich relay serverů. Pravidla můžete přidat, jakmile bude v seznamu výše nějaký server.",
+        "relay_sheet_desc": "Relay server přenáší vzdálené relace, když se dvě zařízení nemohou spojit přímo.",
+        "rule_section_match": "Která zařízení",
+        "rule_section_relay": "Kam se připojí",
+        "rule_sheet_desc": "Odešle odpovídající zařízení na jeden relay server. Pravidla se kontrolují podle priority, nejnižší číslo první.",
+        "rule_match_hint_group": "Název skupiny zařízení.",
+        "rule_match_hint_tag": "Jeden štítek, jak je nastaven na zařízeních.",
+        "rule_match_hint_country": "Země, ze které se zařízení připojují.",
+        "rule_match_hint_device_id": "Jedno ID zařízení.",
+        "saving": "Ukládání…"
     },
     "cross_platform": {
         "title": "Meziplatformní kompatibilita",
@@ -6817,7 +6835,22 @@
             "usage_empty": "Zatím žádná přiřazení balíčků. Zahrnutý čas se zde zobrazí, jakmile skupině zařízení přiřadíte balíček.",
             "smtp_missing_effect": "Odesílání e-mailů zatím není nastavené, takže se žádná upozornění neodesílají.",
             "assign_more": "Další možnosti",
-            "assign_more_hint": "Zbývající minuty, vlastní sazby a data platnosti přiřazení. Prázdná pole převezmou hodnoty balíčku, bez data konce."
+            "assign_more_hint": "Zbývající minuty, vlastní sazby a data platnosti přiřazení. Prázdná pole převezmou hodnoty balíčku, bez data konce.",
+            "package_name_hint": "Zobrazí se v seznamu balíčků a při přiřazení.",
+            "package_description_hint": "Nepovinné. Zobrazí se pod názvem v seznamu.",
+            "section_billing": "Zaokrouhlení a překročení",
+            "assign_target_hint": "Skupina zařízení, jejíž relace se účtují.",
+            "section_rates": "Čas a sazby",
+            "section_rates_note": "Nepovinné. Prázdná pole použijí hodnoty balíčku.",
+            "remaining_hint": "Zbývající minuty zahrnutého času v tomto měsíci.",
+            "hourly_rate_hint": "Cena za hodinu v rámci zahrnutého času.",
+            "validity_hint": "Nepovinné. Bez dat platí přiřazení od teď a bez konce.",
+            "package_sheet_desc": "Čas podpory, který skupina zařízení dostane každý měsíc, a cena za čas nad něj.",
+            "assign_sheet_desc": "Relace na zařízeních této skupiny se od teď započítávají do balíčku.",
+            "assignment_edit_desc": "Skupina zařízení a balíček zůstávají. Změňte zbývající čas v tomto měsíci, sazby nebo data.",
+            "preview_sheet_desc": "Kolik zahrnutého času balíček v měsíci využil a kolik času se účtovalo navíc.",
+            "save_failed": "Uložení se nezdařilo. Zkuste to znovu.",
+            "error_targets": "Skupiny zařízení se nepodařilo načíst: {error}"
         }
     },
     "remote_dashboard": {

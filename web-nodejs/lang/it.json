@@ -5115,7 +5115,16 @@
         "unavailable_notice": "Questo server non offre ancora le attività sulla flotta. Qui non si possono caricare, salvare né eseguire risorse, attività, flussi salvati e risultati di conformità. Può comunque aprire i moduli per vedere cosa si può impostare, e disegnare un flusso ed esportarlo come file.",
         "unavailable_table": "Niente da mostrare. Questo server non lo offre ancora.",
         "unavailable_short": "Questo server non offre ancora le attività sulla flotta.",
-        "unavailable_dialog": "Questo server non offre ancora le attività sulla flotta, quindi non si può salvare. I campi mostrano cosa potrà impostare quando saranno disponibili."
+        "unavailable_dialog": "Questo server non offre ancora le attività sulla flotta, quindi non si può salvare. I campi mostrano cosa potrà impostare quando saranno disponibili.",
+        "res_name_hint": "Come appare nell'elenco delle risorse.",
+        "scope_label": "Dispositivi che la ricevono",
+        "res_sheet_desc": "Una stampante, un'unità o un'impostazione di rete che ricevono i dispositivi di {org}.",
+        "task_name_hint": "Come appare nell'elenco delle attività.",
+        "section_where_when": "Dispositivi e pianificazione",
+        "section_script": "Cosa viene eseguito",
+        "section_failures": "Nuovi tentativi e limite di tempo",
+        "task_sheet_desc": "Uno script, un'installazione, un aggiornamento o un riavvio eseguito sui dispositivi indicati, subito o secondo una pianificazione.",
+        "run_output_desc": "Cosa ha riportato il flusso di lavoro {name} all'avvio."
     },
     "scaling": {
         "title": "Scalabilità e gestione relay",
@@ -5247,7 +5256,16 @@
         "diagram_note": "Disegnato con gli indirizzi che questo server fornisce ora ai client.",
         "diagram_loading": "Lettura degli indirizzi di questo server…",
         "diagram_error": "Impossibile leggere gli indirizzi di questo server.",
-        "rules_need_relay_note": "Una regola indirizza i dispositivi verso uno dei suoi server relay. Potrà aggiungere regole quando l'elenco qui sopra ne conterrà uno."
+        "rules_need_relay_note": "Una regola indirizza i dispositivi verso uno dei suoi server relay. Potrà aggiungere regole quando l'elenco qui sopra ne conterrà uno.",
+        "relay_sheet_desc": "Un server relay trasporta le sessioni remote quando due dispositivi non riescono a connettersi direttamente.",
+        "rule_section_match": "Quali dispositivi",
+        "rule_section_relay": "Dove si connettono",
+        "rule_sheet_desc": "Invia i dispositivi corrispondenti a un server relay. Le regole sono controllate per priorità, prima il numero più basso.",
+        "rule_match_hint_group": "Il nome di un gruppo di dispositivi.",
+        "rule_match_hint_tag": "Un tag, così come è impostato sui dispositivi.",
+        "rule_match_hint_country": "Il paese da cui si connettono i dispositivi.",
+        "rule_match_hint_device_id": "Un ID dispositivo.",
+        "saving": "Salvataggio…"
     },
     "cross_platform": {
         "title": "Compatibilità multipiattaforma",
@@ -6817,7 +6835,22 @@
             "usage_empty": "Nessun pacchetto assegnato. Il tempo incluso compare qui quando un pacchetto viene assegnato a un gruppo di dispositivi.",
             "smtp_missing_effect": "L'invio di e-mail non è ancora configurato, quindi non parte nessuna notifica via e-mail.",
             "assign_more": "Altre opzioni",
-            "assign_more_hint": "Minuti rimanenti, tariffe proprie e date di validità dell'assegnazione. I campi vuoti usano i valori del pacchetto, senza data di fine."
+            "assign_more_hint": "Minuti rimanenti, tariffe proprie e date di validità dell'assegnazione. I campi vuoti usano i valori del pacchetto, senza data di fine.",
+            "package_name_hint": "Compare nell'elenco dei pacchetti e quando lo assegni.",
+            "package_description_hint": "Facoltativo. Compare sotto il nome nell'elenco.",
+            "section_billing": "Arrotondamento ed eccedenza",
+            "assign_target_hint": "Il gruppo di dispositivi le cui sessioni vengono fatturate.",
+            "section_rates": "Tempo e tariffe",
+            "section_rates_note": "Facoltativo. I campi vuoti usano i valori del pacchetto.",
+            "remaining_hint": "Minuti rimasti del tempo incluso di questo mese.",
+            "hourly_rate_hint": "Prezzo all'ora per il tempo entro il tempo incluso.",
+            "validity_hint": "Facoltativo. Senza date l'assegnazione vale da subito, senza data di fine.",
+            "package_sheet_desc": "Tempo di supporto che un gruppo di dispositivi riceve ogni mese e il prezzo del tempo oltre.",
+            "assign_sheet_desc": "Le sessioni sui dispositivi di questo gruppo contano sul pacchetto da ora in poi.",
+            "assignment_edit_desc": "Il gruppo di dispositivi e il pacchetto restano. Cambia il tempo rimasto questo mese, le tariffe o le date.",
+            "preview_sheet_desc": "Quanto del tempo incluso il pacchetto ha usato in un mese e il tempo fatturato oltre.",
+            "save_failed": "Impossibile salvare. Riprova.",
+            "error_targets": "Impossibile caricare i gruppi di dispositivi: {error}"
         }
     },
     "remote_dashboard": {

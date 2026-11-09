@@ -5115,7 +5115,16 @@
         "unavailable_notice": "이 서버는 아직 플릿 작업을 제공하지 않습니다. 여기에서는 리소스, 작업, 저장된 워크플로, 규정 준수 결과를 불러오거나 저장하거나 실행할 수 없습니다. 양식을 열어 설정할 수 있는 항목을 확인하고, 워크플로를 구성해 파일로 내보낼 수는 있습니다.",
         "unavailable_table": "표시할 항목이 없습니다. 이 서버는 아직 이 기능을 제공하지 않습니다.",
         "unavailable_short": "이 서버는 아직 플릿 작업을 제공하지 않습니다.",
-        "unavailable_dialog": "이 서버는 아직 플릿 작업을 제공하지 않아 저장할 수 없습니다. 각 필드는 지원된 후 설정할 수 있는 항목을 보여 줍니다."
+        "unavailable_dialog": "이 서버는 아직 플릿 작업을 제공하지 않아 저장할 수 없습니다. 각 필드는 지원된 후 설정할 수 있는 항목을 보여 줍니다.",
+        "res_name_hint": "리소스 목록에 표시되는 이름입니다.",
+        "scope_label": "받는 장치",
+        "res_sheet_desc": "{org}의 장치가 받는 프린터, 드라이브 또는 네트워크 설정입니다.",
+        "task_name_hint": "작업 목록에 표시되는 이름입니다.",
+        "section_where_when": "장치와 일정",
+        "section_script": "실행할 내용",
+        "section_failures": "재시도와 시간 제한",
+        "task_sheet_desc": "지정한 장치에서 바로 또는 일정에 따라 실행되는 스크립트, 설치, 업데이트 또는 다시 시작입니다.",
+        "run_output_desc": "워크플로 {name}이(가) 시작할 때 보고한 내용입니다."
     },
     "scaling": {
         "title": "스케일링 및 릴레이 관리",
@@ -5247,7 +5256,16 @@
         "diagram_note": "이 서버가 지금 클라이언트에 주는 주소로 그렸습니다.",
         "diagram_loading": "이 서버의 주소를 읽는 중…",
         "diagram_error": "이 서버의 주소를 읽지 못했습니다.",
-        "rules_need_relay_note": "규칙은 기기를 릴레이 서버 중 하나로 보냅니다. 위 목록에 서버가 있으면 규칙을 추가할 수 있습니다."
+        "rules_need_relay_note": "규칙은 기기를 릴레이 서버 중 하나로 보냅니다. 위 목록에 서버가 있으면 규칙을 추가할 수 있습니다.",
+        "relay_sheet_desc": "두 장치가 직접 연결할 수 없을 때 릴레이 서버가 원격 세션을 전달합니다.",
+        "rule_section_match": "대상 장치",
+        "rule_section_relay": "연결할 곳",
+        "rule_sheet_desc": "일치하는 장치를 릴레이 서버 하나로 보냅니다. 규칙은 우선순위 순서로 확인하며 숫자가 낮은 것이 먼저입니다.",
+        "rule_match_hint_group": "장치 그룹의 이름입니다.",
+        "rule_match_hint_tag": "장치에 설정된 그대로의 태그 하나입니다.",
+        "rule_match_hint_country": "장치가 연결하는 국가입니다.",
+        "rule_match_hint_device_id": "장치 ID 하나입니다.",
+        "saving": "저장 중…"
     },
     "cross_platform": {
         "title": "크로스 플랫폼 호환성",
@@ -6817,7 +6835,22 @@
             "usage_empty": "아직 패키지 할당이 없습니다. 장치 그룹에 패키지를 할당하면 포함 시간이 여기에 표시됩니다.",
             "smtp_missing_effect": "이메일 발송이 아직 설정되지 않아 알림 이메일이 발송되지 않습니다.",
             "assign_more": "추가 옵션",
-            "assign_more_hint": "남은 분, 별도 요금, 할당 유효 기간입니다. 빈 필드는 패키지 값을 사용하며 종료일이 없습니다."
+            "assign_more_hint": "남은 분, 별도 요금, 할당 유효 기간입니다. 빈 필드는 패키지 값을 사용하며 종료일이 없습니다.",
+            "package_name_hint": "패키지 목록과 할당할 때 표시됩니다.",
+            "package_description_hint": "선택 사항입니다. 목록에서 이름 아래에 표시됩니다.",
+            "section_billing": "반올림과 초과 사용",
+            "assign_target_hint": "세션이 청구되는 장치 그룹입니다.",
+            "section_rates": "시간과 요금",
+            "section_rates_note": "선택 사항입니다. 비워 두면 패키지 값을 사용합니다.",
+            "remaining_hint": "이번 달 포함 시간 중 남은 분입니다.",
+            "hourly_rate_hint": "포함 시간 안에서 쓴 시간의 시간당 요금입니다.",
+            "validity_hint": "선택 사항입니다. 날짜가 없으면 지금부터 종료일 없이 적용됩니다.",
+            "package_sheet_desc": "장치 그룹이 매달 받는 지원 시간과 이를 넘는 시간의 가격입니다.",
+            "assign_sheet_desc": "이 그룹 장치의 세션은 지금부터 패키지에서 차감됩니다.",
+            "assignment_edit_desc": "장치 그룹과 패키지는 그대로입니다. 이번 달 남은 시간, 요금 또는 날짜를 바꿀 수 있습니다.",
+            "preview_sheet_desc": "한 달 동안 패키지가 쓴 포함 시간과 이를 넘어 청구된 시간입니다.",
+            "save_failed": "저장하지 못했습니다. 다시 시도하세요.",
+            "error_targets": "장치 그룹을 불러오지 못했습니다: {error}"
         }
     },
     "remote_dashboard": {

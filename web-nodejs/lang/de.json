@@ -5115,7 +5115,16 @@
         "unavailable_notice": "Dieser Server bietet noch keine Flottenaufgaben an. Ressourcen, Aufgaben, gespeicherte Workflows und Compliance-Ergebnisse lassen sich hier nicht laden, speichern oder ausführen. Sie können trotzdem die Formulare öffnen, um zu sehen, was sich einstellen lässt, und einen Workflow entwerfen und als Datei exportieren.",
         "unavailable_table": "Nichts anzuzeigen. Dieser Server bietet das noch nicht an.",
         "unavailable_short": "Dieser Server bietet noch keine Flottenaufgaben an.",
-        "unavailable_dialog": "Dieser Server bietet noch keine Flottenaufgaben an, daher lässt sich das nicht speichern. Die Felder zeigen, was Sie dann einstellen können."
+        "unavailable_dialog": "Dieser Server bietet noch keine Flottenaufgaben an, daher lässt sich das nicht speichern. Die Felder zeigen, was Sie dann einstellen können.",
+        "res_name_hint": "So erscheint sie in der Liste der Ressourcen.",
+        "scope_label": "Geräte, die sie erhalten",
+        "res_sheet_desc": "Ein Drucker, ein Laufwerk oder eine Netzwerkeinstellung, die die Geräte von {org} erhalten.",
+        "task_name_hint": "So erscheint sie in der Liste der Aufgaben.",
+        "section_where_when": "Geräte und Zeitplan",
+        "section_script": "Was ausgeführt wird",
+        "section_failures": "Wiederholungen und Zeitlimit",
+        "task_sheet_desc": "Ein Skript, eine Installation, ein Update oder ein Neustart, der auf den angegebenen Geräten läuft, sofort oder nach Zeitplan.",
+        "run_output_desc": "Was der Workflow {name} beim Start gemeldet hat."
     },
     "scaling": {
         "title": "Dashboard",
@@ -5247,7 +5256,16 @@
         "diagram_note": "Gezeichnet mit den Adressen, die dieser Server Clients gerade mitgibt.",
         "diagram_loading": "Adressen dieses Servers werden gelesen…",
         "diagram_error": "Die Adressen dieses Servers konnten nicht gelesen werden.",
-        "rules_need_relay_note": "Eine Regel weist Geräte einem Ihrer Relay-Server zu. Sie können Regeln hinzufügen, sobald die Liste oben einen enthält."
+        "rules_need_relay_note": "Eine Regel weist Geräte einem Ihrer Relay-Server zu. Sie können Regeln hinzufügen, sobald die Liste oben einen enthält.",
+        "relay_sheet_desc": "Ein Relay-Server überträgt Fernsitzungen, wenn sich zwei Geräte nicht direkt verbinden können.",
+        "rule_section_match": "Welche Geräte",
+        "rule_section_relay": "Wohin sie sich verbinden",
+        "rule_sheet_desc": "Leitet passende Geräte an einen Relay-Server. Regeln werden nach Priorität geprüft, die niedrigste Zahl zuerst.",
+        "rule_match_hint_group": "Der Name einer Gerätegruppe.",
+        "rule_match_hint_tag": "Ein Tag, so wie er an den Geräten gesetzt ist.",
+        "rule_match_hint_country": "Das Land, aus dem sich die Geräte verbinden.",
+        "rule_match_hint_device_id": "Eine Geräte-ID.",
+        "saving": "Wird gespeichert…"
     },
     "cross_platform": {
         "title": "Dashboard",
@@ -6817,7 +6835,22 @@
             "usage_empty": "Noch keine Paketzuweisungen. Die enthaltene Zeit erscheint hier, sobald einer Gerätegruppe ein Paket zugewiesen ist.",
             "smtp_missing_effect": "Der E-Mail-Versand ist noch nicht eingerichtet, daher werden keine Benachrichtigungen verschickt.",
             "assign_more": "Weitere Optionen",
-            "assign_more_hint": "Verbleibende Minuten, eigene Sätze und die Gültigkeitsdaten. Leere Felder übernehmen die Werte des Pakets, ohne Enddatum."
+            "assign_more_hint": "Verbleibende Minuten, eigene Sätze und die Gültigkeitsdaten. Leere Felder übernehmen die Werte des Pakets, ohne Enddatum.",
+            "package_name_hint": "Erscheint in der Paketliste und wenn Sie das Paket zuweisen.",
+            "package_description_hint": "Optional. Erscheint in der Liste unter dem Namen.",
+            "section_billing": "Rundung und Mehrzeit",
+            "assign_target_hint": "Die Gerätegruppe, deren Sitzungen abgerechnet werden.",
+            "section_rates": "Zeit und Preise",
+            "section_rates_note": "Optional. Leere Felder verwenden die Werte des Pakets.",
+            "remaining_hint": "Verbleibende Minuten der enthaltenen Zeit in diesem Monat.",
+            "hourly_rate_hint": "Preis pro Stunde für Zeit innerhalb der enthaltenen Zeit.",
+            "validity_hint": "Optional. Ohne Datum gilt die Zuweisung ab sofort und ohne Enddatum.",
+            "package_sheet_desc": "Support-Zeit, die eine Gerätegruppe jeden Monat erhält, und der Preis für Zeit darüber hinaus.",
+            "assign_sheet_desc": "Sitzungen auf den Geräten dieser Gruppe zählen ab jetzt auf das Paket.",
+            "assignment_edit_desc": "Gerätegruppe und Paket bleiben. Ändern Sie die restliche Zeit in diesem Monat, die Preise oder die Daten.",
+            "preview_sheet_desc": "Wie viel der enthaltenen Zeit das Paket in einem Monat verbraucht hat und welche Zeit darüber hinaus abgerechnet wurde.",
+            "save_failed": "Speichern fehlgeschlagen. Versuchen Sie es erneut.",
+            "error_targets": "Die Gerätegruppen konnten nicht geladen werden: {error}"
         }
     },
     "remote_dashboard": {

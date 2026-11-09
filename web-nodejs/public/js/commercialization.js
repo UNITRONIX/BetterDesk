@@ -2,8 +2,10 @@
 
 /**
  * Billing packages (?tab=packages) and billable sessions (?tab=sessions).
- * Dialogs are built from the <template> blocks in commercialization.ejs and
- * opened with Modal.show, so Escape and focus return come from modal.js.
+ * Sheets (package, assignment, month preview, session details) and the work
+ * report dialog are built from the <template> blocks in commercialization.ejs
+ * and opened with Modal.sheet / Modal.show, so Escape and focus return come
+ * from modal.js.
  */
 (function () {
     const page = document.querySelector('.commercialization-page');
@@ -185,25 +187,59 @@
     window.addEventListener('scroll', followMenus, true);
     window.addEventListener('resize', followMenus);
 
-    /* ── Dialogs from templates ── */
+    /* ── Dialogs and sheets from templates ──
+       Creating and editing (package, assignment) and the details views
+       (month preview, session) open as side sheets; the work report is a
+       short dialog. opts: { sheet, subtitle, wide, size } */
 
-    function openDialog(templateId, title, buttons, size) {
+    function openDialog(templateId, title, buttons, opts) {
+        const o = opts || {};
         const tpl = document.getElementById(templateId);
-        Modal.show({ title, content: tpl ? tpl.innerHTML : '', buttons, size: size || 'medium' });
-        return document.querySelector('#modal-container .modal-overlay:last-child .modal');
+        const content = tpl ? tpl.innerHTML : '';
+        if (o.sheet) {
+            Modal.sheet({ title, subtitle: o.subtitle || '', content, buttons, wide: !!o.wide, status: o.status !== false });
+        } else {
+            Modal.show({ title, content, buttons, size: o.size || 'medium' });
+        }
+        return document.querySelector('#modal-container .modal-overlay:last-child [role="dialog"]');
     }
 
-    function showError(id, message) {
-        const el = document.getElementById(id);
-        if (!el) return;
-        el.textContent = message || '';
-        el.hidden = !message;
+    // A refused save or a failed request: the dialog's own error line, or the sheet's status line
+    function showError(id, message, fieldId) {
+        const el = id && document.getElementById(id);
+        if (el) {
+            el.textContent = message || '';
+            el.hidden = !message;
+        } else {
+            Modal.setStatus(message || '', message ? 'error' : '');
+        }
+        const field = fieldId && document.getElementById(fieldId);
+        if (field && message) {
+            field.setAttribute('aria-invalid', 'true');
+            field.focus();
+        }
+    }
+
+    // Enter in a field saves like the primary button; a change clears the last result
+    function wireSheetForm(formId, submit) {
+        const form = document.getElementById(formId);
+        if (!form) return;
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            submit();
+        });
+        form.addEventListener('input', (e) => {
+            if (e.target && e.target.removeAttribute) e.target.removeAttribute('aria-invalid');
+            Modal.setStatus('');
+        });
     }
 
     function withBusy(buttonLabel, fn) {
         return async () => {
             const btn = Array.from(document.querySelectorAll('#modal-container .modal-footer .btn'))
                 .find((b) => b.textContent.trim() === buttonLabel);
+            // A second Enter or click while saving does nothing
+            if (btn && btn.disabled) return;
             if (btn) btn.disabled = true;
             try { await fn(); } finally { if (btn && document.contains(btn)) btn.disabled = false; }
         };
@@ -354,7 +390,11 @@
         const pkg = packagesAll.find((p) => p.id === packageId);
         openDialog('package-preview-template', pkg ? pkg.name : t('commercialization.preview.title', 'Package preview'), [
             { label: t('common.close', 'Close'), class: 'btn', onClick: () => Modal.close() }
-        ], 'large');
+        ], {
+            sheet: true,
+            status: false,
+            subtitle: t('commercialization.ui.preview_sheet_desc', 'How much of the included time the package used in a month, and the time billed beyond it.')
+        });
         const cached = previewsById[packageId];
         if (cached) renderPreview(cached);
         else loadPreview();
@@ -398,11 +438,16 @@
         const pkg = editId ? packagesAll.find((p) => p.id === editId) : null;
         if (editId && !pkg) return;
         const submitLabel = pkg ? t('commercialization.actions.save', 'Save') : t('commercialization.packages.create_submit', 'Create package');
+        const submit = withBusy(submitLabel, () => submitPackageModal(pkg ? pkg.id : null));
         openDialog('package-modal-template',
             pkg ? t('commercialization.packages.edit_title', 'Edit package') : t('commercialization.packages.create_title', 'New support package'), [
-                { label: t('commercialization.form.cancel', 'Cancel'), class: 'btn', onClick: () => Modal.close() },
-                { label: submitLabel, class: 'btn-primary', onClick: withBusy(submitLabel, () => submitPackageModal(pkg ? pkg.id : null)) }
-            ]);
+                { label: t('commercialization.form.cancel', 'Cancel'), class: 'btn', start: true, onClick: () => Modal.close() },
+                { label: submitLabel, class: 'btn-primary', id: 'package-save-btn', onClick: submit }
+            ], {
+                sheet: true,
+                subtitle: t('commercialization.ui.package_sheet_desc', 'Support time a device group gets each month, and the price for time beyond it.')
+            });
+        wireSheetForm('package-form', submit);
         const minutes = pkg ? (pkg.included_minutes || 0) : 600;
         const asHours = minutes % 60 === 0;
         document.getElementById('package-name').value = pkg ? (pkg.name || '') : '';
@@ -430,15 +475,14 @@
         if (rounding === 'custom') rounding = document.getElementById('package-rounding-custom')?.value || '15';
 
         if (!name) {
-            showError('package-modal-error', t('commercialization.ui.name_required', 'Enter a name for the package.'));
-            document.getElementById('package-name')?.focus();
+            showError(null, t('commercialization.ui.name_required', 'Enter a name for the package.'), 'package-name');
             return;
         }
         if (Number.isNaN(overageRate) || overageRate < 0) {
-            showError('package-modal-error', t('commercialization.ui.rate_required', 'Enter an overage rate of 0 or more.'));
-            document.getElementById('package-overage')?.focus();
+            showError(null, t('commercialization.ui.rate_required', 'Enter an overage rate of 0 or more.'), 'package-overage');
             return;
         }
+        Modal.setStatus(t('commercialization.ui.saving', 'Saving…'));
         const body = {
             name,
             description,
@@ -458,7 +502,7 @@
             Modal.close();
             await loadPackages();
         } catch (e) {
-            showError('package-modal-error', e.message);
+            showError(null, e.message || t('commercialization.ui.save_failed', 'Could not save. Try again.'));
         }
     }
 
@@ -573,7 +617,7 @@
     async function deleteContract(id) {
         const c = contractsAll.find((x) => x.id === id);
         const ok = await Modal.confirm({
-            title: t('commercialization.ui.remove_assignment_title', 'Remove {name} from {package}?', {
+            title: t('commercialization.ui.remove_assignment_title', 'Remove {package} from {name}?', {
                 name: c ? (c.target_name || c.target_key) : '', package: c ? (c.package_name || '') : ''
             }),
             message: t('commercialization.ui.remove_assignment_message', 'Sessions on these devices are no longer billed against this package.'),
@@ -628,17 +672,22 @@
             return;
         }
         const submitLabel = t('commercialization.assign.submit', 'Assign');
+        const submit = withBusy(submitLabel, () => submitAssignModal(null));
         openDialog('assign-modal-template', t('commercialization.assign.title', 'Assign package'), [
-            { label: t('commercialization.form.cancel', 'Cancel'), class: 'btn', onClick: () => Modal.close() },
-            { label: submitLabel, class: 'btn-primary', onClick: withBusy(submitLabel, () => submitAssignModal(null)) }
-        ]);
+            { label: t('commercialization.form.cancel', 'Cancel'), class: 'btn', start: true, onClick: () => Modal.close() },
+            { label: submitLabel, class: 'btn-primary', id: 'assign-save-btn', onClick: submit }
+        ], {
+            sheet: true,
+            subtitle: t('commercialization.ui.assign_sheet_desc', 'Sessions on the devices of this group count against the package from now on.')
+        });
+        wireSheetForm('assign-form', submit);
         const pkgSelect = document.getElementById('assign-package-select');
         pkgSelect.innerHTML = packages.map((p) =>
             `<option value="${escapeHtml(p.id)}">${escapeHtml(p.name)} (${escapeHtml(formatMinutes(p.included_minutes))})</option>`).join('');
         try {
             await loadTargetOptions('device_group');
         } catch (e) {
-            showError('assign-modal-error', e.message);
+            showError(null, t('commercialization.ui.error_targets', 'Could not load the device groups: {error}', { error: e.message || '' }));
         }
     }
 
@@ -646,10 +695,18 @@
         const contract = contractsAll.find((c) => c.id === contractId);
         if (!contract) return;
         const submitLabel = t('commercialization.actions.save', 'Save');
+        const submit = withBusy(submitLabel, () => submitAssignModal(contractId));
         openDialog('assign-modal-template', t('commercialization.contracts.edit_title', 'Edit assignment'), [
-            { label: t('commercialization.form.cancel', 'Cancel'), class: 'btn', onClick: () => Modal.close() },
-            { label: submitLabel, class: 'btn-primary', onClick: withBusy(submitLabel, () => submitAssignModal(contractId)) }
-        ]);
+            { label: t('commercialization.form.cancel', 'Cancel'), class: 'btn', start: true, onClick: () => Modal.close() },
+            { label: submitLabel, class: 'btn-primary', id: 'assign-save-btn', onClick: submit }
+        ], {
+            sheet: true,
+            subtitle: t('commercialization.ui.assignment_edit_desc', 'The device group and the package stay. Change the time left this month, the rates or the dates.')
+        });
+        wireSheetForm('assign-form', submit);
+        // Target and package are fixed: no hint about choosing them
+        const targetHint = document.getElementById('assign-target-hint');
+        if (targetHint) targetHint.hidden = true;
         const typeInput = document.getElementById('assign-target-type');
         typeInput.value = contract.target_type || 'device_group';
         const targetLabel = document.querySelector('label[for="assign-target-select"]');
@@ -665,9 +722,8 @@
         document.getElementById('assign-overage-rate').value = contract.overage_rate ?? '';
         document.getElementById('assign-valid-from').value = contract.valid_from ? String(contract.valid_from).slice(0, 10) : '';
         document.getElementById('assign-valid-until').value = contract.valid_until ? String(contract.valid_until).slice(0, 10) : '';
-        // Editing is about these fields, so they start open
-        const more = document.getElementById('assign-more');
-        if (more) more.open = true;
+        // Editing is about these fields: start in the first one
+        document.getElementById('assign-remaining')?.focus();
     }
 
     async function submitAssignModal(editingContractId) {
@@ -681,7 +737,7 @@
         const validUntil = document.getElementById('assign-valid-until')?.value;
 
         if (validFrom && validUntil && validUntil < validFrom) {
-            showError('assign-modal-error', t('commercialization.ui.dates_order', 'The end date is before the start date.'));
+            showError(null, t('commercialization.ui.dates_order', 'The end date is before the start date.'), 'assign-valid-until');
             return;
         }
 
@@ -692,19 +748,20 @@
             if (overageRaw !== '') patch.overage_rate = parseFloat(overageRaw);
             patch.valid_from = validFrom ? `${validFrom}T00:00:00Z` : null;
             patch.valid_until = validUntil ? `${validUntil}T23:59:59Z` : null;
+            Modal.setStatus(t('commercialization.ui.saving', 'Saving…'));
             try {
                 await api(`/api/panel/billing/contracts/${encodeURIComponent(editingContractId)}`, { method: 'PUT', body: patch });
                 Modal.close();
                 notifySuccess(t('commercialization.contracts.updated', 'Assignment updated'));
                 await loadContracts();
             } catch (e) {
-                showError('assign-modal-error', e.message);
+                showError(null, e.message || t('commercialization.ui.save_failed', 'Could not save. Try again.'));
             }
             return;
         }
 
         if (!targetType || !targetKey || !packageId) {
-            showError('assign-modal-error', t('commercialization.assign.missing_fields', 'Select a device group and a package.'));
+            showError(null, t('commercialization.assign.missing_fields', 'Select a device group and a package.'), targetKey ? 'assign-package-select' : 'assign-target-select');
             return;
         }
         const pkg = packagesAll.find((p) => p.id === packageId);
@@ -719,13 +776,14 @@
         if (overageRaw !== '') body.overage_rate = parseFloat(overageRaw);
         if (validFrom) body.valid_from = `${validFrom}T00:00:00Z`;
         if (validUntil) body.valid_until = `${validUntil}T23:59:59Z`;
+        Modal.setStatus(t('commercialization.ui.saving', 'Saving…'));
         try {
             await api('/api/panel/billing/contracts', { method: 'POST', body });
             Modal.close();
             notifySuccess(t('commercialization.assign.success', 'Package assigned'));
             await Promise.all([loadContracts(), loadPackages()]);
         } catch (e) {
-            showError('assign-modal-error', e.message);
+            showError(null, e.message || t('commercialization.ui.save_failed', 'Could not save. Try again.'));
         }
     }
 
@@ -964,6 +1022,7 @@
               + fact(t('commercialization.ui.report_date', 'Written'), r.created_at ? timeExact(r.created_at) : '')
             : '';
         const content = `
+            <div class="form-stack">
             <dl class="facts">
                 ${fact(t('commercialization.sessions.device', 'Device'), `${escapeHtml(s.device_name || s.device_id)} ${copyValue(s.device_id, t('commercialization.sessions.device', 'Device'))}`)}
                 ${fact(t('commercialization.sessions.operator', 'Operator'), (s.operator_name || s.operator_id) ? Utils.userHtml(s.operator_name || s.operator_id) : '')}
@@ -981,10 +1040,13 @@
                 ${running ? '' : fact(t('commercialization.ui.amount_included', 'Amount, included time'), escapeHtml(formatMoney(s.amount_included, s.currency)))}
                 ${running ? '' : fact(t('commercialization.ui.amount_overage', 'Amount, overage'), escapeHtml(formatMoney(s.amount_overage, s.currency)))}
             </dl>
-            <h3 class="dialog-subhead">${escapeHtml(t('commercialization.report.title', 'Work report'))}</h3>
-            ${r ? `<dl class="facts">${reportFacts}</dl>` : `<p class="text-muted">${escapeHtml(running
-                ? t('commercialization.ui.report_after_end_long', 'The operator writes the work report after the session ends.')
-                : t('commercialization.ui.no_report', 'No work report for this session yet.'))}</p>`}
+            <section class="form-section" aria-labelledby="session-report-title">
+                <h3 class="form-section-title" id="session-report-title">${escapeHtml(t('commercialization.report.title', 'Work report'))}</h3>
+                ${r ? `<dl class="facts">${reportFacts}</dl>` : `<p class="text-muted">${escapeHtml(running
+                    ? t('commercialization.ui.report_after_end_long', 'The operator writes the work report after the session ends.')
+                    : t('commercialization.ui.no_report', 'No work report for this session yet.'))}</p>`}
+            </section>
+            <div class="form-section">
             <details class="disclosure session-tech">
                 <summary><h3>${escapeHtml(t('commercialization.ui.technical_details', 'Technical details'))}</h3></summary>
                 <dl class="facts">
@@ -994,13 +1056,21 @@
                     ${fact(t('commercialization.ui.session_id', 'Session ID'), copyValue(s.id, t('commercialization.ui.session_id', 'Session ID')))}
                     ${fact(t('commercialization.ui.relay_id', 'Relay ID'), copyValue(s.relay_uuid, t('commercialization.ui.relay_id', 'Relay ID')))}
                 </dl>
-            </details>`;
+            </details>
+            </div>
+            </div>`;
+        // A details sheet: its command first, Close at the end
         const buttons = [];
         if (!r && s.status === 'pending_report' && canWriteReport) {
             buttons.push({ label: t('commercialization.ui.write_report', 'Write report'), class: 'btn', onClick: () => { Modal.close(); completePendingReport(id); } });
         }
         buttons.push({ label: t('common.close', 'Close'), class: 'btn', onClick: () => Modal.close() });
-        Modal.show({ title: t('commercialization.ui.session_details', 'Session details'), content, buttons, size: 'large' });
+        Modal.sheet({
+            title: t('commercialization.ui.session_details', 'Session details'),
+            subtitle: s.device_name || s.device_id || '',
+            content,
+            buttons
+        });
     }
 
     function completePendingReport(sessionId) {

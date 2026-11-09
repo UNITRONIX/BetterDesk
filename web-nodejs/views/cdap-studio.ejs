@@ -195,68 +195,38 @@
     </div>
 </main>
 
-<!-- Dialogs -->
+<!-- Dialogs: the bodies of Open flow, Browse templates and Save flow.
+     cdap-studio.js opens them with Modal.show (modal.js). -->
 
-<div class="modal-overlay" id="modal-open-flow" style="display:none">
-    <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="modal-open-flow-title">
-        <div class="modal-header">
-            <h2 id="modal-open-flow-title">${_('sdk_studio.open_flow')}</h2>
-            <button type="button" class="modal-close" data-close="modal-open-flow" aria-label="${_('common.close')}">
-                <span class="material-icons" aria-hidden="true">close</span>
-            </button>
-        </div>
-        <div class="modal-body">
-            <div class="studio-flow-list" id="flow-list-container">
-                <p class="state">${_('sdk_studio.loading')}</p>
-            </div>
-        </div>
+<template id="tpl-open-flow">
+    <div class="studio-flow-list" id="flow-list-container">
+        <p class="state">${_('sdk_studio.loading')}</p>
     </div>
-</div>
+</template>
 
-<div class="modal-overlay" id="modal-templates" style="display:none">
-    <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="modal-templates-title">
-        <div class="modal-header">
-            <h2 id="modal-templates-title">${_('sdk_studio.browse_templates')}</h2>
-            <button type="button" class="modal-close" data-close="modal-templates" aria-label="${_('common.close')}">
-                <span class="material-icons" aria-hidden="true">close</span>
-            </button>
-        </div>
-        <div class="modal-body">
-            <p class="studio-modal-note">${_('sdk_studio.templates_note')}</p>
-            <div class="studio-template-grid" id="template-grid-container">
-                <p class="state">${_('sdk_studio.loading')}</p>
-            </div>
-        </div>
+<template id="tpl-templates">
+    <p class="studio-modal-note">${_('sdk_studio.templates_note')}</p>
+    <div class="studio-template-grid" id="template-grid-container">
+        <p class="state">${_('sdk_studio.loading')}</p>
     </div>
-</div>
+</template>
 
-<div class="modal-overlay" id="modal-save-flow" style="display:none">
-    <form class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-save-flow-title" id="save-flow-form">
-        <div class="modal-header">
-            <h2 id="modal-save-flow-title">${_('sdk_studio.save_flow')}</h2>
-            <button type="button" class="modal-close" data-close="modal-save-flow" aria-label="${_('common.close')}">
-                <span class="material-icons" aria-hidden="true">close</span>
-            </button>
+<template id="tpl-save-flow">
+    <form id="save-flow-form" class="form-stack" novalidate>
+        <p class="notice" id="save-flow-note" hidden></p>
+        <div class="form-group">
+            <label class="form-label" for="save-flow-name">${_('sdk_studio.flow_name')}</label>
+            <input type="text" id="save-flow-name" class="form-input" maxlength="100" autocomplete="off" required>
         </div>
-        <div class="modal-body">
-            <p class="notice" id="save-flow-note" hidden></p>
-            <div class="form-group">
-                <label class="form-label" for="save-flow-name">${_('sdk_studio.flow_name')}</label>
-                <input type="text" id="save-flow-name" class="form-input" maxlength="100" autocomplete="off" required>
-            </div>
-            <div class="form-group">
-                <label class="form-label" for="save-flow-desc">${_('sdk_studio.flow_desc')}</label>
-                <textarea id="save-flow-desc" class="form-textarea" rows="3" maxlength="500"></textarea>
-                <p class="form-hint">${_('sdk_studio.flow_desc_hint')}</p>
-            </div>
-            <p class="form-status" id="save-flow-status" aria-live="polite"></p>
+        <div class="form-group">
+            <label class="form-label" for="save-flow-desc">${_('sdk_studio.flow_desc')}</label>
+            <textarea id="save-flow-desc" class="form-textarea" rows="3" maxlength="500" aria-describedby="save-flow-desc-hint"></textarea>
+            <p class="form-hint" id="save-flow-desc-hint">${_('sdk_studio.flow_desc_hint')}</p>
         </div>
-        <div class="modal-footer">
-            <button type="button" class="btn" data-close="modal-save-flow">${_('common.cancel')}</button>
-            <button type="submit" class="btn btn-primary" id="btn-save-confirm">${_('sdk_studio.save_flow')}</button>
-        </div>
+        <p class="form-status" id="save-flow-status" role="status" aria-live="polite"></p>
+        <button type="submit" hidden tabindex="-1" aria-hidden="true"></button>
     </form>
-</div>
+</template>
 
 `
 }) %>

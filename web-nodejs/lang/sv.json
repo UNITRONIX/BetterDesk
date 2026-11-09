@@ -5121,7 +5121,16 @@
         "unavailable_notice": "Den här servern erbjuder inte flottuppgifter ännu. Resurser, uppgifter, sparade arbetsflöden och efterlevnadsresultat kan inte läsas in, sparas eller köras här. Du kan ändå öppna formulären för att se vad som går att ställa in, och rita upp ett arbetsflöde och exportera det som fil.",
         "unavailable_table": "Inget att visa. Den här servern erbjuder det inte ännu.",
         "unavailable_short": "Den här servern erbjuder inte flottuppgifter ännu.",
-        "unavailable_dialog": "Den här servern erbjuder inte flottuppgifter ännu, så detta kan inte sparas. Fälten visar vad du kan ställa in när den gör det."
+        "unavailable_dialog": "Den här servern erbjuder inte flottuppgifter ännu, så detta kan inte sparas. Fälten visar vad du kan ställa in när den gör det.",
+        "res_name_hint": "Så visas den i listan över resurser.",
+        "scope_label": "Enheter som får den",
+        "res_sheet_desc": "En skrivare, enhet eller nätverksinställning som enheterna i {org} får.",
+        "task_name_hint": "Så visas den i listan över uppgifter.",
+        "section_where_when": "Enheter och schema",
+        "section_script": "Vad som körs",
+        "section_failures": "Nya försök och tidsgräns",
+        "task_sheet_desc": "Ett skript, en installation, en uppdatering eller en omstart som körs på de enheter du anger, direkt eller enligt schema.",
+        "run_output_desc": "Vad arbetsflödet {name} rapporterade när det startade."
     },
     "scaling": {
         "title": "Skalning och relähantering",
@@ -5253,7 +5262,16 @@
         "diagram_note": "Ritat med de adresser som den här servern ger klienter just nu.",
         "diagram_loading": "Läser serverns adresser…",
         "diagram_error": "Det gick inte att läsa serverns adresser.",
-        "rules_need_relay_note": "En regel skickar enheter till en av dina reläservrar. Du kan lägga till regler när listan ovan har en."
+        "rules_need_relay_note": "En regel skickar enheter till en av dina reläservrar. Du kan lägga till regler när listan ovan har en.",
+        "relay_sheet_desc": "En reläserver för vidare fjärrsessioner när två enheter inte kan ansluta direkt.",
+        "rule_section_match": "Vilka enheter",
+        "rule_section_relay": "Vart de ansluter",
+        "rule_sheet_desc": "Skickar matchande enheter till en reläserver. Reglerna kontrolleras efter prioritet, lägsta nummer först.",
+        "rule_match_hint_group": "Namnet på en enhetsgrupp.",
+        "rule_match_hint_tag": "En tagg, så som den är satt på enheterna.",
+        "rule_match_hint_country": "Landet som enheterna ansluter från.",
+        "rule_match_hint_device_id": "Ett enhets-ID.",
+        "saving": "Sparar…"
     },
     "cross_platform": {
         "title": "Cross-Platform-kompatibilitet",
@@ -6823,7 +6841,22 @@
             "usage_empty": "Inga pakettilldelningar ännu. Inkluderad tid visas här när ett paket har tilldelats en enhetsgrupp.",
             "smtp_missing_effect": "E-postutskick är inte konfigurerat ännu, så inga aviseringsmejl skickas.",
             "assign_more": "Fler alternativ",
-            "assign_more_hint": "Återstående minuter, egna priser och datumen då tilldelningen gäller. Tomma fält använder paketets värden, utan slutdatum."
+            "assign_more_hint": "Återstående minuter, egna priser och datumen då tilldelningen gäller. Tomma fält använder paketets värden, utan slutdatum.",
+            "package_name_hint": "Visas i paketlistan och när du tilldelar paketet.",
+            "package_description_hint": "Valfritt. Visas under namnet i listan.",
+            "section_billing": "Avrundning och överskridande",
+            "assign_target_hint": "Enhetsgruppen vars sessioner faktureras.",
+            "section_rates": "Tid och priser",
+            "section_rates_note": "Valfritt. Tomma fält använder paketets värden.",
+            "remaining_hint": "Minuter kvar av månadens inkluderade tid.",
+            "hourly_rate_hint": "Pris per timme för tid inom den inkluderade tiden.",
+            "validity_hint": "Valfritt. Utan datum gäller tilldelningen från och med nu, utan slutdatum.",
+            "package_sheet_desc": "Supporttid som en enhetsgrupp får varje månad, och priset för tid utöver den.",
+            "assign_sheet_desc": "Sessioner på gruppens enheter räknas mot paketet från och med nu.",
+            "assignment_edit_desc": "Enhetsgruppen och paketet ligger kvar. Ändra återstående tid denna månad, priserna eller datumen.",
+            "preview_sheet_desc": "Hur mycket av den inkluderade tiden paketet använde under en månad, och tiden som fakturerades utöver den.",
+            "save_failed": "Det gick inte att spara. Försök igen.",
+            "error_targets": "Det gick inte att läsa in enhetsgrupperna: {error}"
         }
     },
     "remote_dashboard": {

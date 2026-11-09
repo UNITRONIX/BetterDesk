@@ -5121,7 +5121,16 @@
         "unavailable_notice": "Ez a szerver még nem kínál flotta-feladatokat. Az erőforrások, feladatok, mentett munkafolyamatok és megfelelőségi eredmények itt nem tölthetők be, nem menthetők és nem futtathatók. Az űrlapokat így is megnyithatja, hogy lássa, mit lehet beállítani, és megtervezhet egy munkafolyamatot, majd fájlként exportálhatja.",
         "unavailable_table": "Nincs mit megjeleníteni. Ez a szerver ezt még nem kínálja.",
         "unavailable_short": "Ez a szerver még nem kínál flotta-feladatokat.",
-        "unavailable_dialog": "Ez a szerver még nem kínál flotta-feladatokat, ezért ez nem menthető. A mezők azt mutatják, mit állíthat be majd."
+        "unavailable_dialog": "Ez a szerver még nem kínál flotta-feladatokat, ezért ez nem menthető. A mezők azt mutatják, mit állíthat be majd.",
+        "res_name_hint": "Így jelenik meg az erőforrások listájában.",
+        "scope_label": "Eszközök, amelyek megkapják",
+        "res_sheet_desc": "Nyomtató, meghajtó vagy hálózati beállítás, amelyet a(z) {org} eszközei megkapnak.",
+        "task_name_hint": "Így jelenik meg a feladatok listájában.",
+        "section_where_when": "Eszközök és ütemezés",
+        "section_script": "Mi fut le",
+        "section_failures": "Újrapróbálkozások és időkorlát",
+        "task_sheet_desc": "Szkript, telepítés, frissítés vagy újraindítás, amely a megadott eszközökön fut, azonnal vagy ütemezve.",
+        "run_output_desc": "Amit a(z) {name} munkafolyamat az indításkor jelentett."
     },
     "scaling": {
         "title": "Skálázás",
@@ -5253,7 +5262,16 @@
         "diagram_note": "Azokkal a címekkel rajzolva, amelyeket ez a szerver most ad a klienseknek.",
         "diagram_loading": "A szerver címeinek beolvasása…",
         "diagram_error": "A szerver címei nem olvashatók be.",
-        "rules_need_relay_note": "A szabály az eszközöket az egyik továbbítószerverére irányítja. Szabályt akkor adhat hozzá, ha a fenti listában már van szerver."
+        "rules_need_relay_note": "A szabály az eszközöket az egyik továbbítószerverére irányítja. Szabályt akkor adhat hozzá, ha a fenti listában már van szerver.",
+        "relay_sheet_desc": "A relay-szerver továbbítja a távoli munkameneteket, ha két eszköz nem tud közvetlenül kapcsolódni.",
+        "rule_section_match": "Mely eszközök",
+        "rule_section_relay": "Hová kapcsolódnak",
+        "rule_sheet_desc": "Az egyező eszközöket egy relay-szerverre irányítja. A szabályokat prioritás szerint ellenőrzi, a legkisebb szám az első.",
+        "rule_match_hint_group": "Egy eszközcsoport neve.",
+        "rule_match_hint_tag": "Egy címke, ahogy az eszközökön szerepel.",
+        "rule_match_hint_country": "Az ország, ahonnan az eszközök kapcsolódnak.",
+        "rule_match_hint_device_id": "Egy eszközazonosító.",
+        "saving": "Mentés…"
     },
     "cross_platform": {
         "title": "Platformok közötti kompatibilitás",
@@ -6823,7 +6841,22 @@
             "usage_empty": "Még nincs csomag-hozzárendelés. A benne foglalt idő itt jelenik meg, amint egy eszközcsoport csomagot kap.",
             "smtp_missing_effect": "Az e-mail-küldés még nincs beállítva, ezért értesítő e-mailek nem mennek ki.",
             "assign_more": "További beállítások",
-            "assign_more_hint": "Hátralévő percek, saját díjak és a hozzárendelés érvényességi dátumai. Az üres mezők a csomag értékeit használják, záró dátum nélkül."
+            "assign_more_hint": "Hátralévő percek, saját díjak és a hozzárendelés érvényességi dátumai. Az üres mezők a csomag értékeit használják, záró dátum nélkül.",
+            "package_name_hint": "A csomaglistában és hozzárendeléskor jelenik meg.",
+            "package_description_hint": "Nem kötelező. A listában a név alatt jelenik meg.",
+            "section_billing": "Kerekítés és túllépés",
+            "assign_target_hint": "Az eszközcsoport, amelynek munkamenetei számlázásra kerülnek.",
+            "section_rates": "Idő és díjak",
+            "section_rates_note": "Nem kötelező. Az üres mezők a csomag értékeit használják.",
+            "remaining_hint": "Az e havi benne foglalt időből hátralévő percek.",
+            "hourly_rate_hint": "Óradíj a benne foglalt időn belüli időre.",
+            "validity_hint": "Nem kötelező. Dátumok nélkül a hozzárendelés mostantól érvényes, lejárat nélkül.",
+            "package_sheet_desc": "Havonta egy eszközcsoportnak járó támogatási idő, és az ezen felüli idő ára.",
+            "assign_sheet_desc": "A csoport eszközein futó munkamenetek mostantól a csomagba számítanak.",
+            "assignment_edit_desc": "Az eszközcsoport és a csomag marad. Módosítsa az e havi hátralévő időt, a díjakat vagy a dátumokat.",
+            "preview_sheet_desc": "Mennyit használt a csomag egy hónapban a benne foglalt időből, és az ezen felül számlázott idő.",
+            "save_failed": "Nem sikerült menteni. Próbálja újra.",
+            "error_targets": "Nem sikerült betölteni az eszközcsoportokat: {error}"
         }
     },
     "remote_dashboard": {

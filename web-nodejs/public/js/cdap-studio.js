@@ -1112,6 +1112,8 @@
 
     // The name and description dialog; note says why it opened (e.g. before a test run)
     function openSaveDialog(note) {
+        if (!note) afterSave = null;
+        showModal('save-flow');
         const nameInput = $('#save-flow-name');
         const descInput = $('#save-flow-desc');
         if (nameInput) nameInput.value = flowMeta.name || '';
@@ -1123,13 +1125,11 @@
             noteEl.textContent = note || '';
             noteEl.hidden = !note;
         }
-        if (!note) afterSave = null;
-
-        showModal('modal-save-flow');
+        if (nameInput) nameInput.focus();
     }
 
     async function doSaveFlow() {
-        const dialogOpen = document.getElementById('modal-save-flow').classList.contains('open');
+        const dialogOpen = isModalOpen('save-flow');
         if (dialogOpen) {
             const name = ($('#save-flow-name') || {}).value || _('sdk_studio.untitled');
             const desc = ($('#save-flow-desc') || {}).value || '';
@@ -1176,7 +1176,7 @@
             const msg = fmt('sdk_studio.log_save_failed', { error: err.message });
             logConsole(msg, 'error');
             const st = $('#save-flow-status');
-            if (st && document.getElementById('modal-save-flow').classList.contains('open')) {
+            if (st && isModalOpen('save-flow')) {
                 st.textContent = msg;
                 st.className = 'form-status is-error';
             } else {
@@ -1310,68 +1310,58 @@
     }
 
     // ─── Modals ─────────────────────────────────────────────────────
+    // Open flow, Browse templates and Save flow are centred dialogs from
+    // modal.js (Escape, focus trap and focus return come from there). Their
+    // bodies are the <template id="tpl-…"> blocks in cdap-studio.ejs.
 
-    let modalOpener = null;
+    const MODALS = {
+        'open-flow': () => ({ title: _('sdk_studio.open_flow'), size: 'large' }),
+        'templates': () => ({ title: _('sdk_studio.browse_templates'), size: 'large' }),
+        'save-flow': () => ({
+            title: _('sdk_studio.save_flow'),
+            buttons: [
+                { label: _('common.cancel'), class: 'btn-secondary', onClick: () => hideModal('save-flow') },
+                { label: _('sdk_studio.save_flow'), class: 'btn-primary', id: 'btn-save-confirm', onClick: () => doSaveFlow() }
+            ]
+        })
+    };
+    // Which of them is open: name -> Modal id
+    const openModals = {};
 
-    function showModal(id) {
-        const m = document.getElementById(id);
-        if (!m) return;
-        if (!document.querySelector('.modal-overlay.open')) modalOpener = document.activeElement;
-        m.style.display = 'flex';
-        m.classList.add('open');
-        const first = m.querySelector('input, textarea, .modal-body button, .modal-close');
-        if (first) first.focus();
+    function showModal(name) {
+        const tpl = document.getElementById('tpl-' + name);
+        if (!tpl || !MODALS[name]) return;
+        // Opening one replaces another (modal.js does the same)
+        Object.keys(openModals).forEach((k) => { delete openModals[k]; });
+        const id = Modal.show(Object.assign({ content: tpl.innerHTML }, MODALS[name](), {
+            onClose: () => { if (openModals[name] === id) delete openModals[name]; }
+        }));
+        openModals[name] = id;
+        if (name === 'save-flow') {
+            const form = document.getElementById('save-flow-form');
+            if (form) {
+                form.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    doSaveFlow();
+                });
+            }
+        }
     }
 
-    function hideModal(m) {
-        m.style.display = 'none';
-        m.classList.remove('open');
-        if (!document.querySelector('.modal-overlay.open') && modalOpener && document.contains(modalOpener)) {
-            modalOpener.focus();
-            modalOpener = null;
-        }
+    function isModalOpen(name) {
+        const el = openModals[name] && document.getElementById(openModals[name]);
+        return !!el && el.getAttribute('aria-hidden') !== 'true';
+    }
+
+    function hideModal(name) {
+        const id = openModals[name];
+        if (!id) return;
+        delete openModals[name];
+        Modal.close(id);
     }
 
     function closeAllModals() {
-        for (const m of $$('.modal-overlay')) {
-            if (m.classList.contains('open') || m.style.display !== 'none') hideModal(m);
-        }
-    }
-
-    function initModals() {
-        // Close buttons
-        for (const btn of $$('[data-close]')) {
-            btn.addEventListener('click', () => {
-                const m = document.getElementById(btn.dataset.close);
-                if (m) hideModal(m);
-            });
-        }
-
-        // Close on backdrop click
-        for (const m of $$('.modal-overlay')) {
-            m.addEventListener('click', (e) => {
-                if (e.target === m) hideModal(m);
-            });
-        }
-
-        // Escape closes the open dialog
-        document.addEventListener('keydown', (e) => {
-            if (e.key !== 'Escape') return;
-            const open = document.querySelector('.modal-overlay.open');
-            if (open) {
-                e.preventDefault();
-                hideModal(open);
-            }
-        });
-
-        // Save dialog submits with Enter
-        const form = document.getElementById('save-flow-form');
-        if (form) {
-            form.addEventListener('submit', (e) => {
-                e.preventDefault();
-                doSaveFlow();
-            });
-        }
+        Object.keys(openModals).forEach(hideModal);
     }
 
     // ─── Open Flow Modal ────────────────────────────────────────────
@@ -1397,10 +1387,9 @@
     }
 
     async function showOpenFlowModal() {
+        showModal('open-flow');
         const container = $('#flow-list-container');
         if (!container) return;
-        container.innerHTML = `<p class="state">${_('sdk_studio.loading')}</p>`;
-        showModal('modal-open-flow');
 
         const flows = await listFlows();
         if (flows === null) {
@@ -1444,7 +1433,7 @@
                 let ok;
                 if (window.Modal && typeof window.Modal.confirm === 'function') {
                     // Modal.confirm replaces the open dialog; reopen the list afterwards
-                    hideModal(document.getElementById('modal-open-flow'));
+                    hideModal('open-flow');
                     ok = await window.Modal.confirm({
                         title: _('sdk_studio.delete_title'),
                         message: fmt('sdk_studio.confirm_delete', { name }),
@@ -1490,10 +1479,9 @@
     // ─── Templates Modal ────────────────────────────────────────────
 
     async function showTemplatesModal() {
+        showModal('templates');
         const container = $('#template-grid-container');
         if (!container) return;
-        container.innerHTML = `<p class="state">${_('sdk_studio.loading')}</p>`;
-        showModal('modal-templates');
 
         try {
             const resp = await fetch('/api/cdap-studio/templates', { headers: { ...getCsrf() } });
@@ -1645,7 +1633,6 @@
         initCanvasDrop();
         initCanvasInteraction();
         initToolbar();
-        initModals();
         renderAll();
         applyTransform();
 

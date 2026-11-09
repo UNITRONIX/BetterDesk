@@ -5121,7 +5121,16 @@
         "unavailable_notice": "Máy chủ này chưa hỗ trợ tác vụ cho nhóm thiết bị. Tại đây không thể tải, lưu hay chạy tài nguyên, tác vụ, quy trình đã lưu và kết quả tuân thủ. Bạn vẫn có thể mở các biểu mẫu để xem những gì có thể đặt, và dựng một quy trình rồi xuất ra tệp.",
         "unavailable_table": "Không có gì để hiển thị. Máy chủ này chưa hỗ trợ.",
         "unavailable_short": "Máy chủ này chưa hỗ trợ tác vụ cho nhóm thiết bị.",
-        "unavailable_dialog": "Máy chủ này chưa hỗ trợ tác vụ cho nhóm thiết bị nên không thể lưu. Các trường cho thấy những gì bạn có thể đặt khi được hỗ trợ."
+        "unavailable_dialog": "Máy chủ này chưa hỗ trợ tác vụ cho nhóm thiết bị nên không thể lưu. Các trường cho thấy những gì bạn có thể đặt khi được hỗ trợ.",
+        "res_name_hint": "Cách tài nguyên hiển thị trong danh sách.",
+        "scope_label": "Thiết bị nhận tài nguyên",
+        "res_sheet_desc": "Máy in, ổ đĩa hoặc cài đặt mạng mà các thiết bị của {org} nhận được.",
+        "task_name_hint": "Cách tác vụ hiển thị trong danh sách.",
+        "section_where_when": "Thiết bị và lịch chạy",
+        "section_script": "Nội dung chạy",
+        "section_failures": "Thử lại và giới hạn thời gian",
+        "task_sheet_desc": "Một tập lệnh, cài đặt, cập nhật hoặc khởi động lại chạy trên các thiết bị bạn chỉ định, ngay lập tức hoặc theo lịch.",
+        "run_output_desc": "Những gì quy trình {name} báo cáo khi bắt đầu."
     },
     "scaling": {
         "title": "Quản lý mở rộng quy mô và chuyển tiếp",
@@ -5253,7 +5262,16 @@
         "diagram_note": "Vẽ bằng các địa chỉ máy chủ này đang cấp cho máy khách.",
         "diagram_loading": "Đang đọc địa chỉ của máy chủ này…",
         "diagram_error": "Không đọc được địa chỉ của máy chủ này.",
-        "rules_need_relay_note": "Quy tắc chuyển thiết bị tới một trong các máy chủ relay của bạn. Bạn có thể thêm quy tắc khi danh sách ở trên có máy chủ."
+        "rules_need_relay_note": "Quy tắc chuyển thiết bị tới một trong các máy chủ relay của bạn. Bạn có thể thêm quy tắc khi danh sách ở trên có máy chủ.",
+        "relay_sheet_desc": "Máy chủ chuyển tiếp truyền các phiên từ xa khi hai thiết bị không kết nối trực tiếp được.",
+        "rule_section_match": "Thiết bị nào",
+        "rule_section_relay": "Kết nối tới đâu",
+        "rule_sheet_desc": "Gửi các thiết bị khớp tới một máy chủ chuyển tiếp. Quy tắc được kiểm tra theo mức ưu tiên, số nhỏ nhất trước.",
+        "rule_match_hint_group": "Tên của một nhóm thiết bị.",
+        "rule_match_hint_tag": "Một thẻ, đúng như được đặt trên thiết bị.",
+        "rule_match_hint_country": "Quốc gia mà thiết bị kết nối từ đó.",
+        "rule_match_hint_device_id": "Một ID thiết bị.",
+        "saving": "Đang lưu…"
     },
     "cross_platform": {
         "title": "Khả năng tương thích đa nền tảng",
@@ -6823,7 +6841,22 @@
             "usage_empty": "Chưa có gói nào được gán. Thời gian bao gồm sẽ hiển thị ở đây khi một gói được gán cho nhóm thiết bị.",
             "smtp_missing_effect": "Chưa thiết lập gửi email, nên không có email thông báo nào được gửi đi.",
             "assign_more": "Tùy chọn khác",
-            "assign_more_hint": "Số phút còn lại, mức giá riêng và ngày hiệu lực của việc gán. Trường để trống dùng giá trị của gói, không có ngày kết thúc."
+            "assign_more_hint": "Số phút còn lại, mức giá riêng và ngày hiệu lực của việc gán. Trường để trống dùng giá trị của gói, không có ngày kết thúc.",
+            "package_name_hint": "Hiển thị trong danh sách gói và khi bạn gán gói.",
+            "package_description_hint": "Không bắt buộc. Hiển thị dưới tên trong danh sách.",
+            "section_billing": "Làm tròn và vượt mức",
+            "assign_target_hint": "Nhóm thiết bị có các phiên được tính phí.",
+            "section_rates": "Thời gian và mức giá",
+            "section_rates_note": "Không bắt buộc. Trường để trống dùng giá trị của gói.",
+            "remaining_hint": "Số phút còn lại của thời gian bao gồm trong tháng này.",
+            "hourly_rate_hint": "Giá mỗi giờ cho thời gian nằm trong thời gian bao gồm.",
+            "validity_hint": "Không bắt buộc. Không có ngày thì việc gán áp dụng từ bây giờ, không có ngày kết thúc.",
+            "package_sheet_desc": "Thời gian hỗ trợ một nhóm thiết bị nhận mỗi tháng, và giá cho thời gian vượt quá.",
+            "assign_sheet_desc": "Các phiên trên thiết bị của nhóm này được tính vào gói từ bây giờ.",
+            "assignment_edit_desc": "Nhóm thiết bị và gói giữ nguyên. Thay đổi thời gian còn lại trong tháng, mức giá hoặc ngày.",
+            "preview_sheet_desc": "Gói đã dùng bao nhiêu thời gian bao gồm trong một tháng, và thời gian bị tính phí vượt mức.",
+            "save_failed": "Không lưu được. Hãy thử lại.",
+            "error_targets": "Không tải được các nhóm thiết bị: {error}"
         }
     },
     "remote_dashboard": {

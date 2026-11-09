@@ -862,3 +862,13 @@ body.studio-body {
         display: none;
     }
 }
+
+/* Save flow dialog: the result line takes no room until it says something
+   (it stays in the accessibility tree so the message is announced) */
+#save-flow-status:empty {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+}

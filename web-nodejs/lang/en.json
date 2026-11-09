@@ -5317,7 +5317,16 @@
         "unavailable_notice": "This server does not offer fleet tasks yet. Resources, tasks, saved workflows and compliance results cannot be loaded, saved or run here. You can still open the forms to see what can be set, and lay out a workflow and export it as a file.",
         "unavailable_table": "Nothing to show. This server does not offer this yet.",
         "unavailable_short": "This server does not offer fleet tasks yet.",
-        "unavailable_dialog": "This server does not offer fleet tasks yet, so this cannot be saved. The fields show what you can set once it does."
+        "unavailable_dialog": "This server does not offer fleet tasks yet, so this cannot be saved. The fields show what you can set once it does.",
+        "res_name_hint": "How it appears in the list of resources.",
+        "scope_label": "Devices that receive it",
+        "res_sheet_desc": "A printer, drive or network setting the devices of {org} receive.",
+        "task_name_hint": "How it appears in the list of tasks.",
+        "section_where_when": "Devices and schedule",
+        "section_script": "What runs",
+        "section_failures": "Retries and time limit",
+        "task_sheet_desc": "A script, install, update or restart that runs on the devices you name, right away or on a schedule.",
+        "run_output_desc": "What the workflow {name} reported when it started."
     },
     "scaling": {
         "title": "Scaling & Relay Management",
@@ -5449,7 +5458,16 @@
         "diagram_note": "Drawn with the addresses this server gives to clients right now.",
         "diagram_loading": "Reading this server's addresses…",
         "diagram_error": "Could not read this server's addresses.",
-        "rules_need_relay_note": "A rule points devices to one of your relay servers. You can add rules once the list above has one."
+        "rules_need_relay_note": "A rule points devices to one of your relay servers. You can add rules once the list above has one.",
+        "relay_sheet_desc": "A relay server carries remote sessions when two devices can't connect directly.",
+        "rule_section_match": "Which devices",
+        "rule_section_relay": "Where they connect",
+        "rule_sheet_desc": "Sends the devices that match to one relay server. Rules are checked by priority, lowest number first.",
+        "rule_match_hint_group": "The name of a device group.",
+        "rule_match_hint_tag": "One tag, as it is set on the devices.",
+        "rule_match_hint_country": "The country the devices connect from.",
+        "rule_match_hint_device_id": "One device ID.",
+        "saving": "Saving…"
     },
     "cross_platform": {
         "title": "Cross-Platform Compatibility",
@@ -6890,7 +6908,22 @@
             "usage_empty": "No package assignments yet. Included time shows here once a package is assigned to a device group.",
             "smtp_missing_effect": "Email sending is not set up yet, so no notification emails go out.",
             "assign_more": "More options",
-            "assign_more_hint": "Remaining minutes, own rates and the dates the assignment is valid. Empty fields use the package's values, with no end date."
+            "assign_more_hint": "Remaining minutes, own rates and the dates the assignment is valid. Empty fields use the package's values, with no end date.",
+            "package_name_hint": "Shown in the package list and when you assign it.",
+            "package_description_hint": "Optional. Shown under the name in the list.",
+            "section_billing": "Rounding and overage",
+            "assign_target_hint": "The device group whose sessions are billed.",
+            "section_rates": "Time and rates",
+            "section_rates_note": "Optional. Empty fields use the package's values.",
+            "remaining_hint": "Minutes left of this month's included time.",
+            "hourly_rate_hint": "Price per hour for time within the included time.",
+            "validity_hint": "Optional. Without dates the assignment applies from now on, with no end date.",
+            "package_sheet_desc": "Support time a device group gets each month, and the price for time beyond it.",
+            "assign_sheet_desc": "Sessions on the devices of this group count against the package from now on.",
+            "assignment_edit_desc": "The device group and the package stay. Change the time left this month, the rates or the dates.",
+            "preview_sheet_desc": "How much of the included time the package used in a month, and the time billed beyond it.",
+            "save_failed": "Could not save. Try again.",
+            "error_targets": "Could not load the device groups: {error}"
         }
     },
     "rdclient_login": {

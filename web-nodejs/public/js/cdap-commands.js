@@ -76,6 +76,16 @@
         const __ = window.BetterDesk?.translations || {};
         const title = __?.cdap?.confirm_command || 'Confirm Command';
 
+        // The console's own dialog (modal.js): Escape, focus trap and focus return
+        if (window.Modal && typeof window.Modal.confirm === 'function') {
+            return window.Modal.confirm({
+                title,
+                message: confirmMsg || `${action} → ${widgetId}?`,
+                confirmLabel: __?.common?.confirm || 'Confirm',
+                cancelLabel: __?.common?.cancel || 'Cancel'
+            }).then((ok) => (ok ? send(deviceId, widgetId, action, value) : null));
+        }
+
         if (!window.BetterDeskModal) {
             if (confirm(confirmMsg || title)) {
                 return send(deviceId, widgetId, action, value);

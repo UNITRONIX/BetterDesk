@@ -158,37 +158,84 @@
         }
     }
 
-    function field(id, labelKey, input, hintKey) {
+    // A string added with the sheets: English until the language files are reloaded
+    function tx(key, fallback, vars) {
+        const v = _(key, vars);
+        if (v && v !== key) return v;
+        return String(fallback).replace(/\{(\w+)\}/g, (m, p) => (vars && vars[p] !== undefined ? vars[p] : m));
+    }
+
+    // One field: label above, hint under it (linked with aria-describedby). hint is a key or { text }
+    function field(id, labelKey, input, hint) {
+        const hintText = hint ? (typeof hint === 'object' ? hint.text : _(hint)) : '';
+        const linked = hintText ? input.replace(/^<(input|select|textarea)\b/, `<$1 aria-describedby="${id}-hint"`) : input;
         return `<div class="form-group">
             <label class="form-label" for="${id}">${escHtml(_(labelKey))}</label>
-            ${input}
-            ${hintKey ? `<p class="form-hint">${escHtml(_(hintKey))}</p>` : ''}
+            ${linked}
+            ${hintText ? `<p class="form-hint" id="${id}-hint">${escHtml(hintText)}</p>` : ''}
         </div>`;
     }
 
+    function section(id, title, body) {
+        return `<section class="form-section" aria-labelledby="${id}">
+            <h3 class="form-section-title" id="${id}">${escHtml(title)}</h3>
+            ${body}
+        </section>`;
+    }
+
+    // A refused or failed save: in the sheet's status line, next to the buttons
+    function sheetError(message, fieldId) {
+        Modal.setStatus(message, 'error');
+        const el = fieldId && document.getElementById(fieldId);
+        if (el) {
+            el.setAttribute('aria-invalid', 'true');
+            el.focus();
+        }
+    }
+
+    // Enter in a field saves; a change clears the last result
+    function wireSheetForm(formId, save) {
+        const form = document.getElementById(formId);
+        if (!form) return;
+        form.addEventListener('submit', (e) => { e.preventDefault(); save(); });
+        form.addEventListener('input', (e) => {
+            if (e.target && e.target.removeAttribute) e.target.removeAttribute('aria-invalid');
+            Modal.setStatus('');
+        });
+    }
+
+    // Saving state of the sheet's primary button: a second click or Enter does nothing meanwhile
+    function sheetBusy(btnId, busy) {
+        const btn = document.getElementById(btnId);
+        if (btn) btn.disabled = busy;
+    }
+
     function relayForm(r) {
-        return `<form id="relay-form" class="scaling-dialog-form" novalidate>
+        return `<form id="relay-form" class="scaling-dialog-form form-stack" novalidate>
             <input type="hidden" id="relay-edit-id" value="${escAttr(r ? r.id : '')}">
-            ${field('relay-name', 'scaling.col_name', `<input type="text" id="relay-name" class="form-input" maxlength="80" value="${escAttr(r ? r.name || '' : '')}" autocomplete="off">`, 'scaling.relay_name_hint')}
-            ${field('relay-address', 'scaling.col_address', `<input type="text" id="relay-address" class="form-input mono" value="${escAttr(r ? r.address || '' : '')}" autocomplete="off" spellcheck="false" placeholder="relay.example.com:21117">`, 'scaling.relay_address_hint')}
-            ${field('relay-location', 'scaling.col_location', `<input type="text" id="relay-location" class="form-input" maxlength="80" value="${escAttr(r ? r.location || '' : '')}" autocomplete="off">`, 'scaling.relay_location_hint')}
-            ${field('relay-max-sessions', 'scaling.relay_max_sessions', `<input type="number" id="relay-max-sessions" class="form-input is-short" min="1" value="${escAttr(r ? r.max_sessions || 50 : 50)}">`)}
-            ${field('relay-max-bw', 'scaling.relay_max_bandwidth', `<input type="number" id="relay-max-bw" class="form-input is-short" min="1" value="${escAttr(r ? r.max_bandwidth_mbps || 100 : 100)}">`, 'scaling.relay_limits_hint')}
-            <p class="form-status" id="relay-form-status" aria-live="polite"></p>
-            <button type="submit" hidden></button>
+            ${field('relay-name', 'scaling.col_name', `<input type="text" id="relay-name" class="form-input is-host" maxlength="80" required value="${escAttr(r ? r.name || '' : '')}" autocomplete="off">`, 'scaling.relay_name_hint')}
+            ${field('relay-address', 'scaling.col_address', `<input type="text" id="relay-address" class="form-input mono is-host" required value="${escAttr(r ? r.address || '' : '')}" autocomplete="off" spellcheck="false">`, 'scaling.relay_address_hint')}
+            ${field('relay-location', 'scaling.col_location', `<input type="text" id="relay-location" class="form-input is-host" maxlength="80" value="${escAttr(r ? r.location || '' : '')}" autocomplete="off">`, 'scaling.relay_location_hint')}
+            ${section('relay-section-limits', _('scaling.col_limits'),
+                `<p class="form-hint" id="relay-limits-note">${escHtml(_('scaling.relay_limits_hint'))}</p>`
+                + field('relay-max-sessions', 'scaling.relay_max_sessions', `<input type="number" id="relay-max-sessions" class="form-input is-short" min="1" aria-describedby="relay-limits-note" value="${escAttr(r ? r.max_sessions || 50 : 50)}">`)
+                + field('relay-max-bw', 'scaling.relay_max_bandwidth', `<input type="number" id="relay-max-bw" class="form-input is-short" min="1" aria-describedby="relay-limits-note" value="${escAttr(r ? r.max_bandwidth_mbps || 100 : 100)}">`))}
+            <button type="submit" hidden tabindex="-1" aria-hidden="true"></button>
         </form>`;
     }
 
     function openRelayDialog(r) {
-        Modal.show({
+        Modal.sheet({
             title: r ? _('scaling.relay_edit') : _('scaling.relay_add'),
+            subtitle: tx('scaling.relay_sheet_desc', 'A relay server carries remote sessions when two devices can\'t connect directly.'),
             content: relayForm(r),
+            status: true,
             buttons: [
-                { label: _('scaling.cancel'), class: 'btn-secondary', onClick: () => Modal.close() },
-                { label: r ? _('scaling.save') : _('scaling.relay_add'), class: 'btn-primary', onClick: saveRelay }
+                { label: _('scaling.cancel'), class: 'btn-secondary', start: true, onClick: () => Modal.close() },
+                { label: r ? _('scaling.save') : _('scaling.relay_add'), class: 'btn-primary', id: 'relay-save-btn', onClick: saveRelay }
             ]
         });
-        document.getElementById('relay-form')?.addEventListener('submit', (e) => { e.preventDefault(); saveRelay(); });
+        wireSheetForm('relay-form', saveRelay);
     }
 
     function showAddRelay() { openRelayDialog(null); }
@@ -198,14 +245,10 @@
         if (r) openRelayDialog(r);
     }
 
-    function formError(id, message) {
-        const el = document.getElementById(id);
-        if (el) {
-            el.textContent = message;
-            el.classList.add('is-error');
-        } else {
-            notify('error', message);
-        }
+    // In the open sheet's status line (fieldId: the field to mark), else a toast
+    function formError(fieldId, message) {
+        if (document.querySelector('#modal-container [data-modal-status]')) sheetError(message, fieldId);
+        else notify('error', message);
     }
 
     async function saveRelay() {
@@ -218,11 +261,14 @@
             max_bandwidth_mbps: parseInt(document.getElementById('relay-max-bw').value) || 100,
         };
         if (!body.name || !body.address) {
-            formError('relay-form-status', _('scaling.relay_name_address_required'));
+            formError(body.name ? 'relay-address' : 'relay-name', _('scaling.relay_name_address_required'));
             return;
         }
+        if (document.getElementById('relay-save-btn')?.disabled) return;
         const method = id ? 'PUT' : 'POST';
         const url = id ? `/api/panel/scaling/relays/${encodeURIComponent(id)}` : '/api/panel/scaling/relays';
+        Modal.setStatus(tx('scaling.saving', 'Saving…'));
+        sheetBusy('relay-save-btn', true);
         try {
             const resp = await fetch(url, {
                 method,
@@ -232,12 +278,14 @@
             });
             if (!resp.ok) {
                 const err = await resp.json().catch(() => ({}));
-                formError('relay-form-status', _('scaling.relay_save_failed_reason', { error: err.error || ('HTTP ' + resp.status) }));
+                formError(null, _('scaling.relay_save_failed_reason', { error: err.error || ('HTTP ' + resp.status) }));
                 return;
             }
         } catch (err) {
-            formError('relay-form-status', _('scaling.relay_save_failed_reason', { error: (err && err.message) || '' }));
+            formError(null, _('scaling.relay_save_failed_reason', { error: (err && err.message) || '' }));
             return;
+        } finally {
+            sheetBusy('relay-save-btn', false);
         }
         Modal.close();
         notify('success', _('scaling.relay_saved_named', { name: body.name }));
@@ -336,20 +384,34 @@
         const relayOptions = _relays.map(x =>
             `<option value="${escAttr(x.id)}" ${r && x.id === r.target_relay ? 'selected' : ''}>${escHtml(x.name || x.id)}</option>`
         ).join('');
-        return `<form id="rule-form" class="scaling-dialog-form" novalidate>
+        return `<form id="rule-form" class="scaling-dialog-form form-stack" novalidate>
             <input type="hidden" id="rule-edit-id" value="${escAttr(r ? r.id : '')}">
-            ${field('rule-name', 'scaling.col_rule_name', `<input type="text" id="rule-name" class="form-input" maxlength="80" value="${escAttr(r ? r.name || '' : '')}" autocomplete="off">`)}
-            ${field('rule-match-type', 'scaling.rule_match_type', `<select id="rule-match-type" class="form-select">${types.map(tp => `<option value="${tp}" ${tp === cur ? 'selected' : ''}>${escHtml(matchTypeLabel(tp))}</option>`).join('')}</select>`)}
-            ${field('rule-match-value', 'scaling.rule_match_value', `<input type="text" id="rule-match-value" class="form-input mono" maxlength="200" value="${escAttr(r ? r.match_value || '' : '')}" autocomplete="off" spellcheck="false">`, 'scaling.rule_match_value_hint')}
-            ${field('rule-target-relay', 'scaling.col_target_relay', `<select id="rule-target-relay" class="form-select">${relayOptions}</select>`)}
-            ${field('rule-fallback', 'scaling.col_fallback', `<select id="rule-fallback" class="form-select">
+            ${field('rule-name', 'scaling.col_rule_name', `<input type="text" id="rule-name" class="form-input is-host" maxlength="80" required value="${escAttr(r ? r.name || '' : '')}" autocomplete="off">`)}
+            ${field('rule-priority', 'scaling.col_priority', `<input type="number" id="rule-priority" class="form-input is-short" min="0" max="1000" value="${escAttr(r ? r.priority ?? 10 : 10)}">`, 'scaling.rule_priority_hint')}
+            ${section('rule-section-match', tx('scaling.rule_section_match', 'Which devices'),
+                field('rule-match-type', 'scaling.rule_match_type', `<select id="rule-match-type" class="form-select is-medium" aria-controls="rule-match-value-hint">${types.map(tp => `<option value="${tp}" ${tp === cur ? 'selected' : ''}>${escHtml(matchTypeLabel(tp))}</option>`).join('')}</select>`)
+                + field('rule-match-value', 'scaling.rule_match_value', `<input type="text" id="rule-match-value" class="form-input mono is-host" maxlength="200" required value="${escAttr(r ? r.match_value || '' : '')}" autocomplete="off" spellcheck="false">`, { text: matchValueHint(cur) }))}
+            ${section('rule-section-relay', tx('scaling.rule_section_relay', 'Where they connect'),
+                field('rule-target-relay', 'scaling.col_target_relay', `<select id="rule-target-relay" class="form-select is-host">${relayOptions}</select>`)
+                + field('rule-fallback', 'scaling.col_fallback', `<select id="rule-fallback" class="form-select is-host">
                 <option value="master" ${fallback === 'master' ? 'selected' : ''}>${escHtml(_('scaling.fallback_master'))}</option>
                 <option value="nearest" ${fallback === 'nearest' ? 'selected' : ''}>${escHtml(_('scaling.fallback_nearest'))}</option>
-            </select>`, 'scaling.rule_fallback_hint')}
-            ${field('rule-priority', 'scaling.col_priority', `<input type="number" id="rule-priority" class="form-input is-short" min="0" max="1000" value="${escAttr(r ? r.priority ?? 10 : 10)}">`, 'scaling.rule_priority_hint')}
-            <p class="form-status" id="rule-form-status" aria-live="polite"></p>
-            <button type="submit" hidden></button>
+            </select>`, 'scaling.rule_fallback_hint'))}
+            <button type="submit" hidden tabindex="-1" aria-hidden="true"></button>
         </form>`;
+    }
+
+    // What to type for each kind of match
+    function matchValueHint(type) {
+        const hints = {
+            subnet: ['scaling.rule_match_value_hint', 'For a subnet, for example 192.168.1.0/24.'],
+            group: ['scaling.rule_match_hint_group', 'The name of a device group.'],
+            tag: ['scaling.rule_match_hint_tag', 'One tag, as it is set on the devices.'],
+            country: ['scaling.rule_match_hint_country', 'The country the devices connect from.'],
+            device_id: ['scaling.rule_match_hint_device_id', 'One device ID.']
+        };
+        const [key, fallback] = hints[type] || hints.subnet;
+        return tx(key, fallback);
     }
 
     function openRuleDialog(r) {
@@ -357,15 +419,22 @@
             notify('warning', _('scaling.rule_needs_relay'));
             return;
         }
-        Modal.show({
+        Modal.sheet({
             title: r ? _('scaling.rule_edit') : _('scaling.rule_add'),
+            subtitle: tx('scaling.rule_sheet_desc', 'Sends the devices that match to one relay server. Rules are checked by priority, lowest number first.'),
             content: ruleForm(r),
+            status: true,
             buttons: [
-                { label: _('scaling.cancel'), class: 'btn-secondary', onClick: () => Modal.close() },
-                { label: r ? _('scaling.save') : _('scaling.rule_add'), class: 'btn-primary', onClick: saveRule }
+                { label: _('scaling.cancel'), class: 'btn-secondary', start: true, onClick: () => Modal.close() },
+                { label: r ? _('scaling.save') : _('scaling.rule_add'), class: 'btn-primary', id: 'rule-save-btn', onClick: saveRule }
             ]
         });
-        document.getElementById('rule-form')?.addEventListener('submit', (e) => { e.preventDefault(); saveRule(); });
+        wireSheetForm('rule-form', saveRule);
+        // The hint under the value follows the kind of match
+        document.getElementById('rule-match-type')?.addEventListener('change', (e) => {
+            const hint = document.getElementById('rule-match-value-hint');
+            if (hint) hint.textContent = matchValueHint(e.target.value);
+        });
     }
 
     function showAddRule() { openRuleDialog(null); }
@@ -387,11 +456,14 @@
             priority: Number.isFinite(prio) ? prio : 10,
         };
         if (!body.name || !body.match_value) {
-            formError('rule-form-status', _('scaling.rule_name_value_required'));
+            formError(body.name ? 'rule-match-value' : 'rule-name', _('scaling.rule_name_value_required'));
             return;
         }
+        if (document.getElementById('rule-save-btn')?.disabled) return;
         const method = id ? 'PUT' : 'POST';
         const url = id ? `/api/panel/scaling/rules/${encodeURIComponent(id)}` : '/api/panel/scaling/rules';
+        Modal.setStatus(tx('scaling.saving', 'Saving…'));
+        sheetBusy('rule-save-btn', true);
         try {
             const resp = await fetch(url, {
                 method,
@@ -401,12 +473,14 @@
             });
             if (!resp.ok) {
                 const err = await resp.json().catch(() => ({}));
-                formError('rule-form-status', _('scaling.rule_save_failed_reason', { error: err.error || ('HTTP ' + resp.status) }));
+                formError(null, _('scaling.rule_save_failed_reason', { error: err.error || ('HTTP ' + resp.status) }));
                 return;
             }
         } catch (err) {
-            formError('rule-form-status', _('scaling.rule_save_failed_reason', { error: (err && err.message) || '' }));
+            formError(null, _('scaling.rule_save_failed_reason', { error: (err && err.message) || '' }));
             return;
+        } finally {
+            sheetBusy('rule-save-btn', false);
         }
         Modal.close();
         notify('success', _('scaling.rule_saved_named', { name: body.name }));

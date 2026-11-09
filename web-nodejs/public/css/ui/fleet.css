@@ -299,7 +299,14 @@ td.state-cell .state-text {
     white-space: normal;
 }
 
-/* "Can't save" note at the top of the resource and task dialogs */
+/* "Can't save" note at the top of the resource and task sheets; the form's gap spaces it */
 .fleet-dialog-note {
-    margin-bottom: var(--space-4);
+    margin: 0;
+}
+
+/* Output of a workflow run, in its sheet */
+.fleet-output-log {
+    margin: 0;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
 }

@@ -195,104 +195,133 @@
 </div>
 
 <template id="package-modal-template">
-    <div class="form-group">
-        <label class="form-label" for="package-name">${_('commercialization.packages.name')}</label>
-        <input type="text" id="package-name" class="form-input" maxlength="128" required autocomplete="off">
-    </div>
-    <div class="form-group">
-        <label class="form-label" for="package-description">${_('commercialization.packages.description')}</label>
-        <textarea id="package-description" class="form-textarea" rows="3" maxlength="512"></textarea>
-    </div>
-    <div class="form-group">
-        <label class="form-label" for="package-amount">${_('commercialization.packages.included_amount')}</label>
-        <div class="field-pair">
-            <input type="number" id="package-amount" class="form-input is-short" value="10" min="0" step="1" required>
-            <select id="package-unit" class="form-select" aria-label="${_('commercialization.packages.unit')}">
-                <option value="hours">${_('commercialization.packages.unit_hours')}</option>
-                <option value="minutes">${_('commercialization.packages.unit_minutes')}</option>
-            </select>
+    <form id="package-form" class="form-stack" novalidate>
+        <div class="form-group">
+            <label class="form-label" for="package-name">${_('commercialization.packages.name')}</label>
+            <input type="text" id="package-name" class="form-input" maxlength="128" required autocomplete="off" aria-describedby="package-name-hint">
+            <p class="form-hint" id="package-name-hint">${_('commercialization.ui.package_name_hint')}</p>
         </div>
-        <p class="form-hint">${_('commercialization.ui.included_hint')}</p>
-    </div>
-    <input type="hidden" id="package-minutes" value="600">
-    <div class="form-group">
-        <label class="form-label" for="package-rounding">${_('commercialization.packages.rounding')}</label>
-        <select id="package-rounding" class="form-select">
-            <option value="5">5</option>
-            <option value="10" selected>10</option>
-            <option value="15">15</option>
-            <option value="20">20</option>
-            <option value="30">30</option>
-            <option value="custom">${_('commercialization.packages.rounding_custom')}</option>
-        </select>
-        <p class="form-hint">${_('commercialization.ui.rounding_hint')}</p>
-    </div>
-    <div class="form-group" id="package-rounding-custom-wrap" hidden>
-        <label class="form-label" for="package-rounding-custom">${_('commercialization.packages.rounding_custom_value')}</label>
-        <input type="number" id="package-rounding-custom" class="form-input is-short" min="1" step="1" value="15">
-    </div>
-    <div class="form-group">
-        <label class="form-label" for="package-overage">${_('commercialization.packages.overage_rate')}</label>
-        <div class="field-pair">
-            <input type="number" id="package-overage" class="form-input is-medium" value="100" min="0" step="0.01" required>
-            <input type="text" id="package-currency" class="form-input is-short" value="EUR" maxlength="8" required aria-label="${_('commercialization.packages.currency')}">
+        <div class="form-group">
+            <label class="form-label" for="package-description">${_('commercialization.packages.description')}</label>
+            <textarea id="package-description" class="form-textarea" rows="3" maxlength="512" aria-describedby="package-description-hint"></textarea>
+            <p class="form-hint" id="package-description-hint">${_('commercialization.ui.package_description_hint')}</p>
         </div>
-        <p class="form-hint">${_('commercialization.ui.overage_hint')}</p>
-    </div>
-    <p id="package-modal-error" class="form-status is-error" role="alert" hidden></p>
+        <section class="form-section" aria-labelledby="package-section-time">
+            <h3 class="form-section-title" id="package-section-time">${_('commercialization.ui.included_time')}</h3>
+            <div class="form-group">
+                <div class="field-pair has-labels">
+                    <div class="form-group">
+                        <label class="form-label" for="package-amount">${_('commercialization.packages.included_amount')}</label>
+                        <input type="number" id="package-amount" class="form-input is-short" value="10" min="0" step="1" required aria-describedby="package-amount-hint">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="package-unit">${_('commercialization.packages.unit')}</label>
+                        <select id="package-unit" class="form-select is-medium">
+                            <option value="hours">${_('commercialization.packages.unit_hours')}</option>
+                            <option value="minutes">${_('commercialization.packages.unit_minutes')}</option>
+                        </select>
+                    </div>
+                </div>
+                <p class="form-hint" id="package-amount-hint">${_('commercialization.ui.included_hint')}</p>
+            </div>
+            <input type="hidden" id="package-minutes" value="600">
+        </section>
+        <section class="form-section" aria-labelledby="package-section-billing">
+            <h3 class="form-section-title" id="package-section-billing">${_('commercialization.ui.section_billing')}</h3>
+            <div class="form-group">
+                <label class="form-label" for="package-rounding">${_('commercialization.packages.rounding')}</label>
+                <select id="package-rounding" class="form-select is-medium" aria-describedby="package-rounding-hint" aria-controls="package-rounding-custom-wrap">
+                    <option value="5">5</option>
+                    <option value="10" selected>10</option>
+                    <option value="15">15</option>
+                    <option value="20">20</option>
+                    <option value="30">30</option>
+                    <option value="custom">${_('commercialization.packages.rounding_custom')}</option>
+                </select>
+                <p class="form-hint" id="package-rounding-hint">${_('commercialization.ui.rounding_hint')}</p>
+            </div>
+            <div class="form-group" id="package-rounding-custom-wrap" hidden>
+                <label class="form-label" for="package-rounding-custom">${_('commercialization.packages.rounding_custom_value')}</label>
+                <input type="number" id="package-rounding-custom" class="form-input is-short" min="1" step="1" value="15">
+            </div>
+            <div class="form-group">
+                <div class="field-pair has-labels">
+                    <div class="form-group">
+                        <label class="form-label" for="package-overage">${_('commercialization.packages.overage_rate')}</label>
+                        <input type="number" id="package-overage" class="form-input is-medium" value="100" min="0" step="0.01" required aria-describedby="package-overage-hint">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="package-currency">${_('commercialization.packages.currency')}</label>
+                        <input type="text" id="package-currency" class="form-input is-short" value="EUR" maxlength="8" required autocomplete="off" spellcheck="false" aria-describedby="package-overage-hint">
+                    </div>
+                </div>
+                <p class="form-hint" id="package-overage-hint">${_('commercialization.ui.overage_hint')}</p>
+            </div>
+        </section>
+        <button type="submit" hidden tabindex="-1" aria-hidden="true"></button>
+    </form>
 </template>
 
 <template id="assign-modal-template">
-    <input type="hidden" id="assign-target-type" value="device_group">
-    <div class="form-group">
-        <label class="form-label" for="assign-target-select">${_('commercialization.targets.device_group')}</label>
-        <select id="assign-target-select" class="form-select" required></select>
-    </div>
-    <div class="form-group">
-        <label class="form-label" for="assign-package-select">${_('commercialization.contracts.package')}</label>
-        <select id="assign-package-select" class="form-select" required></select>
-    </div>
-    <details class="disclosure assign-more" id="assign-more">
-    <summary><h3>${_('commercialization.ui.assign_more')}</h3></summary>
-    <p class="form-hint">${_('commercialization.ui.assign_more_hint')}</p>
-    <div class="form-group">
-        <label class="form-label" for="assign-remaining">${_('commercialization.contracts.remaining')}</label>
-        <input type="number" id="assign-remaining" class="form-input is-medium" min="0" step="1">
-        <p class="form-hint">${_('commercialization.ui.optional_hint')}</p>
-    </div>
-    <div class="form-group">
-        <label class="form-label" for="assign-hourly-rate">${_('commercialization.contracts.hourly_rate')}</label>
-        <input type="number" id="assign-hourly-rate" class="form-input is-medium" min="0" step="0.01">
-        <p class="form-hint">${_('commercialization.ui.optional_hint')}</p>
-    </div>
-    <div class="form-group">
-        <label class="form-label" for="assign-overage-rate">${_('commercialization.contracts.custom_overage')}</label>
-        <input type="number" id="assign-overage-rate" class="form-input is-medium" min="0" step="0.01">
-        <p class="form-hint">${_('commercialization.ui.overage_override_hint')}</p>
-    </div>
-    <div class="form-group">
-        <label class="form-label" for="assign-valid-from">${_('commercialization.contracts.valid_from')}</label>
-        <input type="date" id="assign-valid-from" class="form-input is-medium">
-    </div>
-    <div class="form-group">
-        <label class="form-label" for="assign-valid-until">${_('commercialization.contracts.valid_until')}</label>
-        <input type="date" id="assign-valid-until" class="form-input is-medium">
-    </div>
-    </details>
-    <p id="assign-modal-error" class="form-status is-error" role="alert" hidden></p>
+    <form id="assign-form" class="form-stack" novalidate>
+        <input type="hidden" id="assign-target-type" value="device_group">
+        <div class="form-group">
+            <label class="form-label" for="assign-target-select">${_('commercialization.targets.device_group')}</label>
+            <select id="assign-target-select" class="form-select is-host" required aria-describedby="assign-target-hint"></select>
+            <p class="form-hint" id="assign-target-hint">${_('commercialization.ui.assign_target_hint')}</p>
+        </div>
+        <div class="form-group">
+            <label class="form-label" for="assign-package-select">${_('commercialization.contracts.package')}</label>
+            <select id="assign-package-select" class="form-select is-host" required></select>
+        </div>
+        <section class="form-section" aria-labelledby="assign-section-rates" aria-describedby="assign-section-rates-note">
+            <h3 class="form-section-title" id="assign-section-rates">${_('commercialization.ui.section_rates')}</h3>
+            <p class="form-hint" id="assign-section-rates-note">${_('commercialization.ui.section_rates_note')}</p>
+            <div class="form-group">
+                <label class="form-label" for="assign-remaining">${_('commercialization.contracts.remaining')}</label>
+                <input type="number" id="assign-remaining" class="form-input is-short" min="0" step="1" aria-describedby="assign-remaining-hint">
+                <p class="form-hint" id="assign-remaining-hint">${_('commercialization.ui.remaining_hint')}</p>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="assign-hourly-rate">${_('commercialization.contracts.hourly_rate')}</label>
+                <input type="number" id="assign-hourly-rate" class="form-input is-short" min="0" step="0.01" aria-describedby="assign-hourly-rate-hint">
+                <p class="form-hint" id="assign-hourly-rate-hint">${_('commercialization.ui.hourly_rate_hint')}</p>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="assign-overage-rate">${_('commercialization.contracts.custom_overage')}</label>
+                <input type="number" id="assign-overage-rate" class="form-input is-short" min="0" step="0.01" aria-describedby="assign-overage-rate-hint">
+                <p class="form-hint" id="assign-overage-rate-hint">${_('commercialization.ui.overage_override_hint')}</p>
+            </div>
+        </section>
+        <section class="form-section" aria-labelledby="assign-section-validity">
+            <h3 class="form-section-title" id="assign-section-validity">${_('commercialization.contracts.validity')}</h3>
+            <div class="form-group">
+                <label class="form-label" for="assign-valid-from">${_('commercialization.contracts.valid_from')}</label>
+                <input type="date" id="assign-valid-from" class="form-input is-medium">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="assign-valid-until">${_('commercialization.contracts.valid_until')}</label>
+                <input type="date" id="assign-valid-until" class="form-input is-medium" aria-describedby="assign-validity-hint">
+                <p class="form-hint" id="assign-validity-hint">${_('commercialization.ui.validity_hint')}</p>
+            </div>
+        </section>
+        <button type="submit" hidden tabindex="-1" aria-hidden="true"></button>
+    </form>
 </template>
 
 <template id="package-preview-template">
-    <div class="package-preview-period">
-        <label class="form-label" for="package-preview-period">${_('commercialization.ui.preview_month')}</label>
-        <div class="field-pair">
-            <button type="button" class="btn btn-sm" id="btn-preview-prev-month">${_('commercialization.preview.prev_month')}</button>
-            <select id="package-preview-period" class="form-select"></select>
-            <button type="button" class="btn btn-sm" id="btn-preview-next-month">${_('commercialization.preview.next_month')}</button>
+    <div class="form-stack">
+        <div class="form-group package-preview-period">
+            <label class="form-label" for="package-preview-period">${_('commercialization.ui.preview_month')}</label>
+            <div class="field-pair">
+                <button type="button" class="btn btn-sm" id="btn-preview-prev-month">${_('commercialization.preview.prev_month')}</button>
+                <select id="package-preview-period" class="form-select"></select>
+                <button type="button" class="btn btn-sm" id="btn-preview-next-month">${_('commercialization.preview.next_month')}</button>
+            </div>
         </div>
+        <dl class="facts" id="package-preview-stats"></dl>
+        <p class="form-hint">${_('commercialization.preview.hint')}</p>
     </div>
-    <dl class="facts" id="package-preview-stats"></dl>
-    <p class="form-hint">${_('commercialization.preview.hint')}</p>
 </template>
 
 <template id="report-modal-template">
