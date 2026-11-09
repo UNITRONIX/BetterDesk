@@ -37,17 +37,34 @@ describe('device list schema', () => {
 		expect(v.safeParse(Device, { hostname: 'x' }).success).toBe(false);
 	});
 
-	test('5,000 devices validate fast enough for the list budget', () => {
+	test('validation time grows with the list, not faster (5,000 devices)', () => {
+		// Absolute times depend on the machine and on the other test files running
+		// next to this one; the ratio between two sizes much less. Linear work makes
+		// 5,000 devices about 10 times 500; quadratic work would make it about 100.
 		const base = fixture.data.devices;
-		const devices = Array.from({ length: 5000 }, (_, i) => ({
-			...base[i % base.length],
-			id: String(100000 + i)
-		}));
-		const t0 = performance.now();
-		const out = v.parse(DeviceList, { success: true, data: { devices, total: 5000 } });
-		const ms = performance.now() - t0;
-		expect(out.devices).toHaveLength(5000);
-		console.warn(`validated 5000 devices in ${ms.toFixed(1)} ms`);
-		expect(ms).toBeLessThan(250);
+		const make = (n: number) => ({
+			success: true,
+			data: {
+				devices: Array.from({ length: n }, (_, i) => ({ ...base[i % base.length], id: String(100000 + i) })),
+				total: n
+			}
+		});
+		const small = make(500);
+		const large = make(5000);
+		const time = (input: unknown) => {
+			let best = Infinity;
+			for (let i = 0; i < 5; i++) {
+				const t0 = performance.now();
+				v.parse(DeviceList, input);
+				best = Math.min(best, performance.now() - t0);
+			}
+			return best;
+		};
+		time(small); // warm up
+		const tSmall = time(small);
+		const tLarge = time(large);
+		expect(v.parse(DeviceList, large).devices).toHaveLength(5000);
+		console.warn(`validated 500 devices in ${tSmall.toFixed(1)} ms, 5000 in ${tLarge.toFixed(1)} ms`);
+		expect(tLarge / tSmall).toBeLessThan(40);
 	});
 });
