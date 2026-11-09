@@ -31,6 +31,7 @@ import {
 	cancelPendingRestart,
 	confirmPendingRestart,
 	dismissFailedRestart,
+	finishAndSignIn,
 	onRestartCanceled,
 	resetRestartFlow,
 	restartFlow,
@@ -38,6 +39,7 @@ import {
 	showRestartPrompt
 } from '../../../src/lib/settings/restart.svelte.ts';
 import RestartPrompt from '../../../src/lib/settings/RestartPrompt.svelte';
+import { ApiError } from '../../../src/lib/api/client.ts';
 import { session } from '../../../src/lib/state/session.svelte.ts';
 
 const api = vi.mocked(restartApi);
@@ -341,5 +343,66 @@ describe('restart prompt flow', () => {
 		await userEvent.click(screen.getByRole('button', { name: 'Cancel and restore' }));
 		expect(api.cancelRestart).toHaveBeenCalledWith('r1');
 		expect(screen.queryByRole('dialog')).toBeNull();
+	});
+});
+
+describe('signing in again after a restart', () => {
+	beforeEach(() => {
+		resetRestartFlow();
+		vi.useFakeTimers();
+		api.completeRestart.mockReset();
+		api.getPendingRestart.mockReset();
+		for (const fn of Object.values(toastMock)) fn.mockReset();
+		restartFlow.item = { id: 'r1' } as typeof restartFlow.item;
+		restartFlow.view = 'ready';
+	});
+	afterEach(() => vi.useRealTimers());
+
+	test.each([401, 404, 502, 503, 504, 0])(
+		'a %s answer means the old console or session is gone: on to sign-in',
+		async (status) => {
+			api.completeRestart.mockRejectedValue(new ApiError('gone', status));
+			const go = vi.fn();
+			await finishAndSignIn(go);
+			expect(go).toHaveBeenCalledWith('/login');
+			expect(toastMock.error).not.toHaveBeenCalled();
+		}
+	);
+
+	test('a console that does not answer within 3 s: on to sign-in', async () => {
+		api.completeRestart.mockImplementation(
+			(_id: string, signal?: AbortSignal) =>
+				new Promise((_resolve, reject) =>
+					signal?.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')))
+				)
+		);
+		const go = vi.fn();
+		const done = finishAndSignIn(go);
+		await vi.advanceTimersByTimeAsync(2999);
+		expect(go).not.toHaveBeenCalled();
+		await vi.advanceTimersByTimeAsync(1);
+		await done;
+		expect(go).toHaveBeenCalledWith('/login');
+	});
+
+	test('any other error is shown and the page stays; pressing again tries again, one request at a time', async () => {
+		api.completeRestart.mockRejectedValueOnce(new ApiError('Disk full', 500));
+		const go = vi.fn();
+		await finishAndSignIn(go);
+		expect(go).not.toHaveBeenCalled();
+		expect(toastMock.error).toHaveBeenCalledWith('Disk full');
+		expect(restartFlow.busy).toBe(false);
+
+		let answer: () => void = () => {};
+		api.completeRestart.mockImplementation(
+			() => new Promise((resolve) => (answer = () => resolve(undefined)))
+		);
+		const first = finishAndSignIn(go);
+		const second = finishAndSignIn(go);
+		await second;
+		expect(api.completeRestart).toHaveBeenCalledTimes(2);
+		answer();
+		await first;
+		expect(go).toHaveBeenCalledTimes(1);
 	});
 });

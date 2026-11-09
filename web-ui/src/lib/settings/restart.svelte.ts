@@ -23,6 +23,7 @@ import {
 	restartStatus,
 	type RestartItem
 } from '#lib/api/restart.ts';
+import { ApiError } from '#lib/api/client.ts';
 import { tf } from '#lib/i18n/i18n.svelte.ts';
 import { toast } from '#lib/ui/toasts.svelte.ts';
 
@@ -226,16 +227,44 @@ function startPolling(id: string, token: string): void {
 	timer = setTimeout(step, POLL_MS);
 }
 
-/** After a finished restart: forget it, then sign in again (the session may be gone) */
-export async function finishAndSignIn(): Promise<void> {
+/** Answers after which signing in again is the way on: the old session or console is gone (0: no answer) */
+const GONE = new Set([0, 401, 404, 502, 503, 504]);
+/** How long finishing waits for the console */
+const FINISH_MS = 3000;
+let finishing = false;
+
+/**
+ * After a finished restart: forget it, then sign in again. A changed session
+ * secret ends the old session, and a console that isn't back yet may not
+ * answer: then (and after 3 s without an answer) the sign-in page is the way
+ * on. Any other answer is shown and the button can be pressed again. One
+ * request at a time.
+ */
+export async function finishAndSignIn(
+	go: (url: string) => void = (url) => location.assign(url)
+): Promise<void> {
+	if (finishing) return;
+	finishing = true;
 	const item = restartFlow.item;
 	restartFlow.busy = true;
+	const ctrl = new AbortController();
+	const timer = setTimeout(() => ctrl.abort(), FINISH_MS);
 	try {
-		if (item) await completeRestart(item.id);
-	} catch {
-		// A changed session secret ends the old session; signing in is the way on
+		if (item) await completeRestart(item.id, ctrl.signal);
+	} catch (err) {
+		const gone =
+			(err instanceof DOMException && err.name === 'AbortError') ||
+			(err instanceof ApiError && GONE.has(err.status));
+		if (!gone) {
+			finishing = false;
+			restartFlow.busy = false;
+			toast.error(message(err, tf('settings.restart_prompt.failed_status', 'The restart failed.')));
+			return;
+		}
+	} finally {
+		clearTimeout(timer);
 	}
-	location.assign('/login');
+	go('/login');
 }
 
 /** After a failure: keep the saved values and stop asking */
@@ -268,6 +297,7 @@ export function hideRestartPrompt(): void {
 /** Tests: back to the start */
 export function resetRestartFlow(): void {
 	stopPolling();
+	finishing = false;
 	restartFlow.item = null;
 	restartFlow.view = 'hidden';
 	restartFlow.status = '';

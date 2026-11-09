@@ -44,8 +44,12 @@ export function confirmRestart(id: string) {
 }
 
 /** The restart is over (ready or given up): forget it */
-export function completeRestart(id: string) {
-	return api(wrapped(v.unknown()), '/api/settings/restart/complete', { method: 'POST', body: { id } });
+export function completeRestart(id: string, signal?: AbortSignal) {
+	return api(wrapped(v.unknown()), '/api/settings/restart/complete', {
+		method: 'POST',
+		body: { id },
+		signal
+	});
 }
 
 const Probe = v.looseObject({
