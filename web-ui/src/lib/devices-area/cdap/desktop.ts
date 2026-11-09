@@ -20,8 +20,11 @@
  * Video codecs decode with WebCodecs where the browser has it (a secure
  * context). Elsewhere H.264 can still decode through Media Source
  * Extensions with the remote viewer's own self-hosted helpers
- * (/js/vendor/jmuxer.min.js and /js/rdclient/video.js), loaded only then.
+ * (static/rdclient/vendor/jmuxer.min.js and static/rdclient/video.js),
+ * loaded only then.
  */
+
+import { asset } from '$app/paths';
 
 export type StreamState = 'idle' | 'connecting' | 'open' | 'closed' | 'error';
 
@@ -267,8 +270,8 @@ export function loadMseH264(): Promise<boolean> {
 		MediaSource.isTypeSupported('video/mp4; codecs="avc1.42E01E"');
 	if (!supported) return (mseLoad = Promise.resolve(false));
 	if (w.RDVideo) return (mseLoad = Promise.resolve(true));
-	mseLoad = loadScript('/js/vendor/jmuxer.min.js')
-		.then(() => loadScript('/js/rdclient/video.js'))
+	mseLoad = loadScript(asset('rdclient/vendor/jmuxer.min.js'))
+		.then(() => loadScript(asset('rdclient/video.js')))
 		.then(() => typeof (window as unknown as { RDVideo?: RDVideoCtor }).RDVideo === 'function')
 		.catch(() => false);
 	return mseLoad;
