@@ -4,7 +4,10 @@ import { poll, socket } from '../../src/lib/state/live.ts';
 let hidden = false;
 beforeEach(() => {
 	hidden = false;
-	Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => (hidden ? 'hidden' : 'visible') });
+	Object.defineProperty(document, 'visibilityState', {
+		configurable: true,
+		get: () => (hidden ? 'hidden' : 'visible')
+	});
 	vi.useFakeTimers();
 });
 afterEach(() => vi.useRealTimers());
@@ -40,8 +43,24 @@ describe('poll', () => {
 		stop();
 	});
 
+	test('a poller started in a hidden tab waits until it is shown', async () => {
+		setHidden(true);
+		const fn = vi.fn().mockResolvedValue(undefined);
+		const stop = poll(fn, { every: 1000 });
+		await vi.advanceTimersByTimeAsync(5000);
+		expect(fn).not.toHaveBeenCalled();
+		setHidden(false);
+		await vi.advanceTimersByTimeAsync(0);
+		expect(fn).toHaveBeenCalledTimes(1);
+		stop();
+	});
+
 	test('backs off after errors and resets after success', async () => {
-		const fn = vi.fn().mockRejectedValueOnce(new Error('x')).mockRejectedValueOnce(new Error('x')).mockResolvedValue(undefined);
+		const fn = vi
+			.fn()
+			.mockRejectedValueOnce(new Error('x'))
+			.mockRejectedValueOnce(new Error('x'))
+			.mockResolvedValue(undefined);
 		const stop = poll(fn, { every: 1000 });
 		await vi.advanceTimersByTimeAsync(0); // fail 1 → wait 2000
 		await vi.advanceTimersByTimeAsync(1999);
@@ -93,7 +112,9 @@ describe('socket', () => {
 	test('connects same-origin over ws, parses JSON, reconnects with backoff', async () => {
 		const got: unknown[] = [];
 		const s = socket('/ws/device-status', { onmessage: (d) => got.push(d) });
-		expect(FakeWS.all[0]!.url).toBe('ws://localhost:3000/ws/device-status'.replace('localhost:3000', location.host));
+		expect(FakeWS.all[0]!.url).toBe(
+			'ws://localhost:3000/ws/device-status'.replace('localhost:3000', location.host)
+		);
 		FakeWS.all[0]!.open();
 		FakeWS.all[0]!.onmessage?.({ data: '{"id":"1","online":true}' });
 		expect(got).toEqual([{ id: '1', online: true }]);
