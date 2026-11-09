@@ -5,11 +5,13 @@ on:
     branches: [main, dev]
     paths:
       - 'web-nodejs/**'
+      - 'web-ui/src/lib/nav.ts'
       - '.github/workflows/web-nodejs-ci.yml'
   pull_request:
     branches: [main, dev]
     paths:
       - 'web-nodejs/**'
+      - 'web-ui/src/lib/nav.ts'
       - '.github/workflows/web-nodejs-ci.yml'
 
 permissions:

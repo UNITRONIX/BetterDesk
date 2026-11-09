@@ -47,6 +47,7 @@ on:
       - 'docker/**'
       - 'betterdesk-server/**'
       - 'web-nodejs/**'
+      - 'web-ui/**'
       - '.github/workflows/docker-publish.yml'
       - 'VERSION'
 
