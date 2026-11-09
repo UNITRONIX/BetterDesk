@@ -34,7 +34,8 @@ export const PORTED: readonly string[] = [
 	'/reports',
 	'/policies',
 	'/policies/*',
-	'/automation'
+	'/automation',
+	'/dataguard'
 ];
 
 /** Whether a path (no query) is one of the entries */

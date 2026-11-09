@@ -3365,7 +3365,7 @@
         "policy_disabled": "Kebijakan {name} dinonaktifkan.",
         "policy_deleted": "Kebijakan {name} dihapus.",
         "delete_confirm_message": "Hapus kebijakan {name}? Perangkat berhenti menerapkannya saat berikutnya mengambil kebijakan. Peristiwa sebelumnya tetap ada di daftar.",
-        "edit_named": "Edit {name}",
+        "edit_named": "Ubah {name}",
         "actions_for": "Tindakan lain untuk {name}",
         "enable": "Aktifkan",
         "disable": "Nonaktifkan",
