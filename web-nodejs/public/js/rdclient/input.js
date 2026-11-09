@@ -490,12 +490,19 @@ class RDInput {
 
     _isInputFocused() {
         const el = document.activeElement;
-        if (!el) return false;
+        if (!el || el === this.canvas) return false;
         if (el.isContentEditable) return true;
         const tag = el.tagName?.toLowerCase();
-        if (tag !== 'input' && tag !== 'textarea' && tag !== 'select') return false;
-        if (el.type === 'hidden' || el.offsetParent === null) return false;
-        return true;
+        if (tag === 'input' || tag === 'textarea' || tag === 'select') {
+            if (el.type === 'hidden' || el.offsetParent === null) return false;
+            return true;
+        }
+        // A focused viewer control (tab, button, link, menu item, disclosure) keeps
+        // its keys, so Enter, Space and the arrow keys work on it. The remote
+        // screen gets the keys while it (or nothing in particular) has focus.
+        if (tag === 'button' || tag === 'a' || tag === 'summary') return true;
+        if (typeof el.getAttribute === 'function' && el.getAttribute('role')) return true;
+        return false;
     }
 
     close() {

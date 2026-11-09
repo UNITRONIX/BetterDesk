@@ -27,13 +27,18 @@
     }
 
     /**
-     * Mount overlays inside the viewer shell so they stay visible when
+     * Mount menus inside the viewer shell so they stay visible when
      * #rd-viewer-shell is the Fullscreen API element (body children are hidden).
      */
     function getOverlayHost() {
         return document.fullscreenElement
             || document.getElementById('rd-viewer-shell')
             || document.body;
+    }
+
+    /** The file panel is a side sheet beside the remote screen (#rd-sheet-host). */
+    function getSheetHost() {
+        return document.getElementById('rd-sheet-host') || getOverlayHost();
     }
 
     function FileTransferModal() {
@@ -61,7 +66,7 @@
         el.id = 'file-transfer-modal';
         el.style.display = 'none';
         el.innerHTML =
-            '<div class="file-transfer-modal" role="dialog" aria-modal="true" aria-labelledby="ft-modal-title">' +
+            '<div class="file-transfer-modal" role="dialog" aria-labelledby="ft-modal-title">' +
                 '<div class="ft-modal-header">' +
                     '<h2 class="ft-modal-title" id="ft-modal-title"></h2>' +
                     '<button type="button" class="ft-modal-close modal-close"><span class="material-icons" aria-hidden="true">close</span></button>' +
@@ -70,11 +75,11 @@
                     '<div class="ft-pane ft-pane-local">' +
                         '<div class="ft-pane-head"><span class="ft-pane-label"></span></div>' +
                         '<div class="ft-pane-toolbar">' +
-                            '<button type="button" class="ft-btn ft-local-pick"></button>' +
-                            '<button type="button" class="ft-btn ft-local-up"></button>' +
-                            '<button type="button" class="ft-btn ft-local-home"></button>' +
+                            '<button type="button" class="btn btn-sm ft-btn ft-local-pick"></button>' +
+                            '<button type="button" class="btn btn-sm ft-btn ft-local-up"></button>' +
+                            '<button type="button" class="btn btn-sm ft-btn ft-local-home"></button>' +
                             '<span class="ft-path ft-local-path"></span>' +
-                            '<button type="button" class="ft-btn ft-btn-action ft-local-send"></button>' +
+                            '<button type="button" class="btn btn-sm ft-btn ft-btn-action ft-local-send"></button>' +
                         '</div>' +
                         '<div class="ft-local-body">' +
                             '<div class="ft-local-dropzone ft-dropzone-disabled" tabindex="0" role="button">' +
@@ -90,12 +95,12 @@
                     '<div class="ft-pane ft-pane-remote">' +
                         '<div class="ft-pane-head"><span class="ft-pane-label"></span></div>' +
                         '<div class="ft-pane-toolbar">' +
-                            '<button type="button" class="ft-btn ft-remote-up"></button>' +
-                            '<button type="button" class="ft-btn ft-remote-home"></button>' +
-                            '<button type="button" class="ft-btn ft-remote-new-folder"></button>' +
-                            '<button type="button" class="ft-btn ft-remote-hidden"></button>' +
+                            '<button type="button" class="btn btn-sm ft-btn ft-remote-up"></button>' +
+                            '<button type="button" class="btn btn-sm ft-btn ft-remote-home"></button>' +
+                            '<button type="button" class="btn btn-sm ft-btn ft-remote-new-folder"></button>' +
+                            '<button type="button" class="btn btn-sm ft-btn ft-remote-hidden"></button>' +
                             '<span class="ft-path ft-remote-path"></span>' +
-                            '<button type="button" class="ft-btn ft-btn-action ft-remote-download"></button>' +
+                            '<button type="button" class="btn btn-sm ft-btn ft-btn-action ft-remote-download"></button>' +
                         '</div>' +
                         '<div class="ft-list ft-remote-list"></div>' +
                         '<div class="ft-drop-overlay" hidden>' +
@@ -121,7 +126,7 @@
                     '</div>' +
                 '</div>' +
             '</div>';
-        getOverlayHost().appendChild(el);
+        getSheetHost().appendChild(el);
         this._el = el;
         el.querySelector('.ft-pane-local .ft-pane-label').textContent = t('remote.file_local', 'Local computer');
         el.querySelector('.ft-pane-remote .ft-pane-label').textContent = t('remote.file_remote', 'Remote computer');
@@ -129,7 +134,8 @@
         el.querySelector('.ft-local-send').textContent = t('remote.file_send', 'Send');
         el.querySelector('.ft-remote-download').textContent = t('remote.file_download', 'Download');
         el.querySelector('.ft-queue-empty span:last-child').textContent = t('remote.file_queue_empty', 'No transfers in progress');
-        el.querySelector('.ft-modal-close').setAttribute('aria-label', t('actions.close', 'Close'));
+        el.querySelector('.ft-modal-close').setAttribute('aria-label', t('remote_viewer.close_files', 'Close file transfer'));
+        el.querySelector('.ft-modal-close').classList.add('icon-btn');
         // Text labels: "up" was read as "upload" when it was an arrow icon
         el.querySelector('.ft-local-pick').textContent = t('remote.file_pick_folder', 'Choose folder');
         el.querySelector('.ft-local-up').textContent = t('remote.file_parent', 'Parent folder');
@@ -144,7 +150,6 @@
 
         var self = this;
         el.querySelector('.ft-modal-close').addEventListener('click', function () { self.close(); });
-        el.addEventListener('click', function (e) { if (e.target === el) self.close(); });
         el.querySelector('.ft-local-pick').addEventListener('click', function () { self._pickLocalFolder(); });
         el.querySelector('.ft-local-up').addEventListener('click', function () { self._localGoUp(); });
         el.querySelector('.ft-local-home').addEventListener('click', function () { self._localGoHome(); });
@@ -359,7 +364,7 @@
 
     FileTransferModal.prototype._ensureMountedInHost = function () {
         if (!this._el) return;
-        var host = getOverlayHost();
+        var host = getSheetHost();
         if (this._el.parentNode !== host) {
             host.appendChild(this._el);
         }
@@ -378,11 +383,8 @@
         this._open = true;
         document.getElementById('btn-file-transfer')?.classList.add('active');
 
-        var title = t('remote.file_transfer', 'File Transfer');
-        if (session && (session.deviceName || session.deviceId)) {
-            title += ' — ' + (session.deviceName || session.deviceId);
-        }
-        this._el.querySelector('.ft-modal-title').textContent = title;
+        // The sheet sits beside the device's own screen, so the title needs no name
+        this._el.querySelector('.ft-modal-title').textContent = t('remote.file_transfer', 'File transfer');
 
         if (!session || !session.client || !session.client.fileTransfer) {
             this._remoteReady = false;
@@ -429,6 +431,7 @@
         if (this._session && this._session.client && this._session.client.fileTransfer) {
             this._session.client.fileTransfer._saveDownload = null;
         }
+        try { document.dispatchEvent(new CustomEvent('rd-file-sheet-closed')); } catch (_e) { /* old browsers */ }
     };
 
     FileTransferModal.prototype.isOpen = function () {
@@ -528,6 +531,10 @@
         this._localEntries.forEach(function (entry) {
             var row = document.createElement('div');
             row.className = 'ft-row' + (entry.isDir ? ' ft-row-dir' : '');
+            // Keyboard: Tab reaches each row, Enter opens a folder or selects a file
+            row.tabIndex = 0;
+            row.setAttribute('role', 'button');
+            row.addEventListener('keydown', function (ev) { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); row.click(); } });
             if (self._selectedLocal === entry) row.classList.add('selected');
             row.innerHTML = '<span class="material-icons ft-row-icon">' + (entry.isDir ? 'folder' : 'insert_drive_file') + '</span>' +
                 '<span class="ft-row-name">' + escapeHtml(entry.name) + '</span>' +
@@ -596,6 +603,10 @@
         this._remoteEntries.forEach(function (entry) {
             var row = document.createElement('div');
             row.className = 'ft-row' + (entry.isDir ? ' ft-row-dir' : '');
+            // Keyboard: Tab reaches each row, Enter opens a folder or selects a file
+            row.tabIndex = 0;
+            row.setAttribute('role', 'button');
+            row.addEventListener('keydown', function (ev) { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); row.click(); } });
             if (self._selectedRemote === entry) row.classList.add('selected');
             var icon = typeof RDFileTransfer !== 'undefined' ? RDFileTransfer.getFileIcon(entry) : (entry.isDir ? 'folder' : 'insert_drive_file');
             row.innerHTML = '<span class="material-icons ft-row-icon">' + icon + '</span>' +

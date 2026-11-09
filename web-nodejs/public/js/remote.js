@@ -72,7 +72,9 @@
         const back = document.getElementById('btn-back-devices');
         if (back) {
             back.title = t('guest_access.back_to_list', 'Back to guest devices');
-            back.textContent = t('guest_access.back_to_list', 'Back to guest devices');
+            const backLabel = back.querySelector('.tab-bar-label');
+            if (backLabel) backLabel.textContent = t('guest_access.back_to_list', 'Back to guest devices');
+            else back.textContent = t('guest_access.back_to_list', 'Back to guest devices');
             back.onclick = function (e) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -96,6 +98,11 @@
         }
     }
     function createTransportClient(canvas, opts) {
+        // Dev only: /dev/mock-remote.js (served when BD_DEV_MOCK_REMOTE=1) defines a
+        // fake device that replaces the network, so the viewer can be reviewed.
+        if (window.__mockRemote && typeof window.MockRemoteSession === 'function') {
+            return new window.MockRemoteSession(canvas, opts);
+        }
         const name = getTransportName();
         if (name === 'mesh' && typeof MeshSession === 'function') {
             return new MeshSession(canvas, opts);
@@ -120,6 +127,24 @@
             toast.classList.remove('show');
             setTimeout(() => toast.remove(), 300);
         }, 3500);
+    }
+
+    // The viewer has no console toast script: copy buttons (Utils.valueHtml) and
+    // older code paths call Notifications, so route them to the viewer's toast.
+    if (!window.Notifications) {
+        window.Notifications = {
+            success: (m) => showToast(m, 'success'),
+            error: (m) => showToast(m, 'error'),
+            warning: (m) => showToast(m, 'warning'),
+            info: (m) => showToast(m, 'info'),
+        };
+    }
+
+    // "{name}" placeholders in a translated sentence
+    function fmt(key, fallback, vars) {
+        let s = t(key, fallback);
+        Object.keys(vars || {}).forEach((k) => { s = s.split('{' + k + '}').join(String(vars[k])); });
+        return s;
     }
 
     // ---- Session storage ----
@@ -240,6 +265,20 @@
             this.viewerPrefs = cloneViewerPrefs();
             this.mediaRecorder = null;
             this.recordedChunks = [];
+            // What the state screen and the tab show
+            this.platform = '';
+            this.stepId = null;          // find | route | accept | signin | screen
+            this.stepStartedAt = 0;
+            this.slowTimer = null;
+            this.everStreamed = false;
+            this.connectedAt = null;
+            this.endedBy = '';           // '' | 'user' | 'cancel'
+            this.endInfo = null;         // { reason, meta, at, step }
+            this.endPending = false;
+            this.view = 'connecting';    // connecting | password | failed | ended | streaming
+            this.encryptionWarning = '';
+            this.domWired = false;
+            this.closed = false;
         }
     }
 
@@ -252,6 +291,8 @@
     const toolbarStatus = document.getElementById('toolbar-status');
     const toolbarDeviceId = document.getElementById('toolbar-device-id');
     const tabBar = document.getElementById('session-tabs');
+    const sheetHost = document.getElementById('rd-sheet-host');
+    let currentSheet = null; // 'chat' | 'files' | 'info'
 
     // ---- Notch toolbar (integrated in session tab bar) ----
     // Compact handle pulls the action drawer open; fullscreen stays on the handle only.
@@ -279,7 +320,7 @@
         const exp = document.getElementById('btn-toolbar-expand');
         if (!exp) return;
         exp.classList.toggle('active', expanded);
-        const ic = exp.querySelector('.material-icons');
+        const ic = exp.querySelector('.btn-caret');
         if (ic) ic.textContent = expanded ? 'expand_less' : 'expand_more';
     }
 
@@ -549,52 +590,74 @@
         expandedTabId = null;
     }
 
-    function tabStatusClass(state) {
-        switch (state) {
-        case 'streaming': return 'status-online';
-        case 'connecting':
-        case 'authenticating':
-        case 'waiting_password': return 'status-connecting';
-        case 'error': return 'status-error';
-        default: return 'status-offline';
+    // Tab status: one tone per state (data display): connecting = waiting,
+    // connected = good, failed = danger, ended = neutral. The word is in the
+    // tab's accessible name and its tooltip; the mark's shape tells them apart.
+    const TAB_STATUS_CLASSES = ['status-online', 'status-connecting', 'status-error', 'status-offline'];
+
+    function tabStatusFor(session) {
+        if (!session) return { tone: 'neutral', cls: 'status-offline', label: t('remote_viewer.tab_ended', 'Ended') };
+        switch (session.view) {
+        case 'streaming':
+            return { tone: 'good', cls: 'status-online', label: t('remote.streaming', 'Connected') };
+        case 'failed':
+            return { tone: 'danger', cls: 'status-error', label: t('remote_viewer.tab_failed', 'Could not connect') };
+        case 'ended':
+            return { tone: 'neutral', cls: 'status-offline', label: t('remote_viewer.tab_ended', 'Ended') };
+        case 'password':
+            return { tone: 'waiting', cls: 'status-connecting', label: t('remote_viewer.tab_password', 'Needs a password') };
+        default:
+            return { tone: 'waiting', cls: 'status-connecting', label: t('remote_viewer.tab_connecting', 'Connecting') };
         }
     }
 
-    function createTab(deviceId, deviceName, platform) {
+    function tabDomId(deviceId) { return 'rd-tab-' + String(deviceId).replace(/[^A-Za-z0-9_-]/g, '_'); }
+    function panelDomId(deviceId) { return 'rd-panel-' + String(deviceId).replace(/[^A-Za-z0-9_-]/g, '_'); }
+
+    function createTab(deviceId, deviceName) {
         const tab = document.createElement('div');
-        tab.className = 'session-tab session-tab-card status-offline';
+        tab.className = 'session-tab session-tab-card status-connecting';
         tab.dataset.sessionId = deviceId;
+        tab.setAttribute('role', 'presentation');
 
         const inner = document.createElement('div');
         inner.className = 'session-tab-card-inner';
+        inner.setAttribute('role', 'presentation');
 
         const select = document.createElement('button');
         select.type = 'button';
         select.className = 'session-tab-select';
+        select.id = tabDomId(deviceId);
+        select.setAttribute('role', 'tab');
+        select.setAttribute('aria-selected', 'false');
+        select.setAttribute('aria-controls', panelDomId(deviceId));
+        select.tabIndex = -1;
 
         const dot = document.createElement('span');
-        dot.className = 'session-tab-dot dot-offline';
+        dot.className = 'status is-waiting session-tab-dot';
         dot.setAttribute('aria-hidden', 'true');
         select.appendChild(dot);
 
         const label = document.createElement('span');
         label.className = 'session-tab-label';
         label.textContent = deviceName || deviceId;
-        label.title = deviceId;
         select.appendChild(label);
 
         const stateText = document.createElement('span');
         stateText.className = 'session-tab-state sr-only';
-        stateText.textContent = t('remote.connecting', 'Connecting');
+        stateText.textContent = ', ' + t('remote_viewer.tab_connecting', 'Connecting');
         select.appendChild(stateText);
         inner.appendChild(select);
 
+        // Pointer users close with the ×; keyboard users press Delete on the tab
+        // (the button stays out of the tab order, so the tab list only holds tabs).
         const closeBtn = document.createElement('button');
         closeBtn.type = 'button';
-        closeBtn.className = 'session-tab-close';
+        closeBtn.className = 'icon-btn session-tab-close';
+        closeBtn.tabIndex = -1;
+        closeBtn.setAttribute('aria-hidden', 'true');
         closeBtn.innerHTML = '<span class="material-icons" aria-hidden="true">close</span>';
-        closeBtn.setAttribute('aria-label', t('actions.close', 'Close') + ' ' + (deviceName || deviceId));
-        closeBtn.title = t('actions.close', 'Close');
+        closeBtn.title = fmt('remote_viewer.close_tab_named', 'Close {name}', { name: deviceName || deviceId });
         closeBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             closeSession(deviceId);
@@ -603,8 +666,7 @@
 
         tab.appendChild(inner);
 
-        tab.addEventListener('click', (e) => {
-            if (e.target.closest('.session-tab-close')) return;
+        select.addEventListener('click', () => {
             switchSession(deviceId);
             if (window.matchMedia('(hover: none)').matches) {
                 collapseExpandedTabBarItems();
@@ -612,48 +674,88 @@
                 expandedTabId = deviceId;
             }
         });
+        select.addEventListener('keydown', onTabKeydown);
 
         tabBar.appendChild(tab);
+        refreshTab(sessions.get(deviceId) || null, deviceId);
     }
 
-    function updateTabState(deviceId, state) {
-        const tab = findTab(deviceId);
+    // Arrow keys move between tabs (and open them), Home/End jump, Delete closes.
+    function onTabKeydown(e) {
+        const tabs = Array.from(tabBar.querySelectorAll('[role="tab"]'));
+        const i = tabs.indexOf(e.currentTarget);
+        if (i < 0) return;
+        const rtl = document.documentElement.dir === 'rtl';
+        let next = -1;
+        switch (e.key) {
+        case 'ArrowRight': next = rtl ? i - 1 : i + 1; break;
+        case 'ArrowLeft': next = rtl ? i + 1 : i - 1; break;
+        case 'Home': next = 0; break;
+        case 'End': next = tabs.length - 1; break;
+        case 'Delete': {
+            e.preventDefault();
+            e.stopPropagation();
+            const id = e.currentTarget.closest('.session-tab')?.dataset.sessionId;
+            const neighbour = tabs[i + 1] || tabs[i - 1] || null;
+            if (id) closeSession(id);
+            if (neighbour && neighbour.isConnected) neighbour.focus();
+            return;
+        }
+        default: return;
+        }
+        e.preventDefault();
+        e.stopPropagation();
+        if (next < 0) next = tabs.length - 1;
+        if (next >= tabs.length) next = 0;
+        const target = tabs[next];
+        const id = target.closest('.session-tab')?.dataset.sessionId;
+        if (id) switchSession(id);
+        target.focus();
+    }
+
+    function refreshTab(session, deviceId) {
+        const id = session ? session.deviceId : deviceId;
+        const tab = findTab(id);
         if (!tab) return;
-        tab.classList.remove('status-online', 'status-connecting', 'status-error', 'status-offline');
-        tab.classList.add(tabStatusClass(state));
-        const stateText = tab.querySelector('.session-tab-state');
-        if (stateText) {
-            const labels = {
-                streaming: t('remote.streaming', 'Connected'),
-                connecting: t('remote.connecting', 'Connecting'),
-                authenticating: t('remote.authenticating', 'Authenticating'),
-                waiting_password: t('remote.waiting_password', 'Waiting for password'),
-                error: t('remote.error', 'Could not connect'),
-            };
-            stateText.textContent = labels[state] || t('remote.disconnected', 'Disconnected');
-        }
+        const st = tabStatusFor(session);
+        tab.classList.remove(...TAB_STATUS_CLASSES);
+        tab.classList.add(st.cls);
         const dot = tab.querySelector('.session-tab-dot');
-        if (!dot) return;
-        dot.className = 'session-tab-dot';
-        switch (state) {
-        case 'streaming': dot.classList.add('dot-online'); break;
-        case 'connecting':
-        case 'authenticating':
-        case 'waiting_password': dot.classList.add('dot-connecting'); break;
-        case 'error': dot.classList.add('dot-error'); break;
-        default: dot.classList.add('dot-offline'); break;
-        }
+        if (dot) dot.className = 'status is-' + st.tone + ' session-tab-dot';
+        const stateText = tab.querySelector('.session-tab-state');
+        if (stateText) stateText.textContent = ', ' + st.label;
+        const name = session ? deviceLabel(session) : id;
+        const label = tab.querySelector('.session-tab-label');
+        if (label && label.textContent !== name) label.textContent = name;
+        const select = tab.querySelector('.session-tab-select');
+        if (select) select.title = name + (name !== id ? ' (' + id + ')' : '') + ' · ' + st.label;
+        const closeBtn = tab.querySelector('.session-tab-close');
+        if (closeBtn) closeBtn.title = fmt('remote_viewer.close_tab_named', 'Close {name}', { name });
+    }
+
+    // Kept for callers that pass a transport state: the tab follows session.view
+    function updateTabState(deviceId) {
+        refreshTab(sessions.get(deviceId) || null, deviceId);
     }
 
     function setActiveTab(deviceId) {
-        tabBar.querySelectorAll('.session-tab').forEach((t) => {
-            t.classList.remove('active');
-            t.querySelector('.session-tab-select')?.removeAttribute('aria-current');
+        tabBar.querySelectorAll('.session-tab').forEach((tb) => {
+            tb.classList.remove('active');
+            const sel = tb.querySelector('.session-tab-select');
+            if (sel) {
+                sel.setAttribute('aria-selected', 'false');
+                sel.tabIndex = -1;
+            }
         });
         const tab = findTab(deviceId);
         if (tab) {
             tab.classList.add('active');
-            tab.querySelector('.session-tab-select')?.setAttribute('aria-current', 'true');
+            const sel = tab.querySelector('.session-tab-select');
+            if (sel) {
+                sel.setAttribute('aria-selected', 'true');
+                sel.tabIndex = 0;
+            }
+            if (typeof tab.scrollIntoView === 'function') tab.scrollIntoView({ block: 'nearest', inline: 'nearest' });
         }
     }
 
@@ -684,6 +786,76 @@
 
     // ---- Session Lifecycle ----
 
+    function deviceLabel(session) {
+        return (session && (session.deviceName || session.deviceId)) || '';
+    }
+
+    function isRemoteTargetId(deviceId) {
+        return String(deviceId || '').startsWith('rt_');
+    }
+
+    // Name, system mark and ID (with copy) at the top of every state screen
+    function fillDeviceHeader(session) {
+        const name = deviceLabel(session);
+        const panel = session.panel;
+        panel.querySelectorAll('.session-device-name, .session-device-name-copy').forEach((el) => { el.textContent = name; });
+        const idHtml = (window.Utils && Utils.valueHtml)
+            ? Utils.valueHtml(session.deviceId, { copy: true, label: fmt('remote_viewer.device_id_named', 'ID of {name}', { name }) })
+            : '';
+        panel.querySelectorAll('.session-device-label, .session-device-id-copy').forEach((el) => {
+            if (idHtml) el.innerHTML = idHtml;
+            else el.textContent = session.deviceId;
+            el.hidden = name === session.deviceId && !idHtml;
+        });
+        const osHtml = (session.platform && window.Utils && Utils.platformHtml) ? Utils.platformHtml(session.platform) : '';
+        panel.querySelectorAll('.session-device-os').forEach((el) => {
+            el.innerHTML = osHtml;
+            el.hidden = !osHtml;
+        });
+        if (session.canvas) {
+            session.canvas.setAttribute('aria-label', fmt('remote_viewer.screen_label', 'Screen of {name}', { name }));
+        }
+        session.passwordLabel = panel.querySelector('.session-password-label');
+        if (session.passwordLabel) {
+            session.passwordLabel.textContent = fmt('remote_viewer.password_intro',
+                '{name} asks for a password. Use the one set in RustDesk on that device.', { name });
+        }
+        const tfaLabel = panel.querySelector('.session-2fa-label');
+        if (tfaLabel) {
+            tfaLabel.textContent = fmt('remote_viewer.tfa_intro',
+                '{name} asks for a code from the authenticator app linked to it.', { name });
+        }
+        const openDevice = panel.querySelector('.session-btn-open-device');
+        if (openDevice) {
+            openDevice.href = '/devices?open=' + encodeURIComponent(session.deviceId);
+            openDevice.hidden = isGuestAccessMode() || isRemoteTargetId(session.deviceId);
+        }
+        refreshTab(session);
+        const chat = session.chatPanel;
+        if (chat) chat.setAttribute('aria-label', fmt('remote_viewer.chat_with', 'Chat with {name}', { name }));
+    }
+
+    // Name and system for sessions opened from the picker or a link
+    function loadDeviceDetails(session) {
+        if (isGuestAccessMode() || isRemoteTargetId(session.deviceId)) return;
+        if (session.platform && session.deviceName) return;
+        fetch('/api/devices/' + encodeURIComponent(session.deviceId), {
+            credentials: 'same-origin',
+            headers: { Accept: 'application/json' }
+        }).then((r) => (r.ok ? r.json() : null)).then((body) => {
+            const d = body && (body.data || body.device);
+            if (!d || session.closed) return;
+            session.deviceName = session.deviceName && session.deviceName !== session.deviceId
+                ? session.deviceName
+                : (d.display_name || d.hostname || session.deviceName);
+            session.platform = session.platform || d.platform || d.os || '';
+            fillDeviceHeader(session);
+            renderSteps(session);
+            if (session.view === 'connecting' && session.stepId) setStep(session, session.stepId, true);
+            if (isActive(session) && currentSheet === 'info') renderSessionInfo();
+        }).catch(() => { /* the ID is enough to connect */ });
+    }
+
     function createSession(deviceId, deviceName, platform) {
         if (!isPeerAllowedForGuest(deviceId)) {
             console.warn('Guest access: refused session outside allowlist', deviceId);
@@ -698,16 +870,17 @@
         const template = document.getElementById('session-panel-template');
         const panel = template.content.firstElementChild.cloneNode(true);
 
-        // Fill device labels
         panel.dataset.deviceId = deviceId;
-        panel.querySelector('.session-device-label').textContent = deviceId;
-        panel.querySelector('.session-device-name').textContent = deviceName || '';
-        panel.querySelector('.session-password-label').textContent =
-            (_('remote.enter_password_for') || 'Enter password for') + ' ' + deviceId;
+        panel.id = panelDomId(deviceId);
+        panel.setAttribute('aria-labelledby', tabDomId(deviceId));
 
         viewerContainer.appendChild(panel);
 
-        const session = new SessionInfo(deviceId, deviceName, panel);
+        const session = new SessionInfo(deviceId, deviceName && deviceName !== deviceId ? deviceName : '', panel);
+        session.platform = platform || '';
+
+        // The chat is a side sheet beside the screen, like files and session info
+        if (session.chatPanel && sheetHost) sheetHost.appendChild(session.chatPanel);
 
         // Show HTTP / WebCodecs warning once
         if (!RDVideo.isSupported()) {
@@ -717,17 +890,16 @@
             if (isInsecure) showHttpWarningBanner();
         }
 
-        // Create transport client from saved operator prefs (Best = 60fps).
-        wireNewClient(session);
         sessions.set(deviceId, session);
-        createTab(deviceId, deviceName, platform);
+        createTab(deviceId, session.deviceName);
+        fillDeviceHeader(session);
+        startConnecting(session);
         switchSession(deviceId);
+        loadDeviceDetails(session);
 
         session.client.renderer.resize();
         session.client.connect().catch(err => {
-            session.lastError = err && err.message ? err.message : '';
-            setSessionStatus(session, 'error', connectFailedText(session.lastError));
-            showSessionActions(session);
+            failSession(session, err && err.message ? err.message : '');
         });
     }
 
@@ -737,12 +909,16 @@
             session.client.setBackgroundFps((session.viewerPrefs || globalViewerPrefs).backgroundFps || 1);
         }
         wireSessionEvents(session);
-        wireSessionDomEvents(session);
+        if (!session.domWired) {
+            wireSessionDomEvents(session);
+            session.domWired = true;
+        }
         attachMobileTouch(session);
     }
 
     function switchSession(deviceId) {
         if (!sessions.has(deviceId)) return;
+        const previous = activeSessionId;
         activeSessionId = deviceId;
         const session = sessions.get(deviceId);
 
@@ -755,8 +931,11 @@
         setActiveTab(deviceId);
         toolbarDeviceId.textContent = deviceId;
 
-        if (window.__fileTransferModal?.isOpen()) {
-            window.__fileTransferModal.close();
+        // Files belong to one session; chat and info follow the tab
+        if (previous !== deviceId) {
+            if (currentSheet === 'files') closeSheet();
+            else if (currentSheet === 'chat') openSheet('chat');
+            else if (currentSheet === 'info') renderSessionInfo();
         }
 
         // Sync toolbar state
@@ -766,10 +945,8 @@
         if (session.state === 'streaming') {
             session.canvas.focus();
             session.client.renderer.resize();
-            syncToolbarChrome(session);
-        } else {
-            syncToolbarChrome(session);
         }
+        syncToolbarChrome(session);
 
         syncSessionMediaCapture();
 
@@ -792,6 +969,9 @@
             return;
         }
 
+        session.closed = true;
+        clearStepTimer(session);
+        if (session.endTimer) clearTimeout(session.endTimer);
         try { if (session.client) session.client.disconnect(); } catch { /* ignore */ }
         if (window.__fileTransferModal?.isOpen() &&
             window.__fileTransferModal._session?.deviceId === deviceId) {
@@ -802,6 +982,7 @@
         }
 
         if (session.panel) session.panel.remove();
+        if (session.chatPanel) session.chatPanel.remove();
         const tab = findTab(deviceId);
         if (tab) tab.remove();
         sessions.delete(deviceId);
@@ -812,8 +993,9 @@
             activeSessionId = null;
             if (sessions.size > 0) {
                 switchSession(sessions.keys().next().value);
-            } else if (!options.suppressReturn) {
-                returnToDevices();
+            } else {
+                closeSheet();
+                if (!options.suppressReturn) returnToDevices();
             }
         } else {
             syncSessionMediaCapture();
@@ -825,27 +1007,39 @@
     }
 
     function reconnectSession(session) {
-        if (session.client) session.client.disconnect();
-        session.connectionOverlay.style.display = 'flex';
+        const old = session.client;
+        session.client = null;
+        try { if (old) old.disconnect(); } catch { /* ignore */ }
         session.passwordOverlay.style.display = 'none';
-        session.overlayActions.style.display = 'none';
+        if (session.tfaOverlay) session.tfaOverlay.style.display = 'none';
         if (session.cdapFallbackBtn) session.cdapFallbackBtn.style.display = 'none';
         if (typeof window.BillingReport !== 'undefined' && window.BillingReport.hideBillingPane) {
             window.BillingReport.hideBillingPane(session.panel);
         }
         const autoplay = session.panel.querySelector('.autoplay-overlay');
         if (autoplay) autoplay.style.display = 'none';
-        const spinner = session.connectionOverlay.querySelector('.spinner');
-        if (spinner) spinner.style.display = 'block';
-        session.statusText.textContent = _('remote.connecting');
 
-        wireNewClient(session);
+        startConnecting(session);
         session.client.renderer.resize();
         session.client.connect().catch(err => {
-            session.lastError = err && err.message ? err.message : '';
-            setSessionStatus(session, 'error', connectFailedText(session.lastError));
-            showSessionActions(session);
+            failSession(session, err && err.message ? err.message : '');
         });
+    }
+
+    // A fresh client and the connecting screen at step one
+    function startConnecting(session) {
+        session.state = 'connecting';
+        session.everStreamed = false;
+        session.connectedAt = null;
+        session.endedBy = '';
+        session.endInfo = null;
+        session.endPending = false;
+        session.lastError = '';
+        session.encryptionWarning = '';
+        session.panel.classList.remove('streaming');
+        wireNewClient(session);
+        showView(session, 'connecting');
+        setStep(session, 'find', true);
     }
 
     function getActiveSession() {
@@ -856,10 +1050,12 @@
 
     function wireSessionEvents(session) {
         const c = session.client;
+        // Events from a client this session has replaced (reconnect) or closed are ignored
+        const live = () => session.client === c && !session.closed;
 
         c.on('state', (state) => {
+            if (!live()) return;
             session.state = state;
-            updateTabState(session.deviceId, state);
             if (isActive(session)) {
                 if (state !== 'streaming') hideToolbarChromeForSession(session);
                 syncToolbarToSession(session);
@@ -868,41 +1064,48 @@
         });
 
         c.on('log', (msg) => {
-            if (isActive(session) && (session.state === 'connecting' || session.state === 'authenticating')) {
-                session.statusText.textContent = msg;
-            }
+            if (!live()) return;
+            if (session.view !== 'connecting') return;
+            const step = stepFromLog(msg);
+            if (step) setStep(session, step);
+        });
+
+        c.on('step', (step) => {
+            if (!live() || session.view !== 'connecting') return;
+            setStep(session, step);
         });
 
         c.on('error', (msg, meta) => {
-            session.lastError = msg || '';
-            setSessionStatus(session, 'error', connectFailedText(session.lastError));
-            showSessionActions(session);
+            if (!live()) return;
+            const text = msg && typeof msg === 'object' ? (msg.message || '') : (msg || '');
+            failSession(session, text, meta);
             if (meta && meta.cdapFallback) showCdapFallback(session);
-            if (isActive(session)) setToolbarChromeVisible(false);
         });
 
         c.on('cdap_fallback_available', () => {
+            if (!live()) return;
             showCdapFallback(session);
         });
 
-        c.on('disconnected', (reason) => {
-            setSessionStatus(session, 'info', reason || _('remote.disconnected'));
-            showSessionActions(session);
-            if (isActive(session)) setToolbarChromeVisible(false);
+        c.on('disconnected', (reason, info) => {
+            if (!live()) return;
+            // A failure already on screen keeps its own message
+            if (session.view === 'failed') return;
+            session.endInfo = {
+                reason: typeof reason === 'string' ? reason : '',
+                meta: info || null,
+                at: Date.now(),
+                step: session.stepId,
+            };
+            finishEnd(session);
             const autoplay = session.panel.querySelector('.autoplay-overlay');
             if (autoplay) autoplay.style.display = 'none';
-            if (typeof window.BillingReport !== 'undefined') {
-                window.BillingReport.promptAfterSession(session.deviceId, session.deviceName)
-                    .then((submitted) => {
-                        if (submitted) showToast(t('commercialization.report.saved', 'Work report saved'), 'success');
-                    })
-                    .catch(() => {});
-            }
         });
 
         c.on('password_required', () => {
-            session.connectionOverlay.style.display = 'none';
-            session.passwordOverlay.style.display = 'flex';
+            if (!live()) return;
+            setStep(session, 'signin');
+            showView(session, 'password');
             session.loginError.style.display = 'none';
             session.passwordInput.value = '';
             var applySaved = function (saved) {
@@ -915,7 +1118,7 @@
             var localPromise = (window.RdClientSecureStore && session.deviceId)
                 ? window.RdClientSecureStore.loadPeerPassword(session.deviceId).catch(function () { return ''; })
                 : Promise.resolve('');
-            var orgPromise = session.deviceId
+            var orgPromise = session.deviceId && !window.__mockRemote
                 ? fetch('/api/devices/' + encodeURIComponent(session.deviceId) + '/connect-password', {
                     credentials: 'same-origin',
                     headers: { 'Accept': 'application/json' }
@@ -933,6 +1136,7 @@
         });
 
         c.on('login_error', (error) => {
+            if (!live()) return;
             if (session.state === 'waiting_2fa' || session.tfaOverlay.style.display === 'flex') {
                 session.tfaError.textContent = error;
                 session.tfaError.style.display = 'block';
@@ -940,13 +1144,15 @@
                 if (isActive(session)) session.tfaInput.focus();
                 return;
             }
-            session.loginError.textContent = error;
+            showView(session, 'password');
+            session.loginError.textContent = loginErrorText(error);
             session.loginError.style.display = 'block';
             session.passwordInput.value = '';
             if (isActive(session)) session.passwordInput.focus();
         });
 
         c.on('certificate_required', async (details) => {
+            if (!live()) return;
             const fingerprint = String(details?.fingerprint || '');
             if (!fingerprint) return;
             const accepted = window.confirm(
@@ -962,23 +1168,24 @@
                 c.disconnect();
                 c.connect();
             } catch (error) {
-                setSessionStatus(session, 'error', error.message || 'Certificate was not trusted');
+                failSession(session, error.message || 'Certificate was not trusted');
             }
         });
 
         c.on('2fa_error', (error) => {
+            if (!live()) return;
+            showView(session, 'tfa');
             session.tfaError.textContent = error || (_('remote.2fa_invalid') || 'Invalid code');
             session.tfaError.style.display = 'block';
             session.tfaInput.value = '';
-            session.tfaOverlay.style.display = 'flex';
             if (isActive(session)) session.tfaInput.focus();
             if (isActive(session)) setToolbarChromeVisible(false);
         });
 
         c.on('2fa_required', () => {
-            session.passwordOverlay.style.display = 'none';
-            session.connectionOverlay.style.display = 'none';
-            session.tfaOverlay.style.display = 'flex';
+            if (!live()) return;
+            setStep(session, 'signin');
+            showView(session, 'tfa');
             session.tfaError.style.display = 'none';
             session.tfaInput.value = '';
             if (isActive(session)) session.tfaInput.focus();
@@ -986,9 +1193,12 @@
         });
 
         c.on('login_success', () => {
+            if (!live()) return;
             session.passwordOverlay.style.display = 'none';
             session.tfaOverlay.style.display = 'none';
             session.passwordInput.blur();
+            if (session.view === 'password' || session.view === 'tfa') showView(session, 'connecting');
+            setStep(session, 'screen');
             if (window.RdClientSecureStore && session.rememberPeerCheckbox) {
                 var pw = session.passwordInput.value;
                 if (session.rememberPeerCheckbox.checked && pw) {
@@ -1000,8 +1210,8 @@
         });
 
         c.on('session_start', () => {
-            session.connectionOverlay.style.display = 'none';
-            session.passwordOverlay.style.display = 'none';
+            if (!live()) return;
+            showView(session, 'streaming');
             session.client.renderer.resize();
             if (isActive(session)) {
                 applyViewerPrefsToClient(session.client, session.viewerPrefs);
@@ -1019,7 +1229,7 @@
             }
             if (window.__openFilePanelOnConnect && isActive(session)) {
                 window.__openFilePanelOnConnect = false;
-                window.__fileTransferModal?.open(session);
+                openSheet('files');
             }
         });
 
@@ -1041,6 +1251,7 @@
         // CDAP transport: agent emits `monitors` after `monitor_list`. Show
         // the toolbar dropdown on multi-display agents and refresh contents.
         c.on('monitors', (list) => {
+            if (!live()) return;
             const btn = document.getElementById('btn-monitors');
             if (btn) btn.style.display = (Array.isArray(list) && list.length > 1) ? '' : 'none';
             if (isActive(session)) {
@@ -1051,7 +1262,12 @@
         // Native RustDesk transport: the rdclient emits `peer_info` once the
         // login completes. Reveal the monitors dropdown when the peer has more
         // than one display OR supports virtual displays, then rebuild it.
-        c.on('peer_info', () => {
+        c.on('peer_info', (info) => {
+            if (!live()) return;
+            if (info && !session.platform && (info.platform || info.os)) {
+                session.platform = String(info.platform || info.os);
+                fillDeviceHeader(session);
+            }
             if (isActive(session)) {
                 try { refreshMonitorButton(session); } catch { /* not ready */ }
                 try { updateWindowsSessionMenu(session); } catch { /* not ready */ }
@@ -1060,6 +1276,7 @@
         c.on('display_switched', () => {
             if (isActive(session)) {
                 try { updateMonitorMenu(); } catch { /* menu not yet built */ }
+                try { refreshMonitorButton(session); } catch { /* not ready */ }
             }
         });
         c.on('virtual_display_toggled', () => {
@@ -1071,10 +1288,12 @@
         // Security events: show warnings for E2E encryption issues
         c.on('signature_warning', (msg) => {
             console.warn('[Remote] Signature warning:', msg);
+            session.encryptionWarning = msg || '';
             showSecurityWarning(session, msg, 'warning');
         });
         c.on('encryption_warning', (msg) => {
             console.warn('[Remote] Encryption warning:', msg);
+            session.encryptionWarning = msg || '';
             showSecurityWarning(session, msg, 'error');
         });
     }
@@ -1089,7 +1308,7 @@
             banner.className = 'security-warning-banner security-' + level;
             banner.setAttribute('role', 'alert');
             banner.innerHTML = '<span class="security-warning-text"></span>'
-                + '<button type="button" class="security-warning-dismiss" aria-label="' + escapeHtml(t('actions.dismiss', 'Dismiss')) + '">'
+                + '<button type="button" class="icon-btn security-warning-dismiss" aria-label="' + escapeHtml(t('actions.dismiss', 'Dismiss')) + '">'
                 + '<span class="material-icons" aria-hidden="true">close</span></button>';
             banner.querySelector('.security-warning-dismiss').addEventListener('click', () => banner.remove());
             session.panel.appendChild(banner);
@@ -1106,10 +1325,28 @@
                 window.location.href = '/remote-cdap/' + encodeURIComponent(session.deviceId);
             });
 
+        session.panel.querySelector('.session-btn-close-tab')
+            ?.addEventListener('click', () => closeSession(session.deviceId));
+
+        // Cancel while connecting or at the password / code prompt
+        session.panel.querySelectorAll('.session-btn-cancel, .session-btn-auth-cancel').forEach((btn) => {
+            btn.addEventListener('click', () => cancelSession(session));
+        });
+
+        session.panel.querySelector('.session-btn-copy-details')
+            ?.addEventListener('click', async () => {
+                const text = detailsText(session);
+                let ok = false;
+                try { ok = await Utils.copyToClipboard(text); } catch { ok = false; }
+                showToast(ok ? t('common.copied', 'Copied to clipboard')
+                    : t('common.copy_failed', 'Could not copy. Select the text and copy it yourself.'), ok ? 'success' : 'error');
+            });
+
         session.panel.querySelector('.session-btn-authenticate')
             ?.addEventListener('click', () => {
                 const pw = session.passwordInput.value;
                 if (!pw) { session.passwordInput.focus(); return; }
+                session.loginError.style.display = 'none';
                 if (session.client) session.client.authenticate(pw);
             });
 
@@ -1144,17 +1381,15 @@
             session.tfaInput.value = session.tfaInput.value.replace(/[^0-9]/g, '');
         });
 
-        session.panel.querySelector('.session-btn-chat-close')
-            ?.addEventListener('click', () => {
-                session.chatPanel.style.display = 'none';
-                document.getElementById('btn-chat')?.classList.remove('active');
-            });
+        session.chatPanel?.querySelector('.session-btn-chat-close')
+            ?.addEventListener('click', () => closeSheet());
 
-        session.panel.querySelector('.session-btn-chat-send')
+        session.chatPanel?.querySelector('.session-btn-chat-send')
             ?.addEventListener('click', () => sendChat(session));
 
         session.chatInput?.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') sendChat(session);
+            if (e.key === 'Escape') { closeSheet(); return; }
             e.stopPropagation();
         });
     }
@@ -1178,14 +1413,22 @@
     function handleSessionState(session, state) {
         switch (state) {
         case 'connecting':
-            session.connectionOverlay.style.display = 'flex';
-            session.passwordOverlay.style.display = 'none';
-            setSessionStatus(session, 'loading', _('remote.connecting'));
+            if (session.view !== 'connecting') showView(session, 'connecting');
             if (isActive(session)) setToolbarChromeVisible(false);
             break;
+        case 'waiting_password':
+            // RDClient waits here for the device's answer (a password request,
+            // or someone accepting on the device) after the relay is set up.
+            if (session.view === 'connecting') setStep(session, 'accept');
+            break;
+        case 'authenticating':
+        case 'waiting_2fa':
+            if (session.view === 'connecting') setStep(session, 'signin');
+            break;
         case 'streaming':
-            session.connectionOverlay.style.display = 'none';
-            session.passwordOverlay.style.display = 'none';
+            session.everStreamed = true;
+            if (!session.connectedAt) session.connectedAt = Date.now();
+            showView(session, 'streaming');
             session.panel.classList.add('streaming');
             syncSessionMediaCapture();
             attachMobileTouch(session);
@@ -1195,16 +1438,361 @@
         case 'disconnected':
         case 'error':
             session.panel.classList.remove('streaming');
-            session.connectionOverlay.style.display = 'flex';
-            setSessionStatus(session, state === 'error' ? 'error' : 'info',
-                state === 'error' ? connectFailedText(session.lastError) : _('remote.disconnected'));
-            showSessionActions(session);
             if (isActive(session)) setToolbarChromeVisible(false);
+            if (state === 'error') {
+                // The error event came first and already said what happened
+                if (session.view !== 'failed') failSession(session, session.lastError || '');
+                break;
+            }
+            if (session.view === 'failed' || session.view === 'ended') break;
+            // RDClient sends the reason right after this state; wait one tick for it
+            session.endPending = true;
+            if (session.endTimer) clearTimeout(session.endTimer);
+            session.endTimer = setTimeout(() => finishEnd(session), 0);
             break;
+        }
+        refreshTab(session);
+    }
+
+    // ---- Connection states in plain words ----
+
+    const STEP_IDS = ['find', 'route', 'accept', 'signin', 'screen'];
+    const SLOW_AFTER_MS = 8000;
+
+    function stepStrings(session, id) {
+        const name = deviceLabel(session);
+        const throughServer = getTransportName() !== 'rd';
+        const S = {
+            find: {
+                label: ['remote_viewer.step_find', 'Find {name} on the server'],
+                now: ['remote_viewer.now_find', 'Looking for {name} on the server.'],
+                slow: ['remote_viewer.slow_find', 'This takes long when the server is busy or this browser cannot reach it. Check the server address and your network.'],
+            },
+            route: {
+                label: throughServer
+                    ? ['remote_viewer.step_route_server', 'Connect through the server']
+                    : ['remote_viewer.step_route', 'Connect through the relay server'],
+                now: throughServer
+                    ? ['remote_viewer.now_route_server', 'Setting up the connection through the server.']
+                    : ['remote_viewer.now_route', 'Setting up the connection through the relay server.'],
+                slow: ['remote_viewer.slow_route', 'This takes long when the relay server is slow or a firewall blocks it.'],
+            },
+            accept: {
+                label: ['remote_viewer.step_accept', 'Wait for {name} to answer'],
+                now: ['remote_viewer.now_accept', 'Waiting for {name} to answer.'],
+                slow: ['remote_viewer.slow_accept', '{name} may be asleep, or someone has to accept the connection on the device. Ask them to click Accept.'],
+            },
+            signin: {
+                label: ['remote_viewer.step_signin', 'Sign in, if the device asks for a password'],
+                now: ['remote_viewer.now_signin', 'Signing in to {name}.'],
+                slow: ['remote_viewer.slow_signin', 'Signing in takes long when the device is busy.'],
+            },
+            screen: {
+                label: ['remote_viewer.step_screen', 'Receive the screen'],
+                now: ['remote_viewer.now_screen', 'Waiting for the first picture from {name}.'],
+                slow: ['remote_viewer.slow_screen', 'The device is starting its screen capture. On a slow network this takes a moment.'],
+            },
+        };
+        const e = S[id] || S.find;
+        return {
+            label: fmt(e.label[0], e.label[1], { name }),
+            now: fmt(e.now[0], e.now[1], { name }),
+            slow: fmt(e.slow[0], e.slow[1], { name }),
+        };
+    }
+
+    // Transport log lines to steps (RDClient, CDAP, mesh and the gateway all log in English)
+    function stepFromLog(msg) {
+        const m = String(msg || '').toLowerCase();
+        if (/login successful|no password required|video codec|streaming/.test(m)) return 'screen';
+        if (/authenticat|password required|2fa|verifying/.test(m)) return 'signin';
+        if (/handshake|peer identified|key exchange|consent|accept/.test(m)) return 'accept';
+        if (/relay|tunnel|desktop session|gateway/.test(m)) return 'route';
+        if (/protocol|rendezvous|requesting connection|loading/.test(m)) return 'find';
+        return null;
+    }
+
+    function clearStepTimer(session) {
+        if (session.slowTimer) {
+            clearTimeout(session.slowTimer);
+            session.slowTimer = null;
         }
     }
 
-    // "Could not connect: Device offline". The reason comes from the transport.
+    function setStep(session, id, force) {
+        if (!STEP_IDS.includes(id)) return;
+        const cur = STEP_IDS.indexOf(session.stepId);
+        const next = STEP_IDS.indexOf(id);
+        if (!force && cur >= next) return;
+        if (session.stepId !== id || force) {
+            session.stepId = id;
+            session.stepStartedAt = Date.now();
+        }
+        renderSteps(session);
+        if (session.view === 'connecting') {
+            session.statusText.textContent = stepStrings(session, id).now;
+            const hint = session.panel.querySelector('.session-slow-hint');
+            if (hint) hint.hidden = true;
+            clearStepTimer(session);
+            session.slowTimer = setTimeout(() => {
+                if (session.closed || session.view !== 'connecting' || session.stepId !== id) return;
+                const h = session.panel.querySelector('.session-slow-hint');
+                if (h) {
+                    h.textContent = stepStrings(session, id).slow;
+                    h.hidden = false;
+                }
+            }, SLOW_AFTER_MS);
+        }
+    }
+
+    // Steps with a status mark each: done (good), now (waiting), stopped (danger), still to come (neutral)
+    function renderSteps(session) {
+        const list = session.panel.querySelector('.session-steps');
+        if (!list) return;
+        const at = STEP_IDS.indexOf(session.stepId);
+        const failed = session.view === 'failed';
+        const words = {
+            done: t('remote_viewer.step_done', 'done'),
+            now: t('remote_viewer.step_now', 'in progress'),
+            failed: t('remote_viewer.step_failed', 'stopped here'),
+            todo: t('remote_viewer.step_todo', 'not started'),
+        };
+        list.innerHTML = STEP_IDS.map((id, i) => {
+            let tone = 'neutral';
+            let word = words.todo;
+            let current = '';
+            if (i < at) { tone = 'good'; word = words.done; }
+            else if (i === at) {
+                tone = failed ? 'danger' : 'waiting';
+                word = failed ? words.failed : words.now;
+                current = ' aria-current="step"';
+            }
+            const label = escapeHtml(stepStrings(session, id).label);
+            return '<li class="rd-step is-' + tone + '"' + current + '><span class="status is-' + tone + '">'
+                + label + '<span class="sr-only"> (' + escapeHtml(word) + ')</span></span></li>';
+        }).join('');
+    }
+
+    // Which overlay shows, and what the tab says
+    function showView(session, view) {
+        session.view = view;
+        // The screen is a tab stop only while it shows the remote device
+        if (session.canvas) session.canvas.tabIndex = view === 'streaming' ? 0 : -1;
+        const conn = session.connectionOverlay;
+        const pw = session.passwordOverlay;
+        const tfa = session.tfaOverlay;
+        conn.style.display = (view === 'connecting' || view === 'failed' || view === 'ended') ? 'flex' : 'none';
+        pw.style.display = view === 'password' ? 'flex' : 'none';
+        if (tfa) tfa.style.display = view === 'tfa' ? 'flex' : 'none';
+        conn.classList.toggle('is-failed', view === 'failed');
+        conn.classList.toggle('is-ended', view === 'ended');
+        const connecting = view === 'connecting';
+        const result = view === 'failed' || view === 'ended';
+        const title = session.panel.querySelector('.session-state-title');
+        if (title) {
+            // The title carries the state's mark when the steps no longer show it
+            title.className = 'rd-state-title session-state-title'
+                + (view === 'failed' ? ' status is-danger' : view === 'ended' ? ' status is-neutral' : '');
+            if (connecting) title.textContent = t('remote_viewer.title_connecting', 'Connecting');
+        }
+        const steps = session.panel.querySelector('.session-steps');
+        if (steps) steps.hidden = !(connecting || view === 'failed');
+        const tryEl = session.panel.querySelector('.session-state-try');
+        if (tryEl && connecting) tryEl.hidden = true;
+        const details = session.panel.querySelector('.session-details');
+        if (details && connecting) { details.hidden = true; details.open = false; }
+        const hint = session.panel.querySelector('.session-slow-hint');
+        if (hint && !connecting) hint.hidden = true;
+        const statusEl = conn.querySelector('.overlay-status');
+        if (statusEl) statusEl.className = 'overlay-status' + (view === 'failed' ? ' error' : '');
+        const connectingActions = session.panel.querySelector('.session-connecting-actions');
+        if (connectingActions) connectingActions.hidden = !connecting;
+        session.overlayActions.style.display = result ? 'flex' : 'none';
+        if (!connecting) clearStepTimer(session);
+        refreshTab(session);
+    }
+
+    // Wrong password from the device, in plain words
+    function loginErrorText(error) {
+        const raw = String(error || '');
+        if (/wrong|incorrect|invalid|bad/i.test(raw) && /pass/i.test(raw)) {
+            return t('remote_viewer.password_wrong', 'That password was not accepted. Check it and try again.');
+        }
+        return raw || t('remote_viewer.password_wrong', 'That password was not accepted. Check it and try again.');
+    }
+
+    // Known messages and close codes to a sentence on what happened and what to try
+    function classifyEnd(session, reason, meta) {
+        const raw = String(reason || '');
+        const m = raw.toLowerCase();
+        const code = Number((meta && (meta.closeCode || meta.code)) || (m.match(/websocket (\d{4})/) || [])[1] || 0);
+        const name = deviceLabel(session);
+        const early = !session.everStreamed;
+        const pick = (kind, textKey, textFb, tryKey, tryFb) => ({
+            kind,
+            text: fmt(textKey, textFb, { name }),
+            tryText: fmt(tryKey, tryFb, { name }),
+        });
+
+        if (/^remote:|closed manually|by the peer|peer closed|session (was )?ended|agent_end/.test(m) && !/refus|reject|declin|denied/.test(m)) {
+            return Object.assign(pick('peer', 'remote_viewer.ended_peer', 'The session was ended on {name}.',
+                'remote_viewer.try_ended', 'Reconnect to continue, or close the tab.'), { ended: true });
+        }
+        if (/permission|not allowed|forbidden|\b403\b|unauthori[sz]ed/.test(m)) {
+            return pick('permission', 'remote_viewer.fail_permission', 'You do not have permission to connect to {name}.',
+                'remote_viewer.try_permission', 'Ask an administrator to give you access to this device.');
+        }
+        if (/wrong password|password (was )?(wrong|incorrect|invalid)|invalid password/.test(m)) {
+            return pick('password', 'remote_viewer.fail_password', 'The password was not accepted.',
+                'remote_viewer.try_password', 'Reconnect and enter the password set in RustDesk on the device.');
+        }
+        if (/refus|reject|declin|dismiss|denied/.test(m) && !/relay refused: *$/.test(m) && !/offline|not online|not found|not exist|timeout/.test(m)) {
+            return pick('refused', 'remote_viewer.fail_refused', '{name} refused the connection.',
+                'remote_viewer.try_refused', 'Someone on the device declined it, or the device only accepts connections that are approved there. Ask them to accept, then reconnect.');
+        }
+        if (/timeout|timed out|did not respond|no response/.test(m)) {
+            return pick('timeout', 'remote_viewer.fail_timeout', '{name} did not answer in time.',
+                'remote_viewer.try_timeout', 'The device may be asleep, busy or offline. Wake it up or wait a moment, then reconnect.');
+        }
+        if (/not found|not exist|id_not_exist|unknown id|not registered/.test(m)) {
+            return pick('notfound', 'remote_viewer.fail_notfound', 'This ID is not registered on the server.',
+                'remote_viewer.try_notfound', 'Check the ID. The device may have been removed or registered again under a new ID.');
+        }
+        if (/offline|not online/.test(m)) {
+            return pick('offline', 'remote_viewer.fail_offline', '{name} is offline.',
+                'remote_viewer.try_offline', 'It has not checked in with the server recently. Turn it on or wake it up, then reconnect.');
+        }
+        if (/license|licence|too many/.test(m)) {
+            return pick('limit', 'remote_viewer.fail_limit', 'The server does not allow this connection right now.',
+                'remote_viewer.try_limit', 'The licence or the number of connections is at its limit. Ask an administrator.');
+        }
+        if (/rendezvous connection failed|relay connection failed|relay error|gateway connection failed|websocket open failed|mesh relay error/.test(m)) {
+            return pick('relay', 'remote_viewer.fail_relay', 'The relay server could not be reached.',
+                'remote_viewer.try_relay', 'Check that the relay server is running and that this browser can reach it, then reconnect.');
+        }
+        if (code === 1005 || code === 1006 || /connection closed|socket closed|closed/.test(m)) {
+            if (early) {
+                return pick('dropped_early', 'remote_viewer.fail_dropped_early', 'The connection closed before {name} answered.',
+                    'remote_viewer.try_dropped_early', 'The device may be asleep or offline, or it cannot reach the relay server. Wake it up, then reconnect.');
+            }
+            return pick('dropped', 'remote_viewer.fail_dropped', 'The connection to {name} dropped.',
+                'remote_viewer.try_dropped', 'The network between this browser, the server and the device was interrupted. Reconnect. If it keeps happening, check the network of the device.');
+        }
+        return pick('generic', 'remote_viewer.fail_generic', 'Could not connect to {name}.',
+            'remote_viewer.try_generic', 'Reconnect. If it keeps failing, copy the details below and send them to your administrator.');
+    }
+
+    function renderResult(session, view, info) {
+        clearStepTimer(session);
+        showView(session, view);
+        const title = session.panel.querySelector('.session-state-title');
+        const tryEl = session.panel.querySelector('.session-state-try');
+        if (title) {
+            title.textContent = view === 'failed'
+                ? t('remote_viewer.title_failed', 'Could not connect')
+                : t('remote_viewer.title_ended', 'Session ended');
+        }
+        session.statusText.textContent = info.text;
+        if (tryEl) {
+            tryEl.textContent = info.tryText || '';
+            tryEl.hidden = !info.tryText;
+        }
+        renderSteps(session);
+        renderDetails(session);
+        // Keyboard users land on Reconnect; focus elsewhere in the chrome stays put
+        const focused = document.activeElement;
+        if (isActive(session) && (!focused || focused === document.body || focused === session.canvas)) {
+            session.panel.querySelector('.session-btn-reconnect')?.focus({ preventScroll: true });
+        }
+    }
+
+    // Failed before or while connecting: what happened, what to try, details
+    function failSession(session, reason, meta) {
+        if (session.closed) return;
+        session.lastError = reason || session.lastError || '';
+        session.endInfo = { reason: session.lastError, meta: meta || null, at: Date.now(), step: session.stepId };
+        session.endPending = false;
+        if (session.endedBy) { finishEnd(session); return; }
+        const info = classifyEnd(session, session.lastError, meta);
+        renderResult(session, info.ended ? 'ended' : 'failed', info);
+    }
+
+    // The connection closed: ended by you, by the device, or failed on the way
+    function finishEnd(session) {
+        if (session.closed) return;
+        if (session.endTimer) { clearTimeout(session.endTimer); session.endTimer = null; }
+        session.endPending = false;
+        const name = deviceLabel(session);
+        const end = session.endInfo || { reason: '', meta: null, at: Date.now(), step: session.stepId };
+        session.endInfo = end;
+        let info;
+        if (session.endedBy === 'cancel') {
+            info = { text: t('remote_viewer.ended_cancel', 'You cancelled the connection.'),
+                tryText: t('remote_viewer.try_ended', 'Reconnect to continue, or close the tab.'), ended: true };
+        } else if (session.endedBy === 'user') {
+            info = { text: fmt('remote_viewer.ended_user', 'You ended the session with {name}.', { name }),
+                tryText: t('remote_viewer.try_ended', 'Reconnect to continue, or close the tab.'), ended: true };
+        } else if (!end.reason && session.everStreamed) {
+            info = { text: fmt('remote_viewer.ended_plain', 'The session with {name} ended.', { name }),
+                tryText: t('remote_viewer.try_ended', 'Reconnect to continue, or close the tab.'), ended: true };
+        } else {
+            info = classifyEnd(session, end.reason, end.meta);
+        }
+        renderResult(session, info.ended ? 'ended' : 'failed', info);
+        if (session.everStreamed && typeof window.BillingReport !== 'undefined') {
+            window.BillingReport.promptAfterSession(session.deviceId, session.deviceName)
+                .then((submitted) => {
+                    if (submitted) showToast(t('commercialization.report.saved', 'Work report saved'), 'success');
+                })
+                .catch(() => {});
+        }
+    }
+
+    function cancelSession(session) {
+        session.endedBy = 'cancel';
+        session.passwordOverlay.style.display = 'none';
+        if (session.tfaOverlay) session.tfaOverlay.style.display = 'none';
+        try { if (session.client) session.client.disconnect(); } catch { /* ignore */ }
+        // Transports that do not report the state change still end here
+        if (session.view !== 'ended') {
+            session.endPending = true;
+            finishEnd(session);
+        }
+    }
+
+    function detailRows(session) {
+        const end = session.endInfo || {};
+        const meta = end.meta || {};
+        const rows = [];
+        const add = (label, value) => { if (value !== undefined && value !== null && String(value) !== '') rows.push([label, String(value)]); };
+        add(t('remote_viewer.detail_message', 'Message'), end.reason || session.lastError || '');
+        add(t('remote_viewer.detail_code', 'Close code'), meta.closeCode || '');
+        add(t('remote_viewer.detail_close_reason', 'Close reason'), meta.closeReason || meta.peerReason || '');
+        if (end.step) add(t('remote_viewer.detail_step', 'Last step'), stepStrings(session, end.step).label);
+        add(t('remote_viewer.detail_time', 'Time'), (window.Utils && Utils.formatDate) ? Utils.formatDate(new Date(end.at || Date.now()), { second: '2-digit' }) : new Date(end.at || Date.now()).toISOString());
+        add(t('remote_viewer.detail_device', 'Device ID'), session.deviceId);
+        add(t('remote_viewer.detail_transport', 'Connection type'), getTransportName() === 'rd' ? 'RustDesk relay' : getTransportName().toUpperCase());
+        return rows;
+    }
+
+    function renderDetails(session) {
+        const details = session.panel.querySelector('.session-details');
+        const facts = session.panel.querySelector('.session-details-facts');
+        if (!details || !facts) return;
+        const rows = detailRows(session);
+        const hasMessage = !!((session.endInfo && session.endInfo.reason) || session.lastError);
+        details.hidden = !(hasMessage && session.view === 'failed') && !(hasMessage && session.view === 'ended' && !session.endedBy);
+        details.open = false;
+        facts.innerHTML = rows.map(([k, v]) => '<dt>' + escapeHtml(k) + '</dt><dd>' + escapeHtml(v) + '</dd>').join('');
+    }
+
+    function detailsText(session) {
+        return [deviceLabel(session) + ' (' + session.deviceId + ')',
+            session.statusText.textContent]
+            .concat(detailRows(session).map(([k, v]) => k + ': ' + v)).join('\n');
+    }
+
+    // Older callers: "Could not connect: Device offline"
     function connectFailedText(reason) {
         const clean = String(reason || '').replace(/^(Error:\s*)?(Connection refused:\s*)?/i, '').trim();
         if (!clean) return t('remote.error', 'Could not connect.');
@@ -1212,20 +1800,18 @@
     }
 
     function setSessionStatus(session, type, text) {
+        if (type === 'error') { failSession(session, text); return; }
         session.statusText.textContent = text;
-        const statusEl = session.connectionOverlay.querySelector('.overlay-status');
-        if (statusEl) statusEl.className = 'overlay-status ' + type;
     }
 
     function showSessionActions(session) {
         session.overlayActions.style.display = 'flex';
-        const spinner = session.connectionOverlay.querySelector('.spinner');
-        if (spinner) spinner.style.display = 'none';
     }
 
     function showCdapFallback(session) {
         if (session.cdapFallbackBtn) session.cdapFallbackBtn.style.display = 'inline-flex';
     }
+
 
     function syncToolbarToSession(session) {
         const isStreaming = session.state === 'streaming';
@@ -1352,8 +1938,17 @@
 
     // Disconnect
     document.getElementById('btn-disconnect')?.addEventListener('click', () => {
-        withClient(c => c.disconnect());
+        withClient((c, session) => {
+            session.endedBy = 'user';
+            c.disconnect();
+        });
     });
+
+    // After a remote action from a menu, typing goes to the remote screen again
+    function focusScreen() {
+        const session = getActiveSession();
+        if (session && session.state === 'streaming' && session.canvas) session.canvas.focus({ preventScroll: true });
+    }
 
     // Billing work-report intent (during session → disconnect overlay)
     document.getElementById('btn-billing-report')?.addEventListener('click', () => {
@@ -1373,18 +1968,21 @@
         session.audioMuted = !session.audioMuted;
         if (session.client) session.client.setAudioMuted(session.audioMuted);
         this.classList.toggle('is-muted', !!session.audioMuted);
+        this.title = session.audioMuted ? t('remote_viewer.unmute', 'Turn sound on') : t('remote_viewer.mute', 'Mute sound');
     });
 
     // Ctrl+Alt+Del
     document.getElementById('btn-cad')?.addEventListener('click', () => {
         withClient(c => c.sendCtrlAltDel());
         closeAllDropdowns();
+        focusScreen();
     });
 
     // Lock Screen
     document.getElementById('btn-lock')?.addEventListener('click', () => {
         withClient(c => c.sendLockScreen());
         closeAllDropdowns();
+        focusScreen();
     });
 
     // Restart Remote
@@ -1399,6 +1997,7 @@
     document.getElementById('btn-refresh-screen')?.addEventListener('click', () => {
         withClient(c => c.sendRefreshScreen());
         closeAllDropdowns();
+        focusScreen();
     });
 
     // Reset keyboard (release stuck modifiers on remote)
@@ -1412,6 +2011,7 @@
         });
         showToast(_('remote.reset_keyboard_done') || 'Keyboard state reset on remote', 'success');
         closeAllDropdowns();
+        focusScreen();
     });
 
     // Clipboard Paste
@@ -1643,15 +2243,20 @@
             const item = document.createElement('button');
             item.type = 'button';
             item.className = 'toolbar-monitor-btn' + (m.current ? ' active' : '');
-            item.title = m.name || ('Monitor ' + (i + 1));
+            const screenName = fmt('remote_viewer.screen_n', 'Screen {n}', { n: i + 1 });
+            item.title = screenName + (m.name ? ' (' + m.name + (m.width ? ', ' + m.width + ' × ' + m.height : '') + ')' : '');
+            item.setAttribute('aria-label', item.title);
+            item.setAttribute('aria-pressed', m.current ? 'true' : 'false');
             item.textContent = String(i + 1);
             item.addEventListener('click', function (e) {
                 e.stopPropagation();
                 session.client.switchMonitor(m.idx);
                 strip.querySelectorAll('.toolbar-monitor-btn').forEach(function (b) {
                     b.classList.remove('active');
+                    b.setAttribute('aria-pressed', 'false');
                 });
                 item.classList.add('active');
+                item.setAttribute('aria-pressed', 'true');
                 updateMonitorMenu();
             });
             strip.appendChild(item);
@@ -1825,26 +2430,135 @@
         }
     }
 
-    // Chat toggle
-    document.getElementById('btn-chat')?.addEventListener('click', function () {
+    // ---- Side sheets: chat, file transfer, session info ----
+    // One sheet at a time, beside the screen: the screen gets narrower instead
+    // of being covered. Chat is per session (each tab keeps its messages).
+
+    const sheetButtons = { chat: 'btn-chat', files: 'btn-file-transfer', info: 'btn-session-info' };
+    let infoTimer = null;
+
+    function syncSheetButtons() {
+        Object.entries(sheetButtons).forEach(([name, id]) => {
+            const btn = document.getElementById(id);
+            if (btn) btn.classList.toggle('active', currentSheet === name);
+        });
+        viewerShell?.classList.toggle('has-sheet', !!currentSheet);
+    }
+
+    function hideAllSheets() {
+        sessions.forEach((s) => { if (s.chatPanel) s.chatPanel.style.display = 'none'; });
+        if (window.__fileTransferModal?.isOpen()) window.__fileTransferModal.close();
+        const info = document.getElementById('session-info-sheet');
+        if (info) info.hidden = true;
+        if (infoTimer) { clearInterval(infoTimer); infoTimer = null; }
+    }
+
+    function openSheet(name) {
         const session = getActiveSession();
         if (!session) return;
-        const isOpen = session.chatPanel.style.display !== 'none';
-        session.chatPanel.style.display = isOpen ? 'none' : 'flex';
-        this.classList.toggle('active', !isOpen);
-        if (!isOpen && session.chatInput) session.chatInput.focus();
-    });
-
-    // File transfer modal toggle
-    document.getElementById('btn-file-transfer')?.addEventListener('click', function () {
-        const session = getActiveSession();
-        if (!session || !session.client?.fileTransfer) return;
-        const modal = window.__fileTransferModal;
-        if (!modal) return;
-        if (modal.isOpen()) {
-            modal.close();
-        } else {
+        hideAllSheets();
+        currentSheet = name;
+        if (name === 'chat') {
+            session.chatPanel.style.display = 'flex';
+            if (session.chatInput) session.chatInput.focus();
+        } else if (name === 'files') {
+            const modal = window.__fileTransferModal;
+            if (!modal) { currentSheet = null; syncSheetButtons(); return; }
             modal.open(session);
+            modal._el?.querySelector('.ft-modal-close')?.focus();
+        } else if (name === 'info') {
+            const info = document.getElementById('session-info-sheet');
+            if (info) info.hidden = false;
+            renderSessionInfo();
+            infoTimer = setInterval(renderSessionInfo, 1000);
+            document.getElementById('session-info-close')?.focus();
+        }
+        syncSheetButtons();
+        resizeActiveScreen();
+    }
+
+    function closeSheet(returnFocus) {
+        const was = currentSheet;
+        hideAllSheets();
+        currentSheet = null;
+        syncSheetButtons();
+        resizeActiveScreen();
+        if (returnFocus && was && sheetButtons[was]) document.getElementById(sheetButtons[was])?.focus();
+    }
+
+    function toggleSheet(name) {
+        if (currentSheet === name) closeSheet();
+        else openSheet(name);
+    }
+
+    function resizeActiveScreen() {
+        const session = getActiveSession();
+        if (session && session.client && session.client.renderer) {
+            requestAnimationFrame(() => session.client && session.client.renderer.resize());
+        }
+    }
+
+    // Facts about the active session; values the transport does not report are left out
+    function renderSessionInfo() {
+        const dl = document.getElementById('session-info-facts');
+        const session = getActiveSession();
+        if (!dl) return;
+        if (!session) { dl.innerHTML = ''; return; }
+        const rows = [];
+        const add = (label, html) => { if (html) rows.push('<dt>' + escapeHtml(label) + '</dt><dd>' + html + '</dd>'); };
+        const U = window.Utils;
+        const name = deviceLabel(session);
+        add(t('remote_viewer.info_device', 'Device'), escapeHtml(name));
+        add(t('remote_viewer.info_id', 'ID'), U ? U.valueHtml(session.deviceId, { copy: true }) : escapeHtml(session.deviceId));
+        if (session.platform) add(t('remote_viewer.info_system', 'System'), U ? U.platformHtml(session.platform) : escapeHtml(session.platform));
+        const st = tabStatusFor(session);
+        add(t('remote_viewer.info_state', 'State'), U ? U.statusHtml(st.tone, st.label) : escapeHtml(st.label));
+        if (session.connectedAt && session.view === 'streaming') {
+            add(t('remote_viewer.info_since', 'Connected since'), U ? U.timeHtml(new Date(session.connectedAt), { relative: false, format: { year: undefined, month: undefined, day: undefined, hour: '2-digit', minute: '2-digit', second: '2-digit' } }) : '');
+            if (U) add(t('remote_viewer.info_duration', 'Connected for'), escapeHtml(U.formatDuration((Date.now() - session.connectedAt) / 1000)));
+        }
+        add(t('remote_viewer.info_route', 'Connection'), escapeHtml(getTransportName() === 'rd'
+            ? t('remote_viewer.info_route_relay', 'Through the relay server')
+            : t('remote_viewer.info_route_server', 'Through the server')));
+        if (session.view === 'streaming') {
+            add(t('remote_viewer.info_encryption', 'Encryption'), session.encryptionWarning
+                ? (U ? U.statusHtml('warning', session.encryptionWarning) : escapeHtml(session.encryptionWarning))
+                : (U ? U.statusHtml('good', t('remote_viewer.info_encrypted', 'End-to-end encrypted')) : ''));
+            let stats = null;
+            try { stats = session.client && typeof session.client.getStats === 'function' ? session.client.getStats() : null; } catch { stats = null; }
+            const r = stats && stats.renderer;
+            if (session.latency) add(t('remote_viewer.info_latency', 'Round trip'), escapeHtml((U ? U.formatNumber(Math.round(session.latency)) : Math.round(session.latency)) + ' ms'));
+            if (r && r.fps !== undefined) add(t('remote_viewer.info_fps', 'Frame rate'), escapeHtml(r.fps + ' fps'));
+            if (r && r.remoteWidth) add(t('remote_viewer.info_resolution', 'Screen size'), '<span class="tabular">' + r.remoteWidth + ' × ' + r.remoteHeight + '</span>');
+            const codec = stats && stats.video && (stats.video.codec || stats.video.currentCodec);
+            if (codec) add(t('remote_viewer.info_codec', 'Video format'), escapeHtml(String(codec).toUpperCase()));
+            const p = session.viewerPrefs || {};
+            const quality = { Best: t('remote.quality_best', 'Best'), Balanced: t('remote.quality_balanced', 'Balanced'), Low: t('remote.quality_low', 'Low') }[p.quality];
+            if (quality) add(t('remote.image_quality', 'Image quality'), escapeHtml(quality));
+        }
+        dl.innerHTML = rows.join('');
+    }
+
+    document.getElementById('btn-chat')?.addEventListener('click', () => toggleSheet('chat'));
+    document.getElementById('btn-file-transfer')?.addEventListener('click', () => {
+        const session = getActiveSession();
+        if (!session || !session.client?.fileTransfer) {
+            showToast(t('remote.file_transfer_unavailable', 'File transfer is not available for this session.'), 'warning');
+            return;
+        }
+        toggleSheet('files');
+    });
+    document.getElementById('btn-session-info')?.addEventListener('click', () => toggleSheet('info'));
+    document.getElementById('session-info-close')?.addEventListener('click', () => closeSheet(true));
+    document.getElementById('session-info-sheet')?.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') { e.stopPropagation(); closeSheet(true); }
+    });
+    // The file sheet closes itself (its × or Escape): keep the toolbar in step
+    document.addEventListener('rd-file-sheet-closed', () => {
+        if (currentSheet === 'files') {
+            currentSheet = null;
+            syncSheetButtons();
+            resizeActiveScreen();
         }
     });
 
@@ -1862,9 +2576,7 @@
             Notifications.info(session.meshServerRecord
                 ? (_('mesh.recording_server_on') || 'Server recording enabled — reconnecting…')
                 : (_('mesh.recording_server_off') || 'Server recording disabled — reconnecting…'));
-            try { session.client.disconnect(); } catch { /* ignore */ }
-            wireNewClient(session);
-            session.client.connect().catch((err) => setSessionStatus(session, 'error', err.message));
+            reconnectSession(session);
         } else {
             try {
                 const stream = session.canvas.captureStream(30);
@@ -1973,12 +2685,15 @@
 
     // Fullscreen handler
     document.addEventListener('fullscreenchange', () => {
-        const fsLabel = document.getElementById('btn-handle-fullscreen')?.querySelector('.fullscreen-label');
-        if (fsLabel) {
-            fsLabel.textContent = document.fullscreenElement
-                ? t('remote_viewer.exit_fullscreen', 'Exit full screen')
-                : t('remote.fullscreen', 'Full screen');
-        }
+        const fsBtn = document.getElementById('btn-handle-fullscreen');
+        const fsLabel = fsBtn?.querySelector('.fullscreen-label');
+        const label = document.fullscreenElement
+            ? t('remote_viewer.exit_fullscreen', 'Exit full screen')
+            : t('remote.fullscreen', 'Full screen');
+        if (fsLabel) fsLabel.textContent = label;
+        if (fsBtn) fsBtn.title = label + ' (F11)';
+        const fsIcon = fsBtn?.querySelector('.fullscreen-icon');
+        if (fsIcon) fsIcon.textContent = document.fullscreenElement ? 'fullscreen_exit' : 'fullscreen';
         setTimeout(() => {
             const session = getActiveSession();
             if (session && session.client && session.client.renderer) session.client.renderer.resize();
@@ -2000,13 +2715,33 @@
                 owner?.focus();
                 return;
             }
+            // Escape inside a side sheet closes it (the remote screen keeps Escape otherwise)
+            if (currentSheet && e.target && e.target.closest && e.target.closest('#rd-sheet-host')) {
+                closeSheet(true);
+                return;
+            }
         }
         if (e.key === 'Escape' && !document.fullscreenElement) showToolbar();
     });
 
+    // F8 leaves the remote screen: it opens the controls and moves focus to them
+    // (on the screen every other key, Tab included, goes to the remote device).
+    window.addEventListener('keydown', (e) => {
+        if (e.key !== 'F8' || e.ctrlKey || e.altKey || e.metaKey) return;
+        const notch = document.getElementById('toolbar-notch-slot');
+        e.preventDefault();
+        e.stopPropagation();
+        if (notch && !notch.classList.contains('toolbar-chrome-hidden')) {
+            expandToolbar();
+            document.getElementById('btn-toolbar-expand')?.focus();
+        } else {
+            tabBar.querySelector('[role="tab"][aria-selected="true"]')?.focus();
+        }
+    }, true);
+
     // Toggle buttons in the toolbar keep aria-pressed in step with their visual state
     (function syncPressedState() {
-        const toggles = ['btn-chat', 'btn-viewonly', 'btn-pin', 'btn-record', 'btn-audio'];
+        const toggles = ['btn-chat', 'btn-file-transfer', 'btn-session-info', 'btn-viewonly', 'btn-pin', 'btn-record', 'btn-audio'];
         const apply = (btn) => {
             const on = btn.classList.contains('active') || btn.classList.contains('recording')
                 || btn.classList.contains('is-muted');
@@ -2034,11 +2769,17 @@
         });
     })();
 
-    // Window resize
+    // Window resize, and the screen area changing size (controls row, side sheet)
     window.addEventListener('resize', () => {
         const session = getActiveSession();
         if (session && session.client && session.client.renderer) session.client.renderer.resize();
     });
+    if (typeof ResizeObserver === 'function' && viewerContainer) {
+        new ResizeObserver(() => {
+            const session = getActiveSession();
+            if (session && session.client && session.client.renderer) session.client.renderer.resize();
+        }).observe(viewerContainer);
+    }
 
     // ---- Session picker (address book) ----
 
@@ -2330,12 +3071,13 @@
 
         const deviceId = window.__initialDeviceId;
         const deviceName = window.__initialDeviceName || '';
+        const devicePlatform = window.__initialDevicePlatform || '';
         const panelPref = new URLSearchParams(window.location.search).get('panel');
         if (panelPref === 'files') {
             window.__openFilePanelOnConnect = true;
         }
         if (deviceId) {
-            createSession(deviceId, deviceName);
+            createSession(deviceId, deviceName, devicePlatform);
         }
 
         // Support opening additional sessions via URL hash: #add=DEVICE_ID

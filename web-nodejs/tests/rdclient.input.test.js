@@ -287,6 +287,36 @@ describe('RDKeyboardEncoder parity', () => {
     });
 });
 
+describe('RDInput keys on viewer controls', () => {
+    it('sends keys while the remote screen has focus', () => {
+        const sent = [];
+        const harness = makeInputHarness({});
+        const input = harness.makeInput((msg) => sent.push(msg));
+        input.start(); // focuses the canvas
+        let prevented = false;
+        input._handleKeyDown(keyEvt({ code: 'Enter', key: 'Enter', preventDefault() { prevented = true; } }));
+        expect(sent.some((m) => m.keyEvent)).toBe(true);
+        expect(prevented).toBe(true);
+    });
+
+    it('leaves Enter, Space and arrows to a focused tab or button', () => {
+        const sent = [];
+        const harness = makeInputHarness({});
+        const input = harness.makeInput((msg) => sent.push(msg));
+        input.start();
+        for (const el of [
+            { tagName: 'BUTTON', getAttribute: () => null },
+            { tagName: 'DIV', getAttribute: (n) => (n === 'role' ? 'tab' : null) },
+        ]) {
+            harness.document.activeElement = el;
+            let prevented = false;
+            input._handleKeyDown(keyEvt({ code: 'ArrowRight', key: 'ArrowRight', preventDefault() { prevented = true; } }));
+            expect(prevented).toBe(false);
+        }
+        expect(sent.filter((m) => m.keyEvent)).toHaveLength(0);
+    });
+});
+
 describe('RDInput keyboard release sync', () => {
     let makeInput;
 

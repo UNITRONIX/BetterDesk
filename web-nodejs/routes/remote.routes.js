@@ -25,6 +25,7 @@ const {
     attachGuestGrant,
     peerAllowedByGrant,
 } = require('../middleware/guestAccess');
+const devMockRemote = require('../lib/devMockRemote');
 
 const DEFAULT_CONNECTION_SNAPSHOT = {
     p2p_first: true,
@@ -123,6 +124,9 @@ async function requireRemoteAccess(req, res, next) {
     }
     return requireRdClientAuth('device.connect')(req, res, next);
 }
+
+// Dev-only mock session script (404 unless BD_DEV_MOCK_REMOTE=1)
+router.use(devMockRemote.router);
 
 // Lazy-loaded relay helper — avoid circular require at module load time
 function getRemoteRelay() {
@@ -310,6 +314,7 @@ router.get('/remote/:deviceId', rdClientPageLimiter, requireRemoteAccess, async 
         connection: await resolveConnectionSnapshot(),
         capabilities,
         guestToken: req.guestToken || getGuestTokenFromQuery(req) || '',
+        mockRemote: devMockRemote.forRequest(req),
         layout: 'viewer'
     });
 });

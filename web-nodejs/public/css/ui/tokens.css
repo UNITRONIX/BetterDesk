@@ -202,12 +202,14 @@ html[data-a11y-font-scaled="true"] {
     --font-scale: var(--bd-a11y-font-scale, 1);
 }
 
-html[data-a11y-contrast="high-dark"],
-html[data-a11y-contrast="yellow-black"] {
+/* :root[...] so a contrast mode wins over :root[data-theme="dark"] above
+   (high-light on a dark theme otherwise kept the dark text colour) */
+:root[data-a11y-contrast="high-dark"],
+:root[data-a11y-contrast="yellow-black"] {
     --on-accent: #000000;
 }
 
-html[data-a11y-contrast="high-light"] {
+:root[data-a11y-contrast="high-light"] {
     --on-accent: #ffffff;
 }
 

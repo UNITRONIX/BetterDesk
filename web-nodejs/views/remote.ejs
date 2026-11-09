@@ -1,4 +1,10 @@
-<%- include('layouts/viewer', {
+<%
+    // New strings fall back to English until the language files are reloaded.
+    const T = (key, fallback) => { const v = _(key); return (v && v !== key) ? v : fallback; };
+    const initialName = (device && (device.display_name || device.hostname)) || '';
+    const initialPlatform = (device && (device.platform || device.os)) || '';
+    const mock = (typeof mockRemote !== 'undefined' && mockRemote) ? mockRemote : null;
+%><%- include('layouts/viewer', {
     title: title || _('remote.title'),
     pageScripts: ['billing-report', 'remote'],
     body: `
@@ -16,53 +22,63 @@
     </div>
 </div>
 
-<!-- RdClient shell: tabs + viewer + toolbar (fullscreen target) -->
+<!-- RdClient shell: session bar, controls row, the screen and its side sheets (fullscreen target) -->
 <div id="rd-viewer-shell" class="rd-viewer-shell">
 
 <!-- Session bar: back, open sessions, new connection, controls -->
 <div class="session-tab-bar" id="session-tab-bar">
-    <button type="button" class="btn btn-sm tab-bar-back" id="btn-back-devices">${_('remote.back_to_devices')}</button>
-    <div class="session-tabs" id="session-tabs"></div>
-    <button type="button" class="btn btn-sm tab-bar-add" id="btn-add-session">${_('remote.new_connection')}</button>
+    <button type="button" class="btn btn-ghost tab-bar-back" id="btn-back-devices" title="${_('remote.back_to_devices')}">
+        <span class="material-icons" aria-hidden="true">arrow_back</span><span class="tab-bar-label">${_('remote.back_to_devices')}</span>
+    </button>
+    <div class="session-tabs" id="session-tabs" role="tablist" aria-label="${T('remote_viewer.open_sessions', 'Open sessions')}"></div>
+    <button type="button" class="btn tab-bar-add" id="btn-add-session" aria-haspopup="dialog" title="${T('remote_viewer.new_connection_hint', 'Connect to another device in a new tab')}">
+        <span class="material-icons" aria-hidden="true">add</span><span class="tab-bar-label">${_('remote.new_connection')}</span>
+    </button>
     <div class="toolbar-notch-slot toolbar-chrome-hidden" id="toolbar-notch-slot">
-        <div class="viewer-toolbar" id="viewer-toolbar">
-            <div class="toolbar-drawer" id="toolbar-drawer">
-            <div class="toolbar-handle" id="toolbar-handle">
-                <button type="button" class="btn btn-sm handle-btn handle-expand" id="btn-toolbar-expand" aria-expanded="false" aria-controls="toolbar-expanded">
-                    ${_('remote_viewer.controls')}<span class="material-icons btn-caret" aria-hidden="true">expand_more</span>
-                </button>
-                <button type="button" class="btn btn-sm handle-btn" id="btn-handle-fullscreen"><span class="fullscreen-label">${_('remote.fullscreen')}</span></button>
+        <div class="toolbar-handle" id="toolbar-handle">
+            <button type="button" class="btn handle-btn handle-expand" id="btn-toolbar-expand" aria-expanded="false" aria-controls="toolbar-expanded" title="${T('remote_viewer.controls_hint', 'Show or hide the session controls (F8)')}">
+                <span class="material-icons" aria-hidden="true">tune</span><span class="tab-bar-label">${_('remote_viewer.controls')}</span><span class="material-icons btn-caret" aria-hidden="true">expand_more</span>
+            </button>
+            <button type="button" class="btn handle-btn" id="btn-handle-fullscreen" title="${_('remote.fullscreen')} (F11)">
+                <span class="material-icons fullscreen-icon" aria-hidden="true">fullscreen</span><span class="fullscreen-label tab-bar-label">${_('remote.fullscreen')}</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Session controls: a row under the bar, open while "Controls" is pressed or kept open -->
+<div class="viewer-toolbar" id="viewer-toolbar">
+    <div class="toolbar-drawer" id="toolbar-drawer">
+        <div class="toolbar-expanded" id="toolbar-expanded" role="group" aria-label="${T('remote_viewer.session_controls', 'Session controls')}">
+            <div class="toolbar-left">
+                <span class="toolbar-device-info" hidden>
+                    <span class="toolbar-device-id mono" id="toolbar-device-id"></span>
+                    <span class="toolbar-separator toolbar-status-sep" aria-hidden="true">·</span>
+                    <span class="toolbar-status" id="toolbar-status">${_('remote.connecting')}</span>
+                </span>
+                <span class="toolbar-package-badge" id="toolbar-package-badge" hidden title=""></span>
             </div>
-            <div class="toolbar-expanded" id="toolbar-expanded" role="group" aria-label="${_('remote_viewer.controls')}">
-                <div class="toolbar-left">
-                    <span class="toolbar-device-info">
-                        <span class="toolbar-device-id mono" id="toolbar-device-id"></span>
-                        <span class="toolbar-separator toolbar-status-sep" aria-hidden="true">·</span>
-                        <span class="toolbar-status" id="toolbar-status">${_('remote.connecting')}</span>
-                    </span>
-                    <span class="toolbar-package-badge" id="toolbar-package-badge" hidden title=""></span>
-                </div>
-                <div class="toolbar-monitor-strip" id="toolbar-monitor-strip" hidden></div>
-                <div class="toolbar-right">
+            <div class="toolbar-right">
+                <div class="toolbar-group">
                     <div class="toolbar-dropdown">
-                        <button type="button" class="btn btn-sm toolbar-btn" id="btn-actions" aria-haspopup="true" aria-expanded="false" aria-controls="actions-menu">
-                            ${_('remote.actions')}<span class="material-icons btn-caret" aria-hidden="true">expand_more</span>
+                        <button type="button" class="btn btn-sm toolbar-btn" id="btn-actions" aria-haspopup="true" aria-expanded="false" aria-controls="actions-menu" title="${_('remote.actions')}">
+                            <span class="material-icons" aria-hidden="true">keyboard</span><span class="tb-label">${_('remote.actions')}</span><span class="material-icons btn-caret" aria-hidden="true">expand_more</span>
                         </button>
                         <div class="toolbar-dropdown-menu menu" id="actions-menu">
-                            <button type="button" class="dropdown-item" id="btn-cad">Ctrl+Alt+Del</button>
-                            <button type="button" class="dropdown-item" id="btn-lock">${_('remote.lock_screen')}</button>
-                            <button type="button" class="dropdown-item" id="btn-restart-remote">${_('remote.restart_remote')}</button>
+                            <button type="button" class="dropdown-item" id="btn-cad"><span class="material-icons" aria-hidden="true">keyboard</span>Ctrl+Alt+Del</button>
+                            <button type="button" class="dropdown-item" id="btn-lock"><span class="material-icons" aria-hidden="true">lock</span>${_('remote.lock_screen')}</button>
+                            <button type="button" class="dropdown-item" id="btn-restart-remote"><span class="material-icons" aria-hidden="true">restart_alt</span>${_('remote.restart_remote')}</button>
                             <div class="dropdown-separator"></div>
-                            <button type="button" class="dropdown-item" id="btn-refresh-screen">${_('remote.refresh_screen')}</button>
-                            <button type="button" class="dropdown-item" id="btn-clipboard-paste" title="${_('remote.clipboard_paste_hint')}">${_('remote.clipboard_paste')}</button>
-                            <button type="button" class="dropdown-item" id="btn-reset-keyboard">${_('remote.reset_keyboard')}</button>
+                            <button type="button" class="dropdown-item" id="btn-refresh-screen"><span class="material-icons" aria-hidden="true">refresh</span>${_('remote.refresh_screen')}</button>
+                            <button type="button" class="dropdown-item" id="btn-clipboard-paste" title="${_('remote.clipboard_paste_hint')}"><span class="material-icons" aria-hidden="true">content_paste</span>${_('remote.clipboard_paste')}</button>
+                            <button type="button" class="dropdown-item" id="btn-reset-keyboard"><span class="material-icons" aria-hidden="true">settings_backup_restore</span>${_('remote.reset_keyboard')}</button>
                             <div class="dropdown-separator"></div>
-                            <button type="button" class="dropdown-item toggle-item" id="btn-block-input" data-active="false">${_('remote.block_input')}</button>
+                            <button type="button" class="dropdown-item toggle-item" id="btn-block-input" data-active="false"><span class="material-icons" aria-hidden="true">block</span>${_('remote.block_input')}</button>
                         </div>
                     </div>
                     <div class="toolbar-dropdown">
-                        <button type="button" class="btn btn-sm toolbar-btn" id="btn-type-text" aria-expanded="false" aria-controls="type-text-menu">
-                            ${_('remote.type_text')}<span class="material-icons btn-caret" aria-hidden="true">expand_more</span>
+                        <button type="button" class="btn btn-sm toolbar-btn" id="btn-type-text" aria-expanded="false" aria-controls="type-text-menu" title="${_('remote.type_text')}">
+                            <span class="material-icons" aria-hidden="true">text_fields</span><span class="tb-label">${_('remote.type_text')}</span><span class="material-icons btn-caret" aria-hidden="true">expand_more</span>
                         </button>
                         <div class="toolbar-dropdown-menu menu toolbar-type-text-menu" id="type-text-menu">
                             <div class="type-text-panel">
@@ -74,8 +90,8 @@
                         </div>
                     </div>
                     <div class="toolbar-dropdown">
-                        <button type="button" class="btn btn-sm toolbar-btn" id="btn-display" aria-haspopup="true" aria-expanded="false" aria-controls="display-menu">
-                            ${_('remote.display_settings')}<span class="material-icons btn-caret" aria-hidden="true">expand_more</span>
+                        <button type="button" class="btn btn-sm toolbar-btn" id="btn-display" aria-haspopup="true" aria-expanded="false" aria-controls="display-menu" title="${_('remote.display_settings')}">
+                            <span class="material-icons" aria-hidden="true">fit_screen</span><span class="tb-label">${_('remote.display_settings')}</span><span class="material-icons btn-caret" aria-hidden="true">expand_more</span>
                         </button>
                         <div class="toolbar-dropdown-menu menu toolbar-dropdown-wide" id="display-menu">
                             <div class="display-menu-grid">
@@ -92,6 +108,19 @@
                                     <button type="button" class="dropdown-item fps-mode-item active" data-fps-mode="adaptive">${_('remote_viewer.fps_adaptive')}</button>
                                 </section>
                                 <section class="display-menu-section">
+                                    <div class="dropdown-label">${_('remote.scale_mode')}</div>
+                                    <button type="button" class="dropdown-item scale-item active" data-scale="fit">${_('remote.scale_fit')}</button>
+                                    <button type="button" class="dropdown-item scale-item" data-scale="fill">${_('remote.scale_fill')}</button>
+                                    <button type="button" class="dropdown-item scale-item" data-scale="1:1">${_('remote.scale_original')}</button>
+                                    <button type="button" class="dropdown-item scale-item" data-scale="stretch">${_('remote.scale_stretch')}</button>
+                                </section>
+                                <section class="display-menu-section">
+                                    <div class="dropdown-label">${_('remote.keyboard_mode')}</div>
+                                    <button type="button" class="dropdown-item keyboard-mode-item active" data-keyboard-mode="Auto">${_('remote.keyboard_mode_auto')}</button>
+                                    <button type="button" class="dropdown-item keyboard-mode-item" data-keyboard-mode="Legacy">${_('remote.keyboard_mode_legacy')}</button>
+                                    <button type="button" class="dropdown-item keyboard-mode-item" data-keyboard-mode="Map">${_('remote.keyboard_mode_map')}</button>
+                                </section>
+                                <section class="display-menu-section">
                                     <div class="dropdown-label">${_('remote.codec')}</div>
                                     <button type="button" class="dropdown-item codec-item active" data-codec="Auto">${_('remote.codec_auto')}</button>
                                     <button type="button" class="dropdown-item codec-item" data-codec="VP9">VP9</button>
@@ -101,19 +130,7 @@
                                     <button type="button" class="dropdown-item codec-item" data-codec="H265">H265</button>
                                 </section>
                                 <section class="display-menu-section">
-                                    <div class="dropdown-label">${_('remote.keyboard_mode')}</div>
-                                    <button type="button" class="dropdown-item keyboard-mode-item active" data-keyboard-mode="Auto">${_('remote.keyboard_mode_auto')}</button>
-                                    <button type="button" class="dropdown-item keyboard-mode-item" data-keyboard-mode="Legacy">${_('remote.keyboard_mode_legacy')}</button>
-                                    <button type="button" class="dropdown-item keyboard-mode-item" data-keyboard-mode="Map">${_('remote.keyboard_mode_map')}</button>
-                                </section>
-                                <section class="display-menu-section">
-                                    <div class="dropdown-label">${_('remote.scale_mode')}</div>
-                                    <button type="button" class="dropdown-item scale-item active" data-scale="fit">${_('remote.scale_fit')}</button>
-                                    <button type="button" class="dropdown-item scale-item" data-scale="fill">${_('remote.scale_fill')}</button>
-                                    <button type="button" class="dropdown-item scale-item" data-scale="1:1">${_('remote.scale_original')}</button>
-                                    <button type="button" class="dropdown-item scale-item" data-scale="stretch">${_('remote.scale_stretch')}</button>
-                                </section>
-                                <section class="display-menu-section display-menu-section--full">
+                                    <div class="dropdown-label">${T('remote_viewer.display_options', 'Options')}</div>
                                     <button type="button" class="dropdown-item toggle-item" id="btn-show-cursor" data-active="true">${_('remote.show_cursor')}</button>
                                     <button type="button" class="dropdown-item toggle-item" id="btn-lock-session" data-active="false">${_('remote.lock_after_session')}</button>
                                     <button type="button" class="dropdown-item toggle-item" id="btn-privacy-mode" data-active="false">${_('remote.privacy_mode')}</button>
@@ -122,28 +139,47 @@
                             </div>
                         </div>
                     </div>
-                    <button type="button" class="btn btn-sm toolbar-btn" id="btn-billing-report" style="display:none;">${_('commercialization.report.toolbar') || 'Work report'}</button>
-                    <button type="button" class="btn btn-sm toolbar-btn" id="btn-audio">
-                        <span class="when-off">${_('remote_viewer.mute')}</span><span class="when-on">${_('remote_viewer.unmute')}</span>
-                    </button>
+                    <div class="toolbar-monitor-strip segmented" id="toolbar-monitor-strip" role="group" aria-label="${_('remote.select_monitor')}" hidden></div>
                     <div class="toolbar-dropdown">
-                        <button type="button" class="btn btn-sm toolbar-btn" id="btn-monitors" aria-haspopup="true" aria-expanded="false" aria-controls="monitors-menu" style="display:none">
-                            ${_('remote.monitors') || 'Monitors'}<span class="material-icons btn-caret" aria-hidden="true">expand_more</span>
+                        <button type="button" class="btn btn-sm toolbar-btn" id="btn-monitors" aria-haspopup="true" aria-expanded="false" aria-controls="monitors-menu" title="${_('remote.monitors')}" style="display:none">
+                            <span class="material-icons" aria-hidden="true">screenshot_monitor</span><span class="tb-label">${_('remote.monitors')}</span><span class="material-icons btn-caret" aria-hidden="true">expand_more</span>
                         </button>
                         <div class="toolbar-dropdown-menu menu" id="monitors-menu">
-                            <div class="dropdown-label">${_('remote.select_monitor') || 'Select Monitor'}</div>
+                            <div class="dropdown-label">${_('remote.select_monitor')}</div>
                         </div>
                     </div>
-                    <button type="button" class="btn btn-sm toolbar-btn" id="btn-chat">${_('remote.chat')}</button>
-                    <button type="button" class="btn btn-sm toolbar-btn" id="btn-file-transfer">${_('remote.file_transfer') || 'File transfer'}</button>
-                    <button type="button" class="btn btn-sm toolbar-btn" id="btn-record">
-                        <span class="when-off">${_('remote.record')}</span><span class="when-on">${_('remote_viewer.stop_recording')}</span>
-                    </button>
-                    <button type="button" class="btn btn-sm toolbar-btn" id="btn-viewonly">${_('remote.view_only')}</button>
-                    <button type="button" class="btn btn-sm toolbar-btn" id="btn-pin">${_('remote.pin_toolbar')}</button>
-                    <button type="button" class="btn btn-sm btn-danger-quiet toolbar-btn toolbar-btn-danger" id="btn-disconnect">${_('remote.disconnect')}</button>
                 </div>
-            </div>
+                <div class="toolbar-group">
+                    <button type="button" class="btn btn-sm toolbar-btn" id="btn-chat" aria-controls="rd-sheet-host" title="${_('remote.chat')}">
+                        <span class="material-icons" aria-hidden="true">chat</span><span class="tb-label">${_('remote.chat')}</span>
+                    </button>
+                    <button type="button" class="btn btn-sm toolbar-btn" id="btn-file-transfer" aria-controls="rd-sheet-host" title="${_('remote.file_transfer')}">
+                        <span class="material-icons" aria-hidden="true">folder_open</span><span class="tb-label">${_('remote.file_transfer')}</span>
+                    </button>
+                    <button type="button" class="btn btn-sm toolbar-btn" id="btn-session-info" aria-controls="session-info-sheet" title="${T('remote_viewer.session_info', 'Session info')}">
+                        <span class="material-icons" aria-hidden="true">info</span><span class="tb-label">${T('remote_viewer.session_info', 'Session info')}</span>
+                    </button>
+                </div>
+                <div class="toolbar-group">
+                    <button type="button" class="btn btn-sm toolbar-btn" id="btn-audio" title="${_('remote_viewer.mute')}">
+                        <span class="material-icons when-off" aria-hidden="true">volume_up</span><span class="material-icons when-on" aria-hidden="true">volume_off</span><span class="tb-label"><span class="when-off">${_('remote_viewer.mute')}</span><span class="when-on">${_('remote_viewer.unmute')}</span></span>
+                    </button>
+                    <button type="button" class="btn btn-sm toolbar-btn" id="btn-record" title="${_('remote.record')}">
+                        <span class="material-icons when-off" aria-hidden="true">fiber_manual_record</span><span class="material-icons when-on" aria-hidden="true">stop_circle</span><span class="tb-label"><span class="when-off">${_('remote.record')}</span><span class="when-on">${_('remote_viewer.stop_recording')}</span></span>
+                    </button>
+                    <button type="button" class="btn btn-sm toolbar-btn" id="btn-viewonly" title="${_('remote.view_only')}">
+                        <span class="material-icons" aria-hidden="true">visibility</span><span class="tb-label">${_('remote.view_only')}</span>
+                    </button>
+                    <button type="button" class="btn btn-sm toolbar-btn" id="btn-billing-report" style="display:none;" title="${_('commercialization.report.toolbar') || 'Work report'}">
+                        <span class="material-icons" aria-hidden="true">payments</span><span class="tb-label">${_('commercialization.report.toolbar') || 'Work report'}</span>
+                    </button>
+                </div>
+                <div class="toolbar-group toolbar-group-end">
+                    <button type="button" class="btn btn-sm toolbar-btn" id="btn-pin" title="${T('remote_viewer.keep_open_hint', 'Keep the controls open while you work')}">${_('remote.pin_toolbar')}</button>
+                    <button type="button" class="btn btn-sm btn-danger-quiet toolbar-btn toolbar-btn-danger" id="btn-disconnect" title="${_('remote.disconnect')}">
+                        <span class="material-icons" aria-hidden="true">link_off</span><span class="tb-label">${_('remote.disconnect')}</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -240,8 +276,24 @@
     </div>
 </div>
 
-<!-- Main Viewer Container (session panels are inserted here) -->
-<div class="viewer-container" id="viewer-container"></div>
+<!-- The screen and, beside it, one side sheet at a time (chat, files, session info) -->
+<div class="rd-stage" id="rd-stage">
+    <!-- Main Viewer Container (session panels are inserted here) -->
+    <div class="viewer-container" id="viewer-container"></div>
+    <div class="rd-sheet-host" id="rd-sheet-host">
+        <aside class="rd-sheet session-info-sheet" id="session-info-sheet" aria-labelledby="session-info-title" hidden>
+            <div class="rd-sheet-head">
+                <h2 class="rd-sheet-title" id="session-info-title">${T('remote_viewer.session_info', 'Session info')}</h2>
+                <button type="button" class="icon-btn rd-sheet-close" id="session-info-close" aria-label="${T('remote_viewer.close_session_info', 'Close session info')}" title="${_('actions.close')}">
+                    <span class="material-icons" aria-hidden="true">close</span>
+                </button>
+            </div>
+            <div class="rd-sheet-body">
+                <dl class="facts session-info-facts" id="session-info-facts"></dl>
+            </div>
+        </aside>
+    </div>
+</div>
 
 </div><!-- /#rd-viewer-shell -->
 <nav class="rd-mobile-toolbar" id="rd-mobile-toolbar" aria-label="${_('remote.mobile_toolbar') || 'Remote controls'}">
@@ -262,20 +314,37 @@
 
 <!-- Session Panel Template (cloned for each session) -->
 <template id="session-panel-template">
-    <div class="session-panel">
+    <div class="session-panel" role="tabpanel">
         <div class="viewer-overlay session-connection-overlay">
             <div class="overlay-card overlay-card--splitable">
-                <div class="overlay-card-main">
-                    <h2 class="overlay-device-name session-device-name"></h2>
-                    <p class="overlay-device-id session-device-label mono"></p>
+                <div class="overlay-card-main rd-state">
+                    <div class="rd-state-device">
+                        <span class="rd-state-os session-device-os"></span>
+                        <h2 class="rd-state-name overlay-device-name session-device-name"></h2>
+                        <span class="rd-state-id session-device-label"></span>
+                    </div>
+                    <h3 class="rd-state-title session-state-title">${T('remote_viewer.title_connecting', 'Connecting')}</h3>
                     <p class="overlay-status" role="status">
                         <span class="spinner" aria-hidden="true"></span>
                         <span class="session-status-text">${_('remote.connecting')}</span>
                     </p>
-                    <div class="overlay-actions session-overlay-actions" style="display:none;">
-                        <button type="button" class="btn btn-primary session-btn-reconnect">${_('remote.reconnect')}</button>
-                        <button type="button" class="btn session-btn-cdap-fallback" style="display:none;" title="${_('remote.cdap_fallback_hint')}">${_('remote.use_cdap_fallback')}</button>
+                    <p class="rd-state-try session-state-try" hidden></p>
+                    <ol class="rd-steps session-steps" aria-label="${T('remote_viewer.steps_label', 'Connection steps')}"></ol>
+                    <p class="rd-state-hint session-slow-hint" hidden></p>
+                    <div class="overlay-actions session-connecting-actions">
+                        <button type="button" class="btn session-btn-cancel">${_('common.cancel')}</button>
                     </div>
+                    <div class="overlay-actions session-overlay-actions" style="display:none;">
+                        <button type="button" class="btn btn-primary session-btn-reconnect"><span class="material-icons" aria-hidden="true">refresh</span>${_('remote.reconnect')}</button>
+                        <button type="button" class="btn session-btn-cdap-fallback" style="display:none;" title="${_('remote.cdap_fallback_hint')}">${_('remote.use_cdap_fallback')}</button>
+                        <a class="btn session-btn-open-device" href="/devices" target="_blank" rel="noopener" hidden><span class="material-icons" aria-hidden="true">open_in_new</span>${T('remote_viewer.open_device', 'Open device')}</a>
+                        <button type="button" class="btn session-btn-close-tab">${T('remote_viewer.close_tab', 'Close tab')}</button>
+                    </div>
+                    <details class="disclosure rd-state-details session-details" hidden>
+                        <summary>${T('remote_viewer.details', 'Details')}</summary>
+                        <button type="button" class="btn btn-sm btn-ghost session-btn-copy-details"><span class="material-icons" aria-hidden="true">content_copy</span>${T('remote_viewer.copy_details', 'Copy details')}</button>
+                        <dl class="facts session-details-facts"></dl>
+                    </details>
                 </div>
                 <div class="overlay-card-divider session-billing-divider" hidden aria-hidden="true"></div>
                 <div class="overlay-card-billing session-billing-pane" hidden>
@@ -295,63 +364,89 @@
         </div>
         <div class="viewer-overlay session-password-overlay" style="display:none;">
             <div class="overlay-card">
-                <h2 class="overlay-title">${_('remote.password_required')}</h2>
-                <p class="overlay-device-id session-password-label"></p>
-                <div class="password-form">
-                    <div class="form-group">
-                        <label class="form-label">${_('remote.password_placeholder')}
-                            <input type="password" class="form-input session-password-input" autocomplete="off">
-                        </label>
+                <div class="rd-state">
+                    <div class="rd-state-device">
+                        <span class="rd-state-os session-device-os"></span>
+                        <h2 class="rd-state-name session-device-name-copy"></h2>
+                        <span class="rd-state-id session-device-id-copy"></span>
                     </div>
-                    <p class="login-error session-login-error" role="alert" style="display:none;"></p>
-                    <div class="password-form-footer">
-                        <label class="checkbox-row session-remember-peer">
+                    <h3 class="rd-state-title overlay-title">${T('remote_viewer.password_title', 'Password needed')}</h3>
+                    <p class="rd-state-text session-password-label"></p>
+                    <div class="password-form">
+                        <div class="form-group">
+                            <label class="form-label">${_('remote.password_placeholder')}
+                                <input type="password" class="form-input session-password-input" autocomplete="off">
+                            </label>
+                        </div>
+                        <p class="login-error session-login-error" role="alert" style="display:none;"></p>
+                        <label class="check-field session-remember-peer">
                             <input type="checkbox" class="session-remember-peer-checkbox">
-                            <span>${_('remote.remember_peer_password') || 'Remember device password on this device'}</span>
+                            <span class="check-label">${T('remote_viewer.remember_password', 'Remember the password in this browser')}</span>
                         </label>
-                        <button type="button" class="btn btn-primary btn-block session-btn-authenticate">${_('remote.connect')}</button>
+                        <div class="overlay-actions">
+                            <button type="button" class="btn btn-primary session-btn-authenticate">${_('remote.connect')}</button>
+                            <button type="button" class="btn session-btn-auth-cancel">${_('common.cancel')}</button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
         <div class="viewer-overlay session-2fa-overlay" style="display:none;">
             <div class="overlay-card">
-                <h2 class="overlay-title">${_('remote.2fa_required') || '2FA Verification'}</h2>
-                <div class="password-form">
-                    <div class="form-group">
-                        <label class="form-label">${_('auth.totp_code')}
-                            <input type="text" class="form-input session-2fa-input"
-                                   autocomplete="one-time-code" maxlength="6" inputmode="numeric" pattern="[0-9]*">
-                        </label>
-                        <p class="form-hint">${_('remote.2fa_hint') || 'Enter the 6-digit code from your authenticator app'}</p>
+                <div class="rd-state">
+                    <div class="rd-state-device">
+                        <span class="rd-state-os session-device-os"></span>
+                        <h2 class="rd-state-name session-device-name-copy"></h2>
+                        <span class="rd-state-id session-device-id-copy"></span>
                     </div>
-                    <p class="login-error session-2fa-error" role="alert" style="display:none;"></p>
-                    <button type="button" class="btn btn-primary btn-block session-btn-verify-2fa">${_('remote.verify') || 'Verify'}</button>
+                    <h3 class="rd-state-title overlay-title">${_('remote.2fa_required')}</h3>
+                    <p class="rd-state-text session-2fa-label"></p>
+                    <div class="password-form">
+                        <div class="form-group">
+                            <label class="form-label">${_('auth.totp_code')}
+                                <input type="text" class="form-input session-2fa-input"
+                                       autocomplete="one-time-code" maxlength="6" inputmode="numeric" pattern="[0-9]*">
+                            </label>
+                            <p class="form-hint">${_('remote.2fa_hint')}</p>
+                        </div>
+                        <p class="login-error session-2fa-error" role="alert" style="display:none;"></p>
+                        <div class="overlay-actions">
+                            <button type="button" class="btn btn-primary session-btn-verify-2fa">${_('remote.verify')}</button>
+                            <button type="button" class="btn session-btn-auth-cancel">${_('common.cancel')}</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
         <canvas class="session-canvas" tabindex="0"></canvas>
-        <div class="chat-panel session-chat-panel" style="display:none;">
-            <div class="chat-header">
-                <h2>${_('remote.chat')}</h2>
-                <button type="button" class="chat-close modal-close session-btn-chat-close" aria-label="${_('actions.close')}"><span class="material-icons" aria-hidden="true">close</span></button>
+        <aside class="rd-sheet chat-panel session-chat-panel" style="display:none;">
+            <div class="rd-sheet-head chat-header">
+                <h2 class="rd-sheet-title">${_('remote.chat')}</h2>
+                <button type="button" class="icon-btn rd-sheet-close chat-close session-btn-chat-close" aria-label="${T('remote_viewer.close_chat', 'Close chat')}" title="${_('actions.close')}"><span class="material-icons" aria-hidden="true">close</span></button>
             </div>
-            <div class="chat-messages session-chat-messages" aria-live="polite"></div>
+            <div class="chat-messages session-chat-messages" aria-live="polite">
+                <p class="chat-empty">${T('remote_viewer.chat_empty', 'Your messages appear on the screen of the device. Replies show here.')}</p>
+            </div>
             <div class="chat-input-area">
                 <input type="text" class="form-input chat-input session-chat-input" aria-label="${_('remote.chat_placeholder')}" placeholder="${_('remote.chat_placeholder')}" />
-                <button type="button" class="btn chat-send session-btn-chat-send">${_('remote.type_text_send')}</button>
+                <button type="button" class="btn chat-send session-btn-chat-send"><span class="material-icons" aria-hidden="true">send</span>${_('remote.type_text_send')}</button>
             </div>
-        </div>
+        </aside>
     </div>
 </template>
 
 <!-- Initial session data (from server route) -->
 <script nonce="${cspNonce}">
     window.__initialDeviceId = ` + JSON.stringify(deviceId) + `;
-    window.__initialDeviceName = ` + JSON.stringify(device && device.hostname ? device.hostname : '') + `;
+    window.__initialDeviceName = ` + JSON.stringify(initialName) + `;
+    window.__initialDevicePlatform = ` + JSON.stringify(initialPlatform) + `;
     window.__capabilities = ` + JSON.stringify(capabilities || { transport: 'rd' }) + `;
     window.__guestToken = ` + JSON.stringify((typeof guestToken !== 'undefined' && guestToken) ? guestToken : '') + `;
 </script>
-
+` + (mock ? `
+<!-- Dev only (BD_DEV_MOCK_REMOTE=1): a fake device instead of the network -->
+<script nonce="${cspNonce}">window.__mockRemote = ` + JSON.stringify(mock) + `;</script>
+<script src="/dev/mock-remote.js?v=${cacheVersion}"></script>
+` : '') + `
 `
 }) %>
