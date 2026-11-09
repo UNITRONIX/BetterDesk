@@ -358,59 +358,63 @@
 		</div>
 
 		<aside class="page-side" aria-label={t('tickets.side_label')}>
-			<section class="section" aria-labelledby="tickets-share-title">
-				<div class="section-head"><h2 id="tickets-share-title">{t('tickets.share_title')}</h2></div>
-				{#if loadError && !tickets.length}
-					<p class="muted">{t('tickets.summary_failed')}</p>
-				{:else}
-					<ShareFilter
-						parts={shareParts}
-						label={t('tickets.share_title')}
-						current={status || null}
-						onpick={(v) => (status = v)}
-					/>
-				{/if}
-			</section>
+			<!-- Every section here sums up the list: filled once it is in, so the
+			     sections don't grow and move as it arrives -->
+			{#if loaded}
+				<section class="section" aria-labelledby="tickets-share-title">
+					<div class="section-head"><h2 id="tickets-share-title">{t('tickets.share_title')}</h2></div>
+					{#if loadError && !tickets.length}
+						<p class="muted">{t('tickets.summary_failed')}</p>
+					{:else}
+						<ShareFilter
+							parts={shareParts}
+							label={t('tickets.share_title')}
+							current={status || null}
+							onpick={(v) => (status = v)}
+						/>
+					{/if}
+				</section>
 
-			{#if anyActive}
-				<section class="section" aria-labelledby="tickets-priority-title">
-					<div class="section-head"><h2 id="tickets-priority-title">{t('tickets.open_by_priority')}</h2></div>
-					<p class="section-note">{t('tickets.open_by_priority_note')}</p>
-					<dl class="facts priority-facts">
-						{#each ['critical', 'high', 'medium', 'low'] as const as p (p)}
-							<dt>{t(`tickets.priority_${p}`)}</dt>
-							<dd>{formatNumber(active[p])}</dd>
-						{/each}
-					</dl>
+				{#if anyActive}
+					<section class="section" aria-labelledby="tickets-priority-title">
+						<div class="section-head">
+							<h2 id="tickets-priority-title">{t('tickets.open_by_priority')}</h2>
+						</div>
+						<p class="section-note">{t('tickets.open_by_priority_note')}</p>
+						<dl class="facts priority-facts">
+							{#each ['critical', 'high', 'medium', 'low'] as const as p (p)}
+								<dt>{t(`tickets.priority_${p}`)}</dt>
+								<dd>{formatNumber(active[p])}</dd>
+							{/each}
+						</dl>
+					</section>
+				{/if}
+
+				<section class="section" aria-labelledby="tickets-overdue-title">
+					<div class="section-head"><h2 id="tickets-overdue-title">{t('tickets.overdue_title')}</h2></div>
+					<p class="section-note">{t('tickets.overdue_note')}</p>
+					<RowList>
+						{#if loadError && !tickets.length}
+							<ListRow empty title={t('tickets.summary_failed')} />
+						{:else if !overdue.length}
+							<ListRow empty title={t('tickets.overdue_none')} />
+						{:else}
+							{#each overdue as x (x.id)}
+								<ListRow
+									title={x.title}
+									sub={t('tickets.overdue_row', {
+										id: x.id,
+										priority: t(`tickets.priority_${safeKey(x.priority)}`),
+										time: formatRelative(x.sla_due_at, '')
+									})}
+									chevron
+									onclick={() => openTicket(x.id)}
+								/>
+							{/each}
+						{/if}
+					</RowList>
 				</section>
 			{/if}
-
-			<section class="section" aria-labelledby="tickets-overdue-title">
-				<div class="section-head"><h2 id="tickets-overdue-title">{t('tickets.overdue_title')}</h2></div>
-				<p class="section-note">{t('tickets.overdue_note')}</p>
-				<RowList>
-					{#if !loaded}
-						<ListRow empty title={t('tickets.loading')} />
-					{:else if loadError && !tickets.length}
-						<ListRow empty title={t('tickets.summary_failed')} />
-					{:else if !overdue.length}
-						<ListRow empty title={t('tickets.overdue_none')} />
-					{:else}
-						{#each overdue as x (x.id)}
-							<ListRow
-								title={x.title}
-								sub={t('tickets.overdue_row', {
-									id: x.id,
-									priority: t(`tickets.priority_${safeKey(x.priority)}`),
-									time: formatRelative(x.sla_due_at, '')
-								})}
-								chevron
-								onclick={() => openTicket(x.id)}
-							/>
-						{/each}
-					{/if}
-				</RowList>
-			</section>
 		</aside>
 	</div>
 </div>

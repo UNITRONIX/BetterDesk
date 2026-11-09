@@ -36,6 +36,7 @@
 	import Meter from '#lib/ui/Meter.svelte';
 	import SearchField from '#lib/ui/SearchField.svelte';
 	import Select from '#lib/ui/Select.svelte';
+	import States from '#lib/ui/States.svelte';
 	import Status from '#lib/ui/Status.svelte';
 	import Table from '#lib/ui/Table.svelte';
 	import Tag from '#lib/ui/Tag.svelte';
@@ -64,17 +65,18 @@
 	async function loadPackages(): Promise<BillingPackage[]> {
 		try {
 			const list = await listBillingPackages();
+			// This month's use per package comes with the list: rows that filled in one
+			// by one would grow and push the page down. A package without an answer
+			// shows dashes.
+			const answers = await Promise.allSettled(list.map((p) => packagePreview(p.id)));
+			const next: Record<string, Preview> = {};
+			list.forEach((p, i) => {
+				const a = answers[i];
+				if (a?.status === 'fulfilled') next[p.id] = a.value;
+			});
+			previews = next;
 			packages = list;
 			packagesError = null;
-			// This month's use per package fills in as each answer arrives
-			for (const p of list) {
-				packagePreview(p.id).then(
-					(r) => (previews = { ...previews, [p.id]: r }),
-					() => {
-						/* the row shows dashes */
-					}
-				);
-			}
 			return list;
 		} catch {
 			packagesError = t('commercialization.ui.error_packages');
@@ -83,6 +85,11 @@
 	}
 
 	let statusFilter = $state('');
+
+	/** Both lists have answered: the page draws at once instead of growing table by table */
+	const settled = $derived(
+		(packages !== null || packagesError !== null) && (contracts !== null || contractsError !== null)
+	);
 
 	async function loadContracts() {
 		try {
@@ -371,84 +378,88 @@
 	{/if}
 {/snippet}
 
-<div class="page-cols billing-cols">
-	<div class="page-main">
-		<section class="section" aria-labelledby="{uid}-packages">
-			<div class="section-head"><h2 id="{uid}-packages">{t('commercialization.packages.heading')}</h2></div>
-			{#if packages?.length}
+{#if !settled}
+	<States kind="loading" message={t('commercialization.ui.loading_packages')} />
+{:else}
+	<div class="page-cols billing-cols">
+		<div class="page-main">
+			<section class="section" aria-labelledby="{uid}-packages">
+				<div class="section-head"><h2 id="{uid}-packages">{t('commercialization.packages.heading')}</h2></div>
+				{#if packages?.length}
+					<div class="toolbar">
+						<div class="search">
+							<SearchField label={t('commercialization.ui.search_packages')} bind:value={packageQuery} />
+						</div>
+					</div>
+				{/if}
+				<div class="packages-table">
+					<Table
+						rows={shownPackages}
+						columns={packageColumns}
+						key={(p) => p.id}
+						label={t('commercialization.packages.heading')}
+						onrowclick={(p) => (previewFor = p)}
+						loading={packages === null && !packagesError}
+						loadingText={t('commercialization.ui.loading_packages')}
+						error={packages === null ? packagesError : null}
+						onretry={() => void loadPackages()}
+						emptyText={packages?.length
+							? t('commercialization.ui.no_match_packages')
+							: t('commercialization.empty.packages')}
+					/>
+				</div>
+			</section>
+
+			<section class="section" aria-labelledby="{uid}-contracts">
+				<div class="section-head">
+					<h2 id="{uid}-contracts">{t('commercialization.contracts.assignments_title')}</h2>
+					{#if canManage}
+						<Button size="sm" class="contract-new" icon={ICONS.add} onclick={() => void assign()}
+							>{t('commercialization.contracts.new')}</Button
+						>
+					{/if}
+				</div>
+				<p class="section-note">{t('commercialization.ui.assignments_note')}</p>
 				<div class="toolbar">
 					<div class="search">
-						<SearchField label={t('commercialization.ui.search_packages')} bind:value={packageQuery} />
+						<SearchField label={t('commercialization.ui.search_assignments')} bind:value={contractQuery} />
 					</div>
+					<Select
+						width="medium"
+						aria-label={t('commercialization.contracts.status')}
+						options={statusOptions}
+						bind:value={statusFilter}
+						onchange={() => void loadContracts()}
+					/>
 				</div>
-			{/if}
-			<div class="packages-table">
-				<Table
-					rows={shownPackages}
-					columns={packageColumns}
-					key={(p) => p.id}
-					label={t('commercialization.packages.heading')}
-					onrowclick={(p) => (previewFor = p)}
-					loading={packages === null && !packagesError}
-					loadingText={t('commercialization.ui.loading_packages')}
-					error={packages === null ? packagesError : null}
-					onretry={() => void loadPackages()}
-					emptyText={packages?.length
-						? t('commercialization.ui.no_match_packages')
-						: t('commercialization.empty.packages')}
-				/>
-			</div>
-		</section>
+				<div class="contracts-table">
+					<Table
+						rows={shownContracts}
+						columns={contractColumns}
+						key={(c) => c.id}
+						label={t('commercialization.contracts.assignments_title')}
+						onrowclick={canManage ? (c) => (assignSheet = { contract: c }) : undefined}
+						loading={contracts === null && !contractsError}
+						loadingText={t('commercialization.ui.loading_assignments')}
+						error={contractsError}
+						onretry={() => void loadContracts()}
+						emptyText={contractQuery.trim() || statusFilter
+							? t('commercialization.ui.no_match_assignments')
+							: t('commercialization.empty.contracts')}
+					/>
+				</div>
+			</section>
+		</div>
 
-		<section class="section" aria-labelledby="{uid}-contracts">
-			<div class="section-head">
-				<h2 id="{uid}-contracts">{t('commercialization.contracts.assignments_title')}</h2>
-				{#if canManage}
-					<Button size="sm" class="contract-new" icon={ICONS.add} onclick={() => void assign()}
-						>{t('commercialization.contracts.new')}</Button
-					>
-				{/if}
-			</div>
-			<p class="section-note">{t('commercialization.ui.assignments_note')}</p>
-			<div class="toolbar">
-				<div class="search">
-					<SearchField label={t('commercialization.ui.search_assignments')} bind:value={contractQuery} />
-				</div>
-				<Select
-					width="medium"
-					aria-label={t('commercialization.contracts.status')}
-					options={statusOptions}
-					bind:value={statusFilter}
-					onchange={() => void loadContracts()}
-				/>
-			</div>
-			<div class="contracts-table">
-				<Table
-					rows={shownContracts}
-					columns={contractColumns}
-					key={(c) => c.id}
-					label={t('commercialization.contracts.assignments_title')}
-					onrowclick={canManage ? (c) => (assignSheet = { contract: c }) : undefined}
-					loading={contracts === null && !contractsError}
-					loadingText={t('commercialization.ui.loading_assignments')}
-					error={contractsError}
-					onretry={() => void loadContracts()}
-					emptyText={contractQuery.trim() || statusFilter
-						? t('commercialization.ui.no_match_assignments')
-						: t('commercialization.empty.contracts')}
-				/>
-			</div>
-		</section>
+		<aside class="page-side" aria-labelledby="{uid}-explain">
+			<section class="section">
+				<div class="section-head"><h2 id="{uid}-explain">{t('commercialization.ui.explain_title')}</h2></div>
+				<p class="explain">{t('commercialization.ui.explain_text')}</p>
+			</section>
+			<BillingSettings open={settingsOpen} {canManage} />
+		</aside>
 	</div>
-
-	<aside class="page-side" aria-labelledby="{uid}-explain">
-		<section class="section">
-			<div class="section-head"><h2 id="{uid}-explain">{t('commercialization.ui.explain_title')}</h2></div>
-			<p class="explain">{t('commercialization.ui.explain_text')}</p>
-		</section>
-		<BillingSettings open={settingsOpen} {canManage} />
-	</aside>
-</div>
+{/if}
 
 {#if packageSheet}
 	<PackageSheet

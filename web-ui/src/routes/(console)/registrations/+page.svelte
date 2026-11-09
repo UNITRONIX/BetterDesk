@@ -93,6 +93,8 @@
 
 	let mode = $state<EnrollmentMode>('managed');
 	let modeKnown = $state(false);
+	/** The mode request has answered, either way */
+	let modeSettled = $state(false);
 	let tagPicker = $state(true);
 
 	let loading = false;
@@ -141,6 +143,8 @@
 			modeKnown = true;
 		} catch {
 			/* the mode section stays hidden, the approve form keeps the tag picker */
+		} finally {
+			modeSettled = true;
 		}
 	}
 
@@ -507,49 +511,55 @@
 				</section>
 			</div>
 
-			<aside class="page-side" aria-label={t('registrations.side_label')}>
-				{#if modeKnown}
-					<section class="section reg-mode" aria-labelledby="reg-mode-title">
-						<div class="section-head"><h2 id="reg-mode-title">{t('tokens.enrollment_mode')}</h2></div>
-						<p class="reg-mode-current">{@render modeSentence()}</p>
-						{#if notice}
-							<p class="reg-mode-notice">
-								{t(`registrations.mode_${notice}_pending`, { count: formatNumber(waitingRustdesk) })}
-								{#if !modeLinkShown}{t('registrations.mode_admin_only')}{/if}
-							</p>
-						{/if}
-						{#if modeLinkShown}
-							<p><a href={link('/settings#auth')}>{t('registrations.mode_link')}</a></p>
-						{/if}
-					</section>
-				{/if}
+			<!-- Its sections depend on the mode and the list: drawn once both are in, so
+			     the steps don't move down as they arrive -->
+			{#if loaded && modeSettled}
+				<aside class="page-side" aria-label={t('registrations.side_label')}>
+					{#if modeKnown}
+						<section class="section reg-mode" aria-labelledby="reg-mode-title">
+							<div class="section-head"><h2 id="reg-mode-title">{t('tokens.enrollment_mode')}</h2></div>
+							<p class="reg-mode-current">{@render modeSentence()}</p>
+							{#if notice}
+								<p class="reg-mode-notice">
+									{t(`registrations.mode_${notice}_pending`, { count: formatNumber(waitingRustdesk) })}
+									{#if !modeLinkShown}{t('registrations.mode_admin_only')}{/if}
+								</p>
+							{/if}
+							{#if modeLinkShown}
+								<p><a href={link('/settings#auth')}>{t('registrations.mode_link')}</a></p>
+							{/if}
+						</section>
+					{/if}
 
-				{#if loaded && !loadError && waiting.length}
-					<section class="section" aria-labelledby="reg-sources-title">
-						<div class="section-head"><h2 id="reg-sources-title">{t('registrations.sources_title')}</h2></div>
-						<div class="reg-sources">
-							<Facts
-								items={[
-									{ label: t('registrations.source_rustdesk'), value: formatNumber(sources.rustdesk) },
-									{ label: t('registrations.source_lan'), value: formatNumber(sources.lan) }
-								]}
-							/>
-						</div>
-					</section>
-				{/if}
+					{#if loaded && !loadError && waiting.length}
+						<section class="section" aria-labelledby="reg-sources-title">
+							<div class="section-head">
+								<h2 id="reg-sources-title">{t('registrations.sources_title')}</h2>
+							</div>
+							<div class="reg-sources">
+								<Facts
+									items={[
+										{ label: t('registrations.source_rustdesk'), value: formatNumber(sources.rustdesk) },
+										{ label: t('registrations.source_lan'), value: formatNumber(sources.lan) }
+									]}
+								/>
+							</div>
+						</section>
+					{/if}
 
-				<section class="section" aria-labelledby="reg-steps-title">
-					<div class="section-head"><h2 id="reg-steps-title">{t('registrations.steps_title')}</h2></div>
-					<Steps
-						items={[
-							t('registrations.step_check'),
-							t('registrations.step_approve'),
-							t('registrations.step_after'),
-							t('registrations.step_reject')
-						]}
-					/>
-				</section>
-			</aside>
+					<section class="section" aria-labelledby="reg-steps-title">
+						<div class="section-head"><h2 id="reg-steps-title">{t('registrations.steps_title')}</h2></div>
+						<Steps
+							items={[
+								t('registrations.step_check'),
+								t('registrations.step_approve'),
+								t('registrations.step_after'),
+								t('registrations.step_reject')
+							]}
+						/>
+					</section>
+				</aside>
+			{/if}
 		</div>
 	</div>
 {/if}
@@ -580,6 +590,8 @@
 
 <style>
 	.count-line {
+		/* Its line is kept while the list loads */
+		min-height: 1.5em;
 		margin: 0;
 		color: var(--text-muted);
 	}

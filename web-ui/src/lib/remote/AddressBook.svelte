@@ -204,52 +204,57 @@
 
 <div class={['book', compact && 'compact']}>
 	<aside class="book-side" aria-label={tf('remote_dashboard.filters_label', 'Filters')}>
-		<div class="filter-block">
-			<svelte:element this={H} class="filter-head"
-				>{tf('remote_dashboard.nav_folders', 'Folders')}</svelte:element
-			>
-			<ul class="filter-list">
-				{@render navItem(ALL, tf('remote_dashboard.all_devices', 'All devices'), counts.all)}
-				{@render navItem(
-					{ kind: 'folder', id: 'unassigned' },
-					tf('remote_dashboard.unassigned', 'Unassigned'),
-					counts.unassigned
-				)}
-				{#each folders as f (f.id)}
+		<!-- Filled once the lists are in: before that it would say there are no
+		     groups or tags, then grow -->
+		{#if loaded}
+			<div class="filter-block">
+				<svelte:element this={H} class="filter-head"
+					>{tf('remote_dashboard.nav_folders', 'Folders')}</svelte:element
+				>
+				<ul class="filter-list">
+					{@render navItem(ALL, tf('remote_dashboard.all_devices', 'All devices'), counts.all)}
 					{@render navItem(
-						{ kind: 'folder', id: String(f.id) },
-						f.name,
-						counts.folders.get(String(f.id)) ?? 0
+						{ kind: 'folder', id: 'unassigned' },
+						tf('remote_dashboard.unassigned', 'Unassigned'),
+						counts.unassigned
 					)}
-				{/each}
-			</ul>
-		</div>
-		<div class="filter-block">
-			<svelte:element this={H} class="filter-head"
-				>{tf('remote_dashboard.nav_groups', 'Groups')}</svelte:element
-			>
-			{#if groups.length}
-				<ul class="filter-list">
-					{#each groups as g (g.guid)}
-						{@render navItem({ kind: 'group', id: g.guid }, g.name, counts.groups.get(g.guid) ?? 0)}
+					{#each folders as f (f.id)}
+						{@render navItem(
+							{ kind: 'folder', id: String(f.id) },
+							f.name,
+							counts.folders.get(String(f.id)) ?? 0
+						)}
 					{/each}
 				</ul>
-			{:else}
-				<p class="filter-empty">{tf('remote_dashboard.no_groups', 'No groups')}</p>
-			{/if}
-		</div>
-		<div class="filter-block">
-			<svelte:element this={H} class="filter-head">{tf('remote_dashboard.nav_tags', 'Tags')}</svelte:element>
-			{#if tags.length}
-				<ul class="filter-list">
-					{#each tags as tag (tag)}
-						{@render navItem({ kind: 'tag', id: tag }, tag, counts.tags.get(tag) ?? 0)}
-					{/each}
-				</ul>
-			{:else}
-				<p class="filter-empty">{tf('remote_dashboard.no_tags', 'No tags')}</p>
-			{/if}
-		</div>
+			</div>
+			<div class="filter-block">
+				<svelte:element this={H} class="filter-head"
+					>{tf('remote_dashboard.nav_groups', 'Groups')}</svelte:element
+				>
+				{#if groups.length}
+					<ul class="filter-list">
+						{#each groups as g (g.guid)}
+							{@render navItem({ kind: 'group', id: g.guid }, g.name, counts.groups.get(g.guid) ?? 0)}
+						{/each}
+					</ul>
+				{:else}
+					<p class="filter-empty">{tf('remote_dashboard.no_groups', 'No groups')}</p>
+				{/if}
+			</div>
+			<div class="filter-block">
+				<svelte:element this={H} class="filter-head">{tf('remote_dashboard.nav_tags', 'Tags')}</svelte:element
+				>
+				{#if tags.length}
+					<ul class="filter-list">
+						{#each tags as tag (tag)}
+							{@render navItem({ kind: 'tag', id: tag }, tag, counts.tags.get(tag) ?? 0)}
+						{/each}
+					</ul>
+				{:else}
+					<p class="filter-empty">{tf('remote_dashboard.no_tags', 'No tags')}</p>
+				{/if}
+			</div>
+		{/if}
 	</aside>
 
 	<section class="book-main" aria-labelledby="{uid}-title">

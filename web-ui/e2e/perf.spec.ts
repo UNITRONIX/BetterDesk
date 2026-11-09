@@ -8,14 +8,16 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import zlib from 'node:zlib';
+import type { Browser } from '@playwright/test';
 import { test, expect } from './fixtures.ts';
 import { UI } from './roles.ts';
 
 const BUILD = process.env.BD_UI_BUILD ?? 'build';
 const results: Record<string, unknown> = {};
 
-// One measurement at a time: page loads running side by side slow each other down
-test.describe.configure({ mode: 'serial' });
+// One measurement at a time, in order: page loads running side by side slow each
+// other down. A failing page doesn't skip the ones after it.
+test.describe.configure({ mode: 'default' });
 
 test.afterAll(() => {
 	fs.mkdirSync('test-results', { recursive: true });
@@ -51,30 +53,41 @@ const observe = () => {
 	}
 };
 
+/**
+ * Opens a page signed in as admin at the size Lighthouse's desktop preset uses
+ * and returns what the observers saw once it went quiet.
+ */
+async function load(browser: Browser, page: string) {
+	const ctx = await browser.newContext({
+		storageState: 'e2e/.auth/admin.json',
+		viewport: { width: 1350, height: 940 }
+	});
+	const p = await ctx.newPage();
+	await p.addInitScript(observe);
+	// SvelteKit preloads the page of a link under the pointer. A new page has the
+	// pointer at the top left, on the logo link (the overview), so the overview's
+	// code would count against this page. Move it to an empty spot of the top bar
+	// once the navigation has committed, before the shell draws.
+	await p.goto(UI + page, { waitUntil: 'commit' });
+	await p.mouse.move(700, 24);
+	// Some pages keep a request open (live updates), so don't wait for silence forever
+	await p.waitForLoadState('networkidle', { timeout: 10_000 }).catch(() => {});
+	await p.waitForTimeout(1000);
+	const m = await p.evaluate(() => {
+		const w = window as unknown as { __perf: { lcp: number; cls: number } };
+		const js = performance
+			.getEntriesByType('resource')
+			.filter((e) => e.name.endsWith('.js'))
+			.map((e) => new URL(e.name).pathname);
+		return { ...w.__perf, js, path: location.pathname };
+	});
+	await ctx.close();
+	return m;
+}
+
 for (const page of ['/', '/devices', '/settings']) {
 	test(`@perf ${page}: LCP under 1 s, no layout shift over 0.02, JS within budget`, async ({ browser }) => {
-		const ctx = await browser.newContext({
-			storageState: 'e2e/.auth/admin.json',
-			viewport: { width: 1440, height: 900 }
-		});
-		const p = await ctx.newPage();
-		await p.addInitScript(observe);
-		// SvelteKit preloads the page of a link under the pointer. A new page has the
-		// pointer at the top left, on the logo link (the overview), so the overview's
-		// code would count against this page. Move it to an empty spot of the top bar
-		// once the navigation has committed, before the shell draws.
-		await p.goto(UI + page, { waitUntil: 'commit' });
-		await p.mouse.move(700, 24);
-		await p.waitForLoadState('networkidle');
-		await p.waitForTimeout(500);
-		const m = await p.evaluate(() => {
-			const w = window as unknown as { __perf: { lcp: number; cls: number } };
-			const js = performance
-				.getEntriesByType('resource')
-				.filter((e) => e.name.endsWith('.js'))
-				.map((e) => new URL(e.name).pathname);
-			return { ...w.__perf, js };
-		});
+		const m = await load(browser, page);
 		const appJs = m.js.filter((u) => u.startsWith(UI + '/_ui/'));
 		const gz = appJs.reduce((n, u) => n + gzipSize(u), 0);
 		results[page] = {
@@ -83,10 +96,36 @@ for (const page of ['/', '/devices', '/settings']) {
 			jsFiles: appJs.length,
 			jsGzipKB: +(gz / 1024).toFixed(1)
 		};
-		await ctx.close();
 		expect(m.lcp).toBeLessThan(1000);
 		expect(m.cls).toBeLessThanOrEqual(0.02);
 		if (page === '/devices') expect(gz / 1024).toBeLessThanOrEqual(150);
+	});
+}
+
+/**
+ * Every page an admin can open, from the build's route list: the console, the
+ * studio and the remote address book, with optional parameters left out.
+ * Pages that need a parameter, the sign-in pages and the developer kit are
+ * not in it.
+ */
+function signedInPages(): string[] {
+	const file = path.join(BUILD, 'routes.json');
+	if (!fs.existsSync(file)) return [];
+	const list = JSON.parse(fs.readFileSync(file, 'utf8')) as { id: string }[];
+	return list
+		.map((r) => r.id)
+		.filter((id) => /^\/\((console|studio|remote)\)/.test(id))
+		.map((id) => id.replace(/^\/\([^)]+\)/, '').replace(/\/\[\[[^\]]+\]\]/g, '') || '/')
+		.filter((p) => !p.includes('[') && !['/kit', '/remote/guest', '/remote/login'].includes(p));
+}
+
+for (const page of signedInPages()) {
+	test(`@perf ${page}: no layout shift over 0.02 while it loads`, async ({ browser }) => {
+		const m = await load(browser, page);
+		results[`cls ${page}`] = Number(m.cls.toFixed(4));
+		// A page the admin can't open would measure the sign-in or no-access view instead
+		expect(m.path).toBe(UI + page);
+		expect(m.cls).toBeLessThanOrEqual(0.02);
 	});
 }
 

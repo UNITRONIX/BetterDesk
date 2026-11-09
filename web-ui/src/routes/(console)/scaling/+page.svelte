@@ -72,6 +72,10 @@
 	let capacity = $state.raw<Capacity | null>(null);
 	let diagram = $state.raw<ReturnType<typeof diagramProps> | null>(null);
 	let diagramError = $state(false);
+	/* Whether there are relays decides which sections show and how tall they
+	   are: the page draws once the first four answers are in, instead of
+	   moving as each arrives */
+	let settled = $state(false);
 
 	async function loadRelays() {
 		try {
@@ -114,8 +118,8 @@
 	$effect(() => {
 		if (!allowed) return;
 		untrack(() => {
-			void loadDiagram();
-			void Promise.all([loadRelays(), loadRules(), loadCapacity()]).then(async () => {
+			void Promise.all([loadRelays(), loadRules(), loadCapacity(), loadDiagram()]).then(async () => {
+				settled = true;
 				const id = sectionFor(page.url.searchParams.get('tab'));
 				if (!id) return;
 				await tick();
@@ -335,123 +339,130 @@
 			</div>
 		</div>
 
-		<div class="page-cols">
-			<div class="page-main">
-				<section class="section" id="panel-relays" aria-labelledby="relays-title">
-					<div class="section-head"><h2 id="relays-title">{t('scaling.relays_title')}</h2></div>
-					<p class="section-note">{t('scaling.relays_info_banner')}</p>
-					{#if shows.search}
-						<div class="toolbar">
-							<div class="search"><SearchField label={t('scaling.relay_search')} bind:value={query} /></div>
-						</div>
-						<CountLine
-							text={t('scaling.count_line')}
-							values={{
-								relays: relays?.length ?? 0,
-								rules: rules?.length ?? 0,
-								reporting: reportingCount(relays ?? [])
-							}}
-						/>
-					{/if}
-					<Table
-						rows={shownRelays}
-						columns={relayColumns}
-						key={(r) => r.id}
-						label={t('scaling.relays_title')}
-						onrowclick={(r) => (relaySheet = { relay: r })}
-						loading={relays === null && !relaysError}
-						loadingText={t('scaling.relays_loading')}
-						error={relaysError}
-						onretry={() => void loadRelays()}
-						emptyText={relays?.length ? t('scaling.relays_no_match') : t('scaling.no_relays')}
-					/>
-				</section>
-
-				<section class="section" id="panel-rules" aria-labelledby="rules-title">
-					<div class="section-head">
-						<h2 id="rules-title">{t('scaling.tab_rules')}</h2>
-						{#if shows.addRule && relays !== null}
-							<Button size="sm" class="rule-add" icon={ICONS.add} onclick={() => (ruleSheet = { rule: null })}
-								>{t('scaling.rule_add')}</Button
-							>
+		{#if !settled}
+			<States kind="loading" message={t('scaling.relays_loading')} />
+		{:else}
+			<div class="page-cols">
+				<div class="page-main">
+					<section class="section" id="panel-relays" aria-labelledby="relays-title">
+						<div class="section-head"><h2 id="relays-title">{t('scaling.relays_title')}</h2></div>
+						<p class="section-note">{t('scaling.relays_info_banner')}</p>
+						{#if shows.search}
+							<div class="toolbar">
+								<div class="search"><SearchField label={t('scaling.relay_search')} bind:value={query} /></div>
+							</div>
+							<CountLine
+								text={t('scaling.count_line')}
+								values={{
+									relays: relays?.length ?? 0,
+									rules: rules?.length ?? 0,
+									reporting: reportingCount(relays ?? [])
+								}}
+							/>
 						{/if}
-					</div>
-					<p class="section-note">{t('scaling.rules_hint')}</p>
-					{#if shows.foldRules}
-						<p class="muted">{t('scaling.rules_need_relay_note')}</p>
-					{:else}
 						<Table
-							rows={sortedRules}
-							columns={ruleColumns}
+							rows={shownRelays}
+							columns={relayColumns}
 							key={(r) => r.id}
-							label={t('scaling.tab_rules')}
-							onrowclick={relays?.length ? (r) => (ruleSheet = { rule: r }) : undefined}
-							loading={rules === null && !rulesError}
-							loadingText={t('scaling.rules_loading')}
-							error={rulesError}
-							onretry={() => void loadRules()}
-							emptyText={t('scaling.no_rules')}
+							label={t('scaling.relays_title')}
+							onrowclick={(r) => (relaySheet = { relay: r })}
+							loading={relays === null && !relaysError}
+							loadingText={t('scaling.relays_loading')}
+							error={relaysError}
+							onretry={() => void loadRelays()}
+							emptyText={relays?.length ? t('scaling.relays_no_match') : t('scaling.no_relays')}
 						/>
-					{/if}
-				</section>
+					</section>
 
-				<section class="section" id="panel-diagram" aria-labelledby="diagram-title">
-					<div class="section-head"><h2 id="diagram-title">{t('diagram.how_title')}</h2></div>
-					<p class="section-note">{t('scaling.diagram_note')}</p>
-					{#if diagram}
-						<div class="diagram"><ConnectionDiagram {...diagram} /></div>
-					{:else if diagramError}
-						<States kind="error" message={t('scaling.diagram_error')} onretry={() => void loadDiagram()} />
-					{:else}
-						<States kind="loading" message={t('scaling.diagram_loading')} />
-					{/if}
-				</section>
+					<section class="section" id="panel-rules" aria-labelledby="rules-title">
+						<div class="section-head">
+							<h2 id="rules-title">{t('scaling.tab_rules')}</h2>
+							{#if shows.addRule && relays !== null}
+								<Button
+									size="sm"
+									class="rule-add"
+									icon={ICONS.add}
+									onclick={() => (ruleSheet = { rule: null })}>{t('scaling.rule_add')}</Button
+								>
+							{/if}
+						</div>
+						<p class="section-note">{t('scaling.rules_hint')}</p>
+						{#if shows.foldRules}
+							<p class="muted">{t('scaling.rules_need_relay_note')}</p>
+						{:else}
+							<Table
+								rows={sortedRules}
+								columns={ruleColumns}
+								key={(r) => r.id}
+								label={t('scaling.tab_rules')}
+								onrowclick={relays?.length ? (r) => (ruleSheet = { rule: r }) : undefined}
+								loading={rules === null && !rulesError}
+								loadingText={t('scaling.rules_loading')}
+								error={rulesError}
+								onretry={() => void loadRules()}
+								emptyText={t('scaling.no_rules')}
+							/>
+						{/if}
+					</section>
 
-				<Disclosure class="section" title={t('scaling.cap_planning')}>
-					<div id="panel-sizing" class="sizing">
-						<p class="muted">{t('scaling.cap_planning_note')}</p>
-						<Table
-							rows={[...SIZING]}
-							columns={sizingColumns}
-							key={(r) => r.key}
-							label={t('scaling.cap_planning')}
-						/>
-					</div>
-				</Disclosure>
+					<section class="section" id="panel-diagram" aria-labelledby="diagram-title">
+						<div class="section-head"><h2 id="diagram-title">{t('diagram.how_title')}</h2></div>
+						<p class="section-note">{t('scaling.diagram_note')}</p>
+						{#if diagram}
+							<div class="diagram"><ConnectionDiagram {...diagram} /></div>
+						{:else if diagramError}
+							<States kind="error" message={t('scaling.diagram_error')} onretry={() => void loadDiagram()} />
+						{:else}
+							<States kind="loading" message={t('scaling.diagram_loading')} />
+						{/if}
+					</section>
+
+					<Disclosure class="section" title={t('scaling.cap_planning')}>
+						<div id="panel-sizing" class="sizing">
+							<p class="muted">{t('scaling.cap_planning_note')}</p>
+							<Table
+								rows={[...SIZING]}
+								columns={sizingColumns}
+								key={(r) => r.key}
+								label={t('scaling.cap_planning')}
+							/>
+						</div>
+					</Disclosure>
+				</div>
+
+				<aside class="page-side" aria-labelledby="capacity-title">
+					<section class="section" id="panel-capacity" aria-labelledby="capacity-title">
+						<div class="section-head"><h2 id="capacity-title">{t('scaling.tab_capacity')}</h2></div>
+						{#if shows.capacity && relays !== null}
+							<p class="section-note">{t('scaling.capacity_note')}</p>
+							<dl class="facts tiers">
+								{#each tiers as tier (tier.key)}
+									<dt>{t(tier.key)}</dt>
+									<dd>
+										<span class="meter-box"
+											><Meter
+												value={tier.max > 0 ? (tier.current / tier.max) * 100 : 0}
+												high={80}
+												text={formatPercent(Math.round(tier.max > 0 ? (tier.current / tier.max) * 100 : 0))}
+											/></span
+										>
+										<span class="cell-sub"
+											>{t('scaling.cap_of', {
+												current: formatNumber(tier.current) + tier.unit,
+												max: formatNumber(tier.max) + tier.unit
+											})}</span
+										>
+									</dd>
+								{/each}
+							</dl>
+						{/if}
+						{#if advice.length}
+							<p class="advice">{advice.join(' ')}</p>
+						{/if}
+					</section>
+				</aside>
 			</div>
-
-			<aside class="page-side" aria-labelledby="capacity-title">
-				<section class="section" id="panel-capacity" aria-labelledby="capacity-title">
-					<div class="section-head"><h2 id="capacity-title">{t('scaling.tab_capacity')}</h2></div>
-					{#if shows.capacity && relays !== null}
-						<p class="section-note">{t('scaling.capacity_note')}</p>
-						<dl class="facts tiers">
-							{#each tiers as tier (tier.key)}
-								<dt>{t(tier.key)}</dt>
-								<dd>
-									<span class="meter-box"
-										><Meter
-											value={tier.max > 0 ? (tier.current / tier.max) * 100 : 0}
-											high={80}
-											text={formatPercent(Math.round(tier.max > 0 ? (tier.current / tier.max) * 100 : 0))}
-										/></span
-									>
-									<span class="cell-sub"
-										>{t('scaling.cap_of', {
-											current: formatNumber(tier.current) + tier.unit,
-											max: formatNumber(tier.max) + tier.unit
-										})}</span
-									>
-								</dd>
-							{/each}
-						</dl>
-					{/if}
-					{#if advice.length}
-						<p class="advice">{advice.join(' ')}</p>
-					{/if}
-				</section>
-			</aside>
-		</div>
+		{/if}
 	</div>
 {/if}
 

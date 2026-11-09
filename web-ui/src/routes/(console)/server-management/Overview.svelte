@@ -50,6 +50,7 @@
 	let hbbr = $state<ServerState | null>(null);
 	let failed = $state(false);
 	let run = $state(0);
+	let infoSettled = $state(false);
 
 	let ticks = 0;
 	let failures = 0;
@@ -66,12 +67,14 @@
 				hbbr = 'unknown';
 			}
 		);
-		getServerInfo().then(
-			(next) => (info = next),
-			() => {
-				/* keep the last */
-			}
-		);
+		getServerInfo()
+			.then(
+				(next) => (info = next),
+				() => {
+					/* keep the last */
+				}
+			)
+			.finally(() => (infoSettled = true));
 	}
 
 	// The polling restarts when `run` changes (Try again)
@@ -150,6 +153,10 @@
 		info?.server?.running && info.server.uptimeSeconds !== null ? info.server.uptimeSeconds : null
 	);
 	const serverVersion = $derived(info?.server?.version ?? '');
+	/* Each server's line, the version and the server uptime come with the first
+	   two answers: the side column is drawn once both are in, so its sections
+	   don't grow and move one after the other */
+	const sideReady = $derived(hbbs !== null && infoSettled);
 	const nodeVersion = $derived(info?.nodeVersion || snap?.nodeVersion || '');
 	const restarts = $derived(around('server_mgmt.history_restarts', 'link'));
 </script>
@@ -166,151 +173,161 @@
 
 <div class="page-cols">
 	<div class="page-main">
-		<section class="section" aria-labelledby="sm-history-title">
-			<div class="section-head"><h2 id="sm-history-title">{t('server_mgmt.history')}</h2></div>
-			<p class="section-note">{t('server_mgmt.history_note')}</p>
-			<div class="history" bind:this={chartHost}>
-				{#if chart}
-					<Chart
-						kind="line"
-						label={t('server_mgmt.history_label')}
-						summary={t('server_mgmt.history_summary', {
-							span,
-							cpuAvg: pct(chart.cpuAvg),
-							cpuMax: pct(chart.cpuMax),
-							memAvg: pct(chart.memAvg),
-							memMax: pct(chart.memMax)
-						})}
-						labels={chart.times.map(clock)}
-						series={[
-							{ name: t('server_mgmt.cpu'), values: chart.cpu },
-							{ name: t('server_mgmt.memory'), values: chart.mem }
-						]}
-						yMax={100}
-						format="percent"
-						xHeading={t('server_mgmt.history_time')}
-					/>
-				{:else}
-					<States kind="loading" message={t('server_mgmt.history_waiting')} />
-				{/if}
-			</div>
-			<p class="muted">
-				{restarts[0]}<a href={link('/security-audit')}>{t('nav.security_audit')}</a>{restarts[1]}
-			</p>
-		</section>
+		<!-- The first reading has the chart's samples and the machine's numbers: both
+		     sections are drawn with it, so the chart doesn't push the numbers down -->
+		{#if !snap && !failed}
+			<States kind="loading" message={t('server_mgmt.machine_loading')} />
+		{:else}
+			<section class="section" aria-labelledby="sm-history-title">
+				<div class="section-head"><h2 id="sm-history-title">{t('server_mgmt.history')}</h2></div>
+				<p class="section-note">{t('server_mgmt.history_note')}</p>
+				<div class="history" bind:this={chartHost}>
+					{#if chart}
+						<Chart
+							kind="line"
+							label={t('server_mgmt.history_label')}
+							summary={t('server_mgmt.history_summary', {
+								span,
+								cpuAvg: pct(chart.cpuAvg),
+								cpuMax: pct(chart.cpuMax),
+								memAvg: pct(chart.memAvg),
+								memMax: pct(chart.memMax)
+							})}
+							labels={chart.times.map(clock)}
+							series={[
+								{ name: t('server_mgmt.cpu'), values: chart.cpu },
+								{ name: t('server_mgmt.memory'), values: chart.mem }
+							]}
+							yMax={100}
+							format="percent"
+							xHeading={t('server_mgmt.history_time')}
+						/>
+					{:else}
+						<States kind="loading" message={t('server_mgmt.history_waiting')} />
+					{/if}
+				</div>
+				<p class="muted">
+					{restarts[0]}<a href={link('/security-audit')}>{t('nav.security_audit')}</a>{restarts[1]}
+				</p>
+			</section>
 
-		<section class="section" aria-labelledby="sm-machine-title">
-			<div class="section-head"><h2 id="sm-machine-title">{t('server_mgmt.machine_title')}</h2></div>
-			<p class="section-note">{t('server_mgmt.machine_note')}</p>
-			{#if failed}
-				<States kind="error" message={t('server_mgmt.machine_error')} onretry={retry} />
-			{:else if !snap}
-				<States kind="loading" message={t('server_mgmt.machine_loading')} />
-			{:else}
-				<dl class="facts sm-facts">
-					<dt>{t('server_mgmt.cpu')}</dt>
-					<dd>
-						<span class="meter-box"><Meter value={share(snap.cpu)} high={80} /></span>
-						<span class="sub">{t('server_mgmt.cpu_meta', { cores, model: snap.cpuModel || '–' })}</span>
-					</dd>
-					<dt>{t('server_mgmt.memory')}</dt>
-					<dd>
-						<span class="meter-box"><Meter value={share(snap.mem.percent)} high={80} /></span>
-						<span class="sub"
-							>{t('server_mgmt.mem_meta', {
-								used: formatBytes(snap.mem.used) || '–',
-								total: formatBytes(snap.mem.total) || '–'
-							})}</span
-						>
-					</dd>
-					<dt>{t('server_mgmt.load')}</dt>
-					<dd>
-						<span class="num">{load}</span>
-						<span class="sub">{t('server_mgmt.load_meta', { cores })}</span>
-					</dd>
-					{#each snap.disks as d, i (i)}
-						{@const total = Number(d.size || d.total) || 0}
-						<dt>{t('server_mgmt.disk_label', { mount: d.mount || d.fs || '?' })}</dt>
+			<section class="section" aria-labelledby="sm-machine-title">
+				<div class="section-head"><h2 id="sm-machine-title">{t('server_mgmt.machine_title')}</h2></div>
+				<p class="section-note">{t('server_mgmt.machine_note')}</p>
+				{#if failed}
+					<States kind="error" message={t('server_mgmt.machine_error')} onretry={retry} />
+				{:else if snap}
+					<dl class="facts sm-facts">
+						<dt>{t('server_mgmt.cpu')}</dt>
 						<dd>
-							<span class="meter-box"><Meter value={share(diskShare(d))} high={80} /></span>
+							<span class="meter-box"><Meter value={share(snap.cpu)} high={80} /></span>
+							<span class="sub">{t('server_mgmt.cpu_meta', { cores, model: snap.cpuModel || '–' })}</span>
+						</dd>
+						<dt>{t('server_mgmt.memory')}</dt>
+						<dd>
+							<span class="meter-box"><Meter value={share(snap.mem.percent)} high={80} /></span>
 							<span class="sub"
-								>{t('server_mgmt.disk_meta', {
-									used: formatBytes(Number(d.used) || 0),
-									total: formatBytes(total)
+								>{t('server_mgmt.mem_meta', {
+									used: formatBytes(snap.mem.used) || '–',
+									total: formatBytes(snap.mem.total) || '–'
 								})}</span
 							>
 						</dd>
-					{:else}
-						<dt>{t('server_mgmt.disks')}</dt>
-						<dd>{t('server_mgmt.no_disks')}</dd>
-					{/each}
-				</dl>
-			{/if}
-		</section>
+						<dt>{t('server_mgmt.load')}</dt>
+						<dd>
+							<span class="num">{load}</span>
+							<span class="sub">{t('server_mgmt.load_meta', { cores })}</span>
+						</dd>
+						{#each snap.disks as d, i (i)}
+							{@const total = Number(d.size || d.total) || 0}
+							<dt>{t('server_mgmt.disk_label', { mount: d.mount || d.fs || '?' })}</dt>
+							<dd>
+								<span class="meter-box"><Meter value={share(diskShare(d))} high={80} /></span>
+								<span class="sub"
+									>{t('server_mgmt.disk_meta', {
+										used: formatBytes(Number(d.used) || 0),
+										total: formatBytes(total)
+									})}</span
+								>
+							</dd>
+						{:else}
+							<dt>{t('server_mgmt.disks')}</dt>
+							<dd>{t('server_mgmt.no_disks')}</dd>
+						{/each}
+					</dl>
+				{/if}
+			</section>
+		{/if}
 	</div>
 
 	<aside class="page-side" aria-labelledby="sm-servers-title">
 		<section class="section" aria-labelledby="sm-servers-title">
 			<div class="section-head"><h2 id="sm-servers-title">{t('server_mgmt.servers_title')}</h2></div>
-			<dl class="facts side-facts">
-				<dt>{t('dashboard.signal_server')}</dt>
-				<dd class="sm-hbbs">{@render server('hbbs', hbbs)}</dd>
-				<dt>{t('dashboard.relay_server_label')}</dt>
-				<dd class="sm-hbbr">{@render server('hbbr', hbbr)}</dd>
-				<dt>{t('dashboard.web_console')}</dt>
-				<dd><Status tone="good" label={t('status.running')} /></dd>
-				{#if serverVersion}
-					<dt>{t('server_mgmt.server_version')}</dt>
-					<dd><Version version={serverVersion} /></dd>
-				{/if}
-			</dl>
+			{#if !sideReady}
+				<States kind="loading" message={t('status.checking')} />
+			{:else}
+				<dl class="facts side-facts">
+					<dt>{t('dashboard.signal_server')}</dt>
+					<dd class="sm-hbbs">{@render server('hbbs', hbbs)}</dd>
+					<dt>{t('dashboard.relay_server_label')}</dt>
+					<dd class="sm-hbbr">{@render server('hbbr', hbbr)}</dd>
+					<dt>{t('dashboard.web_console')}</dt>
+					<dd><Status tone="good" label={t('status.running')} /></dd>
+					{#if serverVersion}
+						<dt>{t('server_mgmt.server_version')}</dt>
+						<dd><Version version={serverVersion} /></dd>
+					{/if}
+				</dl>
+			{/if}
 		</section>
 
-		<section class="section" aria-labelledby="sm-uptime-title">
-			<div class="section-head"><h2 id="sm-uptime-title">{t('server_mgmt.uptime')}</h2></div>
-			<dl class="facts side-facts">
-				{#if serverUptime !== null}
-					<dt>{t('server_mgmt.server_uptime')}</dt>
-					<dd>{formatDuration(serverUptime)}</dd>
-				{/if}
-				<dt>{t('server_mgmt.console_uptime')}</dt>
-				<dd>
-					{#if snap}{formatDuration(snap.nodeUptime)}{:else}<Empty />{/if}
-				</dd>
-				<dt>{t('server_mgmt.host_uptime')}</dt>
-				<dd>
-					{#if snap}{formatDuration(snap.uptime)}{:else}<Empty />{/if}
-					<span class="sub">{t('server_mgmt.host_uptime_hint')}</span>
-				</dd>
-			</dl>
-		</section>
+		{#if sideReady}
+			<section class="section" aria-labelledby="sm-uptime-title">
+				<div class="section-head"><h2 id="sm-uptime-title">{t('server_mgmt.uptime')}</h2></div>
+				<dl class="facts side-facts">
+					{#if serverUptime !== null}
+						<dt>{t('server_mgmt.server_uptime')}</dt>
+						<dd>{formatDuration(serverUptime)}</dd>
+					{/if}
+					<dt>{t('server_mgmt.console_uptime')}</dt>
+					<dd>
+						{#if snap}{formatDuration(snap.nodeUptime)}{:else}<Empty />{/if}
+					</dd>
+					<dt>{t('server_mgmt.host_uptime')}</dt>
+					<dd>
+						{#if snap}{formatDuration(snap.uptime)}{:else}<Empty />{/if}
+						<span class="sub">{t('server_mgmt.host_uptime_hint')}</span>
+					</dd>
+				</dl>
+			</section>
 
-		<Disclosure class="section" title={t('server_mgmt.host_info')}>
-			<dl class="facts side-facts">
-				<dt>{t('server_mgmt.info_hostname')}</dt>
-				<dd><ValueCopy value={snap?.hostname} /></dd>
-				<dt>{t('server_mgmt.info_platform')}</dt>
-				<dd>
-					{#if snap?.platform}{snap.platform} ({snap.arch}){:else}<Empty />{/if}
-				</dd>
-				<dt>{t('server_mgmt.info_kernel')}</dt>
-				<dd>
-					{#if snap?.release || snap?.osVersion}{snap.release || snap.osVersion}{:else}<Empty />{/if}
-				</dd>
-				<dt>{t('server_mgmt.info_node')}</dt>
-				<dd><Version version={nodeVersion} /></dd>
-				<dt>{t('server_mgmt.info_process_id')}</dt>
-				<dd><ValueCopy value={info?.pid} copy={false} /></dd>
-				<dt>{t('server_mgmt.info_pty_available')}</dt>
-				<dd>
-					{#if info}<BooleanStatus
-							value={info.ptyAvailable}
-							on={t('server_mgmt.pty_yes')}
-							off={t('server_mgmt.pty_no')}
-						/>{:else}<Empty />{/if}
-				</dd>
-			</dl>
-		</Disclosure>
+			<Disclosure class="section" title={t('server_mgmt.host_info')}>
+				<dl class="facts side-facts">
+					<dt>{t('server_mgmt.info_hostname')}</dt>
+					<dd><ValueCopy value={snap?.hostname} /></dd>
+					<dt>{t('server_mgmt.info_platform')}</dt>
+					<dd>
+						{#if snap?.platform}{snap.platform} ({snap.arch}){:else}<Empty />{/if}
+					</dd>
+					<dt>{t('server_mgmt.info_kernel')}</dt>
+					<dd>
+						{#if snap?.release || snap?.osVersion}{snap.release || snap.osVersion}{:else}<Empty />{/if}
+					</dd>
+					<dt>{t('server_mgmt.info_node')}</dt>
+					<dd><Version version={nodeVersion} /></dd>
+					<dt>{t('server_mgmt.info_process_id')}</dt>
+					<dd><ValueCopy value={info?.pid} copy={false} /></dd>
+					<dt>{t('server_mgmt.info_pty_available')}</dt>
+					<dd>
+						{#if info}<BooleanStatus
+								value={info.ptyAvailable}
+								on={t('server_mgmt.pty_yes')}
+								off={t('server_mgmt.pty_no')}
+							/>{:else}<Empty />{/if}
+					</dd>
+				</dl>
+			</Disclosure>
+		{/if}
 	</aside>
 </div>
 

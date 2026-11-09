@@ -296,12 +296,15 @@
 		</section>
 	{:else if !code}
 		<section class="section" id="lang-grid" aria-label={t('nav.languages')}>
-			{#if listState === 'ready' && languages.length}
-				<CountLine
-					text={t('languages.count_line')}
-					values={{ total: languages.length, review: reviewCount, keys: refKeyCount }}
-				/>
-			{/if}
+			<!-- Its line is kept while the list loads, so the table doesn't move down -->
+			<div class="count-line-row">
+				{#if listState === 'ready' && languages.length}
+					<CountLine
+						text={t('languages.count_line')}
+						values={{ total: languages.length, review: reviewCount, keys: refKeyCount }}
+					/>
+				{/if}
+			</div>
 			<Table
 				rows={languages}
 				columns={listColumns}
@@ -457,6 +460,9 @@
 	}
 	.count-line {
 		color: var(--text-muted);
+	}
+	.count-line-row {
+		min-height: 1.5em;
 	}
 	.languages-page :global(.languages-table .col-coverage) {
 		width: 220px;

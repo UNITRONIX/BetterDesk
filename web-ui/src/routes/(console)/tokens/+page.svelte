@@ -32,6 +32,7 @@
 	import MenuDivider from '#lib/ui/MenuDivider.svelte';
 	import MenuItem from '#lib/ui/MenuItem.svelte';
 	import Notice from '#lib/ui/Notice.svelte';
+	import States from '#lib/ui/States.svelte';
 	import SearchField from '#lib/ui/SearchField.svelte';
 	import SegmentedFilter from '#lib/ui/SegmentedFilter.svelte';
 	import Status from '#lib/ui/Status.svelte';
@@ -83,6 +84,9 @@
 		tone: 'neutral'
 	});
 
+	/** The first mode request has answered, either way */
+	let modeSettled = $state(false);
+
 	async function loadMode(): Promise<void> {
 		if (!allowed) return;
 		try {
@@ -93,6 +97,8 @@
 				message: `${t('tokens.mode_load_failed')} ${err instanceof Error ? err.message : ''}`.trim(),
 				tone: 'error'
 			};
+		} finally {
+			modeSettled = true;
 		}
 	}
 
@@ -274,68 +280,74 @@
 			</div>
 		</div>
 
-		<div class="page-cols">
-			<div class="page-main">
-				<section class="section" aria-labelledby="tokens-list-title">
-					<div class="section-head"><h2 id="tokens-list-title">{t('tokens.list_title')}</h2></div>
-					{#if modeNotice}<Notice class="tokens-mode-notice" message={modeNotice} />{/if}
-					<Toolbar>
-						{#snippet search()}<SearchField
-								label={t('tokens.search_placeholder')}
-								bind:value={query}
-							/>{/snippet}
-						<SegmentedFilter label={t('tokens.status')} options={filterOptions} bind:value={filter} />
-					</Toolbar>
-					{#if loaded && !loadError && tokens.length}
-						<p class="count-line" aria-live="polite">
-							<strong>{formatNumber(tokens.length)}</strong>
-							{t('tokens.count_total')}: {countText}
-						</p>
-					{/if}
-					<div class="tokens-table">
-						<Table
-							rows={shown}
-							{columns}
-							key={(tok) => tok.id}
-							label={t('tokens.list_title')}
-							loading={!loaded}
-							loadingText={t('tokens.loading')}
-							error={loadError}
-							onretry={() => void load()}
-							emptyText={tokens.length ? t('tokens.no_match') : t('tokens.no_tokens')}
+		<!-- The mode decides the notice above the list: the columns are drawn once
+		     the list and the mode are in, so nothing moves down as they arrive -->
+		{#if !loaded || !modeSettled}
+			<States kind="loading" message={t('tokens.loading')} />
+		{:else}
+			<div class="page-cols">
+				<div class="page-main">
+					<section class="section" aria-labelledby="tokens-list-title">
+						<div class="section-head"><h2 id="tokens-list-title">{t('tokens.list_title')}</h2></div>
+						{#if modeNotice}<Notice class="tokens-mode-notice" message={modeNotice} />{/if}
+						<Toolbar>
+							{#snippet search()}<SearchField
+									label={t('tokens.search_placeholder')}
+									bind:value={query}
+								/>{/snippet}
+							<SegmentedFilter label={t('tokens.status')} options={filterOptions} bind:value={filter} />
+						</Toolbar>
+						{#if loaded && !loadError && tokens.length}
+							<p class="count-line" aria-live="polite">
+								<strong>{formatNumber(tokens.length)}</strong>
+								{t('tokens.count_total')}: {countText}
+							</p>
+						{/if}
+						<div class="tokens-table">
+							<Table
+								rows={shown}
+								{columns}
+								key={(tok) => tok.id}
+								label={t('tokens.list_title')}
+								loading={!loaded}
+								loadingText={t('tokens.loading')}
+								error={loadError}
+								onretry={() => void load()}
+								emptyText={tokens.length ? t('tokens.no_match') : t('tokens.no_tokens')}
+							/>
+						</div>
+					</section>
+				</div>
+
+				<aside class="page-side" aria-label={t('tokens.enrollment_mode')}>
+					<section class="section" aria-labelledby="enrollment-mode-title">
+						<div class="section-head"><h2 id="enrollment-mode-title">{t('tokens.enrollment_mode')}</h2></div>
+						<p class="section-note">{t('tokens.enrollment_mode_note')}</p>
+						<ChoiceList
+							choices={modeChoices}
+							labelledby="enrollment-mode-title"
+							name="enrollment_mode"
+							disabled={modeBusy}
+							bind:value={mode}
+							onchange={(v, on) => {
+								if (on) void changeMode(v);
+							}}
 						/>
-					</div>
-				</section>
+						<FormStatus message={modeStatus.message} tone={modeStatus.tone} />
+						{#if showRequests}
+							<p class="mode-next">
+								<a href={link('/registrations')}>{t('nav.registrations')}</a>: {t('keys.next_requests_sub')}
+							</p>
+						{/if}
+					</section>
+
+					<section class="section" aria-labelledby="tokens-how-title">
+						<div class="section-head"><h2 id="tokens-how-title">{t('tokens.how_title')}</h2></div>
+						<Steps items={[t('tokens.how_step1'), t('tokens.how_step2'), t('tokens.how_step3')]} />
+					</section>
+				</aside>
 			</div>
-
-			<aside class="page-side" aria-label={t('tokens.enrollment_mode')}>
-				<section class="section" aria-labelledby="enrollment-mode-title">
-					<div class="section-head"><h2 id="enrollment-mode-title">{t('tokens.enrollment_mode')}</h2></div>
-					<p class="section-note">{t('tokens.enrollment_mode_note')}</p>
-					<ChoiceList
-						choices={modeChoices}
-						labelledby="enrollment-mode-title"
-						name="enrollment_mode"
-						disabled={modeBusy}
-						bind:value={mode}
-						onchange={(v, on) => {
-							if (on) void changeMode(v);
-						}}
-					/>
-					<FormStatus message={modeStatus.message} tone={modeStatus.tone} />
-					{#if showRequests}
-						<p class="mode-next">
-							<a href={link('/registrations')}>{t('nav.registrations')}</a>: {t('keys.next_requests_sub')}
-						</p>
-					{/if}
-				</section>
-
-				<section class="section" aria-labelledby="tokens-how-title">
-					<div class="section-head"><h2 id="tokens-how-title">{t('tokens.how_title')}</h2></div>
-					<Steps items={[t('tokens.how_step1'), t('tokens.how_step2'), t('tokens.how_step3')]} />
-				</section>
-			</aside>
-		</div>
+		{/if}
 	</div>
 {/if}
 

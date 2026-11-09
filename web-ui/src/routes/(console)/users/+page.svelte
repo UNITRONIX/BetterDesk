@@ -276,8 +276,16 @@
 			sortValue: (u) => roleLabel(u.role),
 			class: 'col-nowrap'
 		},
-		{ id: 'devices', label: t('users.column_devices'), cell: scopeCell, class: 'col-nowrap' },
-		{ id: 'orgs', label: t('users.column_organizations'), cell: orgsCell },
+		// These two fill in after the list, one request per account: their width is
+		// kept from the start so the rows don't grow and move when the text arrives
+		{
+			id: 'devices',
+			label: t('users.column_devices'),
+			cell: scopeCell,
+			class: 'col-nowrap',
+			minWidth: '8rem'
+		},
+		{ id: 'orgs', label: t('users.column_organizations'), cell: orgsCell, minWidth: '12rem' },
 		{
 			id: 'two_factor',
 			label: t('nav.account_2fa'),
@@ -456,80 +464,82 @@
 				</section>
 			</div>
 
-			<aside class="page-side" aria-label={t('users.side_label')}>
-				<section class="section" id="user-groups" aria-labelledby="user-groups-title">
-					<div class="section-head">
-						<h2 id="user-groups-title" tabindex="-1">{t('users.user_groups')}</h2>
-						{#if canEdit}
-							<Button
-								class="add-group"
-								size="sm"
-								icon={ICONS.add}
-								onclick={() => (groupDialog = { group: null })}>{t('users.create_user_group')}</Button
-							>
+			<!-- Below the table on most screens: drawn once the list and the groups are
+			     in, so it doesn't move down when they arrive -->
+			{#if loaded && groupsState !== 'loading'}
+				<aside class="page-side" aria-label={t('users.side_label')}>
+					<section class="section" id="user-groups" aria-labelledby="user-groups-title">
+						<div class="section-head">
+							<h2 id="user-groups-title" tabindex="-1">{t('users.user_groups')}</h2>
+							{#if canEdit}
+								<Button
+									class="add-group"
+									size="sm"
+									icon={ICONS.add}
+									onclick={() => (groupDialog = { group: null })}>{t('users.create_user_group')}</Button
+								>
+							{/if}
+						</div>
+						<p class="section-note">{t('users.user_groups_note')}</p>
+						{#if groupsState === 'error'}
+							<States kind="error" message={t('users.groups_failed')} onretry={() => void loadGroups()} />
+						{:else if !groups.length}
+							<RowList><ListRow empty title={t('users.no_user_groups')} /></RowList>
+						{:else}
+							<RowList label={t('users.user_groups')}>
+								{#each groups as g (g.guid)}
+									{@const members = plural(g.member_count, {
+										one: t('users.members_one'),
+										other: t('users.members_many')
+									})}
+									{#snippet groupMenu()}<MenuButton
+											kebab
+											label={t('users.group_actions_for', { name: g.name || g.guid })}
+										>
+											<MenuItem icon={ICONS.edit} onselect={() => (groupDialog = { group: g })}
+												>{t('users.edit')}</MenuItem
+											>
+											<MenuDivider />
+											<MenuItem icon={ICONS.delete} danger onselect={() => void removeGroup(g)}
+												>{t('actions.delete')}</MenuItem
+											>
+										</MenuButton>{/snippet}
+									<ListRow
+										title={g.name || g.guid}
+										sub={g.note ? `${members}, ${g.note}` : members}
+										actions={canEdit ? groupMenu : undefined}
+									/>
+								{/each}
+							</RowList>
 						{/if}
-					</div>
-					<p class="section-note">{t('users.user_groups_note')}</p>
-					{#if groupsState === 'loading'}
-						<States kind="loading" message={t('users.loading_user_groups')} />
-					{:else if groupsState === 'error'}
-						<States kind="error" message={t('users.groups_failed')} onretry={() => void loadGroups()} />
-					{:else if !groups.length}
-						<RowList><ListRow empty title={t('users.no_user_groups')} /></RowList>
-					{:else}
-						<RowList label={t('users.user_groups')}>
-							{#each groups as g (g.guid)}
-								{@const members = plural(g.member_count, {
-									one: t('users.members_one'),
-									other: t('users.members_many')
-								})}
-								{#snippet groupMenu()}<MenuButton
-										kebab
-										label={t('users.group_actions_for', { name: g.name || g.guid })}
-									>
-										<MenuItem icon={ICONS.edit} onselect={() => (groupDialog = { group: g })}
-											>{t('users.edit')}</MenuItem
-										>
-										<MenuDivider />
-										<MenuItem icon={ICONS.delete} danger onselect={() => void removeGroup(g)}
-											>{t('actions.delete')}</MenuItem
-										>
-									</MenuButton>{/snippet}
-								<ListRow
-									title={g.name || g.guid}
-									sub={g.note ? `${members}, ${g.note}` : members}
-									actions={canEdit ? groupMenu : undefined}
-								/>
+					</section>
+
+					<section class="section" aria-labelledby="users-roles-title">
+						<div class="section-head"><h2 id="users-roles-title">{t('users.roles_title')}</h2></div>
+						<dl class="roles">
+							{#each DESCRIBED_ROLES as r (r)}
+								<div>
+									<dt>{roleLabel(r)}</dt>
+									<dd>{t(`users.role_desc_${r}`)}</dd>
+								</div>
 							{/each}
-						</RowList>
-					{/if}
-				</section>
+						</dl>
+						<p class="section-note">
+							{t('users.role_note')}
+							{#if session.isSuperAdmin}<a href={link('/permissions')}>{t('users.roles_change_link')}</a>{/if}
+						</p>
+					</section>
 
-				<section class="section" aria-labelledby="users-roles-title">
-					<div class="section-head"><h2 id="users-roles-title">{t('users.roles_title')}</h2></div>
-					<dl class="roles">
-						{#each DESCRIBED_ROLES as r (r)}
-							<div>
-								<dt>{roleLabel(r)}</dt>
-								<dd>{t(`users.role_desc_${r}`)}</dd>
-							</div>
-						{/each}
-					</dl>
-					<p class="section-note">
-						{t('users.role_note')}
-						{#if session.isSuperAdmin}<a href={link('/permissions')}>{t('users.roles_change_link')}</a>{/if}
-					</p>
-				</section>
-
-				<Disclosure title={t('users.security_tips_title')}>
-					<ul class="tips">
-						<li>{t('users.tip_unique_accounts')}</li>
-						<li>{t('users.tip_strong_passwords')}</li>
-						<li>{t('users.tip_least_role')}</li>
-						<li>{t('users.tip_audit_logs')}</li>
-					</ul>
-				</Disclosure>
-			</aside>
+					<Disclosure title={t('users.security_tips_title')}>
+						<ul class="tips">
+							<li>{t('users.tip_unique_accounts')}</li>
+							<li>{t('users.tip_strong_passwords')}</li>
+							<li>{t('users.tip_least_role')}</li>
+							<li>{t('users.tip_audit_logs')}</li>
+						</ul>
+					</Disclosure>
+				</aside>
+			{/if}
 		</div>
 	</div>
 

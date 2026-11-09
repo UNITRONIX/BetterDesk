@@ -84,23 +84,32 @@
 	let mode = $state<EnrollmentMode | null>(null);
 	let diagramMode = $state<'direct-first' | 'relay-only'>('direct-first');
 
+	let modeSettled = $state(false);
+	let diagramSettled = $state(false);
+
 	async function loadMode(): Promise<void> {
-		if (!canManage) return;
 		try {
-			mode = await getEnrollmentMode();
+			if (canManage) mode = await getEnrollmentMode();
 		} catch {
 			mode = null;
+		} finally {
+			modeSettled = true;
 		}
 	}
 
 	async function loadDiagramMode(): Promise<void> {
-		if (!can('server.config')) return;
 		try {
-			diagramMode = await getDiagramMode();
+			if (can('server.config')) diagramMode = await getDiagramMode();
 		} catch {
 			/* clients try a direct connection first */
+		} finally {
+			diagramSettled = true;
 		}
 	}
+
+	/* The values, the diagram and the next steps each depend on one of the three
+	   answers: the page draws once all are in, instead of moving as each arrives */
+	const settled = $derived(loaded && modeSettled && diagramSettled);
 
 	function loadAll() {
 		void loadConfig();
@@ -178,88 +187,85 @@
 		<p class="page-description">{t('keys.page_description')}</p>
 	</div>
 
-	<div class="page-cols">
-		<div class="page-main">
-			<section class="section" aria-labelledby="keys-values-title">
-				<div class="section-head"><h2 id="keys-values-title">{t('keys.values_title')}</h2></div>
-				<p class="section-note">{t('dashboard.client_config_hint')}</p>
-				{#if warn.local}
-					<Notice tone="warning" class="keys-local-warning">
-						<p>
-							{t('keys.local_warning')}
-							<a href={link('/settings#public-endpoints')}>{t('dashboard.client_host_settings_link')}</a>
-						</p>
-					</Notice>
-				{/if}
+	{#if !settled}
+		<States kind="loading" />
+	{:else}
+		<div class="page-cols">
+			<div class="page-main">
+				<section class="section" aria-labelledby="keys-values-title">
+					<div class="section-head"><h2 id="keys-values-title">{t('keys.values_title')}</h2></div>
+					<p class="section-note">{t('dashboard.client_config_hint')}</p>
+					{#if warn.local}
+						<Notice tone="warning" class="keys-local-warning">
+							<p>
+								{t('keys.local_warning')}
+								<a href={link('/settings#public-endpoints')}>{t('dashboard.client_host_settings_link')}</a>
+							</p>
+						</Notice>
+					{/if}
 
-				<dl class="facts keys-facts" aria-busy={!loaded}>
-					<dt>{t('dashboard.config_server_id')}</dt>
-					<dd>
-						{#if loaded}<ValueField value={idServer} label={t('dashboard.config_server_id')} />{:else}…{/if}
-					</dd>
-					<dt>{t('dashboard.config_relay_server')}</dt>
-					<dd>
-						{#if loaded}<ValueField value={relay} label={t('dashboard.config_relay_server')} />{:else}…{/if}
-					</dd>
-					<dt>{t('dashboard.config_api_server')}</dt>
-					<dd>
-						{#if loaded}<ValueField value={apiServer} label={t('dashboard.config_api_server')} />{:else}…{/if}
-					</dd>
-					<dt>{t('dashboard.config_key')}</dt>
-					<dd>
-						{#if loaded}<ValueField
-								value={publicKey}
-								label={t('dashboard.config_key')}
-								hidden
-								empty={keyMissing}
-							/>{:else}…{/if}
-					</dd>
-					<dt>{t('keys.config_string')}</dt>
-					<dd>
-						{#if loaded}<span class="config-field"
+					<dl class="facts keys-facts">
+						<dt>{t('dashboard.config_server_id')}</dt>
+						<dd>
+							<ValueField value={idServer} label={t('dashboard.config_server_id')} />
+						</dd>
+						<dt>{t('dashboard.config_relay_server')}</dt>
+						<dd>
+							<ValueField value={relay} label={t('dashboard.config_relay_server')} />
+						</dd>
+						<dt>{t('dashboard.config_api_server')}</dt>
+						<dd>
+							<ValueField value={apiServer} label={t('dashboard.config_api_server')} />
+						</dd>
+						<dt>{t('dashboard.config_key')}</dt>
+						<dd>
+							<ValueField value={publicKey} label={t('dashboard.config_key')} hidden empty={keyMissing} />
+						</dd>
+						<dt>{t('keys.config_string')}</dt>
+						<dd>
+							<span class="config-field"
 								><ValueField
 									value={configString}
 									label={t('keys.config_string')}
 									empty={t('keys.config_string_missing')}
 								/></span
-							>{:else}…{/if}
-						<span class="fact-hint">{t('keys.config_string_hint')}</span>
-					</dd>
-				</dl>
-
-				<!-- Only scripts that call the server API use it -->
-				<Disclosure title={t('keys.scripts_title')} level={3} class="keys-scripts" bind:open={scriptsOpen}>
-					<dl class="facts keys-facts">
-						<dt>{t('keys.server_api_key')}</dt>
-						<dd>
-							{#if fullKey !== null}
-								<ValueField value={fullKey} label={t('keys.server_api_key')} />
-							{:else}
-								<span class="mono api-key">{apiKey || '…'}</span>
-							{/if}
-							{#if canSeeKey && apiKey && apiKey !== NO_API_KEY}
-								<Button size="sm" class="show-api-key" busy={showingKey} onclick={toggleFullKey}
-									>{fullKey !== null
-										? tf('keys.hide_api_key', 'Hide key')
-										: tf('keys.show_api_key', 'Show whole key')}</Button
-								>
-							{/if}
-							<span class="fact-hint"
-								>{fullKey !== null
-									? tf(
-											'keys.server_api_key_full_hint',
-											"The whole key. Anyone who has it can manage this server through its API, so keep it in your scripts' secret store."
-										)
-									: t('keys.server_api_key_hint')}</span
 							>
+							<span class="fact-hint">{t('keys.config_string_hint')}</span>
 						</dd>
 					</dl>
-				</Disclosure>
-			</section>
 
-			<section class="section" aria-labelledby="keys-diagram-title">
-				<div class="section-head"><h2 id="keys-diagram-title">{t('diagram.how_title')}</h2></div>
-				{#if loaded}
+					<!-- Only scripts that call the server API use it -->
+					<Disclosure title={t('keys.scripts_title')} level={3} class="keys-scripts" bind:open={scriptsOpen}>
+						<dl class="facts keys-facts">
+							<dt>{t('keys.server_api_key')}</dt>
+							<dd>
+								{#if fullKey !== null}
+									<ValueField value={fullKey} label={t('keys.server_api_key')} />
+								{:else}
+									<span class="mono api-key">{apiKey || '…'}</span>
+								{/if}
+								{#if canSeeKey && apiKey && apiKey !== NO_API_KEY}
+									<Button size="sm" class="show-api-key" busy={showingKey} onclick={toggleFullKey}
+										>{fullKey !== null
+											? tf('keys.hide_api_key', 'Hide key')
+											: tf('keys.show_api_key', 'Show whole key')}</Button
+									>
+								{/if}
+								<span class="fact-hint"
+									>{fullKey !== null
+										? tf(
+												'keys.server_api_key_full_hint',
+												"The whole key. Anyone who has it can manage this server through its API, so keep it in your scripts' secret store."
+											)
+										: t('keys.server_api_key_hint')}</span
+								>
+							</dd>
+						</dl>
+					</Disclosure>
+				</section>
+
+				<section class="section" aria-labelledby="keys-diagram-title">
+					<div class="section-head"><h2 id="keys-diagram-title">{t('diagram.how_title')}</h2></div>
 					<ConnectionDiagram
 						idServer={id.host || here}
 						relay={rel.host}
@@ -267,83 +273,79 @@
 						relayPort={rel.port}
 						mode={diagramMode}
 					/>
-				{:else}
-					<States kind="loading" />
-				{/if}
-			</section>
-		</div>
+				</section>
+			</div>
 
-		<aside class="page-side" aria-label={t('keys.side_label')}>
-			<section class="section" aria-labelledby="keys-qr-title">
-				<div class="section-head"><h2 id="keys-qr-title">{t('keys.qr_title')}</h2></div>
-				<p class="section-note">{t('keys.qr_hint')}</p>
-				{#if warn.qr}
-					<Notice tone="warning" message={t('keys.qr_unreachable_host')} />
-				{/if}
-				<div class="keys-qr" aria-live="polite">
-					{#if !loaded}
-						<States kind="loading" message={t('keys.qr_loading')} />
-					{:else if qrText}
-						<QR text={qrText} label={t('keys.qr_alt')} size={220} />
-					{:else}
-						<States
-							kind="error"
-							message={failed ? t('keys.qr_failed') : t('keys.no_qr')}
-							retryLabel={t('actions.retry')}
-							onretry={() => void loadConfig()}
-						/>
+			<aside class="page-side" aria-label={t('keys.side_label')}>
+				<section class="section" aria-labelledby="keys-qr-title">
+					<div class="section-head"><h2 id="keys-qr-title">{t('keys.qr_title')}</h2></div>
+					<p class="section-note">{t('keys.qr_hint')}</p>
+					{#if warn.qr}
+						<Notice tone="warning" message={t('keys.qr_unreachable_host')} />
 					{/if}
-				</div>
-			</section>
+					<div class="keys-qr" aria-live="polite">
+						{#if qrText}
+							<QR text={qrText} label={t('keys.qr_alt')} size={220} />
+						{:else}
+							<States
+								kind="error"
+								message={failed ? t('keys.qr_failed') : t('keys.no_qr')}
+								retryLabel={t('actions.retry')}
+								onretry={() => void loadConfig()}
+							/>
+						{/if}
+					</div>
+				</section>
 
-			<section class="section" aria-labelledby="keys-next-title">
-				<div class="section-head"><h2 id="keys-next-title">{t('keys.next_title')}</h2></div>
-				<p class="section-note keys-next-mode">{@render modeSentence()}</p>
-				<RowList>
-					{#each steps as step (step)}
-						{@const p = STEP_PAGES[step]}
-						<ListRow href={link(p.href)} title={t(p.title)} sub={t(p.sub)} />
-					{/each}
-				</RowList>
-			</section>
-
-			<section class="section" aria-labelledby="keys-files-title">
-				<div class="section-head"><h2 id="keys-files-title">{t('keys.files_title')}</h2></div>
-				<div {@attach externalLinks}>
+				<section class="section" aria-labelledby="keys-next-title">
+					<div class="section-head"><h2 id="keys-next-title">{t('keys.next_title')}</h2></div>
+					<p class="section-note keys-next-mode">{@render modeSentence()}</p>
 					<RowList>
-						<ListRow title={t('keys.download_title')} sub={t('keys.download_hint')}>
-							{#snippet end()}
-								{#if publicKey}
-									<Button
-										href={KEY_FILE_URL}
-										download="id_ed25519.pub"
-										icon={ICONS.download}
-										class="download-key">{t('keys.download')}</Button
-									>
-								{:else}
-									<Button icon={ICONS.download} disabled class="download-key">{t('keys.download')}</Button>
-								{/if}
-							{/snippet}
-						</ListRow>
-						<ListRow
-							href={RUSTDESK_RELEASES}
-							title={t('dashboard.get_rustdesk')}
-							sub={t('dashboard.get_rustdesk_hint')}
-							chevron={false}
-							end={externalMark}
-						/>
-						<ListRow
-							href="/portal"
-							title={t('keys.portal_title')}
-							sub={t('keys.portal_sub')}
-							chevron={false}
-							end={externalMark}
-						/>
+						{#each steps as step (step)}
+							{@const p = STEP_PAGES[step]}
+							<ListRow href={link(p.href)} title={t(p.title)} sub={t(p.sub)} />
+						{/each}
 					</RowList>
-				</div>
-			</section>
-		</aside>
-	</div>
+				</section>
+
+				<section class="section" aria-labelledby="keys-files-title">
+					<div class="section-head"><h2 id="keys-files-title">{t('keys.files_title')}</h2></div>
+					<div {@attach externalLinks}>
+						<RowList>
+							<ListRow title={t('keys.download_title')} sub={t('keys.download_hint')}>
+								{#snippet end()}
+									{#if publicKey}
+										<Button
+											href={KEY_FILE_URL}
+											download="id_ed25519.pub"
+											icon={ICONS.download}
+											class="download-key">{t('keys.download')}</Button
+										>
+									{:else}
+										<Button icon={ICONS.download} disabled class="download-key">{t('keys.download')}</Button>
+									{/if}
+								{/snippet}
+							</ListRow>
+							<ListRow
+								href={RUSTDESK_RELEASES}
+								title={t('dashboard.get_rustdesk')}
+								sub={t('dashboard.get_rustdesk_hint')}
+								chevron={false}
+								end={externalMark}
+							/>
+							<ListRow
+								href="/portal"
+								title={t('keys.portal_title')}
+								sub={t('keys.portal_sub')}
+								chevron={false}
+								end={externalMark}
+							/>
+						</RowList>
+					</div>
+				</section>
+			</aside>
+		</div>
+	{/if}
 </div>
 
 <style>

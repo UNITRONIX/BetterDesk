@@ -30,6 +30,7 @@
 	import { setPageTitle } from '#lib/shell/page.svelte.ts';
 	import { can } from '#lib/state/session.svelte.ts';
 	import Notice from '#lib/ui/Notice.svelte';
+	import States from '#lib/ui/States.svelte';
 	import Tabs from '#lib/ui/Tabs.svelte';
 	import ComplianceTab from './ComplianceTab.svelte';
 	import ResourcesTab from './ResourcesTab.svelte';
@@ -117,33 +118,39 @@
 			<p class="page-description">{t('fleet.page_description')}</p>
 		</div>
 
-		{#if unavailable}
-			<Notice tone="warning" id={NOTICE_ID} role="status" message={t('fleet.unavailable_notice')} />
-		{/if}
+		<!-- The notice above the tabs depends on the answer: drawn after it, so the
+		     tabs don't move down when it arrives -->
+		{#if !ready}
+			<States kind="loading" />
+		{:else}
+			{#if unavailable}
+				<Notice tone="warning" id={NOTICE_ID} role="status" message={t('fleet.unavailable_notice')} />
+			{/if}
 
-		<Tabs {tabs} value={tab} label={t('nav.fleet')} onchange={selectTab}>
-			{#snippet children(id)}
-				<div class="fleet-panel">
-					{#if id === 'resources'}
-						<ResourcesTab
-							{ready}
-							bind:unavailable
-							{orgs}
-							{orgsState}
-							onreloadorgs={loadOrgs}
-							bind:org={resOrg}
-							bind:type={resType}
-						/>
-					{:else if id === 'tasks'}
-						<TasksTab {ready} bind:unavailable bind:query={taskSearch} bind:status={taskStatus} />
-					{:else if id === 'builder'}
-						<WorkflowsTab {ready} bind:unavailable noticeId={NOTICE_ID} {editor} />
-					{:else}
-						<ComplianceTab {ready} bind:unavailable noticeId={NOTICE_ID} {orgs} bind:org={compOrg} />
-					{/if}
-				</div>
-			{/snippet}
-		</Tabs>
+			<Tabs {tabs} value={tab} label={t('nav.fleet')} onchange={selectTab}>
+				{#snippet children(id)}
+					<div class="fleet-panel">
+						{#if id === 'resources'}
+							<ResourcesTab
+								{ready}
+								bind:unavailable
+								{orgs}
+								{orgsState}
+								onreloadorgs={loadOrgs}
+								bind:org={resOrg}
+								bind:type={resType}
+							/>
+						{:else if id === 'tasks'}
+							<TasksTab {ready} bind:unavailable bind:query={taskSearch} bind:status={taskStatus} />
+						{:else if id === 'builder'}
+							<WorkflowsTab {ready} bind:unavailable noticeId={NOTICE_ID} {editor} />
+						{:else}
+							<ComplianceTab {ready} bind:unavailable noticeId={NOTICE_ID} {orgs} bind:org={compOrg} />
+						{/if}
+					</div>
+				{/snippet}
+			</Tabs>
+		{/if}
 	</div>
 {/if}
 
