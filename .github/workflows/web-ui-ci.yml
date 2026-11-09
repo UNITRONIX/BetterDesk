@@ -1,0 +1,51 @@
+name: Web UI CI
+
+on:
+  push:
+    branches: [main, dev]
+    paths:
+      - 'web-ui/**'
+      - '.github/workflows/web-ui-ci.yml'
+  pull_request:
+    branches: [main, dev]
+    paths:
+      - 'web-ui/**'
+      - '.github/workflows/web-ui-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  check-test-build:
+    if: github.event_name != 'push' || !contains(github.event.head_commit.message, '[version-bump]')
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web-ui
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.2'
+          cache: npm
+          cache-dependency-path: web-ui/package-lock.json
+
+      # npm 10 (bundled with Node 22) fails to resolve this dependency tree
+      - name: Install dependencies
+        run: npx -y npm@11.6.2 ci --no-audit --no-fund
+
+      - name: npm audit (high+)
+        run: npx -y npm@11.6.2 audit --audit-level=high
+
+      - name: Lint and formatting
+        run: npm run lint
+
+      - name: Type check
+        run: npm run check
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
