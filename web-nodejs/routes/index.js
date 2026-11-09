@@ -122,8 +122,7 @@ router.use('/api/i18n', i18nRoutes);
 // bdApiRoutes now mounted in server.js (before CSRF) for desktop client access
 router.use('/api/bd', inventoryRoutes);     // device-facing: /api/bd/inventory, /api/bd/telemetry
 router.use('/api/inventory', inventoryRoutes); // admin-facing: /api/inventory, /api/inventory/:id
-router.use('/api/tickets', ticketsRoutes);      // admin-facing: /api/tickets CRUD
-router.use('/api/tickets', ticketsRoutes);      // device-facing: /api/tickets/bd (agent creates tickets)
+router.use('/api/tickets', ticketsRoutes);      // /api/tickets CRUD and device-facing /api/tickets/bd
 router.use('/api/bd', activityRoutes);           // device-facing: /api/bd/activity
 router.use('/api/activity', activityRoutes);     // admin-facing: /api/activity
 router.use('/api/automation', automationRoutes); // admin-facing: /api/automation/*
