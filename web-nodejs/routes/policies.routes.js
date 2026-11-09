@@ -4,13 +4,11 @@
  * Provides policy CRUD for organizations + device-facing policy fetch
  * + device attestation management.
  *
- * Page routes:
- *   GET /policies                          — Policy management page
- *   GET /policies/:orgId                   — Org-specific policies
- *   GET /attestation                       — Device attestation dashboard
+ * The pages (/policies, /policies/:orgId, /attestation) are in the new
+ * console (web-ui); the old addresses redirect there (lib/portedPages.js).
  *
  * API routes (proxy to Go server /api/org/{id}/policy). Reads and writes
- * need the same roles as the pages (requireAdmin):
+ * need the same roles as those pages (requireAdmin):
  *   GET    /api/panel/policies/:orgId              — Get all policies for org
  *   PUT    /api/panel/policies/:orgId/connection    — Set connection policy
  *   PUT    /api/panel/policies/:orgId/features      — Set feature policy
@@ -60,35 +58,6 @@ async function goApiProxy(req, res, method, path, body) {
         res.status(status).json(data);
     }
 }
-
-// ---------------------------------------------------------------------------
-//  Page routes
-// ---------------------------------------------------------------------------
-
-router.get('/policies', requireAuth, requireAdmin, (req, res) => {
-    res.render('policies', {
-        title: 'Organization Policies',
-        user: req.session.user,
-        currentPage: 'policies',
-    });
-});
-
-router.get('/policies/:orgId', requireAuth, requireAdmin, (req, res) => {
-    res.render('policies', {
-        title: 'Organization Policies',
-        user: req.session.user,
-        currentPage: 'policies',
-        orgId: req.params.orgId,
-    });
-});
-
-router.get('/attestation', requireAuth, requireAdmin, (req, res) => {
-    res.render('attestation', {
-        title: 'Device Attestation',
-        user: req.session.user,
-        currentPage: 'attestation',
-    });
-});
 
 // ---------------------------------------------------------------------------
 //  API routes — Policy management (admin panel)

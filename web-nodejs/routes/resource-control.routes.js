@@ -44,18 +44,6 @@ async function goApiProxySafe(req, res, method, pathBuilder, body) {
     }
 }
 
-// --- Page Route ---
-
-router.get('/resource-control', requireAuth, requirePermission('server.config'), (req, res) => {
-    res.render('resource-control', {
-        title: req.t('nav.resource_control'),
-        pageStyles: ['resource-control'],
-        pageScripts: ['resource-control'],
-        currentPage: 'resource-control',
-        breadcrumb: [{ label: req.t('nav.resource_control') }]
-    });
-});
-
 // --- API Routes ---
 
 /**

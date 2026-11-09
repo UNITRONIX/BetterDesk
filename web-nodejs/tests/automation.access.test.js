@@ -127,30 +127,3 @@ describe('device routes on /api/bd', () => {
         expect(mockAdapter.getAlertRules).not.toHaveBeenCalled();
     });
 });
-
-describe('the old /automation page', () => {
-    const pagesRoutes = require('../routes/pages.routes');
-    function pages(role) {
-        const app = createTestApp();
-        withAuth(app, { id: 2, username: role, role });
-        // Report the template instead of rendering it
-        app.use((req, res, next) => {
-            res.render = (view) => res.json({ view });
-            next();
-        });
-        app.use('/', pagesRoutes);
-        return app;
-    }
-
-    it('answers 403 without server.config', async () => {
-        const res = await request(pages('viewer')).get('/automation');
-        expect(res.status).toBe(403);
-        expect(res.body.view).toBe('errors/403');
-    });
-
-    it('renders for a server admin', async () => {
-        const res = await request(pages('server_admin')).get('/automation');
-        expect(res.status).toBe(200);
-        expect(res.body.view).toBe('automation');
-    });
-});

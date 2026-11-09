@@ -67,3 +67,19 @@ test('every switched page is one the new console has', () => {
     expect(list).toContain('/devices');
     expect(PORTED_PAGES.filter((p) => !list.includes(p))).toEqual([]);
 });
+
+// A switched page's old handler goes in the same commit: left in place it
+// would answer wherever there is no build (and hide that the page moved).
+test('no route still renders an old view for a switched page', () => {
+    const dir = path.join(__dirname, '..', 'routes');
+    const left = [];
+    for (const f of fs.readdirSync(dir).filter((n) => n.endsWith('.js'))) {
+        const src = fs.readFileSync(path.join(dir, f), 'utf8');
+        for (const m of src.matchAll(/router\.get\(\s*'([^']+)'[\s\S]*?\n\}\);/g)) {
+            if (!/res\.render\(/.test(m[0])) continue;
+            const route = m[1].replace(/:[^/]+/g, 'x');
+            if (isPortedPath(route)) left.push(`${f} ${m[1]}`);
+        }
+    }
+    expect(left).toEqual([]);
+});

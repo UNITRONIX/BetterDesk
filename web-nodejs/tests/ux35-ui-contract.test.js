@@ -20,7 +20,6 @@ describe('UX 3.5 mobile and accessibility contracts', () => {
     const navItem = read('views', 'partials', 'nav-item.ejs');
     const consoleNav = read('lib', 'consoleNav.js');
     const layout = read('views', 'layouts', 'main.ejs');
-    const automation = read('public', 'js', 'automation.js');
     const appJs = read('public', 'js', 'app.js');
     const devicesJs = read('public', 'js', 'devices.js');
     const registrationRoutes = read('routes', 'registration.routes.js');
@@ -69,14 +68,6 @@ describe('UX 3.5 mobile and accessibility contracts', () => {
         assert.match(bottomNav, /href="\/remote"/);
         assert.match(bottomNav, /data-nav="remote"/);
         assert.doesNotMatch(bottomNav, /href="\/remote-dashboard"/);
-    });
-
-    it('escapes dynamic automation values before inserting rule rows', () => {
-        // The threshold cell goes through escapeHtml (formatted as a number, or the empty dash for custom rules)
-        assert.match(automation, /<td class="is-num">\$\{[^\n]*escapeHtml\([^\n]*r\.condition_value[^\n]*\}<\/td>/);
-        assert.doesNotMatch(automation, /<td[^>]*>\$\{r\.condition_value\}<\/td>/);
-        assert.match(automation, /function safeSeverity/);
-        assert.match(automation, /function safeStatus/);
     });
 
     it('defers console scripts without changing their document order', () => {

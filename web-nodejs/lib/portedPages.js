@@ -12,7 +12,14 @@
 
 'use strict';
 
-const PORTED_PAGES = Object.freeze([]);
+const PORTED_PAGES = Object.freeze([
+    '/policies',
+    '/policies/*',
+    '/attestation',
+    '/automation',
+    '/resource-control',
+    '/dataguard'
+]);
 
 function isPortedPath(pathname, list = PORTED_PAGES) {
     return list.some((entry) => (entry.endsWith('/*')

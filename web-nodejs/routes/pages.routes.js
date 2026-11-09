@@ -10,7 +10,7 @@
 
 const express = require('express');
 const router = express.Router();
-const { requireAuth, requirePermission, requireRole } = require('../middleware/auth');
+const { requireAuth, requireRole } = require('../middleware/auth');
 
 // ── Inventory ──
 
@@ -27,15 +27,6 @@ router.get('/tickets', requireAuth, (req, res) => {
     res.render('tickets', {
         title: req.t('tickets.title'),
         activePage: 'tickets',
-    });
-});
-
-// ── Automation (Alerts + Remote Commands) — server.config, like its API ──
-
-router.get('/automation', requireAuth, requirePermission('server.config'), (req, res) => {
-    res.render('automation', {
-        title: req.t('automation.title'),
-        activePage: 'automation',
     });
 });
 
@@ -63,15 +54,6 @@ router.get('/reports', requireAuth, (req, res) => {
     res.render('reports', {
         title: req.t('reports.title'),
         activePage: 'reports',
-    });
-});
-
-// ── DataGuard (DLP) — admin only ──
-
-router.get('/dataguard', requireAuth, requirePermission('server.config'), (req, res) => {
-    res.render('dataguard', {
-        title: req.t('dataguard.title'),
-        activePage: 'dataguard',
     });
 });
 
