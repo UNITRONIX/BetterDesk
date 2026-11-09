@@ -40,7 +40,8 @@ describe('web UI host', () => {
     test('sends signed-out people to the login page with a return path', async () => {
         const res = await request(app(null)).get('/app/devices?open=123');
         expect(res.status).toBe(302);
-        expect(res.headers.location).toBe('/login?expired=1&return=%2Fapp%2Fdevices%3Fopen%3D123');
+        // No "expired" on a first visit (tests/webUi.login.test.js)
+        expect(res.headers.location).toBe('/login?return=%2Fapp%2Fdevices%3Fopen%3D123');
     });
 
     test('pro accounts get no console', async () => {
@@ -52,6 +53,28 @@ describe('web UI host', () => {
         const res = await request(app(null)).get('/app/login');
         expect(res.status).toBe(200);
         expect(res.text).toContain('app');
+    });
+
+    test('the remote viewer opens without a session (guest links); its data endpoint checks access', async () => {
+        for (const p of ['/app/remote/900100012', '/app/remote/900100012?guest=tok', '/app/remote/rt_abc?mesh_share=x']) {
+            const res = await request(app(null)).get(p);
+            expect(res.status).toBe(200);
+            expect(res.headers['content-security-policy']).toContain("frame-ancestors 'none'");
+        }
+    });
+
+    test('other remote client pages send signed-out people to the remote sign-in', async () => {
+        const dash = await request(app(null)).get('/app/remote');
+        expect(dash.status).toBe(302);
+        expect(dash.headers.location).toBe('/app/remote/login?return=%2Fapp%2Fremote');
+        // Not a device id: no public page
+        for (const p of ['/app/remote/a', '/app/remote/x/y', '/app/remote/%3Cb%3E']) {
+            const res = await request(app(null)).get(p);
+            expect(res.status).toBe(302);
+        }
+        expect((await request(app(null)).get('/app/remote/login')).status).toBe(200);
+        expect((await request(app(null)).get('/app/remote/guest?t=x')).status).toBe(200);
+        expect((await request(app({ id: 9, role: 'pro' })).get('/app/remote')).status).toBe(302);
     });
 
     test('serves the app page with a strict policy for every console path', async () => {
