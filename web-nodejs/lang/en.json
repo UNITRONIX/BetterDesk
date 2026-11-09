@@ -2263,7 +2263,10 @@
         "virtual_displays": "Virtual displays",
         "virtual_display": "Virtual display",
         "plug_out_all": "Plug out all",
-        "file_transfer_unavailable": "File transfer is not available for this session."
+        "file_transfer_unavailable": "File transfer is not available for this session.",
+        "certificate_title": "Untrusted certificate",
+        "certificate_confirm": "The certificate of {name} is not trusted. Trust the certificate with the fingerprint {fingerprint}?",
+        "certificate_trust": "Trust certificate"
     },
     "remote_dashboard": {
         "title": "Remote Desktop Client",

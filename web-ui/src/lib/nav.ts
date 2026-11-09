@@ -59,7 +59,8 @@ export const PORTED: readonly string[] = [
 	'/fleet',
 	'/login',
 	'/portal',
-	'/d/*'
+	'/d/*',
+	'/remote/*'
 ];
 
 /** Whether a path (no query) is one of the entries */

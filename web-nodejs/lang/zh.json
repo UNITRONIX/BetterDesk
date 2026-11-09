@@ -2170,7 +2170,7 @@
         "2fa_invalid": "请输入有效的6位数代码",
         "verify": "验证",
         "use_cdap_fallback": "使用 CDAP 查看器",
-        "cdap_fallback_hint": "Open the lightweight JPEG-polling viewer that uses bd-signal/CDAP instead of the RustDesk relay. Useful when the peer is offline on the relay but reachable via the agent management channel.",
+        "cdap_fallback_hint": "打开轻量的 JPEG 轮询查看器，它通过 bd-signal/CDAP 连接，而不是 RustDesk 中继。适用于设备在中继上离线、但可以通过代理管理通道访问的情况。",
         "codec": "视频编解码器",
         "codec_auto": "自动（推荐）",
         "remember_peer_password": "在此设备上记住设备密码",
@@ -2237,7 +2237,10 @@
         "virtual_displays": "虚拟显示器",
         "virtual_display": "虚拟显示器",
         "plug_out_all": "全部拔出",
-        "file_transfer_unavailable": "此会话无法使用文件传输。"
+        "file_transfer_unavailable": "此会话无法使用文件传输。",
+        "certificate_title": "不受信任的证书",
+        "certificate_confirm": "{name} 的证书不受信任。要信任指纹为 {fingerprint} 的证书吗？",
+        "certificate_trust": "信任证书"
     },
     "branding": {
         "identity_title": "品牌标识",
@@ -7218,8 +7221,8 @@
         "recordings_empty": "No server recordings yet.",
         "recordings_load_error": "无法加载录像。",
         "recording_download": "下载",
-        "recording_server_on": "Server recording enabled — reconnecting…",
-        "recording_server_off": "Server recording disabled — reconnecting…",
+        "recording_server_on": "已开启服务器录制，正在重新连接…",
+        "recording_server_off": "已关闭服务器录制，正在重新连接…",
         "cert_missing": "Agent-server certificate not found. Back up mesh_agent_server.pem after agents connect.",
         "cert_ok": "Agent-server certificate present",
         "onboarding_step_msh": "Download the .msh file and set the mesh group name.",

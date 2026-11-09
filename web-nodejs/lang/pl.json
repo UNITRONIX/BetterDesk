@@ -2255,7 +2255,10 @@
         "virtual_displays": "Wirtualne ekrany",
         "virtual_display": "Wirtualny ekran",
         "plug_out_all": "Odłącz wszystkie",
-        "file_transfer_unavailable": "Przesyłanie plików nie jest dostępne w tej sesji."
+        "file_transfer_unavailable": "Przesyłanie plików nie jest dostępne w tej sesji.",
+        "certificate_title": "Niezaufany certyfikat",
+        "certificate_confirm": "Certyfikat urządzenia {name} nie jest zaufany. Zaufać certyfikatowi o odcisku {fingerprint}?",
+        "certificate_trust": "Zaufaj certyfikatowi"
     },
     "branding": {
         "identity_title": "Identyfikacja marki",
