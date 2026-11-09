@@ -5,8 +5,9 @@
   and logo come from.
 
   The page needs one of the four admin roles (requireAdmin, DECISIONS R7).
-  Reading and importing the release need enrollment.manage; the Activate
-  agent link needs enrollment.approve; the branding link branding.edit.
+  Reading and importing the release need enrollment.manage; Pair with code
+  (the overview's pairing dialog) needs enrollment.approve; the branding
+  link branding.edit.
 -->
 <script lang="ts">
 	import { untrack } from 'svelte';
@@ -98,12 +99,6 @@
 	const [importedPre, importedPost] = $derived(around(t('agents.imported_on'), '{{date}}'));
 </script>
 
-{#snippet step3()}{@const [pre, post] = around(
-		t('agents.step3'),
-		'{page}'
-	)}{pre}{#if can('enrollment.approve')}<a href={link('/?activateAgent=1')}>{t('nav.activate_agent')}</a
-		>{:else}{t('nav.activate_agent')}{/if}{post}{/snippet}
-
 {#snippet step4()}{@const [pre, post] = around(
 		t('agents.step4'),
 		'{page}'
@@ -164,7 +159,14 @@
 
 				<section class="section" aria-labelledby="agents-steps-title">
 					<div class="section-head"><h2 id="agents-steps-title">{t('agents.steps_title')}</h2></div>
-					<Steps items={[t('agents.step1'), t('agents.step2'), step3, step4]} />
+					<Steps items={[t('agents.step1'), t('agents.step2'), t('agents.step3'), step4]} />
+					{#if can('enrollment.approve')}
+						<div class="form-actions">
+							<Button href={link('/?activateAgent=1')} icon="pin" class="agents-pair"
+								>{t('agents.pair_activate')}</Button
+							>
+						</div>
+					{/if}
 				</section>
 			</div>
 

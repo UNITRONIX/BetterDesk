@@ -12,7 +12,9 @@
   when an address is typed into "Client server address" (kept for this
   tab, as the old overview did). Trends (audit.view) load on their own.
 
-  URL: ?activateAgent=1 opens "Activate support agent" (enrollment.approve).
+  "Pair with code" (enrollment.approve) creates a one-time code for a
+  BetterDesk agent; the agent QR scanner opens from that dialog.
+  URL: ?activateAgent=1 opens "Pair with code" (enrollment.approve).
 -->
 <script lang="ts">
 	import { onMount, untrack } from 'svelte';
@@ -208,6 +210,7 @@
 
 	let qrOpen = $state(false);
 	let scriptOpen = $state(false);
+	let pairOpen = $state(false);
 	let activationOpen = $state(false);
 
 	function showQr() {
@@ -222,10 +225,13 @@
 
 	const activateParam = page.url.searchParams.get('activateAgent') === '1';
 	// The tab title and the breadcrumb name the task, as the old server did; the page stays the overview
-	if (activateParam) setPageTitle(t('nav.activate_agent'));
+	if (activateParam) setPageTitle(t('nav.pair_agent'));
 	onMount(() => {
-		if (activateParam && canApprove) activationOpen = true;
+		if (activateParam && canApprove) pairOpen = true;
 	});
+
+	/** The address agents type: the client address the values above are for */
+	const pairHost = $derived(config?.client_server_host || host.trim());
 </script>
 
 <div class="page page-wide dashboard-page">
@@ -424,8 +430,8 @@
 
 					<div class="page-actions setup-actions">
 						{#if canApprove}
-							<Button variant="primary" onclick={() => (activationOpen = true)}
-								>{t('dashboard.activate_agent_qr')}</Button
+							<Button variant="primary" icon="pin" onclick={() => (pairOpen = true)}
+								>{t('dashboard.pair_with_code')}</Button
 							>
 						{/if}
 						<Button icon={copyAll.copied ? 'check' : ICONS.copy} onclick={copyConfig}
@@ -502,6 +508,19 @@
 {#if scriptOpen && config}
 	{#await import('#lib/devices-area/InstallScriptSheet.svelte') then { default: InstallScriptSheet }}
 		<InstallScriptSheet {config} onclose={() => (scriptOpen = false)} />
+	{/await}
+{/if}
+
+{#if pairOpen}
+	{#await import('#lib/devices-area/PairCodeDialog.svelte') then { default: PairCodeDialog }}
+		<PairCodeDialog
+			host={pairHost}
+			onclose={() => (pairOpen = false)}
+			onscan={() => {
+				pairOpen = false;
+				activationOpen = true;
+			}}
+		/>
 	{/await}
 {/if}
 

@@ -47,9 +47,11 @@ for (const role of ROLES) {
 			// Devices are found with the top bar's search; the page has none of its own
 			await expect(main(page).getByRole('search')).toHaveCount(0);
 			await expect(page.locator('.devices-now')).toHaveCount(can('device.view') ? 1 : 0);
-			await expect(main(page).getByRole('button', { name: 'Activate support agent' })).toHaveCount(
+			// Agents pair with a one-time code; the QR scanner opens from that dialog
+			await expect(main(page).getByRole('button', { name: 'Pair with code' })).toHaveCount(
 				can('enrollment.approve') ? 1 : 0
 			);
+			await expect(main(page).getByRole('button', { name: 'Activate support agent' })).toHaveCount(0);
 			await expect(main(page).getByRole('link', { name: 'Open server status' })).toHaveCount(
 				nav.has('server-management:overview') ? 1 : 0
 			);
@@ -81,22 +83,73 @@ for (const role of ROLES) {
 			await expect(page.getByRole('dialog').getByRole('img')).toBeVisible();
 			await expectNoAxeViolations(page);
 			await page.keyboard.press('Escape');
+
+			// Pair with code opens the pairing dialog; Escape closes it and focus goes back
+			if (can('enrollment.approve')) {
+				const pair = main(page).getByRole('button', { name: 'Pair with code' });
+				await pair.click();
+				const dialog = page.getByRole('dialog', { name: 'Pairing code' });
+				await expect(dialog).toBeVisible();
+				await page.keyboard.press('Escape');
+				await expect(dialog).toBeHidden();
+				await expect(pair).toBeFocused();
+			}
 		});
 
-		test('overview: ?activateAgent=1 opens the activation only for enrollment.approve', async ({ page }) => {
+		test('overview: ?activateAgent=1 pairs an agent with a one-time code, only for enrollment.approve', async ({
+			page
+		}) => {
 			await page.goto(`${UI}/?activateAgent=1`);
 			await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 			const { can } = await boot(page);
-			const dialog = page.getByRole('dialog', { name: 'Activate support agent' });
-			if (can('enrollment.approve')) {
-				await expect(dialog).toBeVisible();
-				await expectNoAxeViolations(page);
-				await page.keyboard.press('Escape');
-				await expect(dialog).toBeHidden();
-			} else {
+			const dialog = page.getByRole('dialog', { name: 'Pairing code' });
+			if (!can('enrollment.approve')) {
 				await page.waitForTimeout(500);
-				await expect(dialog).toHaveCount(0);
+				await expect(page.getByRole('dialog')).toHaveCount(0);
+				return;
 			}
+			await expect(page).toHaveTitle(/^Pair agent/);
+			await expect(dialog).toBeVisible();
+			// The client address is filled in; the label is optional
+			await expect(dialog.getByLabel('Server address')).not.toHaveValue('');
+			await expectNoAxeViolations(page);
+
+			// A code, shown once with the address and how long it works
+			await dialog.getByLabel('Label (optional)').fill('e2e devices area');
+			const created = page.waitForResponse(
+				(r) => r.request().method() === 'POST' && r.url().endsWith('/api/panel/pairing/codes')
+			);
+			await dialog.getByRole('button', { name: 'Create code' }).click();
+			const answer = (await (await created).json()) as { id?: string | number; code?: string };
+			try {
+				expect(answer.code).toBeTruthy();
+				await expect(dialog.getByText(String(answer.code))).toBeVisible();
+				await expect(dialog.getByText(/more minutes, works once/)).toBeVisible();
+				await expect(dialog.getByRole('button', { name: 'Copy Pairing code' })).toBeVisible();
+				await expectNoAxeViolations(page);
+			} finally {
+				// The code is only for this test: revoke it again
+				await page.evaluate(async (id) => {
+					const boot = (await (
+						await fetch('/api/console/bootstrap', { headers: { Accept: 'application/json' } })
+					).json()) as {
+						csrfToken: string;
+					};
+					await fetch(`/api/panel/pairing/codes/${encodeURIComponent(String(id))}`, {
+						method: 'DELETE',
+						headers: { 'X-CSRF-Token': boot.csrfToken, Accept: 'application/json' }
+					});
+				}, answer.id);
+			}
+
+			// The agent's QR code can still be read: the scanner replaces the dialog
+			await dialog.getByRole('button', { name: 'Scan agent QR' }).click();
+			const scanner = page.getByRole('dialog', { name: 'Scan agent QR' });
+			await expect(scanner).toBeVisible();
+			await expect(dialog).toBeHidden();
+			await expectNoAxeViolations(page);
+			await page.keyboard.press('Escape');
+			await expect(scanner).toBeHidden();
 		});
 
 		test('inventory: a row opens the device on Hardware', async ({ page }) => {

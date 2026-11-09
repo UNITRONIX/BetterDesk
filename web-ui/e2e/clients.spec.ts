@@ -138,6 +138,11 @@ for (const role of ROLES) {
 			if (!ADMIN_ROLES.includes(role)) return expectNoAccess(page);
 			const perms = await permissions(page);
 			await expect(page.locator('.agents-import')).toHaveCount(has(perms, 'enrollment.manage') ? 1 : 0);
+			// Step 3 is plain text; Pair with code opens the overview's pairing dialog
+			const pair = page.locator('main').getByRole('link', { name: 'Pair with code' });
+			await expect(pair).toHaveCount(has(perms, 'enrollment.approve') ? 1 : 0);
+			if (has(perms, 'enrollment.approve'))
+				await expect(pair).toHaveAttribute('href', UI ? `${UI}?activateAgent=1` : '/?activateAgent=1');
 			await expect(page.getByRole('link', { name: 'Open the download page' })).toHaveAttribute(
 				'target',
 				'_blank'

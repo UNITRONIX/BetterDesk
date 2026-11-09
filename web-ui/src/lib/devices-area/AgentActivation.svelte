@@ -1,5 +1,5 @@
 <!--
-  "Activate support agent" (enrollment.approve): read the QR code the
+  "Scan agent QR" (enrollment.approve), opened from "Pair with code": read the QR code the
   BetterDesk support agent shows, with the camera or from a picture, then
   name the device, pick a folder and activate it. A centred dialog: Cancel,
   and Activate once a code has been read.
@@ -229,13 +229,12 @@
 	]);
 </script>
 
-<Dialog bind:open title={t('dashboard.activate_agent_qr')} onclose={finish}>
+<Dialog bind:open title={t('pairing.scan_qr_agent')} onclose={finish}>
 	<div class="activation">
 		<p class="hint">{t('dashboard.activate_agent_qr_hint')}</p>
 		{#if canCamera && !deviceId}
 			<div class="reader" hidden={!cameraOn}>
-				<video bind:this={video} autoplay muted playsinline aria-label={t('dashboard.activate_agent_qr')}
-				></video>
+				<video bind:this={video} autoplay muted playsinline aria-label={t('pairing.scan_qr_agent')}></video>
 			</div>
 		{/if}
 		{#if canRead && !deviceId}
