@@ -25,11 +25,12 @@ export default defineConfig({
 				directives: {
 					'default-src': ['self'],
 					'script-src': ['self'],
-					'style-src': ['self'],
-					// Only SvelteKit's route announcer (a visually hidden live region)
-					// carries a style attribute; allow exactly that value. Our own
-					// markup uses style: directives, which go through CSSOM.
-					'style-src-attr': ['unsafe-hashes', 'sha256-S8qMpvofolR8Mpjy4kQvEm7m1q8clzU4dfDH0AmvZjo='],
+					// Scripts are hash-only. Styles may be inline: xterm (terminals in server
+					// management, IoT devices and the device panel) writes <style> elements
+					// and per-cell style attributes, and SvelteKit's route announcer has a
+					// style attribute. All outside data renders as text, so nothing can
+					// inject markup to abuse this.
+					'style-src': ['self', 'unsafe-inline'],
 					'img-src': ['self', 'data:', 'blob:'],
 					'font-src': ['self'],
 					'connect-src': ['self'],

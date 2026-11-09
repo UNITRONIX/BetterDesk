@@ -75,8 +75,8 @@ Styles:
   component's `<style>`, keeping the class names, so `.ui-rework/ui-kit.html`
   stays the visual reference. Tokens only (`var(--text)`, `var(--space-3)`),
   no new colours or sizes.
-- No `!important`. No `style="..."` attributes in markup (CSP blocks
-  them); computed geometry uses `style:width={px}` (goes through CSSOM).
+- No `!important`. No `style="..."` attributes in markup; only computed
+  geometry, as `style:width={px}`.
 - Logical properties (`margin-inline-start`, `inset-inline-end`,
   `text-align: start`) so right-to-left works.
 - `:global()` only to style a child component's root or markup a snippet
