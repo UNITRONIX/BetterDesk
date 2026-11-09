@@ -1008,17 +1008,19 @@ function loadCookieFile(file) {
     for (const c of state.cookies || []) cookies[c.name] = c.value;
 }
 
+// The console's pages are the Svelte app, which gets its CSRF token from JSON: the
+// bootstrap once signed in, the sign-in page's data before.
 async function refreshCsrf() {
-    const res = await fetch(PANEL + '/login', { headers: { cookie: cookieHeader() }, redirect: 'manual' });
-    keepCookies(res);
-    let html = await res.text();
-    if (res.status >= 300 && res.status < 400) {
-        const page = await fetch(PANEL + '/', { headers: { cookie: cookieHeader() } });
-        keepCookies(page);
-        html = await page.text();
+    csrf = '';
+    for (const url of ['/api/console/bootstrap', '/api/auth/login-page']) {
+        const res = await fetch(PANEL + url, { headers: { cookie: cookieHeader(), accept: 'application/json' } });
+        keepCookies(res);
+        const json = await res.json().catch(() => null);
+        if (res.ok && json && json.csrfToken) {
+            csrf = json.csrfToken;
+            return;
+        }
     }
-    const m = html.match(/csrfToken:\s*'([^']*)'/);
-    csrf = m ? m[1] : '';
 }
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -1050,8 +1052,8 @@ async function api(method, url, body, { quiet = [] } = {}) {
 async function signIn() {
     if (COOKIE_FILE) {
         loadCookieFile(COOKIE_FILE);
-        const res = await fetch(PANEL + '/settings', { headers: { cookie: cookieHeader() }, redirect: 'manual' });
-        if (res.status !== 200) throw new Error(`Session in ${COOKIE_FILE} is not valid (GET /settings -> ${res.status}). Refresh it and try again.`);
+        const res = await fetch(PANEL + '/api/console/bootstrap', { headers: { cookie: cookieHeader(), accept: 'application/json' } });
+        if (res.status !== 200) throw new Error(`Session in ${COOKIE_FILE} is not valid (GET /api/console/bootstrap -> ${res.status}). Refresh it and try again.`);
         await refreshCsrf();
         return;
     }
