@@ -19,10 +19,12 @@ export function checkState(check: UpdateCheck): Exclude<UpdateState, 'idle' | 'c
 	return 'uptodate';
 }
 
-export type ComponentId = 'console' | 'server' | 'agent' | 'scripts' | 'other';
+export type ComponentId = 'console' | 'webui' | 'server' | 'agent' | 'scripts' | 'other';
 
 export const COMPONENTS: Readonly<Record<ComponentId, { label: string; auto: boolean }>> = {
 	console: { label: 'updates.component_console', auto: true },
+	// The new console's sources (web-ui/): part of the console, rebuilt on the server
+	webui: { label: 'updates.component_console', auto: true },
 	server: { label: 'updates.component_server', auto: true },
 	agent: { label: 'updates.component_agent', auto: false },
 	scripts: { label: 'updates.component_scripts', auto: true },

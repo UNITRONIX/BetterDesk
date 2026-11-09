@@ -211,9 +211,11 @@ describe('updates', () => {
 	});
 
 	test('changed parts with their files, empty parts left out, unknown parts as other', () => {
-		const rows = componentRows({ console: ['a', 'b'], server: [], agent: ['x'], weird: ['y'] });
+		const rows = componentRows({ console: ['a', 'b'], server: [], webui: ['u'], agent: ['x'], weird: ['y'] });
 		expect(rows).toEqual([
 			{ id: 'console', label: 'updates.component_console', auto: true, files: 2 },
+			// The new console's sources: part of the console, rebuilt on the server by the update
+			{ id: 'webui', label: 'updates.component_console', auto: true, files: 1 },
 			{ id: 'agent', label: 'updates.component_agent', auto: false, files: 1 },
 			{ id: 'weird', label: 'updates.component_other', auto: false, files: 1 }
 		]);
