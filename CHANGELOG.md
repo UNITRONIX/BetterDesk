@@ -5,6 +5,55 @@
 
 ---
 
+## [3.5.221] — 2026-11-08
+
+### Fixed
+- **Console icons chosen in JavaScript no longer render as giant raw labels.**
+  The self-hosted Material Symbols subset was built by scanning view markup only, so
+  icons picked from a lookup table — the Pro role avatar (`roleIcons.pro = 'star'` in
+  `users.js` and `permissions.js`) most visibly — were never baked into the woff2. A
+  missing ligature makes the browser paint the icon name as ordinary text, which is the
+  oversized “STAR” overlapping the username in the users table. `shield_person` and
+  `engineering` had the same problem.
+  `scripts/update-material-symbols.mjs` now also collects names from icon lookup tables,
+  `icon = …` assignments and inline ternaries; the subset grew 341 → 357 icons
+  (`star`, `shield_person`, `engineering`, `audiotrack`, `picture_as_pdf`, `folder_zip`,
+  `drive_folder_upload`, `check_box`, `check_box_outline_blank`, `delete_outline`,
+  `remove_circle_outline`, `format_align_left`, `drag_handle`, `gps_fixed`, `factory`,
+  `pending`). `users.css` also clips the avatar so a stray ligature can never spill again,
+  and `tests/material-symbols-subset.test.js` now guards JS icon tables too.
+
+### Changed
+- **Users page is now a two-column layout.** The security best-practices card is gone.
+  User groups (with create) sit in a sticky left rail at 25% width; the users table
+  fills the remaining 75%. Below 1200px the columns stack. Covered by
+  `tests/usersLayout.test.js`.
+- **Users table actions moved to a right-click context menu.** The Actions column
+  (organizations / reset password / edit / delete icon row) is removed; right-click
+  a user row to open the same actions. Local-auth users still see Reset password;
+  LDAP/OIDC users do not. Clicking the Organizations cell still opens that modal.
+
+---
+
+## [3.5.220] — 2026-11-08
+
+### Changed
+- **Główne → agent pairing now issues a one-time code instead of opening the QR scanner.**
+  The button in the client-config card (previously **Activate agent**, QR scanner) and the
+  sidebar entry (**Activate agent**, now **Pair agent**) open a pairing-code dialog: server
+  address (prefilled from the resolved client address), optional label, code generation,
+  10-minute countdown and copy. Codes are minted through the existing
+  `POST /api/panel/pairing/codes` behind `enrollment.approve`; the plaintext is shown once
+  and never logged.
+  The QR scanner is still available — inside the dialog as **Scan agent QR** and on the full
+  `/pairing` page (active codes, revoke). `/?activateAgent=1` now opens the code dialog, so
+  existing bookmarks and shortcuts no longer land in the QR scanner.
+  New keys `nav.pair_agent`, `dashboard.pair_with_code`, `pairing.scan_qr_agent`,
+  `pairing.generating` in all 26 locales; `agents.*` copy (step 3, button, description) no
+  longer presents QR as the primary path.
+
+---
+
 ## [3.5.219] — 2026-11-08
 
 ### Changed
@@ -4638,3 +4687,5 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.217]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.216...v3.5.217
 [3.5.218]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.217...v3.5.218
 [3.5.219]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.218...v3.5.219
+[3.5.220]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.219...v3.5.220
+[3.5.221]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.220...v3.5.221

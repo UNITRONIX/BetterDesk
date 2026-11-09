@@ -13,6 +13,7 @@ const userSync = require('../services/userSync');
 const avatarService = require('../services/avatarService');
 const userScopeService = require('../services/userScopeService');
 const deviceGroupService = require('../services/deviceGroupService');
+const panelAccessPolicyService = require('../services/panelAccessPolicyService');
 const serverBackend = require('../services/serverBackend');
 const {
     requireAuth,
@@ -424,6 +425,7 @@ router.delete('/api/panel/user-groups/:guid', requireAuth, requirePermission('us
             return res.status(404).json({ success: false, error: req.t('users.user_group_not_found') });
         }
 
+        await panelAccessPolicyService.savePolicy('group', guid, {});
         await db.deleteUserGroup(guid);
         await db.logAction(req.session.userId, 'user_group_deleted', `Deleted user group: ${group.name}`, req.ip);
         res.json({ success: true });
@@ -746,6 +748,7 @@ router.delete('/api/users/:id', requireAuth, requirePermission('user.delete'), a
             });
         }
 
+        await panelAccessPolicyService.savePolicy('user', String(userId), {});
         await db.deleteUser(userId);
 
         // Log action

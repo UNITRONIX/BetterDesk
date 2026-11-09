@@ -27,6 +27,9 @@ const mockDb = {
     getUserStrategyGuid: jest.fn().mockResolvedValue(''),
     setUserStrategyAssignment: jest.fn().mockResolvedValue(''),
     getAllFolders: jest.fn().mockResolvedValue([]),
+    // Deleting a user or a group clears its panel access policy
+    setPanelAccessPolicies: jest.fn().mockResolvedValue(undefined),
+    setClientFeaturePolicies: jest.fn().mockResolvedValue(undefined),
 };
 
 const mockUserSync = {
@@ -162,6 +165,7 @@ describe('Users Routes', () => {
         expect(res.status).toBe(200);
         expect(mockDb.getUserGroupByGuid).toHaveBeenCalledWith('volunteers');
         expect(mockDb.deleteUserGroup).toHaveBeenCalledWith('volunteers');
+        expect(mockDb.setPanelAccessPolicies).toHaveBeenCalledWith('group', 'volunteers', expect.anything());
     });
 
     it('stores user group memberships when creating a user', async () => {
@@ -522,6 +526,7 @@ describe('Users Routes', () => {
         expect(mockUserSync.assertGoAllowsSuperAdminDelete).toHaveBeenCalledWith('admin');
         expect(mockUserSync.mirrorDelete).toHaveBeenCalledWith('admin');
         expect(mockDb.deleteUser).toHaveBeenCalledWith(2);
+        expect(mockDb.setPanelAccessPolicies).toHaveBeenCalledWith('user', '2', expect.anything());
     });
 
     it('refuses delete when Go still has only one Super Admin (Issue #315)', async () => {

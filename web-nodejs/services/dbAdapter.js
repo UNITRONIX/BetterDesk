@@ -521,6 +521,26 @@ function createSqliteAdapter(config) {
                 team_id TEXT DEFAULT '',
                 created_at TEXT DEFAULT (datetime('now'))
             );
+            CREATE TABLE IF NOT EXISTS panel_access_policies (
+                subject_type TEXT NOT NULL,
+                subject_id TEXT NOT NULL,
+                resource_key TEXT NOT NULL,
+                access_level TEXT NOT NULL DEFAULT 'none',
+                updated_at TEXT DEFAULT (datetime('now')),
+                PRIMARY KEY (subject_type, subject_id, resource_key)
+            );
+            CREATE INDEX IF NOT EXISTS idx_panel_access_policies_subject
+                ON panel_access_policies (subject_type, subject_id);
+            CREATE TABLE IF NOT EXISTS client_feature_policies (
+                subject_type TEXT NOT NULL,
+                subject_id TEXT NOT NULL,
+                feature_key TEXT NOT NULL,
+                enabled INTEGER NOT NULL DEFAULT 0,
+                updated_at TEXT DEFAULT (datetime('now')),
+                PRIMARY KEY (subject_type, subject_id, feature_key)
+            );
+            CREATE INDEX IF NOT EXISTS idx_client_feature_policies_subject
+                ON client_feature_policies (subject_type, subject_id);
             CREATE TABLE IF NOT EXISTS user_group_members (
                 user_group_id INTEGER NOT NULL,
                 user_id INTEGER NOT NULL,
@@ -3239,6 +3259,75 @@ function createSqliteAdapter(config) {
             return this.getUserGroupsForUser(user.id);
         },
 
+        async getPanelAccessPolicies(subjectType, subjectId) {
+            return openAuth().prepare(`
+                SELECT resource_key, access_level
+                FROM panel_access_policies
+                WHERE subject_type = ? AND subject_id = ?
+                ORDER BY resource_key ASC
+            `).all(String(subjectType), String(subjectId));
+        },
+
+        async setPanelAccessPolicies(subjectType, subjectId, policies = []) {
+            const db = openAuth();
+            const normalized = Array.isArray(policies) ? policies : [];
+            const tx = db.transaction(() => {
+                db.prepare('DELETE FROM panel_access_policies WHERE subject_type = ? AND subject_id = ?')
+                    .run(String(subjectType), String(subjectId));
+                const insert = db.prepare(`
+                    INSERT INTO panel_access_policies
+                        (subject_type, subject_id, resource_key, access_level, updated_at)
+                    VALUES (?, ?, ?, ?, datetime('now'))
+                `);
+                for (const policy of normalized) {
+                    insert.run(
+                        String(subjectType),
+                        String(subjectId),
+                        String(policy.resource_key),
+                        String(policy.access_level)
+                    );
+                }
+            });
+            tx();
+            return this.getPanelAccessPolicies(subjectType, subjectId);
+        },
+
+        async getClientFeaturePolicies(subjectType, subjectId) {
+            return openAuth().prepare(`
+                SELECT feature_key, enabled
+                FROM client_feature_policies
+                WHERE subject_type = ? AND subject_id = ?
+                ORDER BY feature_key ASC
+            `).all(String(subjectType), String(subjectId)).map((row) => ({
+                feature_key: row.feature_key,
+                enabled: !!row.enabled,
+            }));
+        },
+
+        async setClientFeaturePolicies(subjectType, subjectId, policies = []) {
+            const db = openAuth();
+            const normalized = Array.isArray(policies) ? policies : [];
+            const tx = db.transaction(() => {
+                db.prepare('DELETE FROM client_feature_policies WHERE subject_type = ? AND subject_id = ?')
+                    .run(String(subjectType), String(subjectId));
+                const insert = db.prepare(`
+                    INSERT INTO client_feature_policies
+                        (subject_type, subject_id, feature_key, enabled, updated_at)
+                    VALUES (?, ?, ?, ?, datetime('now'))
+                `);
+                for (const policy of normalized) {
+                    insert.run(
+                        String(subjectType),
+                        String(subjectId),
+                        String(policy.feature_key),
+                        policy.enabled ? 1 : 0
+                    );
+                }
+            });
+            tx();
+            return this.getClientFeaturePolicies(subjectType, subjectId);
+        },
+
         // ---- Device Groups ----
 
         async getAllDeviceGroups() {
@@ -4743,6 +4832,28 @@ function createPostgresAdapter() {
                 created_at TIMESTAMPTZ DEFAULT NOW()
             )
         `);
+        await q(`
+            CREATE TABLE IF NOT EXISTS panel_access_policies (
+                subject_type TEXT NOT NULL,
+                subject_id TEXT NOT NULL,
+                resource_key TEXT NOT NULL,
+                access_level TEXT NOT NULL DEFAULT 'none',
+                updated_at TIMESTAMPTZ DEFAULT NOW(),
+                PRIMARY KEY (subject_type, subject_id, resource_key)
+            )
+        `);
+        await q('CREATE INDEX IF NOT EXISTS idx_panel_access_policies_subject ON panel_access_policies (subject_type, subject_id)');
+        await q(`
+            CREATE TABLE IF NOT EXISTS client_feature_policies (
+                subject_type TEXT NOT NULL,
+                subject_id TEXT NOT NULL,
+                feature_key TEXT NOT NULL,
+                enabled BOOLEAN NOT NULL DEFAULT FALSE,
+                updated_at TIMESTAMPTZ DEFAULT NOW(),
+                PRIMARY KEY (subject_type, subject_id, feature_key)
+            )
+        `);
+        await q('CREATE INDEX IF NOT EXISTS idx_client_feature_policies_subject ON client_feature_policies (subject_type, subject_id)');
 
         await q(`
             CREATE TABLE IF NOT EXISTS user_group_members (
@@ -6828,6 +6939,82 @@ function createPostgresAdapter() {
                 client.release();
             }
             return this.getUserGroupsForUser(user.id);
+        },
+
+        async getPanelAccessPolicies(subjectType, subjectId) {
+            return all(`
+                SELECT resource_key, access_level
+                FROM panel_access_policies
+                WHERE subject_type = $1 AND subject_id = $2
+                ORDER BY resource_key ASC
+            `, [String(subjectType), String(subjectId)]);
+        },
+
+        async setPanelAccessPolicies(subjectType, subjectId, policies = []) {
+            const client = await getPool().connect();
+            const type = String(subjectType);
+            const id = String(subjectId);
+            try {
+                await client.query('BEGIN');
+                await client.query(
+                    'DELETE FROM panel_access_policies WHERE subject_type = $1 AND subject_id = $2',
+                    [type, id]
+                );
+                for (const policy of (Array.isArray(policies) ? policies : [])) {
+                    await client.query(`
+                        INSERT INTO panel_access_policies
+                            (subject_type, subject_id, resource_key, access_level, updated_at)
+                        VALUES ($1, $2, $3, $4, NOW())
+                    `, [type, id, String(policy.resource_key), String(policy.access_level)]);
+                }
+                await client.query('COMMIT');
+            } catch (err) {
+                await client.query('ROLLBACK');
+                throw err;
+            } finally {
+                client.release();
+            }
+            return this.getPanelAccessPolicies(type, id);
+        },
+
+        async getClientFeaturePolicies(subjectType, subjectId) {
+            const rows = await all(`
+                SELECT feature_key, enabled
+                FROM client_feature_policies
+                WHERE subject_type = $1 AND subject_id = $2
+                ORDER BY feature_key ASC
+            `, [String(subjectType), String(subjectId)]);
+            return rows.map((row) => ({
+                feature_key: row.feature_key,
+                enabled: row.enabled === true || row.enabled === 1,
+            }));
+        },
+
+        async setClientFeaturePolicies(subjectType, subjectId, policies = []) {
+            const client = await getPool().connect();
+            const type = String(subjectType);
+            const id = String(subjectId);
+            try {
+                await client.query('BEGIN');
+                await client.query(
+                    'DELETE FROM client_feature_policies WHERE subject_type = $1 AND subject_id = $2',
+                    [type, id]
+                );
+                for (const policy of (Array.isArray(policies) ? policies : [])) {
+                    await client.query(`
+                        INSERT INTO client_feature_policies
+                            (subject_type, subject_id, feature_key, enabled, updated_at)
+                        VALUES ($1, $2, $3, $4, NOW())
+                    `, [type, id, String(policy.feature_key), !!policy.enabled]);
+                }
+                await client.query('COMMIT');
+            } catch (err) {
+                await client.query('ROLLBACK');
+                throw err;
+            } finally {
+                client.release();
+            }
+            return this.getClientFeaturePolicies(type, id);
         },
 
         // ---- Device Groups ----

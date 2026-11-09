@@ -8,6 +8,11 @@ const {
     loadEffectivePermissions,
 } = require('../services/rolePermissionService');
 const { loginRedirectUrl } = require('../lib/returnUrl');
+const {
+    ACCESS_LEVEL_RANK,
+    PANEL_ACCESS_CATALOG,
+    normalizeAccessLevel,
+} = require('../lib/panelAccessCatalog');
 
 // Default role-permission map (mirrors Go auth/permissions.go — Phase 52+)
 //
@@ -143,6 +148,17 @@ function requestHasPermission(req, permission) {
     const role = req?.session?.user?.role;
     if (proRoleBlocksPermission(role, permission)) return false;
     if (isSuperAdminRole(role)) return true;
+    const policySection = req?.panelAccessPolicy?.sections?.[req.panelAccessSection];
+    const catalogEntry = PANEL_ACCESS_CATALOG.find((entry) => entry.key === req.panelAccessSection);
+    if (policySection && catalogEntry) {
+        const required = catalogEntry.writePermission === permission
+            ? 'write'
+            : catalogEntry.readPermission === permission ? 'read' : null;
+        if (required) {
+            return ACCESS_LEVEL_RANK[normalizeAccessLevel(policySection.access)]
+                >= ACCESS_LEVEL_RANK[required];
+        }
+    }
     if (req?.effectivePermissions instanceof Set) {
         return req.effectivePermissions.has(permission);
     }

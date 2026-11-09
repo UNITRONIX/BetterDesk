@@ -71,7 +71,8 @@ const ICON_PROPERTY = /\bicon\s*:\s*['"]([a-z][a-z0-9_]{1,48})['"]/g;
 const ICON_RETURN = /\breturn\s+['"]([a-z][a-z0-9_]{1,48})['"]/g;
 const PLATFORM_ICON_MAP =
     /\b(?:windows|linux|mac|macos|android|ios)\s*:\s*['"]([a-z][a-z0-9_]{1,48})['"]/g;
-const ICON_HELPER_LINE = /\b(?:createWindowCtrlBtn|createMaterialIconSpan)\b[^;\n]*/g;
+const ICON_HELPER_LINE =
+    /\b(?:createWindowCtrlBtn|createMaterialIconSpan|addItem|toggleButton)\b[^;\n]*/g;
 const TEXT_CONTENT_LINE = /\btextContent\s*=[^;\n]*/g;
 /* A line that builds an icon span: names in ternaries such as
    `material-icons">' + (isDir ? 'folder' : 'insert_drive_file') + '<` */
@@ -89,6 +90,9 @@ const ICON_COMPONENT = /<Icon\b[^>]*?\bname=["']([a-z][a-z0-9_]{1,48})["']/g;
 const ICON_ATTR_EXPR = /\b\w*[iI]con\w*=\{[^}\n]*\}/g;
 
 const SKIP_DIRS = new Set(['node_modules', '.git', 'coverage', 'vendor', 'tests', 'data']);
+/* Names picked inline a few lines from an icon span: `(on ? 'check_box' : 'check_box_outline_blank')` */
+const ICON_TERNARY_PAIR =
+    /\?\s*['"]([a-z][a-z0-9_]{1,48})['"]\s*:\s*['"]([a-z][a-z0-9_]{1,48})['"]/g;
 
 function walkFiles(dir, out = []) {
     for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -174,6 +178,20 @@ export function collectCandidateIcons() {
                 }
             }
         }
+
+        // Icons picked inline inside markup:
+        // `(on ? 'check_box' : 'check_box_outline_blank')` next to an icon span.
+        const lines = text.split(/\r?\n/);
+        lines.forEach((line, idx) => {
+            if (!/material-(?:icons|symbols)/.test(line)) return;
+            const window = lines.slice(Math.max(0, idx - 3), idx + 4).join('\n');
+            ICON_TERNARY_PAIR.lastIndex = 0;
+            let pair;
+            while ((pair = ICON_TERNARY_PAIR.exec(window)) !== null) {
+                add(pair[1], file);
+                add(pair[2], file);
+            }
+        });
     }
     return icons;
 }

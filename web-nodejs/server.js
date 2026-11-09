@@ -47,6 +47,8 @@ const { initServerTerminalProxy } = require('./services/serverTerminalProxy');
 const { initCdapMediaProxies } = require('./services/cdapMediaProxy');
 const { initMeshAshxProxy } = require('./services/meshAshxProxy');
 const { initRemoteTargetGateway } = require('./services/remoteTargetGateway');
+const { loadEffectivePolicy } = require('./services/panelAccessPolicyService');
+const { panelAccessGuard } = require('./middleware/panelAccess');
 const { startDiscoveryService } = require('./services/lanDiscovery');
 const { initDeviceStatusPush } = require('./services/deviceStatusPush');
 const { initHelpRequestEmailService } = require('./services/helpRequestEmailService');
@@ -230,6 +232,8 @@ app.use('/wallpapers', express.static(path.join(__dirname, 'wallpapers'), {
 // intentionally served first so authenticated pages do not add a Go lookup
 // for every CSS, image, and JavaScript request.
 app.use(loadEffectivePermissions);
+app.use(loadEffectivePolicy);
+app.use(panelAccessGuard);
 
 // Rate limiting for API.
 // SECURITY (audit fix M-03, 2026-04-10): high-frequency widget refresh paths
