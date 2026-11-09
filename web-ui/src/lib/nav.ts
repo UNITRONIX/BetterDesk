@@ -40,7 +40,8 @@ export const PORTED: readonly string[] = [
 	'/attestation',
 	'/',
 	'/inventory',
-	'/network'
+	'/network',
+	'/cross-platform'
 ];
 
 /** Whether a path (no query) is one of the entries */
