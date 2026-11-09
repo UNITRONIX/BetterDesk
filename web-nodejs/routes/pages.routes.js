@@ -11,11 +11,10 @@
 
 const express = require('express');
 const router = express.Router();
-const { requireAuth, requireRole } = require('../middleware/auth');
 
-// ── Tenants — redirect to Organizations (merged) ──
+// ── Tenants — redirect to Organizations (merged); that page checks access ──
 
-router.get('/tenants', requireAuth, requireRole('admin'), (req, res) => {
+router.get('/tenants', (req, res) => {
     res.redirect('/organizations');
 });
 

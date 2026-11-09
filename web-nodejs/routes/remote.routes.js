@@ -399,9 +399,10 @@ router.get('/api/remote/viewer/:deviceId', rdClientPageLimiter, requireRemoteAcc
 });
 
 /**
- * GET /remote-cdap/:deviceId - Legacy alias, redirects to unified entry.
+ * GET /remote-cdap/:deviceId - Legacy alias, redirects to unified entry
+ * (the viewer's data endpoint checks access).
  */
-router.get('/remote-cdap/:deviceId', rdClientPageLimiter, requireRdClientAuth('device.connect'), (req, res) => {
+router.get('/remote-cdap/:deviceId', rdClientPageLimiter, (req, res) => {
     const deviceId = req.params.deviceId;
     if (deviceId && /^[A-Za-z0-9_-]{3,64}$/.test(deviceId)) {
         return res.redirect(`/remote/${encodeURIComponent(deviceId)}?transport=cdap`);
@@ -411,8 +412,9 @@ router.get('/remote-cdap/:deviceId', rdClientPageLimiter, requireRdClientAuth('d
 
 /**
  * GET /remote-desktop/:deviceId - Legacy route, redirects to unified /remote/:deviceId
+ * (the viewer's data endpoint checks access).
  */
-router.get('/remote-desktop/:deviceId', rdClientPageLimiter, requireRdClientAuth('device.connect'), (req, res) => {
+router.get('/remote-desktop/:deviceId', rdClientPageLimiter, (req, res) => {
     const deviceId = req.params.deviceId;
     if (deviceId && /^[A-Za-z0-9_-]{3,64}$/.test(deviceId)) {
         return res.redirect(`/remote/${encodeURIComponent(deviceId)}`);

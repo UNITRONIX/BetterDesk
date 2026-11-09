@@ -14,6 +14,19 @@
 const config = require('../config/config');
 const logger = require('./logger');
 
+// The API and sockets answer in JSON, never with a page
+const SERVER_PATH = /^\/(api|ws)(\/|$)/i;
+
+function wantsJson(req) {
+    return req.path.startsWith('/api/')
+        || String(req.headers['content-type'] || '').includes('application/json');
+}
+
+/** The console's error page (lib/webUi.js res.sendErrorPage); false when there is none */
+function sendErrorPage(res, kind, opts) {
+    return typeof res.sendErrorPage === 'function' && res.sendErrorPage(kind, opts);
+}
+
 /**
  * @param {import('express').Express} app
  * @param {{ routes: import('express').Router, webUi: import('express').Router }} parts
@@ -26,30 +39,26 @@ function mountRoutes(app, { routes, webUi }) {
 
     // CSRF token mismatch
     app.use((err, req, res, next) => {
-        if (err.code === 'EBADCSRFTOKEN' || err.message?.includes('csrf') || err.message?.includes('CSRF')) {
-            res.status(403);
-            // Detect likely SSL→HTTP transition: cookie missing because browser held Secure cookie
-            const likelySslTransition = !config.httpsEnabled && !req.secure;
-            const hint = likelySslTransition
-                ? ' If you recently disabled SSL, clear your browser cookies for this site and reload.'
-                : '';
-            // Always return JSON for API routes (fetch sends Accept: */*)
-            if (req.path.startsWith('/api/') || (req.headers['content-type'] && req.headers['content-type'].includes('application/json'))) {
-                return res.json({ success: false, error: 'Invalid CSRF token. Please refresh the page and try again.' + hint });
-            }
-            if (req.accepts('html')) {
-                return res.render('errors/500', {
-                    title: 'Forbidden',
-                    activePage: 'error',
-                    error: 'Invalid or missing CSRF token. Please refresh the page and try again.' + hint
-                });
-            }
-            return res.json({ success: false, error: 'Invalid CSRF token' + hint });
+        if (!(err.code === 'EBADCSRFTOKEN' || err.message?.includes('csrf') || err.message?.includes('CSRF'))) return next(err);
+        res.status(403);
+        // Detect likely SSL→HTTP transition: cookie missing because browser held Secure cookie
+        const likelySslTransition = !config.httpsEnabled && !req.secure;
+        const hint = likelySslTransition
+            ? ' If you recently disabled SSL, clear your browser cookies for this site and reload.'
+            : '';
+        // Always return JSON for API routes (fetch sends Accept: */*)
+        if (wantsJson(req)) {
+            return res.json({ success: false, error: 'Invalid CSRF token. Please refresh the page and try again.' + hint });
         }
-        next(err);
+        if (req.accepts('html')) {
+            const message = 'Invalid or missing CSRF token. Please refresh the page and try again.' + hint;
+            return sendErrorPage(res, 403, { message }) || res.type('text').send(message);
+        }
+        return res.json({ success: false, error: 'Invalid CSRF token' + hint });
     });
 
-    // 404 Not Found
+    // 404 Not Found: what no route and no console page answered (other
+    // methods, missing files, the API and sockets)
     app.use((req, res, _next) => {
         res.status(404);
 
@@ -62,17 +71,10 @@ function mountRoutes(app, { routes, webUi }) {
             console.warn(`[panel] 404 ${req.method} ${req.originalUrl} from ${ip} ua="${ua}"`);
         }
 
-        if (req.accepts('html')) {
-            res.render('errors/404', {
-                title: req.t ? req.t('errors.not_found') : 'Not Found',
-                activePage: 'error'
-            });
-        } else {
-            res.json({
-                success: false,
-                error: 'Not Found'
-            });
+        if (!SERVER_PATH.test(req.path) && req.accepts('html')) {
+            return sendErrorPage(res, 404) || res.type('text').send('Not Found');
         }
+        res.json({ success: false, error: 'Not Found' });
     });
 
     // 500 Server Error
@@ -80,27 +82,18 @@ function mountRoutes(app, { routes, webUi }) {
         logger.error('Server error:', err);
 
         res.status(err.status || 500);
+        const detail = config.isProduction ? null : err.message;
 
         // Always return JSON for API routes
-        if (req.path.startsWith('/api/') || (req.headers['content-type'] && req.headers['content-type'].includes('application/json'))) {
-            return res.json({
-                success: false,
-                error: config.isProduction ? 'Internal Server Error' : err.message
-            });
+        if (wantsJson(req)) {
+            return res.json({ success: false, error: detail || 'Internal Server Error' });
         }
 
         if (req.accepts('html')) {
-            res.render('errors/500', {
-                title: req.t ? req.t('errors.server_error') : 'Server Error',
-                activePage: 'error',
-                error: config.isProduction ? null : err.message
-            });
-        } else {
-            res.json({
-                success: false,
-                error: config.isProduction ? 'Internal Server Error' : err.message
-            });
+            return sendErrorPage(res, 500, { status: res.statusCode, message: detail || undefined })
+                || res.type('text').send(detail || 'Internal Server Error');
         }
+        res.json({ success: false, error: detail || 'Internal Server Error' });
     });
 }
 

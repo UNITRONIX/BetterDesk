@@ -255,10 +255,10 @@ function filterAvailableBuilds(builds) {
 }
 
 // =========================================================================
-//  Old client Generator address: the agents page replaced it
+//  Old client Generator address: the agents page replaced it (and checks access)
 // =========================================================================
 
-router.get('/generator', requireAuth, requireAdmin, (_req, res) => {
+router.get('/generator', (_req, res) => {
     res.redirect(301, '/agents');
 });
 

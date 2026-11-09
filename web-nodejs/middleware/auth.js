@@ -100,6 +100,19 @@ function isApiRequest(req) {
 }
 
 /**
+ * Refuse a page request (API requests get JSON from the callers): the
+ * console's error page at this address with the status (lib/webUi.js
+ * res.sendErrorPage), or plain text when there is no console build. A 403
+ * shows the console's own words; other statuses show the message.
+ */
+function refusePage(res, status, message) {
+    const shown = typeof res.sendErrorPage === 'function'
+        && res.sendErrorPage(status === 403 ? 403 : 500, status === 403 ? { status } : { status, message });
+    if (!shown) res.status(status).type('text').send(message || 'Forbidden');
+    return res;
+}
+
+/**
  * Check if a role is a super admin (or legacy admin).
  */
 function isSuperAdminRole(role) {
@@ -211,10 +224,7 @@ function requireRdClientAuth(permission) {
                 if (isApiRequest(req)) {
                     return res.status(403).json({ success: false, error: `Permission denied: ${permission}` });
                 }
-                return res.status(403).render('errors/403', {
-                    title: 'Forbidden',
-                    message: 'You do not have permission to access this resource'
-                });
+                return refusePage(res, 403);
             }
         }
 
@@ -300,10 +310,7 @@ function requireRole(role) {
             if (isApiRequest(req)) {
                 return res.status(403).json({ success: false, error: 'Forbidden' });
             }
-            return res.status(403).render('errors/403', {
-                title: 'Forbidden',
-                message: 'You do not have permission to access this resource'
-            });
+            return refusePage(res, 403);
         }
         
         res.locals.user = req.session.user;
@@ -353,10 +360,7 @@ function requireAdmin(req, res, next) {
         if (isApiRequest(req)) {
             return res.status(403).json({ success: false, error: 'Admin access required' });
         }
-        return res.status(403).render('errors/403', {
-            title: 'Forbidden',
-            message: 'You do not have permission to access this resource'
-        });
+        return refusePage(res, 403);
     }
     
     res.locals.user = req.session.user;
@@ -386,19 +390,13 @@ function requirePermission(permission) {
                     code: 'permission_service_unavailable'
                 });
             }
-            return res.status(503).render('errors/500', {
-                title: 'Service unavailable',
-                message: 'Permission service unavailable'
-            });
+            return refusePage(res, 503, 'Permission service unavailable');
         }
         if (!requestHasPermission(req, permission)) {
             if (isApiRequest(req)) {
                 return res.status(403).json({ success: false, error: `Permission denied: ${permission}` });
             }
-            return res.status(403).render('errors/403', {
-                title: 'Forbidden',
-                message: 'You do not have permission to access this resource'
-            });
+            return refusePage(res, 403);
         }
 
         res.locals.user = req.session.user;
