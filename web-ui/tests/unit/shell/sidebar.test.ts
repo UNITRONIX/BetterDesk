@@ -31,11 +31,12 @@ describe('Sidebar', () => {
 		expect(current).toHaveAttribute('aria-current', 'page');
 		expect(current).toHaveAttribute('href', '/app/devices');
 		expect(screen.getByRole('link', { name: 'Overview' })).not.toHaveAttribute('aria-current');
-		// A page still in the old console keeps its URL
 		expect(screen.getByRole('link', { name: 'Inventory', hidden: true })).toHaveAttribute(
 			'href',
-			'/inventory'
+			'/app/inventory'
 		);
+		// A page still in the old console keeps its URL (fleet tasks move with the canvas tools)
+		expect(screen.getByRole('link', { name: 'Fleet tasks', hidden: true })).toHaveAttribute('href', '/fleet');
 	});
 
 	test('settings tabs are matched by their tab (pageKey)', async () => {

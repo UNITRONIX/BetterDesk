@@ -37,8 +37,8 @@ test('says the page is refused, who is signed in with which role, and links to t
 	);
 	expect(line.textContent).toBe('Rolle Betrachter, angemeldet als demo_viewer.');
 	expect(line.querySelector('strong')?.textContent).toBe('demo_viewer');
-	// The overview, in the new console once it is ported
-	expect(screen.getByRole('link', { name: 'Zur Übersicht' }).getAttribute('href')).toMatch(/^(\/app)?\/$/);
+	// The overview
+	expect(screen.getByRole('link', { name: 'Zur Übersicht' })).toHaveAttribute('href', '/app');
 });
 
 test('a role without a translated name is shown in words', async () => {
