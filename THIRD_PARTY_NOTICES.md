@@ -30,9 +30,29 @@ xdotool, and ydotool are not silently relicensed by BetterDesk. A package may
 only bundle one of them after its license, redistributability, provenance, and
 security-update path are recorded in the release SBOM.
 
+## Web console code
+
+The Svelte console in `web-ui/` bundles these npm packages into the code the
+browser loads. All are under the MIT License; each package ships its license,
+and the resolved versions are in `web-ui/package-lock.json`.
+
+- Svelte, copyright Svelte contributors
+- SvelteKit (`@sveltejs/kit`, its client runtime), copyright SvelteKit
+  contributors
+- devalue (used by SvelteKit), copyright devalue contributors
+- clsx (used by Svelte), copyright Luke Edwards
+- Valibot, copyright Fabian Hiller
+- xterm.js (`@xterm/xterm` and `@xterm/addon-fit`), copyright the xterm.js
+  authors, SourceLair Private Company and Christopher Jeffrey
+- qrcode-generator, copyright Kazuhiko Arase
+
+Build and test tools in `web-ui/package.json` (Vite, TypeScript, Vitest,
+Playwright, ESLint and others) are not part of what the console serves.
+
 ## Web console fonts
 
-The console self-hosts these fonts in `web-nodejs/public/fonts/`:
+The console self-hosts these fonts in `web-nodejs/public/fonts/`, and the
+Svelte console the same files in `web-ui/static/fonts/`:
 
 - IBM Plex Sans (Latin, Latin Extended, Cyrillic, Greek and Vietnamese
   subsets, variable weight) and IBM Plex Mono (Latin, Latin Extended and
@@ -53,6 +73,9 @@ package. Graphics licensed under CC-BY 4.0
 (https://creativecommons.org/licenses/by/4.0/), copyright Twitter, Inc and
 other contributors. The files are renamed to the language code they stand
 for; the drawings are unchanged.
+
+The Svelte console has copies of the OS marks and the flags in
+`web-ui/static/img/`.
 
 ## Compatibility components
 
