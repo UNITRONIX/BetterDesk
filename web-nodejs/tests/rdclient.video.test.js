@@ -19,7 +19,7 @@ function loadRDVideo() {
     sandbox.globalThis = sandbox;
     vm.runInNewContext(
         fs.readFileSync(
-            path.join(__dirname, '..', 'public/js/rdclient/video.js'),
+            path.join(__dirname, '..', '../web-ui/static/rdclient/video.js'),
             'utf8'
         ) + '\nglobalThis.RDVideo = RDVideo;',
         sandbox,

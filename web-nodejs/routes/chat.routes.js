@@ -1,6 +1,7 @@
 /**
  * BetterDesk Console — Chat Routes
- * Dedicated chat page + API endpoints for Chat 2.0
+ * API endpoints for Chat 2.0. The chat page (/chat) is in the console
+ * (web-ui).
  */
 
 'use strict';
@@ -11,7 +12,10 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
-const { requireAuth } = require('../middleware/auth');
+const { requireAuth, requirePermission } = require('../middleware/auth');
+
+// The chat WebSocket needs chat.access; its HTTP routes need the same
+const chatAccess = requirePermission('chat.access');
 
 // File upload config — max 50MB, store in data/chat-files/
 const UPLOAD_DIR = path.join(__dirname, '..', 'data', 'chat-files');
@@ -33,22 +37,10 @@ const upload = multer({
     limits: { fileSize: MAX_FILE_SIZE },
 });
 
-// ========== Page Route ==========
-
-router.get('/chat', requireAuth, (req, res) => {
-    res.render('chat', {
-        title: req.t('nav.chat'),
-        pageStyles: ['chat'],
-        pageScripts: ['chat'],
-        currentPage: 'chat',
-        breadcrumb: [{ label: req.t('nav.chat') }],
-    });
-});
-
 // ========== API Routes ==========
 
 // Upload encrypted file
-router.post('/api/chat/upload', requireAuth, upload.single('file'), (req, res) => {
+router.post('/api/chat/upload', requireAuth, chatAccess, upload.single('file'), (req, res) => {
     if (!req.file) {
         return res.status(400).json({ success: false, error: 'No file provided' });
     }
@@ -63,12 +55,13 @@ router.post('/api/chat/upload', requireAuth, upload.single('file'), (req, res) =
 });
 
 // Download file
-router.get('/api/chat/files/:fileId', requireAuth, (req, res) => {
-    const fileId = req.params.fileId.replace(/[^a-f0-9]/gi, '');
-    if (!fileId) return res.status(400).json({ success: false, error: 'Invalid file ID' });
+router.get('/api/chat/files/:fileId', requireAuth, chatAccess, (req, res) => {
+    // Upload ids are 16 random bytes in hex; only a whole id finds its file
+    // (a prefix used to match, so a short id walked the uploads)
+    const fileId = String(req.params.fileId).toLowerCase();
+    if (!/^[a-f0-9]{32}$/.test(fileId)) return res.status(400).json({ success: false, error: 'Invalid file ID' });
 
-    // Find file by ID prefix
-    const files = fs.readdirSync(UPLOAD_DIR).filter(f => f.startsWith(fileId));
+    const files = fs.readdirSync(UPLOAD_DIR).filter(f => f === fileId || f.startsWith(fileId + '.'));
     if (files.length === 0) {
         return res.status(404).json({ success: false, error: 'File not found' });
     }
@@ -81,7 +74,7 @@ router.get('/api/chat/files/:fileId', requireAuth, (req, res) => {
 });
 
 // Search messages via Go server proxy
-router.get('/api/chat/search', requireAuth, async (req, res) => {
+router.get('/api/chat/search', requireAuth, chatAccess, async (req, res) => {
     try {
         const { apiClient } = require('../services/betterdeskApi');
         const query = String(req.query.q || '').slice(0, 200);

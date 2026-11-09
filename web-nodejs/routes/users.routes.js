@@ -10,6 +10,7 @@ const db = require('../services/database');
 const { apiClient } = require('../services/betterdeskApi');
 const { assertSafeApiId } = require('../lib/goApiPath');
 const userSync = require('../services/userSync');
+const avatarService = require('../services/avatarService');
 const userScopeService = require('../services/userScopeService');
 const deviceGroupService = require('../services/deviceGroupService');
 const panelAccessPolicyService = require('../services/panelAccessPolicyService');
@@ -128,6 +129,11 @@ function normalizeUserGroupPayload(body) {
     return { name, note, team_id: teamId };
 }
 
+// SQLite stores 0/1, Postgres true/false; the list says only whether it is on
+function totpEnabled(u) {
+    return u.totp_enabled === true || u.totp_enabled === 1 || u.totp_enabled === '1';
+}
+
 async function serializeUserForList(u) {
     try {
         const folderIds = await userScopeService.getUserFolderIds(db, u.username);
@@ -149,7 +155,8 @@ async function serializeUserForList(u) {
             user_groups: await getUserGroupGuids(u.id),
             folder_ids: folderIds,
             peer_grants: peerGrants,
-            strategy_guid: strategyGuid
+            strategy_guid: strategyGuid,
+            totp_enabled: totpEnabled(u)
         };
     } catch (err) {
         console.warn(`[users] scope enrichment failed for ${u?.username || u?.id}:`, err.message);
@@ -164,7 +171,8 @@ async function serializeUserForList(u) {
             user_groups: [],
             folder_ids: [],
             peer_grants: [],
-            strategy_guid: ''
+            strategy_guid: '',
+            totp_enabled: totpEnabled(u)
         };
     }
 }
@@ -307,16 +315,6 @@ function requireAnyPermission(...permissions) {
 }
 
 /**
- * GET /users - Users management page (admin only)
- */
-router.get('/users', requireAuth, requirePermission('user.view'), (req, res) => {
-    res.render('users', {
-        title: req.t('nav.users'),
-        activePage: 'users'
-    });
-});
-
-/**
  * GET /api/users - Get all users (admin only)
  */
 router.get('/api/users', requireAuth, requirePermission('user.view'), async (req, res) => {
@@ -325,7 +323,11 @@ router.get('/api/users', requireAuth, requirePermission('user.view'), async (req
         const users = await db.getAllUsers();
         
         // Remove sensitive data
-        const safeUsers = await Promise.all(users.map(u => serializeUserForList(u)));
+        const listed = await Promise.all(users.map(u => serializeUserForList(u)));
+        // has_avatar / avatar_version: Utils.avatarHtml shows the picture
+        let avatarVersions = new Map();
+        try { avatarVersions = await avatarService.getVersionMap(); } catch (_) {}
+        const safeUsers = listed.map(u => avatarService.withAvatarFields(u, avatarVersions));
         
         res.json({
             success: true,

@@ -34,23 +34,11 @@ const { getSmtpSettings, putSmtpSettings, testSmtpSettings } = require('../lib/s
 const betterdeskApi = require('../services/betterdeskApi');
 const { apiClient } = betterdeskApi;
 const { canUsePrivilegedUpdate, invokePrivilegedUpdate } = require('../lib/privilegedUpdateHelper');
-const { requireAuth, requirePermission, requestHasPermission } = require('../middleware/auth');
+const { requireAuth, requirePermission } = require('../middleware/auth');
 const deviceGroupService = require('../services/deviceGroupService');
 const managementCapabilities = require('../lib/managementCapabilities');
 const os = require('os');
 const multer = require('multer');
-
-/**
- * GET /settings - Settings page
- */
-router.get('/settings', requireAuth, (req, res) => {
-    res.render('settings', {
-        title: req.t('nav.settings'),
-        activePage: 'settings',
-        canServerConfig: requestHasPermission(req, 'server.config'),
-        canBrandingEdit: requestHasPermission(req, 'branding.edit')
-    });
-});
 
 /**
  * GET /api/settings/restart-status - Lightweight liveness probe used by the
@@ -149,7 +137,7 @@ router.get('/api/settings/info', requireAuth, async (req, res) => {
                     memoryUsage: process.memoryUsage().heapUsed
                 },
                 goServer: serverHealth,
-                backend: serverBackend.getActiveBackend(),
+                backend: await serverBackend.getActiveBackend(),
                 paths: {
                     database: config.dbPath,
                     publicKey: config.pubKeyPath,
@@ -305,7 +293,7 @@ router.post('/api/settings/availability-history', requireAuth, requirePermission
 /**
  * GET /api/settings/audit - Get audit log
  */
-router.get('/api/settings/audit', requireAuth, async (req, res) => {
+router.get('/api/settings/audit', requireAuth, requirePermission('audit.view'), async (req, res) => {
     try {
         const limit = parseInt(req.query.limit, 10) || 100;
         const logs = await db.getAuditLogs(limit);
@@ -2061,10 +2049,17 @@ router.put('/api/settings/client-sessions', requireAuth, requirePermission('serv
             return res.status(500).json({ success: false, error: failed.error || 'Failed to save client session settings' });
         }
 
+        // The Go server holds the values; the .env copy keeps the expiry after a
+        // console restart. A .env the console may not write (a read-only file in
+        // a container) doesn't undo the save, so it is only logged.
         if (fs.existsSync(CLIENT_SESSIONS_ENV_PATH)) {
-            let content = fs.readFileSync(CLIENT_SESSIONS_ENV_PATH, 'utf8');
-            content = upsertEnvKey(content, 'API_TOKEN_EXPIRY_DAYS', String(expiryDays));
-            fs.writeFileSync(CLIENT_SESSIONS_ENV_PATH, content, { mode: 0o600 });
+            try {
+                let content = fs.readFileSync(CLIENT_SESSIONS_ENV_PATH, 'utf8');
+                content = upsertEnvKey(content, 'API_TOKEN_EXPIRY_DAYS', String(expiryDays));
+                fs.writeFileSync(CLIENT_SESSIONS_ENV_PATH, content, { mode: 0o600 });
+            } catch (envErr) {
+                console.warn('Client sessions: could not update .env:', envErr.message);
+            }
         }
         process.env.API_TOKEN_EXPIRY_DAYS = String(expiryDays);
 

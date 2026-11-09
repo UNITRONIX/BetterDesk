@@ -5,7 +5,7 @@
   "branding": {
     "appName": "BetterDesk",
     "appDescription": "BetterDesk Server Management",
-    "logoType": "icon",
+    "logoType": "default",
     "logoIcon": "dns",
     "logoSvg": "",
     "logoUrl": "",
@@ -17,9 +17,9 @@
       "bgElevated": "#ffffff",
       "textPrimary": "#1f2328",
       "textSecondary": "#656d76",
-      "accentBlue": "#0969da",
-      "accentBlueHover": "#0550ae",
-      "accentBlueMuted": "#ddf4ff",
+      "accentBlue": "#1b62cf",
+      "accentBlueHover": "#1854b3",
+      "accentBlueMuted": "rgba(27, 98, 207, 0.15)",
       "accentGreen": "#1a7f37",
       "accentGreenHover": "#116329",
       "accentGreenMuted": "#dafbe1",
@@ -32,7 +32,7 @@
       "accentPurple": "#8250df",
       "accentPurpleHover": "#6639ba",
       "accentPurpleMuted": "#fbefff",
-      "borderPrimary": "#d0d7de",
+      "borderPrimary": "#828990",
       "borderSecondary": "#eaeef2"
     }
   }

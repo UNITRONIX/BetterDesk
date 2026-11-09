@@ -28,6 +28,11 @@
  *   POST   /api/network/monitor/stop         — Stop polling loop
  *   GET    /api/network/monitor/status        — Get monitor status
  *
+ * Permissions: reading targets, history and monitor status needs device.view;
+ * running a check or an ad-hoc tool needs device.connect (the same as the
+ * Network tools page); changing targets and starting or stopping the
+ * monitor needs server.config.
+ *
  * @author UNITRONIX
  * @version 1.0.0
  */
@@ -38,6 +43,7 @@ const express = require('express');
 const router = express.Router();
 const { NetworkMonitor, pingHost, checkTcpPort, checkHttp, resolveHost } = require('../services/networkMonitor');
 const { getAdapter } = require('../services/dbAdapter');
+const { requirePermission } = require('../middleware/auth');
 
 // Monitor instance (initialized lazily)
 let monitor = null;
@@ -70,7 +76,7 @@ const VALID_CHECK_TYPES = ['ping', 'tcp', 'http', 'https'];
 /**
  * GET /api/network/targets — List all monitoring targets
  */
-router.get('/targets', requireAdmin, async (req, res) => {
+router.get('/targets', requireAdmin, requirePermission('device.view'), async (req, res) => {
     try {
         const { enabled, check_type } = req.query;
         const adapter = getAdapter();
@@ -87,7 +93,7 @@ router.get('/targets', requireAdmin, async (req, res) => {
 /**
  * POST /api/network/targets — Create a monitoring target
  */
-router.post('/targets', requireAdmin, async (req, res) => {
+router.post('/targets', requireAdmin, requirePermission('server.config'), async (req, res) => {
     try {
         const { name, host, port, url, check_type, timeout_ms, interval_ms, enabled } = req.body;
 
@@ -121,7 +127,7 @@ router.post('/targets', requireAdmin, async (req, res) => {
 /**
  * GET /api/network/targets/:id — Get target detail
  */
-router.get('/targets/:id', requireAdmin, async (req, res) => {
+router.get('/targets/:id', requireAdmin, requirePermission('device.view'), async (req, res) => {
     try {
         const target = await getAdapter().getNetworkTargetById(req.params.id);
         if (!target) {
@@ -136,7 +142,7 @@ router.get('/targets/:id', requireAdmin, async (req, res) => {
 /**
  * PATCH /api/network/targets/:id — Update target
  */
-router.patch('/targets/:id', requireAdmin, async (req, res) => {
+router.patch('/targets/:id', requireAdmin, requirePermission('server.config'), async (req, res) => {
     try {
         const { name, host, port, url, check_type, timeout_ms, interval_ms, enabled } = req.body;
         if (check_type && !VALID_CHECK_TYPES.includes(check_type)) {
@@ -166,7 +172,7 @@ router.patch('/targets/:id', requireAdmin, async (req, res) => {
 /**
  * DELETE /api/network/targets/:id — Delete target
  */
-router.delete('/targets/:id', requireAdmin, async (req, res) => {
+router.delete('/targets/:id', requireAdmin, requirePermission('server.config'), async (req, res) => {
     try {
         const ok = await getAdapter().deleteNetworkTarget(req.params.id);
         if (!ok) {
@@ -185,7 +191,7 @@ router.delete('/targets/:id', requireAdmin, async (req, res) => {
 /**
  * POST /api/network/targets/:id/check — Run check now
  */
-router.post('/targets/:id/check', requireAdmin, async (req, res) => {
+router.post('/targets/:id/check', requireAdmin, requirePermission('device.connect'), async (req, res) => {
     try {
         const target = await getAdapter().getNetworkTargetById(req.params.id);
         if (!target) {
@@ -207,7 +213,7 @@ router.post('/targets/:id/check', requireAdmin, async (req, res) => {
 /**
  * GET /api/network/targets/:id/history — Check history
  */
-router.get('/targets/:id/history', requireAdmin, async (req, res) => {
+router.get('/targets/:id/history', requireAdmin, requirePermission('device.view'), async (req, res) => {
     try {
         const { limit, from, to } = req.query;
         const history = await getAdapter().getNetworkCheckHistory(req.params.id, {
@@ -224,7 +230,7 @@ router.get('/targets/:id/history', requireAdmin, async (req, res) => {
 /**
  * GET /api/network/stats — Overview stats
  */
-router.get('/stats', requireAdmin, async (req, res) => {
+router.get('/stats', requireAdmin, requirePermission('device.view'), async (req, res) => {
     try {
         const targets = await getAdapter().getNetworkTargets({});
         const total = targets.length;
@@ -247,7 +253,7 @@ router.get('/stats', requireAdmin, async (req, res) => {
 /**
  * POST /api/network/ping — Ping a host
  */
-router.post('/ping', requireAdmin, async (req, res) => {
+router.post('/ping', requireAdmin, requirePermission('device.connect'), async (req, res) => {
     try {
         const { host, timeout } = req.body;
         if (!host) return res.status(400).json({ error: 'host is required' });
@@ -261,7 +267,7 @@ router.post('/ping', requireAdmin, async (req, res) => {
 /**
  * POST /api/network/tcp — TCP port check
  */
-router.post('/tcp', requireAdmin, async (req, res) => {
+router.post('/tcp', requireAdmin, requirePermission('device.connect'), async (req, res) => {
     try {
         const { host, port, timeout } = req.body;
         if (!host || !port) return res.status(400).json({ error: 'host and port are required' });
@@ -275,7 +281,7 @@ router.post('/tcp', requireAdmin, async (req, res) => {
 /**
  * POST /api/network/http — HTTP endpoint check
  */
-router.post('/http', requireAdmin, async (req, res) => {
+router.post('/http', requireAdmin, requirePermission('device.connect'), async (req, res) => {
     try {
         const { url, timeout } = req.body;
         if (!url) return res.status(400).json({ error: 'url is required' });
@@ -289,7 +295,7 @@ router.post('/http', requireAdmin, async (req, res) => {
 /**
  * POST /api/network/resolve — DNS resolution
  */
-router.post('/resolve', requireAdmin, async (req, res) => {
+router.post('/resolve', requireAdmin, requirePermission('device.connect'), async (req, res) => {
     try {
         const { host } = req.body;
         if (!host) return res.status(400).json({ error: 'host is required' });
@@ -307,7 +313,7 @@ router.post('/resolve', requireAdmin, async (req, res) => {
 /**
  * POST /api/network/monitor/start
  */
-router.post('/monitor/start', requireAdmin, (req, res) => {
+router.post('/monitor/start', requireAdmin, requirePermission('server.config'), (req, res) => {
     const m = getMonitor();
     if (!m) return res.status(503).json({ error: 'Monitor not available' });
     const interval = parseInt(req.body.interval_ms, 10) || undefined;
@@ -318,7 +324,7 @@ router.post('/monitor/start', requireAdmin, (req, res) => {
 /**
  * POST /api/network/monitor/stop
  */
-router.post('/monitor/stop', requireAdmin, (req, res) => {
+router.post('/monitor/stop', requireAdmin, requirePermission('server.config'), (req, res) => {
     const m = getMonitor();
     if (!m) return res.status(503).json({ error: 'Monitor not available' });
     m.stop();
@@ -328,7 +334,7 @@ router.post('/monitor/stop', requireAdmin, (req, res) => {
 /**
  * GET /api/network/monitor/status
  */
-router.get('/monitor/status', requireAdmin, (req, res) => {
+router.get('/monitor/status', requireAdmin, requirePermission('device.view'), (req, res) => {
     const m = getMonitor();
     res.json({
         running: m ? m.running : false,

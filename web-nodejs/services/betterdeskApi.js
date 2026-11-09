@@ -1557,6 +1557,17 @@ async function getStrategy(guid) {
     }
 }
 
+/** DELETE /api/strategies/:guid */
+async function deleteStrategy(guid) {
+    try {
+        const { data } = await apiClient.delete(`/strategies/${encodeURIComponent(guid)}`);
+        return wrap(data);
+    } catch (e) {
+        if (e.response?.data) return wrap(e.response.data);
+        return { success: false, error: e.message };
+    }
+}
+
 /** PUT /api/strategies/:guid/status — body is raw true/false JSON */
 async function setStrategyStatus(guid, enabled) {
     try {
@@ -1699,6 +1710,7 @@ module.exports = {
     proxyOIDCCallback,
     assignStrategy,
     getStrategy,
+    deleteStrategy,
     setStrategyStatus,
     listProDevices,
     // Help Requests

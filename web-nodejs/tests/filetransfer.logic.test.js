@@ -1,6 +1,6 @@
 'use strict';
 
-const { RDFileTransfer } = require('../public/js/rdclient/filetransfer.js');
+const { RDFileTransfer } = require('../../web-ui/static/rdclient/filetransfer.js');
 
 describe('RDFileTransfer static helpers', () => {
     it('uses 128 KB block size (hbb_common parity)', () => {

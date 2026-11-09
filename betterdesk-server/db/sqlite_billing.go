@@ -20,7 +20,8 @@ func parseSQLiteTime(s string) time.Time {
 
 func scanBillingSession(row scanner) (*BillingSession, error) {
 	var sess BillingSession
-	var startedAt, endedAt, createdAt, updatedAt string
+	// ended_at is NULL while a session runs; the timestamps are nullable columns too.
+	var startedAt, endedAt, createdAt, updatedAt sql.NullString
 	var clockSynced int
 	err := row.Scan(
 		&sess.ID, &sess.OrgID, &sess.ContractID, &sess.OperatorID, &sess.OperatorName,
@@ -32,14 +33,14 @@ func scanBillingSession(row scanner) (*BillingSession, error) {
 	if err != nil {
 		return nil, err
 	}
-	sess.StartedAt = parseSQLiteTime(startedAt)
-	if endedAt != "" {
-		t := parseSQLiteTime(endedAt)
+	sess.StartedAt = parseSQLiteTime(startedAt.String)
+	if endedAt.Valid && endedAt.String != "" {
+		t := parseSQLiteTime(endedAt.String)
 		sess.EndedAt = &t
 	}
 	sess.ClockSyncedAtStart = clockSynced != 0
-	sess.CreatedAt = parseSQLiteTime(createdAt)
-	sess.UpdatedAt = parseSQLiteTime(updatedAt)
+	sess.CreatedAt = parseSQLiteTime(createdAt.String)
+	sess.UpdatedAt = parseSQLiteTime(updatedAt.String)
 	return &sess, nil
 }
 
@@ -70,16 +71,16 @@ func (s *SQLiteDB) GetBillingPackage(id string) (*BillingPackage, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	var p BillingPackage
-	var createdAt, updatedAt string
+	var createdAt, updatedAt sql.NullString
 	err := s.db.QueryRow(
-		`SELECT id, name, description, included_minutes, COALESCE(rounding_minutes, 10), overage_rate, currency, created_at, updated_at
+		`SELECT id, name, COALESCE(description, ''), included_minutes, COALESCE(rounding_minutes, 10), overage_rate, currency, created_at, updated_at
 		 FROM billing_packages WHERE id = ?`, id,
 	).Scan(&p.ID, &p.Name, &p.Description, &p.IncludedMinutes, &p.RoundingMinutes, &p.OverageRate, &p.Currency, &createdAt, &updatedAt)
 	if err != nil {
 		return nil, err
 	}
-	p.CreatedAt = parseSQLiteTime(createdAt)
-	p.UpdatedAt = parseSQLiteTime(updatedAt)
+	p.CreatedAt = parseSQLiteTime(createdAt.String)
+	p.UpdatedAt = parseSQLiteTime(updatedAt.String)
 	return &p, nil
 }
 
@@ -87,7 +88,7 @@ func (s *SQLiteDB) ListBillingPackages() ([]*BillingPackage, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	rows, err := s.db.Query(
-		`SELECT id, name, description, included_minutes, COALESCE(rounding_minutes, 10), overage_rate, currency, created_at, updated_at
+		`SELECT id, name, COALESCE(description, ''), included_minutes, COALESCE(rounding_minutes, 10), overage_rate, currency, created_at, updated_at
 		 FROM billing_packages ORDER BY name`)
 	if err != nil {
 		return nil, err
@@ -96,12 +97,12 @@ func (s *SQLiteDB) ListBillingPackages() ([]*BillingPackage, error) {
 	var out []*BillingPackage
 	for rows.Next() {
 		var p BillingPackage
-		var createdAt, updatedAt string
+		var createdAt, updatedAt sql.NullString
 		if err := rows.Scan(&p.ID, &p.Name, &p.Description, &p.IncludedMinutes, &p.RoundingMinutes, &p.OverageRate, &p.Currency, &createdAt, &updatedAt); err != nil {
 			return nil, err
 		}
-		p.CreatedAt = parseSQLiteTime(createdAt)
-		p.UpdatedAt = parseSQLiteTime(updatedAt)
+		p.CreatedAt = parseSQLiteTime(createdAt.String)
+		p.UpdatedAt = parseSQLiteTime(updatedAt.String)
 		out = append(out, &p)
 	}
 	return out, rows.Err()
@@ -469,7 +470,7 @@ func (s *SQLiteDB) ListBillingLedger(sessionID string) ([]*BillingSessionLedger,
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	rows, err := s.db.Query(
-		`SELECT id, session_id, event_type, details, created_at FROM billing_session_ledger WHERE session_id = ? ORDER BY id`,
+		`SELECT id, session_id, event_type, COALESCE(details, ''), created_at FROM billing_session_ledger WHERE session_id = ? ORDER BY id`,
 		sessionID,
 	)
 	if err != nil {
@@ -479,11 +480,11 @@ func (s *SQLiteDB) ListBillingLedger(sessionID string) ([]*BillingSessionLedger,
 	var out []*BillingSessionLedger
 	for rows.Next() {
 		var e BillingSessionLedger
-		var createdAt string
+		var createdAt sql.NullString
 		if err := rows.Scan(&e.ID, &e.SessionID, &e.EventType, &e.Details, &createdAt); err != nil {
 			return nil, err
 		}
-		e.CreatedAt = parseSQLiteTime(createdAt)
+		e.CreatedAt = parseSQLiteTime(createdAt.String)
 		out = append(out, &e)
 	}
 	return out, rows.Err()
@@ -508,15 +509,15 @@ func (s *SQLiteDB) GetBillingWorkReportBySession(sessionID string) (*BillingWork
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	var r BillingWorkReport
-	var createdAt string
+	var createdAt sql.NullString
 	err := s.db.QueryRow(
-		`SELECT id, session_id, operator_id, summary, category, ticket_ref, created_at FROM billing_work_reports WHERE session_id = ?`,
+		`SELECT id, session_id, operator_id, summary, COALESCE(category, ''), COALESCE(ticket_ref, ''), created_at FROM billing_work_reports WHERE session_id = ?`,
 		sessionID,
 	).Scan(&r.ID, &r.SessionID, &r.OperatorID, &r.Summary, &r.Category, &r.TicketRef, &createdAt)
 	if err != nil {
 		return nil, err
 	}
-	r.CreatedAt = parseSQLiteTime(createdAt)
+	r.CreatedAt = parseSQLiteTime(createdAt.String)
 	return &r, nil
 }
 
@@ -526,7 +527,7 @@ func (s *SQLiteDB) ListBillingWorkReports(orgID string, limit int) ([]*BillingWo
 	if limit <= 0 || limit > 500 {
 		limit = 100
 	}
-	query := `SELECT w.id, w.session_id, w.operator_id, w.summary, w.category, w.ticket_ref, w.created_at
+	query := `SELECT w.id, w.session_id, w.operator_id, w.summary, COALESCE(w.category, ''), COALESCE(w.ticket_ref, ''), w.created_at
 		FROM billing_work_reports w`
 	var args []any
 	if orgID != "" {
@@ -543,11 +544,11 @@ func (s *SQLiteDB) ListBillingWorkReports(orgID string, limit int) ([]*BillingWo
 	var out []*BillingWorkReport
 	for rows.Next() {
 		var r BillingWorkReport
-		var createdAt string
+		var createdAt sql.NullString
 		if err := rows.Scan(&r.ID, &r.SessionID, &r.OperatorID, &r.Summary, &r.Category, &r.TicketRef, &createdAt); err != nil {
 			return nil, err
 		}
-		r.CreatedAt = parseSQLiteTime(createdAt)
+		r.CreatedAt = parseSQLiteTime(createdAt.String)
 		out = append(out, &r)
 	}
 	return out, rows.Err()
@@ -632,7 +633,7 @@ func (s *SQLiteDB) GetBillingPeriodTotal(contractID, periodYM string) (*BillingP
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	var t BillingPeriodTotal
-	var updatedAt string
+	var updatedAt sql.NullString
 	err := s.db.QueryRow(
 		`SELECT id, contract_id, package_id, period_ym, timezone, included_minutes_used, overage_minutes, amount_overage, COALESCE(included_limit_snapshot, 0), updated_at
 		 FROM billing_period_totals WHERE contract_id = ? AND period_ym = ?`, contractID, periodYM,
@@ -643,7 +644,7 @@ func (s *SQLiteDB) GetBillingPeriodTotal(contractID, periodYM string) (*BillingP
 	if err != nil {
 		return nil, err
 	}
-	t.UpdatedAt = parseSQLiteTime(updatedAt)
+	t.UpdatedAt = parseSQLiteTime(updatedAt.String)
 	return &t, nil
 }
 
@@ -677,11 +678,11 @@ func scanBillingPeriodTotalsSQLite(rows *sql.Rows) ([]*BillingPeriodTotal, error
 	var out []*BillingPeriodTotal
 	for rows.Next() {
 		var t BillingPeriodTotal
-		var updatedAt string
+		var updatedAt sql.NullString
 		if err := rows.Scan(&t.ID, &t.ContractID, &t.PackageID, &t.PeriodYM, &t.Timezone, &t.IncludedMinutesUsed, &t.OverageMinutes, &t.AmountOverage, &t.IncludedLimitSnapshot, &updatedAt); err != nil {
 			return nil, err
 		}
-		t.UpdatedAt = parseSQLiteTime(updatedAt)
+		t.UpdatedAt = parseSQLiteTime(updatedAt.String)
 		out = append(out, &t)
 	}
 	return out, rows.Err()

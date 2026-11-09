@@ -4,6 +4,8 @@
  * Stored in auth.db branding_config table
  */
 
+const fs = require('fs');
+const path = require('path');
 const db = require('./database');
 const fontService = require('./fontService');
 const { stripUntilStable, stripTagName } = require('../lib/stripUntilStable');
@@ -180,13 +182,12 @@ function getDefaultLoginSlides() {
 
 function normalizeLoginPromoMode(mode) {
     const m = String(mode || '').trim().toLowerCase();
-    return LOGIN_PROMO_MODES.has(m) ? m : 'slides';
+    return LOGIN_PROMO_MODES.has(m) ? m : 'classic';
 }
 
 /**
- * Soft-migrate installs that never saved loginPromoMode.
- * Default to slides (75% promo / 25% form). Operators who want a single wallpaper
- * or classic card pick that explicitly in Settings → Branding.
+ * Installs that never saved loginPromoMode get the plain sign-in form.
+ * Operators who want a wallpaper or slides pick that in Settings → Branding.
  * @param {string|undefined} storedMode
  * @param {Object} _branding
  * @param {boolean} hadExplicitMode
@@ -194,7 +195,7 @@ function normalizeLoginPromoMode(mode) {
  */
 function resolveLoginPromoMode(storedMode, _branding, hadExplicitMode) {
     if (hadExplicitMode) return normalizeLoginPromoMode(storedMode);
-    return 'slides';
+    return 'classic';
 }
 
 /**
@@ -399,10 +400,10 @@ const DEFAULT_BRANDING = {
     appDescription: 'BetterDesk Server Management',
     
     // Logo configuration
-    logoType: 'image', // 'icon' | 'svg' | 'image' | 'text'
+    logoType: 'default', // 'default' (BetterDesk logo) | 'icon' | 'svg' | 'image' | 'text'
     logoIcon: 'dns',   // Material Icons name (when logoType === 'icon')
     logoSvg: '',       // Raw SVG markup or SVG path data (when logoType === 'svg')
-    logoUrl: '/img/betterdesk_icon.png', // URL to image file (when logoType === 'image')
+    logoUrl: '',       // URL to image file (when logoType === 'image')
     logoText: '',      // Text to display as logo (when logoType === 'text')
     logoTextAccent: '', // Accent text (different color, e.g. product name after brand)
     
@@ -423,7 +424,7 @@ const DEFAULT_BRANDING = {
     bgSize: 'cover',    // 'cover' | 'contain' | 'repeat' | 'center'
 
     // Glass surfaces (cards, modals, forms, navbar, etc.)
-    glassEnabled: 'true',   // 'true' | 'false'
+    glassEnabled: 'false',  // 'true' | 'false' (new pages use solid surfaces either way)
     glassColor: '#161b22',  // tint color (hex); empty = use bgSecondary
     glassBlur: '16',        // backdrop-filter blur px (0-40)
     glassOpacity: '55',     // tint opacity 0-100 (%)
@@ -437,7 +438,7 @@ const DEFAULT_BRANDING = {
     loginTitle: '',         // overrides the login heading
     loginSubtitle: '',      // overrides the login subtitle
     // classic = centered card; single = split + loginBg*; slides = carousel (max 10)
-    loginPromoMode: 'slides',
+    loginPromoMode: 'classic',
     loginSlides: [],         // filled with getDefaultLoginSlides() at module init / on load
 
     // Footer / attribution
@@ -456,7 +457,7 @@ const DEFAULT_BRANDING = {
 
     // Appearance model metadata (v2 keeps flat keys for backward compatibility)
     appearanceSchemaVersion: '2',
-    themeMode: 'dark',       // 'dark' | 'light' | 'custom' (auto kept for backward compat → dark)
+    themeMode: 'system',     // 'system' (follow the OS) | 'dark' | 'light' | 'custom' (auto kept for backward compat → dark)
 
     // Color scheme overrides (empty = use defaults from variables.css)
     colors: {
@@ -495,6 +496,35 @@ const DEFAULT_BRANDING = {
     rdclientBgSize: 'cover'
 };
 
+// Logo image that older versions stored as the default; it counts as "no logo of your own".
+const LEGACY_DEFAULT_LOGO_URL = '/img/betterdesk_icon.png';
+
+/**
+ * Whether the console shows the BetterDesk logo: logoType "default", or the
+ * values older versions shipped as the default (Material icon "dns", the old
+ * logo image, or a type whose content is empty and so fell back to the icon).
+ * @param {Object} branding
+ * @returns {boolean}
+ */
+function usesDefaultLogo(branding) {
+    const b = branding || {};
+    const type = String(b.logoType || '');
+    if (type === 'default') return true;
+    if (type === 'text' && b.logoText) return false;
+    if (type === 'svg' && b.logoSvg) return false;
+    if (type === 'image' && b.logoUrl) return b.logoUrl === LEGACY_DEFAULT_LOGO_URL;
+    const icon = String(b.logoIcon || '').trim();
+    return !icon || icon === 'dns';
+}
+
+/** Store the old default logo settings as logoType "default", so every view sees one value. */
+function normalizeLogoType(branding) {
+    if (branding && branding.logoType !== 'default' && usesDefaultLogo(branding)) {
+        branding.logoType = 'default';
+    }
+    return branding;
+}
+
 /** Built-in palettes for themeMode light/dark (custom uses branding.colors). */
 const BUILTIN_THEME_PALETTES = Object.freeze({
     dark: Object.freeze({ ...THEME_PALETTES.dark }),
@@ -504,8 +534,14 @@ const BUILTIN_THEME_PALETTES = Object.freeze({
 function normalizeThemeMode(mode) {
     let m = String(mode || 'dark');
     if (m === 'auto') m = 'dark';
-    if (!['dark', 'light', 'custom'].includes(m)) m = 'dark';
+    if (!['system', 'dark', 'light', 'custom'].includes(m)) m = 'dark';
     return m;
+}
+
+/** CSS color-scheme value for a theme mode. */
+function colorSchemeFor(mode) {
+    if (mode === 'system') return 'light dark';
+    return mode === 'light' ? 'light' : 'dark';
 }
 
 function getThemePalettes() {
@@ -523,6 +559,10 @@ function resolveThemeColors(branding) {
     const mode = normalizeThemeMode(branding && branding.themeMode);
     if (mode === 'light' || mode === 'dark') {
         return { ...BUILTIN_THEME_PALETTES[mode] };
+    }
+    if (mode === 'system') {
+        // Light is the base; generateThemeCss adds dark under prefers-color-scheme.
+        return { ...BUILTIN_THEME_PALETTES.light };
     }
     const stored = (branding && branding.colors) || {};
     const merged = { ...BUILTIN_THEME_PALETTES.dark };
@@ -608,7 +648,7 @@ function bumpBrandingRevision() {
 }
 
 /**
- * Revision string for branding.css cache busting (EJS + autosave).
+ * Revision string for branding.css cache busting (console boot + autosave).
  * @returns {string}
  */
 function getBrandingRevision() {
@@ -658,6 +698,7 @@ async function loadBranding() {
         if (!hadExplicitSlides) {
             branding.loginSlides = getDefaultLoginSlides();
         }
+        normalizeLogoType(branding);
 
         brandingCache = branding;
         try {
@@ -883,7 +924,7 @@ function generateSemanticAliasCss(branding) {
         '    --color-text-muted: var(--text-secondary);',
         '    --color-border: var(--border-primary);',
         '    --focus-ring-color: var(--accent-blue-muted);',
-        `    color-scheme: ${normalizeThemeMode(branding.themeMode) === 'light' ? 'light' : 'dark'};`,
+        `    color-scheme: ${colorSchemeFor(normalizeThemeMode(branding.themeMode))};`,
         '    /* UX 3.5 chrome aliases — solid surfaces (no glass/blur in this shell) */',
         '    --ux35-bg: var(--bg-primary);',
         '    --ux35-sidebar-bg: var(--bg-secondary);',
@@ -925,6 +966,28 @@ function hexToMutedRgba(hex, alpha = 0.15) {
 }
 
 /**
+ * CSS custom property declarations for one palette. Muted colours given
+ * as hex become translucent rgba.
+ * @param {Object} colors - palette keyed like config/theme-palettes.json
+ * @returns {string[]}
+ */
+function paletteDeclarations(colors) {
+    const out = [];
+    for (const [key, cssVar] of Object.entries(COLOR_TO_CSS_VAR)) {
+        const value = colors[key];
+        if (value && String(value).trim()) {
+            if (key.endsWith('Muted') && String(value).startsWith('#')) {
+                const muted = hexToMutedRgba(value, 0.15);
+                out.push(`    ${cssVar}: ${muted || value};`);
+            } else {
+                out.push(`    ${cssVar}: ${value};`);
+            }
+        }
+    }
+    return out;
+}
+
+/**
  * Generate CSS :root overrides from branding colors and fonts
  * @returns {string} CSS string with @font-face imports and :root variable overrides
  */
@@ -932,20 +995,7 @@ function generateThemeCss() {
     const branding = getBranding();
     const themeMode = normalizeThemeMode(branding.themeMode);
     const colors = resolveThemeColors(branding);
-    const overrides = [];
-
-    for (const [key, cssVar] of Object.entries(COLOR_TO_CSS_VAR)) {
-        const value = colors[key];
-        if (value && String(value).trim()) {
-            // For muted colors, auto-generate rgba if a hex color is provided
-            if (key.endsWith('Muted') && String(value).startsWith('#')) {
-                const muted = hexToMutedRgba(value, 0.15);
-                overrides.push(`    ${cssVar}: ${muted || value};`);
-            } else {
-                overrides.push(`    ${cssVar}: ${value};`);
-            }
-        }
-    }
+    const overrides = paletteDeclarations(colors);
 
     let css = '';
 
@@ -959,9 +1009,14 @@ function generateThemeCss() {
     if (overrides.length > 0) {
         css += `:root {\n${overrides.join('\n')}\n}\n`;
     }
+    // Follow the system: light above, dark when the OS asks for it
+    if (themeMode === 'system') {
+        const dark = paletteDeclarations(BUILTIN_THEME_PALETTES.dark);
+        css += `@media (prefers-color-scheme: dark) {\n:root {\n${dark.join('\n')}\n}\n}\n`;
+    }
 
     // Keep data-theme attribute in sync for component selectors (ui-polish / theme.css)
-    css += `html { color-scheme: ${themeMode === 'light' ? 'light' : 'dark'}; }\n`;
+    css += `html { color-scheme: ${colorSchemeFor(themeMode)}; }\n`;
 
     // Semantic aliases consumed by newer UI and legacy components that use
     // --color-* names instead of the original BetterDesk token names.
@@ -1309,51 +1364,34 @@ function getPublicAppearance() {
     };
 }
 
-/**
- * Sanitize a CSS hex/rgb color for safe SVG attribute injection.
- * Falls back when the value is not a simple color token.
- * @param {string} value
- * @param {string} fallback
- * @returns {string}
- */
-function sanitizeSvgColor(value, fallback) {
-    const raw = String(value || '').trim();
-    if (/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(raw)) return raw;
-    if (/^rgba?\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}(?:\s*,\s*(?:0|1|0?\.\d+))?\s*\)$/.test(raw)) return raw;
-    return fallback;
+// The BetterDesk mark alone, cropped to its shapes (public/favicon.svg). It has
+// no tile, so it carries the on-light and on-dark colours and picks one with
+// prefers-color-scheme. The colours are fixed and do not follow the palette.
+const DEFAULT_FAVICON_FILE = path.join(__dirname, '..', 'public', 'favicon.svg');
+const DEFAULT_FAVICON_FALLBACK = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="9.5 9.5 45 45"><style>.s{fill:#1f6feb}.c{fill:#4d8f06}.o{fill:#0f9e96}@media (prefers-color-scheme: dark){.s{fill:#58a6ff}.c{fill:#a3e635}.o{fill:#3fd0c4}}</style><defs><clipPath id="bdf"><circle cx="38" cy="26" r="16"/></clipPath></defs><rect class="s" x="10" y="22" width="32" height="32" rx="10"/><circle class="c" cx="38" cy="26" r="16"/><rect class="o" x="10" y="22" width="32" height="32" rx="10" clip-path="url(#bdf)"/></svg>';
+let defaultFaviconCache = null;
+
+function getDefaultFavicon() {
+    if (defaultFaviconCache === null) {
+        try {
+            defaultFaviconCache = fs.readFileSync(DEFAULT_FAVICON_FILE, 'utf8');
+        } catch (_) {
+            defaultFaviconCache = DEFAULT_FAVICON_FALLBACK;
+        }
+    }
+    return defaultFaviconCache;
 }
 
 /**
- * Generate favicon SVG from branding
- * Default mark: large letter "B" on dark tile (readable at 16×16 tab size).
+ * Favicon SVG: the admin's own faviconSvg when set, otherwise the BetterDesk mark.
  * @returns {string} SVG markup for favicon
  */
 function generateFavicon() {
     const branding = getBranding();
-    
-    // If custom favicon SVG is set, use it
     if (branding.faviconSvg && branding.faviconSvg.trim()) {
         return branding.faviconSvg;
     }
-    
-    // Large "B" mark — same idea as Flutter contactRow fontSize bump: fill the
-    // small viewport so the glyph stays legible in browser tabs / PWA icons.
-    const bgColor = sanitizeSvgColor(branding.colors?.bgPrimary, '#0d1117');
-    const accentColor = sanitizeSvgColor(branding.colors?.accentBlue, '#58a6ff');
-    const greenColor = sanitizeSvgColor(branding.colors?.accentGreen, '#a3e635');
-    
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
-  <defs>
-    <linearGradient id="bdMark" x1="6" y1="4" x2="26" y2="28" gradientUnits="userSpaceOnUse">
-      <stop stop-color="${accentColor}"/>
-      <stop offset="1" stop-color="${greenColor}"/>
-    </linearGradient>
-  </defs>
-  <rect width="32" height="32" rx="7" fill="${bgColor}"/>
-  <text x="16" y="16" text-anchor="middle" dominant-baseline="central"
-        font-family="Arial Black, Arial, Helvetica, sans-serif"
-        font-size="23" font-weight="800" fill="url(#bdMark)">B</text>
-</svg>`;
+    return getDefaultFavicon();
 }
 
 /**
@@ -1445,6 +1483,8 @@ module.exports = {
     resetBranding,
     generateThemeCss,
     generateFavicon,
+    usesDefaultLogo,
+    LEGACY_DEFAULT_LOGO_URL,
     exportPreset,
     importPreset,
     invalidateCache,

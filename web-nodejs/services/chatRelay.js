@@ -624,6 +624,30 @@ function handleOperatorConnection(ws, deviceId, operatorName) {
                 break;
             }
 
+            // A reaction to a message: to the device room, the other console
+            // users and back to the sender (not stored; Go keeps no reactions)
+            case 'reaction': {
+                const conversationId = String(frame.conversation_id || deviceId).slice(0, 128);
+                const messageId = String(frame.message_id || '').slice(0, 64);
+                const emoji = String(frame.emoji || '').slice(0, 16);
+                if (!messageId || !emoji) break;
+                const targetRoom = rooms.get(conversationId);
+                const reaction = {
+                    type: 'reaction',
+                    from: operatorName,
+                    operator: operatorName,
+                    conversation_id: conversationId,
+                    message_id: messageId,
+                    emoji,
+                    timestamp: Date.now(),
+                };
+                if (targetRoom && targetRoom !== room) broadcast(targetRoom, reaction, ws);
+                if (isPanel) broadcastToPanelOperators(reaction, ws);
+                else broadcast(room, reaction, ws);
+                sendTo(ws, reaction);
+                break;
+            }
+
             // Encrypted file share from operator
             case 'file_share': {
                 const conversationId = frame.conversation_id || deviceId;

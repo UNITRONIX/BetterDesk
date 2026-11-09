@@ -23,7 +23,10 @@ const router = express.Router();
 const db = require('../services/database');
 const { getAdapter } = require('../services/dbAdapter');
 const betterdeskApi = require('../services/betterdeskApi');
+const alertRulesEngine = require('../services/alertRulesEngine');
 const { requireAuth, requirePermission } = require('../middleware/auth');
+// Also mounted at /api/bd: the admin routes leave device paths to the device routes
+const { notOnDeviceMount } = require('../lib/adminMount');
 
 // ---------------------------------------------------------------------------
 //  Helpers (shared with bd-api.routes.js)
@@ -79,6 +82,37 @@ function requireTokenDeviceMatch(req, res, deviceId) {
         return false;
     }
     return true;
+}
+
+/**
+ * The fullest disk of a report, for the list's "disks almost full" summary.
+ * Agents send sizes in bytes or in GB, and used space directly or as
+ * free/available space. Returns {} when no disk has a usable size.
+ */
+function fullestDisk(disks) {
+    if (!Array.isArray(disks)) return {};
+    const GB = 1024 ** 3;
+    const num = (v) => (v === null || v === undefined || v === '' ? null : Number(v));
+    let best = null;
+    for (const disk of disks) {
+        if (!disk || typeof disk !== 'object' || disk.removable) continue;
+        const total = num(disk.total_bytes) ?? (num(disk.total_gb) !== null ? num(disk.total_gb) * GB : null);
+        if (!(total > 0)) continue;
+        let used = num(disk.used_bytes) ?? (num(disk.used_gb) !== null ? num(disk.used_gb) * GB : null);
+        if (used === null && num(disk.available_bytes) !== null) used = total - num(disk.available_bytes);
+        if (used === null && num(disk.free_bytes) !== null) used = total - num(disk.free_bytes);
+        if (used === null || !Number.isFinite(used)) continue;
+        const pct = Math.max(0, Math.min(100, (used / total) * 100));
+        if (!best || pct > best.pct) {
+            best = { pct, total, free: Math.max(0, total - used), mount: String(disk.mount_point || disk.device || disk.name || '').slice(0, 120) };
+        }
+    }
+    if (!best) return {};
+    return {
+        disk_max_used_percent: Math.round(best.pct * 10) / 10,
+        disk_max_mount: best.mount,
+        disk_max_free_bytes: Math.round(best.free),
+    };
 }
 
 function parsePagination(req) {
@@ -141,6 +175,12 @@ router.post('/inventory', requireDeviceToken, async (req, res) => {
             console.warn('[Inventory] Failed to update peer info:', dbErr.message);
         }
 
+        // Disk alert rules, on the fullest disk
+        const disk = fullestDisk(hardware.disks).disk_max_used_percent;
+        if (disk !== undefined) {
+            alertRulesEngine.evaluateInBackground(() => alertRulesEngine.evaluateRules(device_id, 'disk_usage', disk));
+        }
+
         console.log(`[Inventory] Full inventory received from ${device_id} (HW + ${software?.apps?.length || 0} apps)`);
 
         res.json({ success: true });
@@ -181,6 +221,10 @@ router.post('/telemetry', requireDeviceToken, async (req, res) => {
             timestamp: timestamp || new Date().toISOString(),
         });
 
+        // CPU and memory alert rules
+        alertRulesEngine.evaluateInBackground(() =>
+            alertRulesEngine.evaluateTelemetry(device_id, { cpu_usage_percent, memory_used_bytes, memory_total_bytes }));
+
         res.json({ success: true });
     } catch (err) {
         console.error('[Telemetry] Upload error:', err.message);
@@ -217,7 +261,7 @@ router.get('/inventory/:id', requireDeviceToken, async (req, res) => {
 /**
  * GET /api/inventory — List all device inventories (admin only).
  */
-router.get('/', requireAuth, requirePermission('device.view'), async (req, res) => {
+router.get('/', notOnDeviceMount, requireAuth, requirePermission('device.view'), async (req, res) => {
     try {
         const pagination = parsePagination(req);
         if (!pagination) {
@@ -236,6 +280,8 @@ router.get('/', requireAuth, requirePermission('device.view'), async (req, res) 
                 device_id: inv.device_id,
                 hostname: inv.hardware?.hostname || inv.device_id,
                 os: `${inv.hardware?.os_name || ''} ${inv.hardware?.os_version || ''}`.trim(),
+                os_name: inv.hardware?.os_name || '',
+                ...fullestDisk(inv.hardware?.disks),
                 cpu: inv.hardware?.cpu?.brand || 'Unknown',
                 cpu_cores: inv.hardware?.cpu?.logical_cores || 0,
                 cpu_usage: inv.hardware?.cpu?.usage_percent ?? null,
@@ -299,7 +345,7 @@ router.get('/', requireAuth, requirePermission('device.view'), async (req, res) 
 /**
  * GET /api/inventory/:id — Full inventory detail for one device (admin only).
  */
-router.get('/:id', requireAuth, requirePermission('device.view'), async (req, res) => {
+router.get('/:id', notOnDeviceMount, requireAuth, requirePermission('device.view'), async (req, res) => {
     try {
         const deviceId = req.params.id;
         const adapter = getAdapter();

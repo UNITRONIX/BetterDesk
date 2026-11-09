@@ -123,6 +123,8 @@ async function endCurrentSession(req, reason = END_REASONS.LOGOUT) {
 /**
  * Refresh last activity / idle cookie window for an authenticated request.
  * Returns { ok, reason } when the session should be rejected.
+ * Requests marked X-BD-Background: 1 (polls and reads the person didn't
+ * start) are checked but don't count as activity.
  */
 function touchActivity(req) {
     if (!req.session?.userId) return { ok: true };
@@ -136,6 +138,10 @@ function touchActivity(req) {
     const last = Number(req.session.lastActivityAt) || createdAt;
     if (now - last > policy.idleTimeoutMs) {
         return { ok: false, reason: END_REASONS.IDLE };
+    }
+
+    if (typeof req.get === 'function' && req.get('x-bd-background') === '1') {
+        return { ok: true };
     }
 
     req.session.lastActivityAt = now;

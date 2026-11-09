@@ -10,8 +10,6 @@ paths-ignore:
   - betterdesk-mgmt
   # MeshAgent tunnel TLS pin (checkServerIdentity); not default chain validation.
   - betterdesk-server/meshcentral/assets/bettercore.js
-  # EJS layout slot; child views escape user data with <%=
-  - web-nodejs/views/layouts/main.ejs
   # Vendored wry cookie read helpers (copy Secure from platform cookies).
   - rdclient-desktop/vendor/wry/**
 
@@ -38,11 +36,10 @@ query-filters:
       paths:
         - web-nodejs/services/serverTerminalProxy.js
 
-  # --- Client-side fetch restricted to same-origin relative API paths ---
+  # --- Server-side downloads from configured GitHub sources ---
   - exclude:
       id: js/request-forgery
       paths:
-        - web-nodejs/public/js/utils.js
         # GitHub API downloads; URL built from configured owner/repo/ref, not raw request body
         - web-nodejs/services/supportGeneratorModule.js
 
@@ -80,7 +77,7 @@ query-filters:
   - exclude:
       id: js/insecure-randomness
       paths:
-        - web-nodejs/public/js/rdclient/connection.js
+        - web-ui/static/rdclient/connection.js
 
   # --- SSL certificate inspection tool: reads peer cert metadata only (admin-only route) ---
   # --- MeshAgent tunnel: pin-based TLS via checkServerIdentity (self-signed agent certs) ---
@@ -143,22 +140,6 @@ query-filters:
       id: js/shell-command-injection-from-environment
       paths:
         - web-nodejs/tests/**
-
-  # --- Server-rendered EJS layout; page bodies escape user data in views ---
-  - exclude:
-      id: js/xss
-      paths:
-        - web-nodejs/views/layouts/main.ejs
-        - web-nodejs/public/js/chat.js
-        - web-nodejs/public/js/cdap-filebrowser.js
-        - web-nodejs/public/js/cdap-desktop.js
-
-  # --- Modal / settings DOM updates use escaped template fragments ---
-  - exclude:
-      id: js/xss-through-dom
-      paths:
-        - web-nodejs/public/js/modal.js
-        - web-nodejs/public/js/settings.js
 
   # --- Branding SVG/CSS: intentional multi-pass sanitization (stable strip loop) ---
   - exclude:

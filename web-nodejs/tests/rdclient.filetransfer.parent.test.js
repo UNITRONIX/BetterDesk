@@ -8,7 +8,7 @@
  * the Web Remote / Mesh behaviour.
  */
 
-const { RDFileTransfer } = require('../public/js/rdclient/filetransfer');
+const { RDFileTransfer } = require('../../web-ui/static/rdclient/filetransfer');
 
 describe('RDFileTransfer.parentRemotePath', () => {
     it('keeps the drive root separator when stepping up to it', () => {

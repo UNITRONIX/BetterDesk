@@ -120,14 +120,29 @@ function getCsrfToken(html) {
 }
 
 async function login(panelUrl) {
-    const page = await request(`${panelUrl}/login`);
+    // The sign-in page answers 200 without a session: directly, or after one
+    // redirect to the new console while it runs under /app
+    let page = await request(`${panelUrl}/login`);
+    if (page.statusCode === 302 && page.headers.location) {
+        page = await request(new URL(page.headers.location, panelUrl).href);
+    }
     if (page.statusCode < 200 || page.statusCode >= 300) {
         throw new Error(`login page returned HTTP ${page.statusCode}`);
     }
 
-    const csrf = getCsrfToken(page.body);
+    // The old page carries the CSRF token in its HTML; the new one asks the server for it
+    let csrf = getCsrfToken(page.body);
+    let cookie = firstCookie(page.headers);
+    if (!csrf) {
+        const boot = await request(`${panelUrl}/api/auth/login-page`, { headers: { Accept: 'application/json' } });
+        try {
+            csrf = JSON.parse(boot.body).csrfToken || '';
+        } catch {
+            csrf = '';
+        }
+        cookie = firstCookie(boot.headers);
+    }
     if (!csrf) throw new Error('login page did not expose a CSRF token');
-    const cookie = firstCookie(page.headers);
     const body = JSON.stringify({ username: 'admin', password: PASSWORD });
     const response = await request(`${panelUrl}/api/auth/login`, {
         method: 'POST',

@@ -1,0 +1,21 @@
+BetterDesk self-hosted Material Symbols (Apache-2.0)
+Upstream: https://github.com/google/material-design-icons (variablefont / Google Fonts CSS API)
+License: Apache License 2.0
+Generated: 2026-11-08T23:33:15.419Z
+Icon count: 258
+
+File: MaterialSymbolsOutlined.woff2
+  size: 22972
+  sha256: 249c49bac4084a5a18e7b68afdcc30964bae71cc269bcaa3a2fe88b7689b1861
+  source: https://fonts.gstatic.com/l/font?kit=kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzaxHMPdY43zj-jCxv3fzvRNU22ZXGJpEpjC_1v-p_4MrImHCIJIZrDCvHOejdcdKnn9Nu7Z8-tKa98e7CeA1bzxBAdfoTCPr1rdi3peq56pKAKqFoh7Y36YIu2FWn_S8T1Pos0oms2_hmUOkjyuZpzHlMKGy3MbVS5TvC7otGESEmCJNtK3tDneyAbGbLenloj3ecAWaDvi96DxehxPFoDvd4talxTD-zlhOlyXJk9p2MxPc-Rso86TqFMDSZ46DbMu5395v2D-5QrVAkurRkkVTZr_QKwGhSutQwJzpRdpvv_Q_9Fk4rBxzuk_7UeDTKsonmcO6lG-LOnnwhTys48QRWUU0Bw-ZKRdWH6iOzKT5La_vhQjQpDaRt4Bt&skey=b8dc2088854b122f&v=v383
+
+File: MaterialSymbolsRounded.woff2
+  size: 26700
+  sha256: c02a40800c6d67999c3e1bdd74afd96279042f17bdb38edcceddc3f94f12dee7
+  source: https://fonts.gstatic.com/l/font?kit=syl0-zNym6YjUruM-QrEh7-nyTnjDwKNJ_190FjpZIvDmUSVOK7BDB_Qb9vUSzq3wzLK-P0J-V_Zs-QtQth3-jOcbTCVpeRL2w5rwZu2rIelXxeRMalQRs9o6jIPRyNAGl5B6QXEbj0fWcVeTL5WugaCLeGdoSba51lzAOisqaizGHA6rwQxIABh6SgX4AptoMtfggZhZ-22wY66TF4dNltpeFXc1hO5HuWRaPPU7z4y6lWL7qg7NpmgieU9pyfVR9DVH7fTtZOCYirqGxvSitu2AEvaeQvGaRnJFhjGxw7URdcbGJC7CKtifaeAN9t2TE80L3hnapz8jGu1H2TR4XV5abo63pUEy5ElgTLdnQCwK1yr9s728iD2PEgoG4uEo4QV94MPUjR4eHLOYzq7gpLgK5lN32djD90DmLK069JJvSQ&skey=70ddea8fe54d532e&v=v384
+
+Axes instance: opsz=24, wght=400, FILL=0, GRAD=0
+display=block
+
+Icons (alphabetical):
+ac_unit,accessibility_new,account_circle,account_tree,add,add_circle,admin_panel_settings,android,api,apps,archive,arrow_back,arrow_forward,arrow_upward,article,assessment,assignment,audiotrack,auto_fix_high,autorenew,av1,badge,bar_chart,bedtime,block,bookmarks,branding_watermark,bug_report,build,business,business_center,cable,call_split,cancel,cell_tower,chat,check,check_circle,chevron_left,chevron_right,close,cloud,cloud_download,cloud_off,cloud_queue,cloud_upload,code,computer,confirmation_number,connected_tv,content_copy,content_paste,contrast,control_point_duplicate,corporate_fare,crop_square,csv,dark_mode,dashboard,data_object,delete,delete_forever,description,desktop_access_disabled,desktop_mac,desktop_windows,developer_board,devices,dns,domain,done,donut_large,download,drive_file_rename_outline,drive_folder_upload,edit,edit_note,electrical_services,email,enable,error,error_outline,event,event_note,expand_less,expand_more,fact_check,favorite,fiber_manual_record,filter_alt,filter_none,fingerprint,fit_screen,flash_on,foggy,folder,folder_open,folder_zip,fullscreen,fullscreen_exit,function,functions,grid_view,group,group_add,groups,handyman,headphones,help,help_outline,history,home,home_repair_service,hourglass_empty,hourglass_top,how_to_reg,http,hub,image,info,insert_drive_file,inventory,inventory_2,ios,key,keyboard,label,lan,language,laptop_chromebook,laptop_mac,laptop_windows,launch,light,light_mode,link,link_off,list,list_alt,local_cafe,lock,lock_open,login,logout,map,maximize,memory,menu,menu_book,merge,minimize,monitor,monitoring,more_vert,movie,music_note,my_location,network_check,network_ping,notifications,notifications_active,open_in_new,palette,partly_cloudy_day,payments,pending,people,person,phone_android,phone_iphone,photo_camera,picture_as_pdf,pip_exit,play_arrow,play_circle,policy,power_off,power_settings_new,precision_manufacturing,print,public,publish,qr_code_2,radio_button_unchecked,refresh,remove,remove_circle_outline,replay,restart_alt,restore_from_trash,route,router,save,schedule,screenshot_monitor,search,security,sell,send,sensors,settings,settings_backup_restore,settings_ethernet,share,shield,slow_motion_video,smart_toy,smartphone,speed,start,sticky_note_2,stop,stop_circle,storage,summarize,support_agent,swap_horiz,swap_vert,sync,system_update,tab_unselected,table_chart,table_view,task_alt,terminal,text_fields,thermostat,thunderstorm,timeline,timer,toggle_off,toggle_on,token,translate,tune,undo,upload,usb,verified,verified_user,vertical_align_bottom,videocam,view_in_ar,visibility,visibility_off,volume_off,volume_up,volunteer_activism,vpn_key,wallpaper,warning,water_drop,wb_sunny,webhook,widgets,wifi,wifi_off,workspaces

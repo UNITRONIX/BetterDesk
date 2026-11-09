@@ -56,36 +56,3 @@ describe('guestAccess helpers', () => {
         expect(cleared[0].opts.path).toBe('/');
     });
 });
-
-describe('remote-guest EJS bootstrap serialization', () => {
-    test('guestMeta serializes outside template-literal interpolation', () => {
-        const ejs = require('ejs');
-        const fs = require('fs');
-        const path = require('path');
-        const tpl = fs.readFileSync(path.join(__dirname, '../views/remote-guest.ejs'), 'utf8');
-        const guestMeta = {
-            view_only: false,
-            expires_at: '2026-07-21T00:00:00Z',
-            label: 'lab`el ${x}',
-            devices: [{ id: '6700120', hostname: 'DIAMOS `Serwer` 2', platform: 'windows' }],
-        };
-        const html = ejs.render(tpl, {
-            title: 'Guest Remote',
-            guestToken: 'tok`en${x}',
-            guestMeta,
-            _: (k) => k,
-            lang: 'en',
-            appName: 'BetterDesk',
-            cacheVersion: '1',
-            translations: {},
-            user: null,
-            branding: {},
-            availableLanguageList: [],
-            cspNonce: 'n',
-        }, { filename: path.join(__dirname, '../views/remote-guest.ejs') });
-        expect(html).toContain('window.__guestAccess =');
-        expect(html).toContain('6700120');
-        expect(html).toContain(JSON.stringify(guestMeta));
-        expect(html).not.toMatch(/500 - Server Error/);
-    });
-});

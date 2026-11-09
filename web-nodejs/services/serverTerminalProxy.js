@@ -14,7 +14,8 @@
  *
  * SECURITY:
  *   • Authentication via session cookie (express-session).
- *   • Authorization: only `super_admin` and `server_admin` may open a session.
+ *   • Authorization: the server.config permission, as for the Server
+ *     management page and its HTTP routes, with the role overrides applied.
  *   • The shell runs as the user that owns the Node.js process — typically
  *     `betterdesk-console` (systemd) which has no sudo by default.
  *     Document this in the install scripts.
@@ -28,6 +29,10 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { spawn } = require('child_process');
+const { roleHasEffectivePermission } = require('../middleware/auth');
+
+// The same permission as the Server management page and its HTTP routes
+const REQUIRED_PERMISSION = 'server.config';
 
 let pty = null;
 try {
@@ -37,19 +42,37 @@ try {
 }
 
 const isWindows = process.platform === 'win32';
-const DEFAULT_SHELL = isWindows ? (process.env.COMSPEC || 'powershell.exe') : '/bin/bash';
-const ALLOWED_LOGIN_SHELLS = new Set([
-    '/bin/bash',
-    '/bin/sh',
-    '/bin/dash',
-    '/bin/zsh',
-    '/usr/bin/bash',
-    '/usr/bin/sh',
-    '/usr/bin/dash',
-    '/usr/bin/zsh',
-]);
+// Last resort on POSIX. Every image and distro has /bin/sh; Alpine-based
+// containers have no bash at all.
+const DEFAULT_SHELL = isWindows ? (process.env.COMSPEC || 'powershell.exe') : '/bin/sh';
+// Tried in this order after the user's own login shell.
+const FALLBACK_SHELLS = ['/bin/bash', '/usr/bin/bash', '/bin/zsh', '/bin/ash', '/bin/sh'];
+const ALLOWED_SHELL_NAMES = ['bash', 'sh', 'dash', 'zsh', 'ash'];
 
-function resolveLoginShell(shell) {
+function isExecutableFile(file) {
+    try {
+        if (!fs.statSync(file).isFile()) return false;
+        fs.accessSync(file, fs.constants.X_OK);
+        return true;
+    } catch (_) {
+        return false;
+    }
+}
+
+function isAllowedShellPath(shell) {
+    return typeof shell === 'string' &&
+        shell.startsWith('/') &&
+        !shell.includes('..') &&
+        ALLOWED_SHELL_NAMES.includes(path.basename(shell));
+}
+
+/**
+ * Pick the shell to start: the requested login shell if it is a known shell
+ * that exists and is executable, otherwise the first fallback that is.
+ * @param {string} [shell] - login shell from /etc/passwd or $SHELL
+ * @param {{isExecutable?:(file:string)=>boolean}} [deps] - injectable for tests
+ */
+function resolveLoginShell(shell, deps) {
     if (isWindows) {
         const winShell = shell || DEFAULT_SHELL;
         if (typeof winShell === 'string' && !/[;&|`$()]/.test(winShell)) {
@@ -57,14 +80,10 @@ function resolveLoginShell(shell) {
         }
         return DEFAULT_SHELL;
     }
-    if (typeof shell === 'string' && ALLOWED_LOGIN_SHELLS.has(shell)) {
-        return shell;
-    }
-    if (typeof shell === 'string' && shell.startsWith('/') && !shell.includes('..')) {
-        const base = path.basename(shell);
-        if (['bash', 'sh', 'dash', 'zsh'].includes(base) && fs.existsSync(shell)) {
-            return shell;
-        }
+    const isExecutable = (deps && typeof deps.isExecutable === 'function') ? deps.isExecutable : isExecutableFile;
+    const candidates = isAllowedShellPath(shell) ? [shell, ...FALLBACK_SHELLS] : FALLBACK_SHELLS;
+    for (const candidate of candidates) {
+        if (isExecutable(candidate)) return candidate;
     }
     return DEFAULT_SHELL;
 }
@@ -131,12 +150,16 @@ function pickTerminalUser() {
         }
     }
 
+    let loginShell;
+    if (validLoginShell(process.env.SHELL)) loginShell = process.env.SHELL;
+    else if (validLoginShell(current.shell)) loginShell = current.shell;
+
     return {
         username: current.username,
         uid: current.uid,
         gid: current.gid,
         homedir: current.homedir || os.homedir(),
-        shell: resolveLoginShell(validLoginShell(process.env.SHELL) ? process.env.SHELL : DEFAULT_SHELL),
+        shell: resolveLoginShell(loginShell),
     };
 }
 
@@ -241,7 +264,7 @@ function initServerTerminalProxy(server, sessionMiddleware, opts) {
         (pathname) => pathname === '/ws/server-management/terminal',
         (req, socket, head) => {
             if (!enforceOrigin(req, socket, 'server-management-terminal')) return;
-            sessionMiddleware(req, {}, () => {
+            sessionMiddleware(req, {}, async () => {
                 if (!req.session || !req.session.userId) {
                     socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
                     return socket.destroy();
@@ -249,8 +272,14 @@ function initServerTerminalProxy(server, sessionMiddleware, opts) {
                 const sessUser = req.session.user || {};
                 const role = sessUser.role || req.session.role || '';
                 const username = sessUser.username || `user#${req.session.userId}`;
-                // RBAC: only super_admin / admin / server_admin
-                if (!(role === 'super_admin' || role === 'admin' || role === 'server_admin')) {
+                // The page's permission, with the role overrides; a failed lookup refuses
+                let allowed = false;
+                try {
+                    allowed = await roleHasEffectivePermission(role, REQUIRED_PERMISSION);
+                } catch (_) {
+                    allowed = false;
+                }
+                if (!allowed) {
                     console.warn(`[srv-term] 403 upgrade rejected (user=${username} role=${role})`);
                     socket.write('HTTP/1.1 403 Forbidden\r\n\r\n');
                     return socket.destroy();
@@ -356,5 +385,7 @@ function initServerTerminalProxy(server, sessionMiddleware, opts) {
 module.exports = {
     initServerTerminalProxy,
     isPtyAvailable: () => !!pty,
-    activeSessionCount: () => ACTIVE_SESSIONS.size
+    activeSessionCount: () => ACTIVE_SESSIONS.size,
+    resolveLoginShell,
+    FALLBACK_SHELLS
 };

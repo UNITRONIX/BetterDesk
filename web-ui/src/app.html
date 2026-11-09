@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en" dir="ltr" data-theme="light" data-theme-mode="system">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+		<meta name="robots" content="noindex, nofollow" />
+		<link rel="icon" type="image/svg+xml" href="/branding/favicon.svg" />
+		<!-- Theme, language, direction and accessibility modes before first paint;
+		     also starts the bootstrap and strings requests (routes/console.routes.js) -->
+		<script src="/console-boot.js"></script>
+		<link
+			rel="preload"
+			href="%sveltekit.assets%/fonts/IBMPlexSans-latin.woff2"
+			as="font"
+			type="font/woff2"
+			crossorigin
+		/>
+		<!-- The fonts come from static/fonts, so the built stylesheet asks for them under the
+		     base (/fonts/... at the root): the preloads use the same URLs (tests/unit/app-html.test.ts) -->
+		<link
+			rel="preload"
+			href="%sveltekit.assets%/fonts/MaterialSymbolsOutlined.woff2?v=249c49bac408"
+			as="font"
+			type="font/woff2"
+			crossorigin
+		/>
+		<!-- IDs and keys in tables are in Plex Mono: found only once a table draws, it
+		     would arrive late and change the rows' line breaks -->
+		<link
+			rel="preload"
+			href="%sveltekit.assets%/fonts/IBMPlexMono-latin-400.woff2"
+			as="font"
+			type="font/woff2"
+			crossorigin
+		/>
+		<link rel="stylesheet" href="/css/branding.css" />
+		%sveltekit.head%
+	</head>
+	<body data-sveltekit-preload-data="hover">
+		<div id="bd-root">%sveltekit.body%</div>
+	</body>
+</html>

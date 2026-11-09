@@ -7,6 +7,9 @@ const { spawnSync } = require('child_process');
 
 const guardScript = path.resolve(__dirname, '..', '..', 'docker', 'guard-sqlite-auth-split.sh');
 const hasPosixShell = spawnSync('sh', ['-c', 'exit 0'], { stdio: 'ignore' }).status === 0;
+// The guard returns early without the sqlite3 tool (the images ship it); without
+// it these tests would only see that early return.
+const hasSqlite3 = hasPosixShell && spawnSync('sh', ['-c', 'command -v sqlite3'], { stdio: 'ignore' }).status === 0;
 
 function runGuard(env) {
     const script = `
@@ -19,7 +22,7 @@ function runGuard(env) {
     });
 }
 
-(hasPosixShell ? describe : describe.skip)('Docker guard_sqlite_auth_split', () => {
+(hasSqlite3 ? describe : describe.skip)('Docker guard_sqlite_auth_split', () => {
     let tempDir;
 
     beforeEach(() => {

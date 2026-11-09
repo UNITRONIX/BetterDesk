@@ -14,16 +14,6 @@ const { requireAuth, requirePermission, requestHasPermission } = require('../mid
 const { bodyInt, bodyString, bodyBool, plainBodyObject } = require('../lib/bodyScalars');
 
 /**
- * GET /devices - Devices list page
- */
-router.get('/devices', requireAuth, (req, res) => {
-    res.render('devices', {
-        title: req.t('nav.devices'),
-        activePage: 'devices'
-    });
-});
-
-/**
  * GET /api/devices - Get devices list (JSON)
  */
 // Allowed values for sort parameters (prevent SQL injection via sort columns)
@@ -43,6 +33,23 @@ function mapChangeIdError(req, error) {
         return req.t('devices.id_exists');
     }
     return error;
+}
+
+/** Parse a stored timestamp; zone-less SQL timestamps are UTC */
+function parseStoredTime(value) {
+    if (!value) return NaN;
+    if (value instanceof Date) return value.getTime();
+    let text = String(value).trim();
+    if (/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/.test(text)) text = text.replace(' ', 'T') + 'Z';
+    return new Date(text).getTime();
+}
+
+/** A console audit entry belongs to the current ban when both were written within 5 minutes */
+function auditEntryMatchesBan(auditTime, bannedAt) {
+    const b = parseStoredTime(bannedAt);
+    if (!Number.isFinite(b)) return true;
+    const a = parseStoredTime(auditTime);
+    return Number.isFinite(a) && Math.abs(a - b) <= 5 * 60 * 1000;
 }
 
 router.get('/api/devices', requireAuth, requirePermission('device.view'), async (req, res) => {
@@ -65,12 +72,13 @@ router.get('/api/devices', requireAuth, requirePermission('device.view'), async 
         let devices = await serverBackend.getAllDevices(filters);
         const scope = await deviceGroupService.getDeviceScopeForUser(db, req.session.user, devices);
         devices = deviceGroupService.filterDevicesByScope(devices, scope);
+        // One query for every device's groups (one per device took ~0.5 s for 5,000)
+        let groupsByPeer = new Map();
+        try {
+            groupsByPeer = await db.getDeviceGroupsForPeers(devices.map((d) => d.id));
+        } catch (_) { /* groups stay empty */ }
         for (const device of devices) {
-            try {
-                device.groups = await db.getDeviceGroupsForPeer(device.id);
-            } catch (_) {
-                device.groups = [];
-            }
+            device.groups = groupsByPeer.get(String(device.id)) || [];
         }
         
         res.json({
@@ -632,9 +640,9 @@ router.get('/api/devices/:id', requireAuth, requirePermission('device.view'), as
             // metrics table may not exist yet — silently skip
         }
 
-        // Enrich with recent metrics history (last 20 data-points for charts)
+        // Enrich with recent metrics history for the usage chart (48 samples: a day at one per 30 minutes)
         try {
-            const metricsHistory = await db.getPeerMetrics(req.params.id, 20);
+            const metricsHistory = await db.getPeerMetrics(req.params.id, 48);
             if (metricsHistory && metricsHistory.length > 0) {
                 device.metrics_history = metricsHistory.map(m => ({
                     cpu: m.cpu_usage,
@@ -667,6 +675,20 @@ router.get('/api/devices/:id', requireAuth, requirePermission('device.view'), as
             }
         } catch (e) {
             console.warn('[API:DEVICE] Connection mode lookup failed:', req.params.id, e.message);
+        }
+
+        // Who banned it: the console's own audit entry for the ban, if it matches
+        // the ban time the server reports (a ban made elsewhere has no actor here).
+        if (device.banned) {
+            try {
+                const entry = await db.getLatestAuditEntry('device_banned', `Device ${device.id} banned`);
+                if (entry && entry.username && auditEntryMatchesBan(entry.created_at, device.banned_at)) {
+                    device.banned_by = entry.username;
+                    if (!device.banned_at) device.banned_at = entry.created_at;
+                }
+            } catch (e) {
+                // audit lookup is optional
+            }
         }
 
         // Enrich with device group memberships
@@ -899,6 +921,9 @@ router.delete('/api/devices/:id', requireAuth, requirePermission('device.delete'
 router.post('/api/devices/:id/restore', requireAuth, requirePermission('device.delete'), async (req, res) => {
     try {
         const id = req.params.id;
+        // A soft-deleted device keeps its groups and folder: check scope first
+        const existing = await serverBackend.getDeviceById(id, { includeDeleted: true });
+        if (existing && await rejectIfDeviceOutOfScope(req, res, existing)) return;
         const result = await serverBackend.restoreDevice(id);
         if (!result || !result.success) {
             const status = result?.error === 'peer not found' ? 404 : 500;
@@ -964,14 +989,22 @@ router.post('/api/devices/:id/connection-mode', requireAuth, requirePermission('
     }
 });
 
+/** The Go server refused a ban or unban: say so instead of answering success */
+function banRefused(res, result) {
+    return res.status(502).json({
+        success: false,
+        error: (result && result.error) || 'The server did not change the ban'
+    });
+}
+
 /**
  * POST /api/devices/:id/ban - Ban device
  */
 router.post('/api/devices/:id/ban', requireAuth, requirePermission('device.ban'), async (req, res) => {
     try {
         const id = req.params.id;
-        const { reason } = req.body;
-        
+        const reason = bodyString(req.body && req.body.reason).trim().slice(0, 500);
+
         const device = await serverBackend.getDeviceById(id);
         if (!device) {
             return res.status(404).json({
@@ -981,10 +1014,11 @@ router.post('/api/devices/:id/ban', requireAuth, requirePermission('device.ban')
         }
         if (await rejectIfDeviceOutOfScope(req, res, device)) return;
         
-        await serverBackend.setBanStatus(id, true, reason || '');
-        
-        // Log action
-        await db.logAction(req.session.userId, 'device_banned', `Device ${id} banned: ${reason}`, req.ip);
+        const result = await serverBackend.setBanStatus(id, true, reason);
+        if (!result || !result.success) return banRefused(res, result);
+
+        // Log action (the device panel reads who banned from this entry)
+        await db.logAction(req.session.userId, 'device_banned', `Device ${id} banned` + (reason ? `: ${reason}` : ''), req.ip);
         
         res.json({ success: true });
     } catch (err) {
@@ -1012,8 +1046,9 @@ router.post('/api/devices/:id/unban', requireAuth, requirePermission('device.ban
         }
         if (await rejectIfDeviceOutOfScope(req, res, device)) return;
         
-        await serverBackend.setBanStatus(id, false);
-        
+        const result = await serverBackend.setBanStatus(id, false);
+        if (!result || !result.success) return banRefused(res, result);
+
         // Log action
         await db.logAction(req.session.userId, 'device_unbanned', `Device ${id} unbanned`, req.ip);
         
@@ -1050,6 +1085,12 @@ router.post('/api/devices/:id/change-id', requireAuth, requirePermission('device
             });
         }
         
+        const current = await serverBackend.getDeviceById(oldId);
+        if (!current) {
+            return res.status(404).json({ success: false, error: req.t('devices.not_found') });
+        }
+        if (await rejectIfDeviceOutOfScope(req, res, current)) return;
+
         // Check if new ID already exists (active or soft-deleted reservation)
         const existingActive = await serverBackend.getDeviceById(newId);
         if (existingActive) {
@@ -1131,6 +1172,7 @@ router.put('/api/devices/:id/tags', requireAuth, requirePermission('device.edit'
                 error: req.t('devices.not_found')
             });
         }
+        if (await rejectIfDeviceOutOfScope(req, res, device)) return;
 
         // BetterDesk backend: delegate to Go server
         if (await serverBackend.isBetterDesk()) {
@@ -1177,7 +1219,10 @@ router.post('/api/devices/bulk-delete', requireAuth, requirePermission('device.d
         const devicesToDelete = [];
         for (const id of ids) {
             const device = await serverBackend.getDeviceById(id);
-            if (!device || await rejectIfDeviceOutOfScope(req, res, device)) return;
+            if (!device) {
+                return res.status(404).json({ success: false, error: req.t('devices.not_found'), id: String(id) });
+            }
+            if (await rejectIfDeviceOutOfScope(req, res, device)) return;
             devicesToDelete.push(String(id));
         }
 
@@ -1585,6 +1630,7 @@ router.post('/api/devices/:id/rename', requireAuth, requirePermission('device.ed
         if (!device) {
             return res.status(404).json({ success: false, error: req.t('devices.not_found') });
         }
+        if (await rejectIfDeviceOutOfScope(req, res, device)) return;
         const result = await serverBackend.updateDevice(req.params.id, { display_name: displayName });
         await db.logAction(req.session.userId, 'device.rename',
             `Device ${req.params.id} renamed to "${displayName}"`, req.ip || null);
@@ -1769,8 +1815,9 @@ router.get('/api/panel/strategies/:guid', requireAuth, requirePermission('device
         }
         let strategy = await db.getStrategyByGuid(guid);
         if (!strategy && (await serverBackend.isBetterDesk())) {
+            // getStrategy answers { success, data } like the other Go calls
             const remote = await betterdeskApi.getStrategy(guid);
-            if (remote.success !== false && remote.guid) strategy = remote;
+            if (remote && remote.success && remote.data && remote.data.guid) strategy = remote.data;
         }
         if (!strategy) {
             return res.status(404).json({ success: false, error: req.t('devices.strategy_not_found') });
@@ -1856,6 +1903,13 @@ router.delete('/api/panel/strategies/:guid', requireAuth, requirePermission('dev
             return res.status(404).json({ success: false, error: req.t('devices.strategy_not_found') });
         }
         await db.deleteStrategy(guid);
+        // The Go server keeps its own copy and applies it to clients
+        if (await serverBackend.isBetterDesk()) {
+            const remote = await betterdeskApi.deleteStrategy(guid);
+            if (remote && !remote.success && !/not found/i.test(String(remote.error || ''))) {
+                console.warn('[strategies] Go delete failed:', remote.error);
+            }
+        }
         await db.logAction(req.session.userId, 'strategy_deleted', `Deleted strategy: ${existing.name}`, req.ip);
         res.json({ success: true });
     } catch (err) {

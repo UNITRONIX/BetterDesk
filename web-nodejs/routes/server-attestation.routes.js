@@ -16,36 +16,6 @@ const auth = [requireAuth, requirePermission(REQUIRED_PERMISSION)];
 
 let runPromise = null;
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
-router.get('/server-attestation', ...auth, async (req, res) => {
-    try {
-        const lastResult = await attestation.getLastResult();
-        const badgeConfig = await attestation.getBadgeConfig();
-        const badgePresentation = attestation.resolveBadgePresentation(badgeConfig, {
-            tier: lastResult && lastResult.tier,
-            translate: req.t,
-            brandName: brandingService.getBranding().appName
-        });
-        res.render('server-attestation', {
-            title: req.t('server_attestation.title'),
-            pageStyles: ['server-attestation'],
-            pageScripts: ['server-attestation'],
-            currentPage: 'server-attestation',
-            breadcrumb: [{ label: req.t('server_attestation.title') }],
-            lastResult,
-            badgeConfig,
-            badgePresentation
-        });
-    } catch (err) {
-        console.error('[ServerAttestation] page render failed:', err);
-        res.status(500).render('errors/500', {
-            title: 'Error',
-            message: req.t('server_attestation.page_error') || 'Failed to load Server Attestation page'
-        });
-    }
-});
-
 // ─── Authenticated API ────────────────────────────────────────────────────────
 
 router.get('/api/server-attestation/status', ...auth, async (req, res) => {

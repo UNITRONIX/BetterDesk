@@ -1,7 +1,8 @@
 /**
- * BetterDesk Console — Page Render Routes
+ * BetterDesk Console — old page addresses
  *
- * Serves HTML pages for management modules. API endpoints are in separate route files.
+ * The pages that lived here are in the console (web-ui) at the same
+ * addresses. /tenants is left: it sends people to Organizations.
  *
  * @module routes/pages.routes
  */
@@ -10,84 +11,11 @@
 
 const express = require('express');
 const router = express.Router();
-const { requireAuth, requirePermission, requireRole } = require('../middleware/auth');
 
-// ── Inventory ──
+// ── Tenants — redirect to Organizations (merged); that page checks access ──
 
-router.get('/inventory', requireAuth, (req, res) => {
-    res.render('inventory', {
-        title: req.t('inventory.title'),
-        activePage: 'inventory',
-    });
-});
-
-// ── Tickets (Helpdesk) ──
-
-router.get('/tickets', requireAuth, (req, res) => {
-    res.render('tickets', {
-        title: req.t('tickets.title'),
-        activePage: 'tickets',
-    });
-});
-
-// ── Automation (Alerts + Remote Commands) ──
-
-router.get('/automation', requireAuth, (req, res) => {
-    res.render('automation', {
-        title: req.t('automation.title'),
-        activePage: 'automation',
-    });
-});
-
-// ── Network Monitoring ──
-
-router.get('/network', requireAuth, (req, res) => {
-    res.render('network', {
-        title: req.t('network.title'),
-        activePage: 'network',
-    });
-});
-
-// ── Activity Monitoring ──
-
-router.get('/activity', requireAuth, (req, res) => {
-    res.render('activity', {
-        title: req.t('activity.title'),
-        activePage: 'activity',
-    });
-});
-
-// ── Reports ──
-
-router.get('/reports', requireAuth, (req, res) => {
-    res.render('reports', {
-        title: req.t('reports.title'),
-        activePage: 'reports',
-    });
-});
-
-// ── DataGuard (DLP) — admin only ──
-
-router.get('/dataguard', requireAuth, requirePermission('server.config'), (req, res) => {
-    res.render('dataguard', {
-        title: req.t('dataguard.title'),
-        activePage: 'dataguard',
-    });
-});
-
-// ── Tenants — redirect to Organizations (merged) ──
-
-router.get('/tenants', requireAuth, requireRole('admin'), (req, res) => {
+router.get('/tenants', (req, res) => {
     res.redirect('/organizations');
-});
-
-// ── Help Requests — operators and admins ──
-
-router.get('/help-requests', requireAuth, (req, res) => {
-    res.render('help-requests', {
-        title: req.t('help_request.title'),
-        activePage: 'help-requests',
-    });
 });
 
 module.exports = router;

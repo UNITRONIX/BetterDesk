@@ -183,6 +183,7 @@ function escapeLikePattern(str) {
  * -- Audit --
  * @property {function(number|null, string, string, string): Promise<void>}  logAction
  * @property {function(number, number): Promise<Object[]>}  getAuditLogs
+ * @property {function(string, string): Promise<Object|null>}  getLatestAuditEntry
  *
  * -- Settings --
  * @property {function(string): Promise<string|null>}  getSetting
@@ -656,6 +657,23 @@ function createSqliteAdapter(config) {
             }
         } catch (e) { console.warn('[DB] Migration users columns error:', e.message); }
 
+        // Profile pictures (lib/avatarImage.js): the checked image bytes, served
+        // by GET /api/users/:id/avatar. source is 'oidc' or 'profile'.
+        try {
+            db.exec(`
+                CREATE TABLE IF NOT EXISTS user_avatars (
+                    user_id INTEGER PRIMARY KEY,
+                    mime_type TEXT NOT NULL,
+                    data BLOB NOT NULL,
+                    version TEXT NOT NULL,
+                    source TEXT NOT NULL DEFAULT 'oidc',
+                    source_url TEXT DEFAULT '',
+                    updated_at TEXT DEFAULT (datetime('now')),
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                )
+            `);
+        } catch (e) { console.warn('[DB] Migration user_avatars error:', e.message); }
+
         // Migration: Add updated_at to settings table if missing (for upgrades from older versions)
         try {
             const settingsCols = new Set(db.prepare('PRAGMA table_info(settings)').all().map(c => c.name));
@@ -948,6 +966,26 @@ function createSqliteAdapter(config) {
                 created_at DATETIME DEFAULT (datetime('now'))
             );
             CREATE INDEX IF NOT EXISTS idx_saved_reports_type ON saved_reports (report_type);
+        `);
+    }
+
+    // -- Flow builder (SDK studio) flows ------------------------------------
+    // Timestamps are ISO 8601 strings written by the adapter, so both
+    // backends return the same format.
+    function ensureStudioFlowTables(db) {
+        db.exec(`
+            CREATE TABLE IF NOT EXISTS studio_flows (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                description TEXT NOT NULL DEFAULT '',
+                flow_json TEXT NOT NULL DEFAULT '{}',
+                status TEXT NOT NULL DEFAULT 'draft',
+                version INTEGER NOT NULL DEFAULT 1,
+                created_by TEXT NOT NULL DEFAULT '',
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_studio_flows_owner ON studio_flows (created_by, updated_at);
         `);
     }
 
@@ -1410,6 +1448,7 @@ function createSqliteAdapter(config) {
             ensureNetworkTables(main);
             ensureDataGuardTables(main);
             ensureReportTables(main);
+            ensureStudioFlowTables(main);
             ensureTenantTables(main);
             ensureRegistrationTables(main);
             ensureAgentBundleTables(main);
@@ -1679,7 +1718,37 @@ function createSqliteAdapter(config) {
             const db = openAuth();
             db.prepare('DELETE FROM user_group_members WHERE user_id = ?').run(id);
             db.prepare('DELETE FROM device_group_user_access WHERE user_id = ?').run(id);
+            db.prepare('DELETE FROM user_avatars WHERE user_id = ?').run(id);
             db.prepare('DELETE FROM users WHERE id = ?').run(id);
+        },
+
+        // ---- Profile pictures ----
+
+        async getUserAvatar(userId) {
+            return openAuth().prepare('SELECT user_id, mime_type, data, version, source, source_url, updated_at FROM user_avatars WHERE user_id = ?').get(userId) || null;
+        },
+        async setUserAvatar(userId, { mimeType, data, version, source = 'oidc', sourceUrl = '' }) {
+            openAuth().prepare(`
+                INSERT INTO user_avatars (user_id, mime_type, data, version, source, source_url, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+                ON CONFLICT(user_id) DO UPDATE SET mime_type = excluded.mime_type, data = excluded.data,
+                    version = excluded.version, source = excluded.source, source_url = excluded.source_url,
+                    updated_at = excluded.updated_at
+            `).run(userId, mimeType, data, version, source, sourceUrl || '');
+        },
+        /** Remove a user's picture; with source, only when it came from there. Returns rows removed. */
+        async deleteUserAvatar(userId, source) {
+            const info = source
+                ? openAuth().prepare('DELETE FROM user_avatars WHERE user_id = ? AND source = ?').run(userId, source)
+                : openAuth().prepare('DELETE FROM user_avatars WHERE user_id = ?').run(userId);
+            return info.changes;
+        },
+        /** [{ user_id, username, version }] for every user with a picture */
+        async listUserAvatarVersions() {
+            return openAuth().prepare(`
+                SELECT a.user_id, u.username, a.version FROM user_avatars a
+                INNER JOIN users u ON u.id = a.user_id ORDER BY a.user_id
+            `).all();
         },
         async countAdmins() {
             return openAuth().prepare("SELECT COUNT(*) as c FROM users WHERE role IN ('admin', 'super_admin')").get().c;
@@ -1952,6 +2021,14 @@ function createSqliteAdapter(config) {
                 ORDER BY a.created_at DESC LIMIT ? OFFSET ?
             `).all(limit, offset);
         },
+        async getLatestAuditEntry(action, detailsPrefix) {
+            return openAuth().prepare(`
+                SELECT a.*, u.username FROM audit_log a
+                LEFT JOIN users u ON a.user_id = u.id
+                WHERE a.action = ? AND substr(a.details, 1, length(?)) = ?
+                ORDER BY a.created_at DESC, a.id DESC LIMIT 1
+            `).get(action, detailsPrefix, detailsPrefix) || null;
+        },
         async cleanupOldAuditLogs(daysToKeep = 90) {
             const cutoff = new Date(Date.now() - daysToKeep * 24 * 60 * 60 * 1000).toISOString();
             const result = openAuth().prepare('DELETE FROM audit_log WHERE created_at < ?').run(cutoff);
@@ -2219,7 +2296,7 @@ function createSqliteAdapter(config) {
             const db = openAuth();
             const sets = [];
             const params = [];
-            for (const key of ['title', 'description', 'status', 'priority', 'category', 'assigned_to', 'sla_due_at']) {
+            for (const key of ['title', 'description', 'status', 'priority', 'category', 'assigned_to', 'sla_due_at', 'device_id']) {
                 if (data[key] !== undefined) { sets.push(`${key} = ?`); params.push(data[key]); }
             }
             if (data.status === 'resolved' && !data.resolved_at) { sets.push("resolved_at = datetime('now')"); }
@@ -2396,7 +2473,8 @@ function createSqliteAdapter(config) {
             return openAuth().prepare(`
                 SELECT * FROM alert_history
                 WHERE rule_id = ? AND device_id = ?
-                  AND triggered_at > datetime('now', '-' || ? || ' seconds')
+                  -- triggered_at is stored as ISO text ("...T...Z"): compare times, not text
+                  AND datetime(triggered_at) > datetime('now', '-' || ? || ' seconds')
                 ORDER BY triggered_at DESC LIMIT 1
             `).get(ruleId, deviceId, cooldownSecs) || null;
         },
@@ -2727,6 +2805,45 @@ function createSqliteAdapter(config) {
         },
         async deleteSavedReport(id) {
             const r = openMain().prepare('DELETE FROM saved_reports WHERE id = ?').run(id);
+            return r.changes > 0;
+        },
+
+        // -- Flow builder (SDK studio) flows -----------------------------------
+        /** List flows without their flow_json, newest change first. createdBy limits to one owner. */
+        async listStudioFlows({ createdBy } = {}) {
+            const cols = 'id, name, description, status, version, created_by, created_at, updated_at';
+            if (createdBy !== undefined && createdBy !== null) {
+                return openMain().prepare(`SELECT ${cols} FROM studio_flows WHERE created_by = ? ORDER BY updated_at DESC`).all(createdBy);
+            }
+            return openMain().prepare(`SELECT ${cols} FROM studio_flows ORDER BY updated_at DESC`).all();
+        },
+        async getStudioFlow(id) {
+            return openMain().prepare('SELECT * FROM studio_flows WHERE id = ?').get(id) || null;
+        },
+        async createStudioFlow(data) {
+            const now = new Date().toISOString();
+            openMain().prepare(`
+                INSERT INTO studio_flows (id, name, description, flow_json, status, created_by, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            `).run(data.id, data.name, data.description || '', data.flow_json || '{}', data.status || 'draft',
+                data.created_by || '', now, now);
+            return this.getStudioFlow(data.id);
+        },
+        /** Change name, description and flow_json; bumps the version. Returns the flow or null. */
+        async updateStudioFlow(id, data) {
+            const r = openMain().prepare(`
+                UPDATE studio_flows SET name = ?, description = ?, flow_json = ?, version = version + 1, updated_at = ?
+                WHERE id = ?
+            `).run(data.name, data.description || '', data.flow_json || '{}', new Date().toISOString(), id);
+            return r.changes > 0 ? this.getStudioFlow(id) : null;
+        },
+        async setStudioFlowStatus(id, status) {
+            const r = openMain().prepare('UPDATE studio_flows SET status = ?, updated_at = ? WHERE id = ?')
+                .run(status, new Date().toISOString(), id);
+            return r.changes > 0;
+        },
+        async deleteStudioFlow(id) {
+            const r = openMain().prepare('DELETE FROM studio_flows WHERE id = ?').run(id);
             return r.changes > 0;
         },
 
@@ -3321,6 +3438,25 @@ function createSqliteAdapter(config) {
                 WHERE dgm.peer_id = ?
                 ORDER BY dg.name ASC
             `).all(peerId);
+        },
+
+        /** Groups of many devices in one query: Map(peerId -> rows), for the device list */
+        async getDeviceGroupsForPeers(peerIds) {
+            const wanted = new Set((peerIds || []).map(String));
+            const out = new Map();
+            if (!wanted.size) return out;
+            const rows = openAuth().prepare(`
+                SELECT dgm.peer_id AS member_peer_id, dg.* FROM device_groups dg
+                INNER JOIN device_group_members dgm ON dg.id = dgm.device_group_id
+                ORDER BY dg.name ASC
+            `).all();
+            for (const { member_peer_id: peer, ...group } of rows) {
+                const key = String(peer);
+                if (!wanted.has(key)) continue;
+                if (!out.has(key)) out.set(key, []);
+                out.get(key).push(group);
+            }
+            return out;
         },
 
         async setDeviceGroupUserAccess(groupGuid, usernames = []) {
@@ -4401,6 +4537,22 @@ function createPostgresAdapter() {
         `);
         await q('CREATE INDEX IF NOT EXISTS idx_saved_reports_type ON saved_reports (report_type)');
 
+        // Flow builder (SDK studio) flows
+        await q(`
+            CREATE TABLE IF NOT EXISTS studio_flows (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                description TEXT NOT NULL DEFAULT '',
+                flow_json TEXT NOT NULL DEFAULT '{}',
+                status TEXT NOT NULL DEFAULT 'draft',
+                version INTEGER NOT NULL DEFAULT 1,
+                created_by TEXT NOT NULL DEFAULT '',
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            )
+        `);
+        await q('CREATE INDEX IF NOT EXISTS idx_studio_flows_owner ON studio_flows (created_by, updated_at)');
+
         // Multi-tenancy tables
         await q(`
             CREATE TABLE IF NOT EXISTS tenants (
@@ -4846,6 +4998,19 @@ function createPostgresAdapter() {
                 await q(`ALTER TABLE users ADD COLUMN IF NOT EXISTS ${col} ${def}`);
             }
         }
+
+        // Profile pictures (lib/avatarImage.js), served by GET /api/users/:id/avatar
+        await q(`
+            CREATE TABLE IF NOT EXISTS user_avatars (
+                user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+                mime_type TEXT NOT NULL,
+                data BYTEA NOT NULL,
+                version TEXT NOT NULL,
+                source TEXT NOT NULL DEFAULT 'oidc',
+                source_url TEXT DEFAULT '',
+                updated_at TIMESTAMPTZ DEFAULT NOW()
+            )
+        `);
 
         // Migration: Add updated_at to settings table if missing (for upgrades from older versions)
         try {
@@ -5300,7 +5465,35 @@ function createPostgresAdapter() {
         async deleteUser(id) {
             await q('DELETE FROM user_group_members WHERE user_id = $1', [id]);
             await q('DELETE FROM device_group_user_access WHERE user_id = $1', [id]);
+            await q('DELETE FROM user_avatars WHERE user_id = $1', [id]);
             await q('DELETE FROM users WHERE id = $1', [id]);
+        },
+
+        // ---- Profile pictures ----
+
+        async getUserAvatar(userId) {
+            return one('SELECT user_id, mime_type, data, version, source, source_url, updated_at FROM user_avatars WHERE user_id = $1', [userId]);
+        },
+        async setUserAvatar(userId, { mimeType, data, version, source = 'oidc', sourceUrl = '' }) {
+            await q(`
+                INSERT INTO user_avatars (user_id, mime_type, data, version, source, source_url, updated_at)
+                VALUES ($1, $2, $3, $4, $5, $6, NOW())
+                ON CONFLICT (user_id) DO UPDATE SET mime_type = EXCLUDED.mime_type, data = EXCLUDED.data,
+                    version = EXCLUDED.version, source = EXCLUDED.source, source_url = EXCLUDED.source_url,
+                    updated_at = EXCLUDED.updated_at
+            `, [userId, mimeType, data, version, source, sourceUrl || '']);
+        },
+        async deleteUserAvatar(userId, source) {
+            const r = source
+                ? await q('DELETE FROM user_avatars WHERE user_id = $1 AND source = $2', [userId, source])
+                : await q('DELETE FROM user_avatars WHERE user_id = $1', [userId]);
+            return r && typeof r.rowCount === 'number' ? r.rowCount : 0;
+        },
+        async listUserAvatarVersions() {
+            return all(`
+                SELECT a.user_id, u.username, a.version FROM user_avatars a
+                INNER JOIN users u ON u.id = a.user_id ORDER BY a.user_id
+            `);
         },
         async countAdmins() { return +(await one("SELECT COUNT(*) as c FROM users WHERE role IN ('admin', 'super_admin')")).c; },
 
@@ -5522,6 +5715,11 @@ function createPostgresAdapter() {
         },
         async getAuditLogs(limit = 100, offset = 0) {
             return all(`SELECT a.*, u.username FROM audit_log a LEFT JOIN users u ON a.user_id = u.id ORDER BY a.created_at DESC LIMIT $1 OFFSET $2`, [limit, offset]);
+        },
+        async getLatestAuditEntry(action, detailsPrefix) {
+            return one(`SELECT a.*, u.username FROM audit_log a LEFT JOIN users u ON a.user_id = u.id
+                WHERE a.action = $1 AND left(a.details, length($2)) = $2
+                ORDER BY a.created_at DESC, a.id DESC LIMIT 1`, [action, detailsPrefix]);
         },
         async cleanupOldAuditLogs(daysToKeep = 90) {
             const cutoff = new Date(Date.now() - daysToKeep * 24 * 60 * 60 * 1000).toISOString();
@@ -5811,7 +6009,7 @@ function createPostgresAdapter() {
             const sets = [];
             const params = [];
             let idx = 1;
-            for (const key of ['title', 'description', 'status', 'priority', 'category', 'assigned_to', 'sla_due_at']) {
+            for (const key of ['title', 'description', 'status', 'priority', 'category', 'assigned_to', 'sla_due_at', 'device_id']) {
                 if (data[key] !== undefined) { sets.push(`${key} = $${idx++}`); params.push(data[key]); }
             }
             if (data.status === 'resolved') { sets.push('resolved_at = NOW()'); }
@@ -6301,6 +6499,40 @@ function createPostgresAdapter() {
         },
         async deleteSavedReport(id) {
             const { rowCount } = await q('DELETE FROM saved_reports WHERE id = $1', [id]);
+            return rowCount > 0;
+        },
+
+        // -- Flow builder (SDK studio) flows -----------------------------------
+        async listStudioFlows({ createdBy } = {}) {
+            const cols = 'id, name, description, status, version, created_by, created_at, updated_at';
+            if (createdBy !== undefined && createdBy !== null) {
+                return all(`SELECT ${cols} FROM studio_flows WHERE created_by = $1 ORDER BY updated_at DESC`, [createdBy]);
+            }
+            return all(`SELECT ${cols} FROM studio_flows ORDER BY updated_at DESC`);
+        },
+        async getStudioFlow(id) {
+            return one('SELECT * FROM studio_flows WHERE id = $1', [id]);
+        },
+        async createStudioFlow(data) {
+            return one(`
+                INSERT INTO studio_flows (id, name, description, flow_json, status, created_by)
+                VALUES ($1, $2, $3, $4, $5, $6)
+                RETURNING *
+            `, [data.id, data.name, data.description || '', data.flow_json || '{}', data.status || 'draft', data.created_by || '']);
+        },
+        async updateStudioFlow(id, data) {
+            return one(`
+                UPDATE studio_flows SET name = $1, description = $2, flow_json = $3, version = version + 1, updated_at = NOW()
+                WHERE id = $4
+                RETURNING *
+            `, [data.name, data.description || '', data.flow_json || '{}', id]);
+        },
+        async setStudioFlowStatus(id, status) {
+            const { rowCount } = await q('UPDATE studio_flows SET status = $1, updated_at = NOW() WHERE id = $2', [status, id]);
+            return rowCount > 0;
+        },
+        async deleteStudioFlow(id) {
+            const { rowCount } = await q('DELETE FROM studio_flows WHERE id = $1', [id]);
             return rowCount > 0;
         },
 
@@ -6895,6 +7127,25 @@ function createPostgresAdapter() {
                 WHERE dgm.peer_id = $1
                 ORDER BY dg.name ASC
             `, [peerId]);
+        },
+
+        /** Groups of many devices in one query: Map(peerId -> rows), for the device list */
+        async getDeviceGroupsForPeers(peerIds) {
+            const ids = Array.from(new Set((peerIds || []).map(String)));
+            const out = new Map();
+            if (!ids.length) return out;
+            const rows = await all(`
+                SELECT dgm.peer_id AS member_peer_id, dg.* FROM device_groups dg
+                INNER JOIN device_group_members dgm ON dg.id = dgm.device_group_id
+                WHERE dgm.peer_id = ANY($1)
+                ORDER BY dg.name ASC
+            `, [ids]);
+            for (const { member_peer_id: peer, ...group } of rows) {
+                const key = String(peer);
+                if (!out.has(key)) out.set(key, []);
+                out.get(key).push(group);
+            }
+            return out;
         },
 
         async setDeviceGroupUserAccess(groupGuid, usernames = []) {

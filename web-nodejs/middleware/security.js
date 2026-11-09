@@ -3,17 +3,14 @@
  * Configures Helmet and custom security headers
  */
 
-const crypto = require('crypto');
 const helmet = require('helmet');
 const config = require('../config/config');
 
 /**
- * Build CSP connect-src based on HTTPS mode
- * Allow WebSocket connections (ws:// or wss:// depending on mode)
+ * connect-src: the server's own address, also over WebSocket (ws:/wss:
+ * depending on the mode)
  */
-const connectSources = config.httpsEnabled
-    ? ["'self'", "wss:", "https://cdn.jsdelivr.net"]
-    : ["'self'", "ws:", "https://cdn.jsdelivr.net"];
+const connectSources = config.httpsEnabled ? ["'self'", 'wss:'] : ["'self'", 'ws:'];
 
 /**
  * HSTS is disabled for self-signed / LAN installs so HTTP↔HTTPS toggles do not
@@ -28,65 +25,48 @@ function shouldSendStrictTransportSecurity() {
 }
 
 /**
- * Emergency rollback for RdClient only: CSP_RELAX_REMOTE=true re-enables
- * unsafe-eval on /remote* (default off after static protobuf bundle).
+ * Helmet with a strict policy for everything the server answers itself:
+ * the API, redirects, files and the branding CSS. The console's pages
+ * replace it with the policy from their build (lib/webUi.js), and nothing
+ * the server sends needs inline scripts, other origins or a frame.
  */
-function allowRemoteUnsafeEval() {
-    return String(process.env.CSP_RELAX_REMOTE || '').toLowerCase() === 'true'
-        || process.env.CSP_RELAX_REMOTE === '1';
-}
-
-function buildHelmetMiddleware(req, res) {
-    const nonce = crypto.randomBytes(16).toString('base64');
-    const isRemoteViewerPage = req.path.startsWith('/remote');
-
-    res.locals.cspNonce = nonce;
-
-    const scriptSources = ["'self'", `'nonce-${nonce}'`, "https://cdn.jsdelivr.net"];
-    if (isRemoteViewerPage && allowRemoteUnsafeEval()) {
-        scriptSources.push("'unsafe-eval'");
-    }
-
-    return helmet({
-        contentSecurityPolicy: {
-            directives: {
-                defaultSrc: ["'self'"],
-                scriptSrc: scriptSources,
-                // Inline event handlers migrated to data-bd-call + bd-actions.js
-                scriptSrcAttr: ["'none'"],
-                styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdn.jsdelivr.net"],
-                fontSrc: ["'self'", "https://fonts.gstatic.com"],
-                imgSrc: ["'self'", "data:", "blob:"],
-                mediaSrc: ["'self'", "blob:"],
-                connectSrc: connectSources,
-                frameSrc: ["'self'"],
-                objectSrc: ["'none'"],
-                childSrc: ["'self'"],
-                workerSrc: ["'self'", "blob:"],
-                baseUri: ["'self'"],
-                formAction: ["'self'"],
-                frameAncestors: ["'self'"],
-                upgradeInsecureRequests: config.httpsEnabled ? [] : null
-            }
-        },
-        crossOriginEmbedderPolicy: false,
-        crossOriginResourcePolicy: { policy: 'same-origin' },
-        crossOriginOpenerPolicy: config.httpsEnabled ? { policy: 'same-origin' } : false,
-        originAgentCluster: config.httpsEnabled,
-        strictTransportSecurity: shouldSendStrictTransportSecurity()
-            ? { maxAge: 31536000, includeSubDomains: true, preload: false }
-            : false,
-        dnsPrefetchControl: { allow: false },
-        referrerPolicy: { policy: 'strict-origin-when-cross-origin' }
-    });
-}
+const helmetMiddleware = helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'"],
+            scriptSrcAttr: ["'none'"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            fontSrc: ["'self'"],
+            imgSrc: ["'self'", 'data:', 'blob:'],
+            mediaSrc: ["'self'", 'blob:'],
+            connectSrc: connectSources,
+            frameSrc: ["'none'"],
+            objectSrc: ["'none'"],
+            workerSrc: ["'self'", 'blob:'],
+            baseUri: ["'self'"],
+            formAction: ["'self'"],
+            frameAncestors: ["'none'"],
+            upgradeInsecureRequests: config.httpsEnabled ? [] : null
+        }
+    },
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: 'same-origin' },
+    crossOriginOpenerPolicy: config.httpsEnabled ? { policy: 'same-origin' } : false,
+    originAgentCluster: config.httpsEnabled,
+    strictTransportSecurity: shouldSendStrictTransportSecurity()
+        ? { maxAge: 31536000, includeSubDomains: true, preload: false }
+        : false,
+    dnsPrefetchControl: { allow: false },
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' }
+});
 
 /**
  * Custom security headers beyond what Helmet provides
  */
 function customSecurityHeaders(req, res, next) {
     // Prevent clickjacking (belt + suspenders with CSP frame-ancestors)
-    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+    res.setHeader('X-Frame-Options', 'DENY');
 
     // Prevent MIME type sniffing
     res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -105,8 +85,7 @@ function customSecurityHeaders(req, res, next) {
     // Prevent cross-site leak via cache timing
     res.setHeader('Cache-Control', 'no-store');
     // Allow static assets to be cached (overridden in express.static options)
-    if (req.path.startsWith('/css/') || req.path.startsWith('/js/') ||
-        req.path.startsWith('/img/') || req.path.startsWith('/fonts/')) {
+    if (req.path.startsWith('/css/') || req.path.startsWith('/img/') || req.path.startsWith('/fonts/')) {
         res.setHeader('Cache-Control', 'public, max-age=3600');
     }
 
@@ -117,10 +96,9 @@ function customSecurityHeaders(req, res, next) {
  * Combined security middleware
  */
 function securityMiddleware(req, res, next) {
-    buildHelmetMiddleware(req, res)(req, res, () => {
+    helmetMiddleware(req, res, () => {
         customSecurityHeaders(req, res, next);
     });
 }
 
 module.exports = securityMiddleware;
-module.exports.allowRemoteUnsafeEval = allowRemoteUnsafeEval;

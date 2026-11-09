@@ -93,6 +93,11 @@ const facade = {
         : Promise.resolve(),
     deleteUser:       (id) => adapter.deleteUser(id),
     updateUserProfile: (id, fields) => adapter.updateUserProfile(id, fields),
+    // Profile pictures (services/avatarService.js)
+    getUserAvatar:    (userId) => adapter.getUserAvatar(userId),
+    setUserAvatar:    (userId, avatar) => adapter.setUserAvatar(userId, avatar),
+    deleteUserAvatar: (userId, source) => adapter.deleteUserAvatar(userId, source),
+    listUserAvatarVersions: () => adapter.listUserAvatarVersions(),
     getUsersEmailsByUsernames: (usernames) => adapter.getUsersEmailsByUsernames(usernames),
     getUsernamesByUserGroupGuid: (guid) => adapter.getUsernamesByUserGroupGuid(guid),
     hasEmailNotificationSent: (eventType, eventId, recipient) =>
@@ -129,6 +134,7 @@ const facade = {
     // ---- Audit Log ----
     logAction:   (userId, action, details, ip) => adapter.logAction(userId, action, details, ip),
     getAuditLogs: (limit) => adapter.getAuditLogs(limit),
+    getLatestAuditEntry: (action, detailsPrefix) => adapter.getLatestAuditEntry(action, detailsPrefix),
 
     // ---- Audit: Connections ----
     insertAuditConnection: (data) => adapter.insertAuditConnection(data),
@@ -256,6 +262,7 @@ const facade = {
     removeDeviceFromGroup: (groupGuid, peerId) => adapter.removeDeviceFromGroup(groupGuid, peerId),
     getDeviceGroupMembers: (groupGuid) => adapter.getDeviceGroupMembers(groupGuid),
     getDeviceGroupsForPeer: (peerId) => adapter.getDeviceGroupsForPeer(peerId),
+    getDeviceGroupsForPeers: (peerIds) => adapter.getDeviceGroupsForPeers(peerIds),
     setDeviceGroupUserAccess: (groupGuid, usernames) => adapter.setDeviceGroupUserAccess(groupGuid, usernames),
     setDeviceGroupUserGroupAccess: (groupGuid, groupGuids) => adapter.setDeviceGroupUserGroupAccess(groupGuid, groupGuids),
     getDeviceGroupAccessForUser: (userId) => adapter.getDeviceGroupAccessForUser(userId),

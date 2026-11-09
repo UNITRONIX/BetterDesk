@@ -24,7 +24,7 @@ function loadRDCrypto() {
     sandbox.window = sandbox;
     sandbox.globalThis = sandbox;
     const src = fs.readFileSync(
-        path.join(__dirname, '..', 'public/js/rdclient/crypto.js'),
+        path.join(__dirname, '..', '../web-ui/static/rdclient/crypto.js'),
         'utf8'
     );
     vm.runInNewContext(src + '\nglobalThis.RDCrypto = RDCrypto;', sandbox, {

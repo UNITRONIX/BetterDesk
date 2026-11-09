@@ -27,6 +27,9 @@ const mockDb = {
     getUserStrategyGuid: jest.fn().mockResolvedValue(''),
     setUserStrategyAssignment: jest.fn().mockResolvedValue(''),
     getAllFolders: jest.fn().mockResolvedValue([]),
+    // Deleting a user or a group clears its panel access policy
+    setPanelAccessPolicies: jest.fn().mockResolvedValue(undefined),
+    setClientFeaturePolicies: jest.fn().mockResolvedValue(undefined),
 };
 
 const mockUserSync = {
@@ -91,17 +94,6 @@ describe('Users Routes', () => {
         expect(mockUserSync.backfillFromGo).toHaveBeenCalledTimes(1);
         expect(res.body.data.users).toHaveLength(2);
         expect(res.body.data.users[1].user_groups).toEqual(['volunteers']);
-    });
-
-    it('does not forbid server_admin from the Users management page', async () => {
-        const app = createTestApp();
-        withAuth(app, { id: 1, username: 'admin', role: 'server_admin' });
-        app.use(usersRoutes);
-
-        const res = await request(app).get('/users');
-
-        expect(res.status).not.toBe(403);
-        expect(res.status).not.toBe(401);
     });
 
     it('blocks the users list when user.view is explicitly denied', async () => {
@@ -173,6 +165,7 @@ describe('Users Routes', () => {
         expect(res.status).toBe(200);
         expect(mockDb.getUserGroupByGuid).toHaveBeenCalledWith('volunteers');
         expect(mockDb.deleteUserGroup).toHaveBeenCalledWith('volunteers');
+        expect(mockDb.setPanelAccessPolicies).toHaveBeenCalledWith('group', 'volunteers', expect.anything());
     });
 
     it('stores user group memberships when creating a user', async () => {
@@ -372,6 +365,25 @@ describe('Users Routes', () => {
         expect(res.body.data.users[0].peer_grants).toEqual([]);
     });
 
+    it('says on the users list whether each account uses two-factor sign-in, never the secret', async () => {
+        mockDb.getAllUsers.mockResolvedValue([
+            { id: 1, username: 'admin', role: 'super_admin', created_at: '2026-05-01', last_login: null, totp_enabled: 1, totp_secret: 'JBSWY3DPEHPK3PXP' },
+            { id: 12, username: 'operator1', role: 'operator', created_at: '2026-05-02', last_login: null, totp_enabled: 0 },
+            { id: 13, username: 'pg_user', role: 'viewer', created_at: '2026-05-03', last_login: null, totp_enabled: true },
+        ]);
+
+        const app = createTestApp();
+        withAuth(app, { id: 1, username: 'admin', role: 'server_admin' });
+        app.use(usersRoutes);
+
+        const res = await request(app).get('/api/users');
+
+        expect(res.status).toBe(200);
+        expect(res.body.data.users.map((u) => u.totp_enabled)).toEqual([true, false, true]);
+        expect(JSON.stringify(res.body)).not.toContain('JBSWY3DPEHPK3PXP');
+        expect(res.body.data.users[0]).not.toHaveProperty('totp_secret');
+    });
+
     it('does not let global_admin create a super_admin user', async () => {
         const app = createTestApp();
         withAuth(app, { id: 1, username: 'global-admin', role: 'global_admin' });
@@ -514,6 +526,7 @@ describe('Users Routes', () => {
         expect(mockUserSync.assertGoAllowsSuperAdminDelete).toHaveBeenCalledWith('admin');
         expect(mockUserSync.mirrorDelete).toHaveBeenCalledWith('admin');
         expect(mockDb.deleteUser).toHaveBeenCalledWith(2);
+        expect(mockDb.setPanelAccessPolicies).toHaveBeenCalledWith('user', '2', expect.anything());
     });
 
     it('refuses delete when Go still has only one Super Admin (Issue #315)', async () => {

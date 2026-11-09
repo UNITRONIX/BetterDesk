@@ -8,13 +8,14 @@
  *   GET    /api/bd/register-status     — Poll approval status (by device_id)
  *
  * Admin-facing (session auth required):
- *   GET    /registrations              — Registrations page (EJS)
  *   GET    /api/registrations          — List all registration requests
  *   GET    /api/registrations/count    — Pending count (for sidebar badge)
  *   GET    /api/registrations/:id      — Single registration detail
  *   PUT    /api/registrations/:id/approve — Approve a pending request
  *   PUT    /api/registrations/:id/reject  — Reject a pending request
  *   DELETE /api/registrations/:id      — Delete a registration record
+ *
+ * The page (/registrations) is in the console (web-ui).
  *
  * @module routes/registration.routes
  */
@@ -195,16 +196,6 @@ router.get('/register-status', async (req, res) => {
 // ===========================================================================
 //  Admin-facing endpoints (session auth required)
 // ===========================================================================
-
-/**
- * GET /registrations — Render the registrations management page.
- */
-router.get('/registrations', requirePermission('enrollment.approve'), (req, res) => {
-    res.render('registrations', {
-        title: req.t('nav.registrations'),
-        activePage: 'registrations',
-    });
-});
 
 /**
  * GET /api/registrations — List all registration requests.
@@ -614,6 +605,7 @@ function normalizeHelpRequest(r) {
     if (!r || typeof r !== 'object') return null;
     const statusMap = { acknowledged: 'accepted' };
     const createdMs = r.created_at ? Date.parse(r.created_at) : Date.now();
+    const updatedMs = r.updated_at ? Date.parse(r.updated_at) : NaN;
     return {
         id: String(r.id),
         device_id: r.device_id || '',
@@ -623,7 +615,67 @@ function normalizeHelpRequest(r) {
         accepted_by: r.status === 'acknowledged' ? (r.handled_by || '') : '',
         resolved_by: r.status === 'resolved' ? (r.handled_by || '') : '',
         created_at: Number.isFinite(createdMs) ? createdMs : Date.now(),
+        // Time of the last status change (the help page counts resolved requests on that day)
+        updated_at: Number.isFinite(updatedMs) ? updatedMs : null,
     };
+}
+
+// The Go server records who accepted or resolved a request from the API
+// key the console uses ("apikey:console-bridge"), not the person. The
+// console writes its own audit entry for every accept/resolve, so the name
+// comes from there. Requests handled by an older console or elsewhere
+// through the API key show no name.
+const HELP_AUDIT_ACTIONS = { accepted: 'help_request_accepted', resolved: 'help_request_resolved' };
+const helpActorCache = new Map();
+
+function helpAuditDetails(action, id) {
+    return `Help request ${String(id).slice(0, 40)} ${action === HELP_AUDIT_ACTIONS.accepted ? 'accepted' : 'resolved'}`;
+}
+
+function auditTimeMs(value) {
+    if (value instanceof Date) return value.getTime();
+    const text = String(value || '');
+    const ms = Date.parse(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/.test(text) ? text.replace(' ', 'T') + 'Z' : text);
+    return Number.isFinite(ms) ? ms : NaN;
+}
+
+async function consoleHelpActor(action, id, requestCreatedMs) {
+    const key = `${action}:${id}`;
+    if (helpActorCache.has(key)) return helpActorCache.get(key);
+    let name = '';
+    try {
+        const entry = await db.getLatestAuditEntry(action, helpAuditDetails(action, id));
+        // An entry older than the request belongs to an earlier request
+        // with the same id (Go database reset), not to this one.
+        const at = entry ? auditTimeMs(entry.created_at) : NaN;
+        if (entry && !(at < requestCreatedMs - 60000)) name = entry.username || '';
+    } catch (_) { /* audit lookup optional */ }
+    helpActorCache.set(key, name);
+    return name;
+}
+
+async function nameConsoleHelpActors(items) {
+    for (const item of items) {
+        if (/^apikey:/.test(item.accepted_by)) {
+            item.accepted_by = await consoleHelpActor(HELP_AUDIT_ACTIONS.accepted, item.id, item.created_at);
+        }
+        if (/^apikey:/.test(item.resolved_by)) {
+            item.resolved_by = await consoleHelpActor(HELP_AUDIT_ACTIONS.resolved, item.id, item.created_at);
+        }
+    }
+}
+
+async function auditHelpAction(req, action) {
+    const id = String(req.params.id);
+    try {
+        await db.logAction(
+            req.session?.user?.id || 0,
+            action,
+            helpAuditDetails(action, id),
+            getClientIp(req)
+        );
+    } catch (_) { /* audit log optional */ }
+    helpActorCache.set(`${action}:${id}`, req.session?.user?.username || '');
 }
 
 router.get('/api/help/requests', requirePermission('chat.access'), async (req, res) => {
@@ -642,6 +694,7 @@ router.get('/api/help/requests', requirePermission('chat.access'), async (req, r
             .map(normalizeHelpRequest)
             .filter(Boolean)
             .sort((a, b) => b.created_at - a.created_at);
+        await nameConsoleHelpActors(items);
 
         res.json({ success: true, requests: items });
     } catch (err) {
@@ -656,6 +709,7 @@ router.post('/api/help/requests/:id/accept', requirePermission('chat.access'), a
         if (!result.success) {
             return res.status(502).json({ success: false, error: result.error || 'Failed to accept' });
         }
+        await auditHelpAction(req, HELP_AUDIT_ACTIONS.accepted);
         res.json({ success: true, request: result.data });
     } catch (err) {
         console.error('[help] Accept error:', err.message);
@@ -669,6 +723,7 @@ router.post('/api/help/requests/:id/resolve', requirePermission('chat.access'), 
         if (!result.success) {
             return res.status(502).json({ success: false, error: result.error || 'Failed to resolve' });
         }
+        await auditHelpAction(req, HELP_AUDIT_ACTIONS.resolved);
         res.json({ success: true, request: result.data });
     } catch (err) {
         console.error('[help] Resolve error:', err.message);

@@ -156,11 +156,26 @@ func (s *Server) handleListRolePermissionOverrides(w http.ResponseWriter, r *htt
 	writeJSON(w, http.StatusOK, map[string]any{"overrides": result})
 }
 
+// requireSuperAdminForOverrides answers 403 unless the caller is a super
+// admin (or legacy admin, which includes the console's API key). The routes
+// need server.config, which server_admin holds; without this a server_admin
+// could grant its own role any permission.
+func requireSuperAdminForOverrides(w http.ResponseWriter, r *http.Request) bool {
+	if auth.IsSuperAdminRole(getRoleFromCtx(r)) {
+		return true
+	}
+	writeJSON(w, http.StatusForbidden, map[string]string{"error": "Only super admins can change role permissions"})
+	return false
+}
+
 // handleSetRolePermission creates or updates a custom permission override.
 //
 //	POST /api/role-permissions
 //	Body: {"role": "operator", "permission": "device.delete", "granted": true}
 func (s *Server) handleSetRolePermission(w http.ResponseWriter, r *http.Request) {
+	if !requireSuperAdminForOverrides(w, r) {
+		return
+	}
 	var body struct {
 		Role       string `json:"role"`
 		Permission string `json:"permission"`
@@ -198,6 +213,9 @@ func (s *Server) handleSetRolePermission(w http.ResponseWriter, r *http.Request)
 //
 //	DELETE /api/role-permissions/{role}/{permission}
 func (s *Server) handleDeleteRolePermission(w http.ResponseWriter, r *http.Request) {
+	if !requireSuperAdminForOverrides(w, r) {
+		return
+	}
 	role := r.PathValue("role")
 	permission := r.PathValue("permission")
 

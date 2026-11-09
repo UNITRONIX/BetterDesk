@@ -1,0 +1,190 @@
+[
+	{
+		"id": "devices",
+		"icon": "devices",
+		"text": "Devices",
+		"pages": [
+			{
+				"page": "dashboard",
+				"href": "/",
+				"text": "Overview",
+				"group": "",
+				"core": true,
+				"keywords": "home dashboard start",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "devices",
+				"href": "/devices",
+				"text": "All devices",
+				"group": "",
+				"core": true,
+				"keywords": "computers peers machines connect",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "inventory",
+				"href": "/inventory",
+				"text": "Inventory",
+				"group": "",
+				"core": false,
+				"keywords": "hardware software",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "network",
+				"href": "/network",
+				"text": "Network monitoring",
+				"group": "",
+				"core": false,
+				"keywords": "ping monitor latency targets",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "cross-platform",
+				"href": "/cross-platform",
+				"text": "Platform support",
+				"group": "",
+				"core": false,
+				"keywords": "cross-platform matrix features os",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "cdap",
+				"href": "/cdap",
+				"text": "IoT devices (CDAP)",
+				"group": "",
+				"core": false,
+				"keywords": "cdap iot scada sensors gateway",
+				"external": false,
+				"countId": null
+			}
+		]
+	},
+	{
+		"id": "support",
+		"icon": "support_agent",
+		"text": "Support",
+		"pages": [
+			{
+				"page": "help-requests",
+				"href": "/help-requests",
+				"text": "Help requests",
+				"group": "",
+				"core": true,
+				"keywords": "help support requests",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "tickets",
+				"href": "/tickets",
+				"text": "Tickets",
+				"group": "",
+				"core": true,
+				"keywords": "issues",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "chat",
+				"href": "/chat",
+				"text": "Chat",
+				"group": "",
+				"core": true,
+				"keywords": "messages",
+				"external": false,
+				"countId": null
+			}
+		]
+	},
+	{
+		"id": "activity",
+		"icon": "history",
+		"text": "Activity",
+		"pages": [
+			{
+				"page": "security-audit",
+				"href": "/security-audit",
+				"text": "Security and audit",
+				"group": "",
+				"core": true,
+				"keywords": "audit log who banned security events",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "activity",
+				"href": "/activity",
+				"text": "App usage",
+				"group": "",
+				"core": false,
+				"keywords": "app usage activity monitoring",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "reports",
+				"href": "/reports",
+				"text": "Reports",
+				"group": "",
+				"core": true,
+				"keywords": "reports export trends",
+				"external": false,
+				"countId": null
+			}
+		]
+	},
+	{
+		"id": "settings",
+		"icon": "settings",
+		"text": "Settings",
+		"pages": [
+			{
+				"page": "settings:general",
+				"href": "/settings",
+				"text": "General",
+				"group": "Console",
+				"core": true,
+				"keywords": "settings relay address public endpoints connection strategy meshcentral",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "settings:branding",
+				"href": "/settings?tab=branding",
+				"text": "Appearance",
+				"group": "Console",
+				"core": false,
+				"keywords": "branding theme colours colors logo dark mode",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "settings:auth",
+				"href": "/settings?tab=auth",
+				"text": "Sign-in",
+				"group": "Console",
+				"core": false,
+				"keywords": "authentication 2fa two-factor totp password ldap sso oidc",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "cdap-studio",
+				"href": "/cdap-studio",
+				"text": "Flow builder (SDK)",
+				"group": "Developer tools",
+				"core": false,
+				"keywords": "sdk studio flows widgets",
+				"external": false,
+				"countId": null
+			}
+		]
+	}
+]

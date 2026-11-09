@@ -36,6 +36,8 @@ const fs = require('fs');
 const crypto = require('crypto');
 const { getAdapter } = require('../services/dbAdapter');
 const { uploadLimiter, fileAccessLimiter } = require('../middleware/rateLimiter');
+const { requirePermission } = require('../middleware/auth');
+const { attachmentBody } = require('../lib/jsonBody');
 
 // ---------------------------------------------------------------------------
 //  Config
@@ -89,16 +91,10 @@ function requireAuth(req, res, next) {
     return res.status(401).json({ error: 'Authentication required' });
 }
 
-function requireAdminOrOperator(req, res, next) {
-    if (!req.session || !req.session.user) {
-        return res.status(401).json({ error: 'Authentication required' });
-    }
-    const role = req.session.user.role;
-    if (role === 'admin' || role === 'operator') {
-        return next();
-    }
-    return res.status(403).json({ error: 'Insufficient permissions' });
-}
+// The Tickets page is a device page: reading needs device.view, changing
+// tickets device.edit (role overrides and super admins included).
+const canRead = requirePermission('device.view');
+const canWrite = requirePermission('device.edit');
 
 // ---------------------------------------------------------------------------
 //  Admin/Operator endpoints
@@ -108,7 +104,7 @@ function requireAdminOrOperator(req, res, next) {
  * GET /api/tickets — List tickets (with filters).
  * Query params: status, priority, category, assigned_to, device_id, search
  */
-router.get('/', requireAuth, async (req, res) => {
+router.get('/', requireAuth, canRead, async (req, res) => {
     try {
         const adapter = getAdapter();
         const filters = {};
@@ -130,7 +126,7 @@ router.get('/', requireAuth, async (req, res) => {
 /**
  * GET /api/tickets/stats — Ticket statistics.
  */
-router.get('/stats', requireAuth, async (req, res) => {
+router.get('/stats', requireAuth, canRead, async (req, res) => {
     try {
         const adapter = getAdapter();
         const stats = await adapter.getTicketStats();
@@ -144,7 +140,7 @@ router.get('/stats', requireAuth, async (req, res) => {
 /**
  * POST /api/tickets — Create ticket.
  */
-router.post('/', uploadLimiter, requireAdminOrOperator, async (req, res) => {
+router.post('/', uploadLimiter, requireAuth, canWrite, async (req, res) => {
     try {
         const { title, description, priority, category, device_id, assigned_to } = req.body;
 
@@ -192,7 +188,7 @@ router.post('/', uploadLimiter, requireAdminOrOperator, async (req, res) => {
 /**
  * GET /api/tickets/:id — Get ticket detail (with comments and attachments).
  */
-router.get('/:id(\\d+)', requireAuth, async (req, res) => {
+router.get('/:id(\\d+)', requireAuth, canRead, async (req, res) => {
     try {
         const adapter = getAdapter();
         const ticket = await adapter.getTicketById(+req.params.id);
@@ -229,7 +225,7 @@ router.get('/:id(\\d+)', requireAuth, async (req, res) => {
 /**
  * PATCH /api/tickets/:id — Update ticket.
  */
-router.patch('/:id(\\d+)', requireAdminOrOperator, async (req, res) => {
+router.patch('/:id(\\d+)', requireAuth, canWrite, async (req, res) => {
     try {
         const adapter = getAdapter();
         const ticket = await adapter.getTicketById(+req.params.id);
@@ -237,13 +233,18 @@ router.patch('/:id(\\d+)', requireAdminOrOperator, async (req, res) => {
             return res.status(404).json({ error: 'Ticket not found' });
         }
 
-        const { title, description, status, priority, category, assigned_to, sla_due_at } = req.body;
+        const { title, description, status, priority, category, assigned_to, sla_due_at, device_id } = req.body;
 
         if (status && !VALID_STATUSES.includes(status)) {
             return res.status(400).json({ error: `Invalid status. Valid: ${VALID_STATUSES.join(', ')}` });
         }
         if (priority && !VALID_PRIORITIES.includes(priority)) {
             return res.status(400).json({ error: `Invalid priority. Valid: ${VALID_PRIORITIES.join(', ')}` });
+        }
+        // The device a ticket is about: a device ID, or empty/null for none
+        if (device_id !== undefined && device_id !== null
+            && (typeof device_id !== 'string' || device_id.trim().length > 64)) {
+            return res.status(400).json({ error: 'Invalid device_id' });
         }
 
         const updates = {};
@@ -254,6 +255,7 @@ router.patch('/:id(\\d+)', requireAdminOrOperator, async (req, res) => {
         if (category !== undefined) updates.category = category;
         if (assigned_to !== undefined) updates.assigned_to = assigned_to;
         if (sla_due_at !== undefined) updates.sla_due_at = sla_due_at;
+        if (device_id !== undefined) updates.device_id = device_id === null ? null : (device_id.trim() || null);
 
         await adapter.updateTicket(ticket.id, updates);
 
@@ -279,7 +281,7 @@ router.patch('/:id(\\d+)', requireAdminOrOperator, async (req, res) => {
 /**
  * DELETE /api/tickets/:id — Delete ticket.
  */
-router.delete('/:id(\\d+)', uploadLimiter, requireAdminOrOperator, async (req, res) => {
+router.delete('/:id(\\d+)', uploadLimiter, requireAuth, canWrite, async (req, res) => {
     try {
         const adapter = getAdapter();
         const ticket = await adapter.getTicketById(+req.params.id);
@@ -316,7 +318,7 @@ router.delete('/:id(\\d+)', uploadLimiter, requireAdminOrOperator, async (req, r
 /**
  * POST /api/tickets/:id/comments — Add comment to ticket.
  */
-router.post('/:id(\\d+)/comments', uploadLimiter, requireAuth, async (req, res) => {
+router.post('/:id(\\d+)/comments', uploadLimiter, requireAuth, canRead, async (req, res) => {
     try {
         const adapter = getAdapter();
         const ticket = await adapter.getTicketById(+req.params.id);
@@ -349,7 +351,7 @@ router.post('/:id(\\d+)/comments', uploadLimiter, requireAuth, async (req, res) 
 /**
  * GET /api/tickets/:id/comments — List ticket comments.
  */
-router.get('/:id(\\d+)/comments', requireAuth, async (req, res) => {
+router.get('/:id(\\d+)/comments', requireAuth, canRead, async (req, res) => {
     try {
         const adapter = getAdapter();
         const comments = await adapter.getTicketComments(+req.params.id);
@@ -369,10 +371,10 @@ router.get('/:id(\\d+)/comments', requireAuth, async (req, res) => {
 
 /**
  * POST /api/tickets/:id/attachments — Upload attachment.
- * Expects multipart/form-data or raw binary with headers.
- * For simplicity, accepts base64-encoded body: { filename, data }
+ * Body: { filename, data } with data in base64, parsed here (up to 35 MB of
+ * JSON) once the person may attach; the console-wide parser skips this path.
  */
-router.post('/:id(\\d+)/attachments', uploadLimiter, requireAdminOrOperator, async (req, res) => {
+router.post('/:id(\\d+)/attachments', uploadLimiter, requireAuth, canWrite, attachmentBody, async (req, res) => {
     try {
         const adapter = getAdapter();
         const ticket = await adapter.getTicketById(+req.params.id);
@@ -416,7 +418,7 @@ router.post('/:id(\\d+)/attachments', uploadLimiter, requireAdminOrOperator, asy
 /**
  * GET /api/tickets/:id/attachments — List attachments.
  */
-router.get('/:id(\\d+)/attachments', fileAccessLimiter, requireAuth, async (req, res) => {
+router.get('/:id(\\d+)/attachments', fileAccessLimiter, requireAuth, canRead, async (req, res) => {
     try {
         const adapter = getAdapter();
         const attachments = await adapter.getTicketAttachments(+req.params.id);
@@ -439,7 +441,7 @@ router.get('/:id(\\d+)/attachments', fileAccessLimiter, requireAuth, async (req,
 /**
  * GET /api/tickets/attachments/:aid — Download attachment file.
  */
-router.get('/attachments/:aid(\\d+)', fileAccessLimiter, requireAuth, async (req, res) => {
+router.get('/attachments/:aid(\\d+)', fileAccessLimiter, requireAuth, canRead, async (req, res) => {
     try {
         const adapter = getAdapter();
         const att = await adapter.getAttachmentById(+req.params.aid);

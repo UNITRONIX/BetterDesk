@@ -322,7 +322,20 @@ class NetworkMonitor {
     }
 
     /**
-     * Run checks for all enabled targets.
+     * Whether a target's own check interval has passed since its last check.
+     * A small allowance keeps a target whose interval equals the poll interval
+     * from being skipped because the previous poll finished a moment late.
+     */
+    isDue(target, now = Date.now()) {
+        const last = target.last_check_at ? new Date(target.last_check_at).getTime() : NaN;
+        if (!Number.isFinite(last)) return true;
+        const interval = Number(target.interval_ms) || this.pollInterval;
+        const allowance = Math.min(5000, this.pollInterval / 2);
+        return now - last >= interval - allowance;
+    }
+
+    /**
+     * Run checks for all enabled targets whose interval is due.
      */
     async checkAll() {
         try {
@@ -330,7 +343,8 @@ class NetworkMonitor {
             if (!targets || targets.length === 0) return [];
 
             const results = [];
-            const batch = targets.slice(0, MAX_TARGETS_PER_POLL);
+            const now = Date.now();
+            const batch = targets.filter((t) => this.isDue(t, now)).slice(0, MAX_TARGETS_PER_POLL);
             for (const target of batch) {
                 const result = await this.checkTarget(target);
                 results.push(result);

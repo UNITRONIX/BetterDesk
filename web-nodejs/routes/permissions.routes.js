@@ -6,22 +6,13 @@
 const express = require('express');
 const router = express.Router();
 const { assertSafeApiId } = require('../lib/goApiPath');
-const { requireAuth, requirePermission } = require('../middleware/auth');
+const { requireAuth, requirePermission, requireRole } = require('../middleware/auth');
+
+// Changing role permissions is for super admins only, as the navigation shows.
+// server.config alone (server_admin has it) let a role grant itself anything.
+const superAdminOnly = requireRole('super_admin');
 const betterdeskApi = require('../services/betterdeskApi');
 const { invalidateRole } = require('../services/rolePermissionService');
-
-// ── Page Route ───────────────────────────────────
-
-/**
- * GET /permissions - Permissions management page
- */
-router.get('/permissions', requireAuth, requirePermission('server.config'), (req, res) => {
-    res.render('permissions', {
-        title: req.t('permissions.title'),
-        activePage: 'permissions',
-        currentPage: 'permissions'
-    });
-});
 
 // ── API Proxy Routes ─────────────────────────────
 
@@ -80,7 +71,7 @@ router.get('/api/panel/role-permissions', requireAuth, requirePermission('server
 /**
  * POST /api/panel/role-permissions - Set a custom override
  */
-router.post('/api/panel/role-permissions', requireAuth, requirePermission('server.config'), async (req, res) => {
+router.post('/api/panel/role-permissions', requireAuth, superAdminOnly, async (req, res) => {
     try {
         const { role, permission, granted } = req.body;
         if (!role || !permission || typeof granted !== 'boolean') {
@@ -106,7 +97,7 @@ router.post('/api/panel/role-permissions', requireAuth, requirePermission('serve
 /**
  * DELETE /api/panel/role-permissions/:role/:permission - Delete a custom override
  */
-router.delete('/api/panel/role-permissions/:role/:permission', requireAuth, requirePermission('server.config'), async (req, res) => {
+router.delete('/api/panel/role-permissions/:role/:permission', requireAuth, superAdminOnly, async (req, res) => {
     try {
         const role = assertSafeApiId(req.params.role, 'role');
         const permission = assertSafeApiId(req.params.permission, 'permission');

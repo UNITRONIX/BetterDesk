@@ -8,16 +8,6 @@ const router = express.Router();
 const { requireAuth, requirePermission } = require('../middleware/auth');
 const betterdeskApi = require('../services/betterdeskApi');
 
-// ── Page Route ───────────────────────────────────────────────────────────
-
-router.get('/tokens', requireAuth, requirePermission('enrollment.manage'), (req, res) => {
-    res.render('tokens', {
-        title: req.t('tokens.title'),
-        activePage: 'tokens',
-        currentPage: 'tokens'
-    });
-});
-
 // ── API Proxy Routes ─────────────────────────────────────────────────────
 
 // List all tokens

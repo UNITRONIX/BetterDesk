@@ -22,18 +22,15 @@ const securityMiddleware = require('./middleware/security');
 const { initI18n } = require('./middleware/i18n');
 const {
     apiLimiter,
+    sessionReadLimiter,
     widgetLimiter,
     panelReadLimiter,
     panelPreferenceLimiter,
     getPanelPollMountPaths,
     getPanelReadMountPaths
 } = require('./middleware/rateLimiter');
-const { csrfTokenProvider, doubleCsrfProtection, downgradeToHttp: csrfDowngradeToHttp } = require('./middleware/csrf');
-const {
-    requestHasPermission,
-    isSuperAdminRole,
-    loadEffectivePermissions,
-} = require('./middleware/auth');
+const { csrfTokenProvider, csrfGate, downgradeToHttp: csrfDowngradeToHttp } = require('./middleware/csrf');
+const { loadEffectivePermissions } = require('./middleware/auth');
 const authService = require('./services/authService');
 const serverBackend = require('./services/serverBackend');
 const db = require('./services/database');
@@ -50,13 +47,13 @@ const { initServerTerminalProxy } = require('./services/serverTerminalProxy');
 const { initCdapMediaProxies } = require('./services/cdapMediaProxy');
 const { initMeshAshxProxy } = require('./services/meshAshxProxy');
 const { initRemoteTargetGateway } = require('./services/remoteTargetGateway');
-const { loadEffectivePolicy, accessAllows } = require('./services/panelAccessPolicyService');
+const { loadEffectivePolicy } = require('./services/panelAccessPolicyService');
 const { panelAccessGuard } = require('./middleware/panelAccess');
 const { startDiscoveryService } = require('./services/lanDiscovery');
 const { initDeviceStatusPush } = require('./services/deviceStatusPush');
 const { initHelpRequestEmailService } = require('./services/helpRequestEmailService');
-const { loadSupporters } = require('./services/supportersService');
 const routes = require('./routes');
+const { mountRoutes } = require('./lib/mountRoutes');
 const rustdeskApiRoutes = require('./routes/rustdesk-api.routes');
 const bdApiRoutes = require('./routes/bd-api.routes');
 const { getWanMiddlewareStack } = require('./middleware/wanSecurity');
@@ -76,10 +73,6 @@ const app = express();
 const trustProxy = parseTrustProxy(process.env.TRUST_PROXY);
 app.set('trust proxy', trustProxy);
 
-// View engine setup
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
-
 // Ensure data directory exists (required before auth.db / session secret)
 try {
     if (!fs.existsSync(config.dataDir)) {
@@ -95,6 +88,12 @@ try {
 
 // Security headers (Helmet)
 app.use(securityMiddleware);
+
+// The console (web-ui/build) at the root. Its pages are mounted after the
+// routes (lib/mountRoutes.js); res.sendErrorPage() is there for every
+// handler from here on, the error handlers included.
+const webUi = require('./lib/webUi').createWebUi();
+app.use(webUi.errorPages);
 
 // CORS for BetterDesk desktop clients (Tauri webview origins)
 app.use('/api/', (req, res, next) => {
@@ -115,8 +114,8 @@ app.use('/api/', (req, res, next) => {
     next();
 });
 
-// Body parsing (2MB limit for base64 logo images)
-app.use(express.json({ limit: '2mb' }));
+// Body parsing (2MB limit for base64 logo images; ticket attachments are parsed by their route, lib/jsonBody.js)
+app.use(require('./lib/jsonBody').jsonBody());
 app.use(express.urlencoded({ extended: false, limit: '2mb' }));
 
 // Cookie parsing
@@ -183,7 +182,8 @@ app.use((req, res, next) => {
                         code: reason === 'idle' ? 'session_idle' : 'session_expired'
                     });
                 }
-                return res.redirect('/login?expired=1');
+                // The way back to this page after signing in again (lib/returnUrl.js, R3)
+                return res.redirect(require('./lib/returnUrl').loginRedirectUrl(req));
             });
         });
         db.logAction(userId, 'session_expired', `reason=${reason}`, req.ip).catch(() => {});
@@ -239,6 +239,8 @@ app.use(panelAccessGuard);
 // SECURITY (audit fix M-03, 2026-04-10): high-frequency widget refresh paths
 // have their own higher-quota limiter mounted BEFORE the general one so they
 // are still bounded but do not eat into the regular API budget.
+// Reads by someone signed in count per person (the per-address limiters skip them).
+app.use('/api/', sessionReadLimiter);
 for (const p of getPanelPollMountPaths()) {
     app.use(p, widgetLimiter);
 }
@@ -262,25 +264,8 @@ app.use('/api/bd', bdApiRoutes);
 // i18n middleware
 app.use(initI18n());
 
-// Embed mode — when ?embed=1 is present, layout renders without sidebar/navbar
-// Used by Desktop Mode to load pages inside floating windows (iframes)
+// Only static files may be cached: no answer that isn't one is stored
 app.use((req, res, next) => {
-    res.locals.embed = req.query.embed === '1';
-    // UX 3.5 is the only supported console shell. Legacy `ui` query
-    // parameters and `bd_ui_shell=classic` cookies are intentionally ignored.
-    res.locals.uiShell = 'ux35';
-    res.locals.supporters = loadSupporters();
-    // Inject permission helper for EJS templates (sidebar/button visibility)
-    const role = req.session?.user?.role;
-    res.locals.hasPermission = (perm) => role
-        ? requestHasPermission(req, perm)
-        : false;
-    res.locals.hasSectionAccess = (section, level = 'read') => role
-        ? accessAllows(req.panelAccessPolicy, section, level)
-        : false;
-    res.locals.isSuperAdmin = role ? isSuperAdminRole(role) : false;
-    res.locals.sessionPolicy = panelSessionService.getPolicy();
-    // Prevent HTML page caching — only static assets should be cached
     if (!req.path.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff2?|ttf|eot|map|proto)$/)) {
         res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
     }
@@ -288,8 +273,9 @@ app.use((req, res, next) => {
 });
 
 // CSRF protection — validate on POST/PUT/DELETE/PATCH.
-// Skip CSRF for device-facing API routes (/api/bd/*) — these MUST authenticate
-// via Bearer access token (session-cookie fallback is rejected in requireDeviceAuth).
+// Device-facing API routes (/api/bd/*) authenticate via Bearer access token
+// and skip it, unless the request carries a signed-in browser session
+// (admin routers are also mounted under /api/bd; see csrfGate).
 //
 // SECURITY (audit fix C-02, 2026-04-10): the previous Origin-based CSRF skip
 // for Tauri webview origins (`tauri://localhost`, `https://tauri.localhost`,
@@ -297,97 +283,15 @@ app.use((req, res, next) => {
 // non-browser HTTP client, so it is unsafe as a CSRF-bypass signal. Tauri
 // desktop clients receive the CSRF token via `csrfTokenProvider` and must
 // echo it back in the `X-CSRF-Token` header (csrf-csrf double-submit).
-app.use((req, res, next) => {
-    if (req.path.startsWith('/api/bd/')) {
-        return next();
-    }
-    doubleCsrfProtection(req, res, next);
-});
+app.use(csrfGate);
 
 // ============ Routes ============
 
-app.use('/', routes);
+// The console API's JSON answers go out compressed when the browser asks
+app.use('/api/', require('./lib/jsonCompression').jsonCompression());
 
-// ============ Error Handlers ============
-
-// CSRF token mismatch
-app.use((err, req, res, next) => {
-    if (err.code === 'EBADCSRFTOKEN' || err.message?.includes('csrf') || err.message?.includes('CSRF')) {
-        res.status(403);
-        // Detect likely SSL→HTTP transition: cookie missing because browser held Secure cookie
-        const likelySslTransition = !config.httpsEnabled && !req.secure;
-        const hint = likelySslTransition
-            ? ' If you recently disabled SSL, clear your browser cookies for this site and reload.'
-            : '';
-        // Always return JSON for API routes (fetch sends Accept: */*)
-        if (req.path.startsWith('/api/') || (req.headers['content-type'] && req.headers['content-type'].includes('application/json'))) {
-            return res.json({ success: false, error: 'Invalid CSRF token. Please refresh the page and try again.' + hint });
-        }
-        if (req.accepts('html')) {
-            return res.render('errors/500', {
-                title: 'Forbidden',
-                activePage: 'error',
-                error: 'Invalid or missing CSRF token. Please refresh the page and try again.' + hint
-            });
-        }
-        return res.json({ success: false, error: 'Invalid CSRF token' + hint });
-    }
-    next(err);
-});
-
-// 404 Not Found
-app.use((req, res, next) => {
-    res.status(404);
-
-    // Log unmatched /api/* and /ws/* paths only (avoid noise from missing
-    // static assets like favicons).  Diagnostics suggestion credit:
-    // progloto (PR #81).
-    if (req.originalUrl.startsWith('/api/') || req.originalUrl.startsWith('/ws/')) {
-        const ip = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown';
-        const ua = String(req.headers['user-agent'] || '').slice(0, 80);
-        console.warn(`[panel] 404 ${req.method} ${req.originalUrl} from ${ip} ua="${ua}"`);
-    }
-
-    if (req.accepts('html')) {
-        res.render('errors/404', {
-            title: req.t ? req.t('errors.not_found') : 'Not Found',
-            activePage: 'error'
-        });
-    } else {
-        res.json({
-            success: false,
-            error: 'Not Found'
-        });
-    }
-});
-
-// 500 Server Error
-app.use((err, req, res, next) => {
-    logger.error('Server error:', err);
-    
-    res.status(err.status || 500);
-    
-    // Always return JSON for API routes
-    if (req.path.startsWith('/api/') || (req.headers['content-type'] && req.headers['content-type'].includes('application/json'))) {
-        return res.json({
-            success: false,
-            error: config.isProduction ? 'Internal Server Error' : err.message
-        });
-    }
-    
-    if (req.accepts('html')) {
-        res.render('errors/500', {
-            title: req.t ? req.t('errors.server_error') : 'Server Error',
-            activePage: 'error',
-            error: config.isProduction ? null : err.message
-        });
-    } else {
-        res.json({
-            success: false,
-            error: config.isProduction ? 'Internal Server Error' : err.message
-        });
-    }
-});
+// The server's routes, then the console's pages, then the error handlers
+mountRoutes(app, { routes, webUi });
 
 // ============ Startup ============
 
@@ -705,7 +609,9 @@ async function startServer() {
             }
         }, 60 * 60 * 1000); // Every hour
         scheduledBackupService.start();
-        
+        // Offline-time alert rules, checked once a minute
+        const stopAlertSweep = require('./services/alertRulesEngine').start();
+
         // ============ Periodic Online Status Sync ============
         const syncInterval = parseInt(process.env.STATUS_SYNC_INTERVAL, 10) || 15; // seconds
         const heartbeatStaleThreshold = parseInt(process.env.HEARTBEAT_STALE_THRESHOLD, 10) || 90; // seconds
@@ -743,7 +649,8 @@ async function startServer() {
             clearInterval(housekeepingInterval);
             clearInterval(statusSyncInterval);
             scheduledBackupService.stop();
-            
+            stopAlertSweep();
+
             const closePromises = [new Promise(r => server.close(r))];
             if (apiServer) {
                 closePromises.push(new Promise(r => apiServer.close(r)));

@@ -8,19 +8,24 @@ const { proxyToGo, safeSegment, assertSafeApiId } = require('../lib/goApiProxy')
 const { requireDeviceToken, requireTokenDeviceMatch } = require('../middleware/deviceAuth');
 
 // ---------------------------------------------------------------------------
-// Page routes
+// Whether the Go server offers fleet functions at all
 // ---------------------------------------------------------------------------
 
-router.get('/fleet', requireAuth, requirePermission('org.manage_devices'), (req, res) => {
-    const tab = req.query.tab || 'resources';
-    res.render('fleet', {
-        title: req.t('fleet.title'),
-        pageStyles: ['fleet'],
-        pageScripts: ['fleet', 'fleet-builder'],
-        currentPage: 'fleet',
-        breadcrumb: [{ label: req.t('fleet.title') }],
-        activeTab: tab
-    });
+/**
+ * GET /api/panel/fleet/availability → { success, available }
+ * A Go server without fleet handlers answers 404 for every /api/fleet path
+ * (BUGS.md P4). The Fleet page asks here first, so it can say so once
+ * instead of sending list requests that can only fail. When the answer is
+ * anything but 404 (including Go being down), available is true and the
+ * lists show their own errors.
+ */
+router.get('/api/panel/fleet/availability', requireAuth, requirePermission('org.manage_devices'), async (req, res) => {
+    try {
+        await apiClient({ method: 'GET', url: '/fleet/tasks' });
+        res.json({ success: true, available: true });
+    } catch (err) {
+        res.json({ success: true, available: err.response?.status !== 404 });
+    }
 });
 
 // ---------------------------------------------------------------------------

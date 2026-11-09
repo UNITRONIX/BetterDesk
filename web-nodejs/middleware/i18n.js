@@ -1,12 +1,10 @@
 /**
  * BetterDesk Console - i18n Middleware
- * Injects translation function and language info into templates
+ * Picks the request's language and gives it req.t()
  */
 
 const { manager } = require('../services/i18nService');
 const config = require('../config/config');
-const brandingService = require('../services/brandingService');
-const { escapeHtml } = require('../lib/escapeHtml');
 
 /**
  * Parse Accept-Language header
@@ -39,7 +37,7 @@ function parseAcceptLanguage(header) {
 
 /**
  * i18n middleware
- * Detects language and injects translation function
+ * Detects the language and sets req.lang and req.t
  */
 function i18nMiddleware(req, res, next) {
     // Language detection priority:
@@ -69,36 +67,9 @@ function i18nMiddleware(req, res, next) {
         });
     }
     
-    // Get language metadata
-    const langMeta = manager.getLanguageMeta(lang);
-    
-    // Inject into res.locals (available in EJS templates)
-    res.locals.lang = lang;
-    res.locals.isRtl = langMeta?.rtl || false;
-    res.locals.availableLanguages = manager.getAvailable();
-    res.locals.availableLanguageList = manager.getAvailableList();
-    res.locals.currentLanguage = langMeta;
-    res.locals.appVersion = config.appVersion;
-    
-    // Branding - inject dynamic app name and branding data
-    const branding = brandingService.getBranding();
-    res.locals.appName = branding.appName || config.appName;
-    res.locals.appDescription = branding.appDescription || 'BetterDesk Server Management';
-    res.locals.branding = branding;
-    res.locals.brandingRevision = brandingService.getBrandingRevision();
-    res.locals.themePalettes = brandingService.getThemePalettes();
-    
-    // Full translations object for client-side JS
-    res.locals.translations = manager.getMergedTranslations(lang);
-    
-    // Translation function
-    res.locals._ = (key, vars) => manager.translate(lang, key, vars);
-    res.locals.t = res.locals._; // Alias
-    res.locals.escapeHtml = escapeHtml;
-    
-    // Store on request object too
+    // The language and translation function for the request (answers, emails, logs)
     req.lang = lang;
-    req.t = res.locals._;
+    req.t = (key, vars) => manager.translate(lang, key, vars);
     
     next();
 }

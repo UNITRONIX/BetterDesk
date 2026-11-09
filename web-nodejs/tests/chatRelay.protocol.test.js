@@ -268,4 +268,37 @@ describe('Chat Relay Protocol', () => {
         expect(keyExchange.operator).toBe('operator1');
         expect(keyExchange.conversation_id).toBe(deviceId);
     });
+
+    // The chat page sends reactions; the relay used to drop them, so a click on
+    // a reaction did nothing for anyone
+    it('relays panel reactions to other panel operators and back to the sender', async () => {
+        const panelA = await connect('/ws/chat-operator/panel');
+        const panelB = await connect('/ws/chat-operator/panel');
+
+        const seenByB = waitForMessage(panelB, (msg) => msg.type === 'reaction');
+        const echoToA = waitForMessage(panelA, (msg) => msg.type === 'reaction');
+        panelA.send(JSON.stringify({
+            type: 'reaction',
+            conversation_id: 'group:demo0001',
+            message_id: '74',
+            emoji: '👍',
+        }));
+
+        const [b, a] = await Promise.all([seenByB, echoToA]);
+        for (const frame of [a, b]) {
+            expect(frame).toMatchObject({
+                conversation_id: 'group:demo0001',
+                message_id: '74',
+                emoji: '👍',
+                from: 'operator1',
+            });
+        }
+    });
+
+    it('drops reactions without a message or an emoji', async () => {
+        const panelA = await connect('/ws/chat-operator/panel');
+        const panelB = await connect('/ws/chat-operator/panel');
+        panelA.send(JSON.stringify({ type: 'reaction', conversation_id: 'x', message_id: '', emoji: '👍' }));
+        await expect(waitForMessage(panelB, (msg) => msg.type === 'reaction', 400)).rejects.toThrow('Timed out');
+    });
 });

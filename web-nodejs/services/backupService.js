@@ -60,7 +60,7 @@ async function createBackup() {
         _version: BACKUP_FORMAT_VERSION,
         _created: timestamp,
         _console_version: config.appVersion,
-        _backend: serverBackend.getActiveBackend(),
+        _backend: await serverBackend.getActiveBackend(),
         console: {
             settings,
             branding,
@@ -298,7 +298,7 @@ async function getBackupStats() {
     const stats = await db.getBackupStats();
     return {
         ...stats,
-        backend: serverBackend.getActiveBackend()
+        backend: await serverBackend.getActiveBackend()
     };
 }
 

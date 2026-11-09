@@ -25,7 +25,7 @@
 │  │ - WebRTC peer   │  │◄──────►│  │  auth, RBAC)    │◄──►│        │  │ Audio Capture       │  │
 │  │ - Clipboard     │  │  WS    │  ├─────────────────┤  WS│        │  │ (WASAPI/PulseAudio) │  │
 │  │ - File I/O      │  │signaling  │ Web Panel       │signaling    │  ├─────────────────────┤  │
-│  │ - Platform APIs │  │        │  │ (Node.js/EJS)   │    │        │  │ Rust Backend        │  │
+│  │ - Platform APIs │  │        │  │ (Node.js/Svelte)│    │        │  │ Rust Backend        │  │
 │  └─────────────────┘  │        │  └─────────────────┘    │        │  │ - WebRTC peer       │  │
 │                       │        │                         │        │  │ - Clipboard         │  │
 │  WebRTC (DTLS/SRTP)   │◄═════════════════════════════════════════►│  │ - File I/O          │  │

@@ -19,24 +19,29 @@ const db = require('../services/database');
 const jsonBody = express.json({ limit: '4kb' });
 
 /**
- * GET /pairing — code pairing page (operator).
- * Shown next to Generator → Activate agent, which uses QR codes.
+ * The address to suggest in the "Server address" field: the public client
+ * endpoint from Settings. Display only; the Go server reports the
+ * authoritative host when a code is minted.
  */
-router.get('/pairing', requireAuth, requirePermission('enrollment.approve'), (req, res) => {
-    let publicHost = '';
+function suggestedHost() {
     try {
         const endpoints = require('../services/rustDeskPublicEndpointsService');
         if (endpoints && typeof endpoints.getPublicEndpoints === 'function') {
             const resolved = endpoints.getPublicEndpoints();
-            publicHost = (resolved && (resolved.serverId || resolved.apiUrl)) || '';
+            return (resolved && (resolved.serverId || resolved.apiUrl)) || '';
         }
     } catch (_) {
-        // Display-only hint; the Go server reports the authoritative host on mint.
+        // No public endpoint configured: the field stays empty
     }
-    res.render('pairing', {
-        title: req.t('nav.pairing'),
-        suggested_host: publicHost,
-    });
+    return '';
+}
+
+/**
+ * GET /api/panel/pairing/host: the same suggested address for the new
+ * console, which can't read it from a rendered page.
+ */
+router.get('/api/panel/pairing/host', requireAuth, requirePermission('enrollment.approve'), (req, res) => {
+    res.json({ success: true, host: String(suggestedHost()) });
 });
 
 /** GET /api/panel/pairing/codes — active codes (no plaintext). */

@@ -87,36 +87,47 @@ async function generateDeviceReport(opts) {
 
 async function generateActivityReport(opts) {
     const db = getAdapter();
-    const summaries = await db.getAllActivitySummaries();
+    const range = { from: opts.from, to: opts.to };
+    // activity_summaries: one row per device and report, times in seconds
+    const summaries = await db.getAllActivitySummaries(range);
 
-    let totalActiveMs = 0;
-    let totalIdleMs = 0;
-    const appUsage = {};
+    let totalActiveSecs = 0;
+    let totalIdleSecs = 0;
+    const deviceIds = new Set();
 
     for (const s of summaries) {
-        totalActiveMs += s.total_active_ms || 0;
-        totalIdleMs += s.total_idle_ms || 0;
-        // Aggregate top apps if available
+        totalActiveSecs += Number(s.total_active_secs) || 0;
+        totalIdleSecs += Number(s.idle_seconds) || 0;
+        if (s.device_id) deviceIds.add(s.device_id);
+    }
+
+    // Per-app time lives in activity_sessions; add up each device's top apps
+    const appUsage = {};
+    for (const deviceId of deviceIds) {
         let apps = [];
-        if (s.top_apps) {
-            apps = typeof s.top_apps === 'string' ? JSON.parse(s.top_apps) : s.top_apps;
-        }
-        for (const app of apps) {
-            const name = app.app || app.name || 'Unknown';
-            appUsage[name] = (appUsage[name] || 0) + (app.duration_ms || app.total_ms || 0);
+        try {
+            apps = await db.getTopApps(deviceId, range);
+        } catch (_) { /* ignore */ }
+        for (const app of apps || []) {
+            const name = app.app_name || 'Unknown';
+            const entry = appUsage[name] || (appUsage[name] = {
+                name, category: app.category || '', total_secs: 0, sessions: 0, devices: 0,
+            });
+            entry.total_secs += Number(app.total_secs) || 0;
+            entry.sessions += Number(app.session_count) || 0;
+            entry.devices += 1;
         }
     }
 
-    // Sort top apps by usage
-    const topApps = Object.entries(appUsage)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 20)
-        .map(([name, ms]) => ({ name, total_ms: ms }));
+    const topApps = Object.values(appUsage)
+        .sort((a, b) => b.total_secs - a.total_secs)
+        .slice(0, 20);
 
     return {
-        total_devices_with_activity: summaries.length,
-        total_active_ms: totalActiveMs,
-        total_idle_ms: totalIdleMs,
+        devices_with_activity: deviceIds.size,
+        daily_reports: summaries.length,
+        total_active_secs: totalActiveSecs,
+        total_idle_secs: totalIdleSecs,
         top_applications: topApps,
     };
 }
@@ -243,14 +254,13 @@ async function generateInventoryReport(opts) {
     let totalRamMb = 0;
     let deviceCount = inventories.length;
 
+    // getAllInventories() returns { device_id, hardware: {...}, software: {...} }
     for (const inv of inventories) {
-        let data = inv;
-        if (typeof inv.data === 'string') {
-            try { data = { ...inv, ...JSON.parse(inv.data) }; } catch (_) {}
-        }
-        const os = data.os_name || data.os || 'Unknown';
+        const hw = (inv && typeof inv.hardware === 'object' && inv.hardware) || {};
+        const os = hw.os_name || inv.os_name || inv.os || 'Unknown';
         osCounts[os] = (osCounts[os] || 0) + 1;
-        totalRamMb += data.ram_total_mb || 0;
+        const ramBytes = Number(hw.memory && hw.memory.total_bytes) || 0;
+        totalRamMb += ramBytes ? Math.round(ramBytes / 1048576) : (Number(inv.ram_total_mb) || 0);
     }
 
     return {

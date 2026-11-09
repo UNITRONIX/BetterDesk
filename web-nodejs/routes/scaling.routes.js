@@ -111,26 +111,13 @@ function sanitizeRule(body, existing) {
     out.fallback = String(body.fallback || 'master').trim();
     const priority = parseInt(body.priority, 10);
     out.priority = Number.isFinite(priority) ? priority : 10;
-    out.enabled = body.enabled !== false;
+    // An edit without the switch keeps the rule's state; a new rule is on
+    out.enabled = body.enabled === undefined
+        ? (existing ? existing.enabled !== false : true)
+        : body.enabled !== false;
     out.updated_at = new Date().toISOString();
     return out;
 }
-
-// ---------------------------------------------------------------------------
-// Page route
-// ---------------------------------------------------------------------------
-
-router.get('/scaling', requireAuth, requirePermission('server.config'), (req, res) => {
-    const tab = req.query.tab || 'overview';
-    res.render('scaling', {
-        title: req.t('scaling.title'),
-        pageStyles: ['scaling'],
-        pageScripts: ['scaling'],
-        currentPage: 'scaling',
-        breadcrumb: [{ label: req.t('scaling.title') }],
-        activeTab: tab
-    });
-});
 
 // ---------------------------------------------------------------------------
 // Relay Nodes API — local persistence

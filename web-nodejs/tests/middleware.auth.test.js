@@ -5,7 +5,7 @@
 const request = require('supertest');
 const { createTestApp } = require('./helpers');
 
-const { requireAuth, requireRole, guestOnly, requireRdClientAuth, rdClientGuestOnly, normalizeRdClientReturnUrl, isSafeRdClientReturnUrl } = require('../middleware/auth');
+const { requireAuth, requireRole, requireRdClientAuth, normalizeRdClientReturnUrl, isSafeRdClientReturnUrl } = require('../middleware/auth');
 const { apiLimiter, rdClientPageLimiter } = require('../middleware/rateLimiter');
 
 describe('Auth Middleware', () => {
@@ -31,7 +31,8 @@ describe('Auth Middleware', () => {
             const res = await request(app).get('/dashboard');
 
             expect(res.status).toBe(302);
-            expect(res.headers.location).toBe('/login?expired=1');
+            // The way back, no "expired" on a first visit (tests/authLoginRedirect.test.js)
+            expect(res.headers.location).toBe('/login?return=%2Fdashboard');
         });
 
         it('should pass through for authenticated requests', async () => {
@@ -113,36 +114,6 @@ describe('Auth Middleware', () => {
         });
     });
 
-    describe('guestOnly', () => {
-        it('should allow unauthenticated users', async () => {
-            const app = createTestApp();
-            app.get('/login', guestOnly, (_req, res) => {
-                res.send('login page');
-            });
-
-            const res = await request(app).get('/login');
-
-            expect(res.status).toBe(200);
-        });
-
-        it('should redirect authenticated users to dashboard', async () => {
-            const app = createTestApp();
-            app.use((req, _res, next) => {
-                req.session.userId = 1;
-                req.session.user = { id: 1, username: 'admin', role: 'admin' };
-                next();
-            });
-            app.get('/login', guestOnly, (_req, res) => {
-                res.send('login page');
-            });
-
-            const res = await request(app).get('/login');
-
-            expect(res.status).toBe(302);
-            expect(res.headers.location).toBe('/');
-        });
-    });
-
     describe('requireRdClientAuth', () => {
         it('should redirect unauthenticated HTML requests to /remote/login', async () => {
             const app = createTestApp();
@@ -200,25 +171,6 @@ describe('Auth Middleware', () => {
             expect(normalizeRdClientReturnUrl('/remote/dev1?transport=cdap')).toBe('/remote/dev1?transport=cdap');
             expect(normalizeRdClientReturnUrl('https://evil.example/remote')).toBeNull();
             expect(normalizeRdClientReturnUrl('/remote/login?return=%2Fremote')).toBeNull();
-        });
-    });
-
-    describe('rdClientGuestOnly', () => {
-        it('should redirect authenticated operator to return URL', async () => {
-            const app = createTestApp();
-            app.use((req, _res, next) => {
-                req.session.userId = 2;
-                req.session.user = { id: 2, username: 'operator1', role: 'operator' };
-                next();
-            });
-            app.get('/remote/login', rdClientGuestOnly, (_req, res) => {
-                res.send('login');
-            });
-
-            const res = await request(app).get('/remote/login?return=%2Fremote%2Fdev1');
-
-            expect(res.status).toBe(302);
-            expect(res.headers.location).toBe('/remote/dev1');
         });
     });
 });

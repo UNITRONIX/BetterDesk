@@ -35,80 +35,6 @@ describe('mobile i18n keys', () => {
     }
 });
 
-function loadDeviceCapabilities(opts) {
-    opts = opts || {};
-    const width = opts.width !== undefined ? opts.width : 400;
-    const window = {
-        innerWidth: width,
-        innerHeight: opts.height || 800,
-        navigator: { maxTouchPoints: opts.touch ? 5 : 0 },
-        matchMedia: opts.matchMedia || (() => ({ matches: false, media: 'not all', addEventListener: () => {} })),
-        visualViewport: opts.visualViewport || null,
-        addEventListener: () => {},
-        dispatchEvent: () => true
-    };
-    const sandbox = {
-        window,
-        document: {
-            readyState: 'complete',
-            body: { classList: { toggle: () => {}, contains: () => false } },
-            documentElement: { clientWidth: width },
-            addEventListener: () => {}
-        },
-        DeviceCapabilities: null
-    };
-    sandbox.global = window;
-    const code = fs.readFileSync(path.join(__dirname, '../public/js/device-capabilities.js'), 'utf8');
-    vm.runInNewContext(code, sandbox);
-    return sandbox.window.DeviceCapabilities;
-}
-
-describe('DeviceCapabilities', () => {
-    it('exposes breakpoint constants and helpers', () => {
-        const DC = loadDeviceCapabilities({ width: 400, touch: true });
-        assert.strictEqual(DC.BP_PHONE, 767);
-        assert.strictEqual(DC.isPhone(), true);
-        assert.strictEqual(DC.isTablet(), false);
-    });
-
-    it('isPhone() is false when width is 0 (pre-layout / WebView)', () => {
-        const DC = loadDeviceCapabilities({ width: 0 });
-        assert.strictEqual(DC.isPhone(), false);
-    });
-
-    it('isPhone() is false on desktop with fine pointer and hover', () => {
-        const DC = loadDeviceCapabilities({
-            width: 1920,
-            matchMedia: (q) => ({
-                matches: q === '(hover: hover) and (pointer: fine)',
-                media: q,
-                addEventListener: () => {}
-            })
-        });
-        assert.strictEqual(DC.isPhone(), false);
-    });
-
-    it('isPhone() is true on small touch viewport without hover', () => {
-        const DC = loadDeviceCapabilities({ width: 400, touch: true });
-        assert.strictEqual(DC.isPhone(), true);
-    });
-
-    it('isPhone() is false on tablet width', () => {
-        const DC = loadDeviceCapabilities({ width: 900, touch: true });
-        assert.strictEqual(DC.isPhone(), false);
-        assert.strictEqual(DC.isTablet(), true);
-    });
-
-    it('getWidth uses visualViewport when innerWidth is 0', () => {
-        const DC = loadDeviceCapabilities({
-            width: 0,
-            visualViewport: { width: 820, height: 600, addEventListener: () => {} }
-        });
-        assert.strictEqual(DC.isPhone(), false);
-        assert.strictEqual(DC.isTablet(), true);
-    });
-});
-
 describe('RDTouch tablet input', () => {
     function loadTouch() {
         const sandbox = {
@@ -126,7 +52,7 @@ describe('RDTouch tablet input', () => {
             },
         };
         const code = fs.readFileSync(
-            path.join(__dirname, '../public/js/rdclient/touch.js'),
+            path.join(__dirname, '../../web-ui/static/rdclient/touch.js'),
             'utf8'
         );
         vm.runInNewContext(code + '\nthis.RDTouch = RDTouch;', sandbox);
@@ -200,7 +126,7 @@ describe('RDRenderer mobile resize', () => {
         };
         sandbox.window = sandbox;
         const code = fs.readFileSync(
-            path.join(__dirname, '../public/js/rdclient/renderer.js'),
+            path.join(__dirname, '../../web-ui/static/rdclient/renderer.js'),
             'utf8'
         );
         vm.runInNewContext(code, sandbox);

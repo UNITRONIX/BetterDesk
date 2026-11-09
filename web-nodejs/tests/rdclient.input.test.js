@@ -67,9 +67,9 @@ function makeInputHarness(extraGlobals) {
     };
 
     const sandbox = loadBrowserScripts([
-        'public/js/rdclient/keyboard-scancode.js',
-        'public/js/rdclient/keyboard-encoder.js',
-        'public/js/rdclient/input.js',
+        '../web-ui/static/rdclient/keyboard-scancode.js',
+        '../web-ui/static/rdclient/keyboard-encoder.js',
+        '../web-ui/static/rdclient/input.js',
     ], {
         document,
         window: win,
@@ -114,7 +114,7 @@ describe('RDKeyboardScancode', () => {
     let RDKeyboardScancode;
 
     beforeAll(() => {
-        const sandbox = loadBrowserScripts(['public/js/rdclient/keyboard-scancode.js'], {});
+        const sandbox = loadBrowserScripts(['../web-ui/static/rdclient/keyboard-scancode.js'], {});
         RDKeyboardScancode = sandbox.RDKeyboardScancode;
     });
 
@@ -129,8 +129,8 @@ describe('RDKeyboardEncoder parity', () => {
 
     beforeAll(() => {
         const sandbox = loadBrowserScripts([
-            'public/js/rdclient/keyboard-scancode.js',
-            'public/js/rdclient/keyboard-encoder.js',
+            '../web-ui/static/rdclient/keyboard-scancode.js',
+            '../web-ui/static/rdclient/keyboard-encoder.js',
         ], {});
         RDKeyboardEncoder = sandbox.RDKeyboardEncoder;
     });
@@ -284,6 +284,36 @@ describe('RDKeyboardEncoder parity', () => {
         expect(evt.chr).toBe(65);
         expect(evt.modifiers).not.toContain(3);
         expect(evt.modifiers).not.toContain(29);
+    });
+});
+
+describe('RDInput keys on viewer controls', () => {
+    it('sends keys while the remote screen has focus', () => {
+        const sent = [];
+        const harness = makeInputHarness({});
+        const input = harness.makeInput((msg) => sent.push(msg));
+        input.start(); // focuses the canvas
+        let prevented = false;
+        input._handleKeyDown(keyEvt({ code: 'Enter', key: 'Enter', preventDefault() { prevented = true; } }));
+        expect(sent.some((m) => m.keyEvent)).toBe(true);
+        expect(prevented).toBe(true);
+    });
+
+    it('leaves Enter, Space and arrows to a focused tab or button', () => {
+        const sent = [];
+        const harness = makeInputHarness({});
+        const input = harness.makeInput((msg) => sent.push(msg));
+        input.start();
+        for (const el of [
+            { tagName: 'BUTTON', getAttribute: () => null },
+            { tagName: 'DIV', getAttribute: (n) => (n === 'role' ? 'tab' : null) },
+        ]) {
+            harness.document.activeElement = el;
+            let prevented = false;
+            input._handleKeyDown(keyEvt({ code: 'ArrowRight', key: 'ArrowRight', preventDefault() { prevented = true; } }));
+            expect(prevented).toBe(false);
+        }
+        expect(sent.filter((m) => m.keyEvent)).toHaveLength(0);
     });
 });
 
@@ -688,7 +718,7 @@ describe('RDInput keyboard parity (RustDesk contract)', () => {
     });
 
     it('maps Delete and Pause to distinct Linux scancodes', () => {
-        const sc = loadBrowserScripts(['public/js/rdclient/keyboard-scancode.js']);
+        const sc = loadBrowserScripts(['../web-ui/static/rdclient/keyboard-scancode.js']);
         const codeToScancode = sc.RDKeyboardScancode.codeToScancode;
         expect(codeToScancode('Delete', 'Linux')).toBe(111);
         expect(codeToScancode('Pause', 'Linux')).toBe(119);

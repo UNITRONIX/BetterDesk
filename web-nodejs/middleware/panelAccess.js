@@ -97,10 +97,10 @@ function panelAccessGuard(req, res, next) {
                 code: 'panel_access_policy_unavailable',
             });
         }
-        return res.status(503).render('errors/500', {
-            title: 'Service unavailable',
-            message: 'Panel access policy unavailable',
-        });
+        // The console's error page (lib/webUi.js), or plain text without a build
+        const message = 'Panel access policy unavailable';
+        if (typeof res.sendErrorPage === 'function' && res.sendErrorPage(500, { status: 503, message })) return undefined;
+        return res.status(503).type('text').send(message);
     }
     if (accessAllows(req.panelAccessPolicy, rule.section, getRequiredLevel(req))) return next();
     if (req.path.startsWith('/api/')) {
@@ -110,13 +110,13 @@ function panelAccessGuard(req, res, next) {
             code: 'panel_access_denied',
         });
     }
-    return res.status(403).render('errors/403', {
-        title: 'Forbidden',
-        message: 'You do not have permission to access this panel section',
-    });
+    const message = 'You do not have permission to access this panel section';
+    if (typeof res.sendErrorPage === 'function' && res.sendErrorPage(403, { message })) return undefined;
+    return res.status(403).type('text').send(message);
 }
 
 module.exports = {
+    ROUTE_RULES,
     findRule,
     getRequiredLevel,
     panelAccessGuard,

@@ -43,7 +43,7 @@ function loadLocalFiles() {
     sandbox.window = Object.assign(sandbox.window, sandbox);
     vm.runInNewContext(
         fs.readFileSync(
-            path.join(__dirname, '..', 'public/js/rdclient/local-files.js'),
+            path.join(__dirname, '..', '../web-ui/static/rdclient/local-files.js'),
             'utf8'
         ),
         sandbox,
@@ -95,7 +95,7 @@ describe('RDCompress.normalizeBytes string trap', () => {
         const sandbox = { console, Uint8Array, ArrayBuffer };
         vm2.runInNewContext(
             fs2.readFileSync(
-                path.join(__dirname, '..', 'public/js/rdclient/compress.js'),
+                path.join(__dirname, '..', '../web-ui/static/rdclient/compress.js'),
                 'utf8'
             ) + '\nglobalThis.RDCompress = RDCompress;',
             sandbox,

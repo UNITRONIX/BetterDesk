@@ -31,6 +31,9 @@ function lanRegistrationToNotification(registration) {
         kind: 'registration',
         source: 'lan',
         device_id: deviceId,
+        hostname: String(registration.hostname || ''),
+        platform: String(registration.platform || ''),
+        ip: String(registration.ip_address || ''),
         status: 'pending',
     };
 }
@@ -49,6 +52,9 @@ function enrollmentToNotification(enrollment) {
         kind: 'registration',
         source: 'enrollment',
         device_id: deviceId,
+        hostname: String(enrollment.hostname || ''),
+        platform: String(enrollment.platform || ''),
+        ip: String(enrollment.ip || ''),
         status: 'pending',
     };
 }

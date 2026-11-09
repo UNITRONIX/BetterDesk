@@ -10,7 +10,9 @@ BetterDesk can update itself through **Settings → Updates** in the web panel, 
 2. Open **Settings → Updates**
 3. Review available version and changelog preview
 4. Run **Preflight** (checks disk space, build tools, server binary)
-5. Click **Install** — panel downloads GitHub changes, merges `.env` keys, rebuilds Go server if needed, restarts services
+5. Click **Install** — panel downloads GitHub changes, merges `.env` keys, rebuilds Go server if needed, rebuilds the new web console (`web-ui/`, needs Node.js 22.17 or newer) when its sources changed, restarts services
+
+If the web console build fails, the update still completes and the console keeps its previous build; the log is in `data/web-ui-build.log` in the console folder, and the next update tries the build again.
 
 ### What is preserved
 

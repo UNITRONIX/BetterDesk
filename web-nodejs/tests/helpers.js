@@ -5,12 +5,10 @@
 
 const express = require('express');
 const session = require('express-session');
-const path = require('path');
-const { escapeHtml } = require('../lib/escapeHtml');
 
 /**
  * Create a minimal Express app for testing routes.
- * Mocks session, i18n, CSRF, and template engine.
+ * Mocks session and i18n.
  */
 function createTestApp() {
     const app = express();
@@ -29,13 +27,8 @@ function createTestApp() {
     // Mock i18n - req.t() returns the key
     app.use((req, res, next) => {
         req.t = (key) => key;
-        res.locals.escapeHtml = escapeHtml;
         next();
     });
-
-    // EJS view engine (templates not rendered in most API tests)
-    app.set('view engine', 'ejs');
-    app.set('views', path.join(__dirname, '..', 'views'));
 
     return app;
 }
@@ -77,6 +70,7 @@ function createMockDb() {
         getLatestPeerMetric: jest.fn().mockResolvedValue(null),
         getPeerMetrics: jest.fn().mockResolvedValue([]),
         getDeviceGroupsForPeer: jest.fn().mockResolvedValue([]),
+        getDeviceGroupsForPeers: jest.fn().mockResolvedValue(new Map()),
         getFolders: jest.fn().mockResolvedValue([]),
         createFolder: jest.fn().mockResolvedValue({ id: 1 }),
         updateFolder: jest.fn().mockResolvedValue(undefined),

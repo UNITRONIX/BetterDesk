@@ -1,12 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
-  <defs>
-    <linearGradient id="bdMark" x1="6" y1="4" x2="26" y2="28" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#58a6ff"/>
-      <stop offset="1" stop-color="#a3e635"/>
-    </linearGradient>
-  </defs>
-  <rect width="32" height="32" rx="7" fill="#0d1117"/>
-  <text x="16" y="16" text-anchor="middle" dominant-baseline="central"
-        font-family="Arial Black, Arial, Helvetica, sans-serif"
-        font-size="23" font-weight="800" fill="url(#bdMark)">B</text>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="9.5 9.5 45 45"><style>.s{fill:#1f6feb}.c{fill:#4d8f06}.o{fill:#0f9e96}@media (prefers-color-scheme: dark){.s{fill:#58a6ff}.c{fill:#a3e635}.o{fill:#3fd0c4}}</style><defs><clipPath id="bdf"><circle cx="38" cy="26" r="16"/></clipPath></defs><rect class="s" x="10" y="22" width="32" height="32" rx="10"/><circle class="c" cx="38" cy="26" r="16"/><rect class="o" x="10" y="22" width="32" height="32" rx="10" clip-path="url(#bdf)"/></svg>

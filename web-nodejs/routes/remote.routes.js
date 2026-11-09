@@ -1,6 +1,8 @@
 /**
  * BetterDesk Console - Remote Desktop Routes
- * Serves the web-based remote desktop viewer page (RustDesk compat + BetterDesk native)
+ * The data the web remote client asks for (RustDesk compat + BetterDesk
+ * native) and its old aliases. The pages (/remote, /remote/:deviceId,
+ * /remote/login, /remote/guest) are in the console (web-ui).
  */
 
 const express = require('express');
@@ -9,7 +11,6 @@ const db = require('../services/database');
 const logger = require('../lib/logger').child('REMOTE');
 const {
     requireRdClientAuth,
-    rdClientGuestOnly,
     normalizeRdClientReturnUrl,
     requestHasPermission,
 } = require('../middleware/auth');
@@ -25,6 +26,7 @@ const {
     attachGuestGrant,
     peerAllowedByGrant,
 } = require('../middleware/guestAccess');
+const devMockRemote = require('../lib/devMockRemote');
 
 const DEFAULT_CONNECTION_SNAPSHOT = {
     p2p_first: true,
@@ -97,9 +99,10 @@ async function requireRemoteAccess(req, res, next) {
         }
         if (queryToken) {
             logger.info('Guest remote deny (explicit query, invalid/expired/not allowed):', deviceId);
-            return res.status(403).render('errors/403', {
-                title: req.t('guest_access.invalid_title', 'Invalid guest link'),
-                message: req.t('guest_access.device_denied', 'This guest link is invalid, expired, or does not allow this device.'),
+            return res.status(403).json({
+                success: false,
+                code: 'guest_denied',
+                error: req.t('guest_access.device_denied', 'This guest link is invalid, expired, or does not allow this device.'),
             });
         }
         logger.debug('Stale guest cookie ignored; falling through to panel auth');
@@ -124,12 +127,15 @@ async function requireRemoteAccess(req, res, next) {
     return requireRdClientAuth('device.connect')(req, res, next);
 }
 
+// Dev-only mock session script (404 unless BD_DEV_MOCK_REMOTE=1)
+router.use(devMockRemote.router);
+
 // Lazy-loaded relay helper — avoid circular require at module load time
 function getRemoteRelay() {
     try { return require('../services/remoteRelay'); } catch { return null; }
 }
 
-// Resolve server public key on each viewer render (file may be stale/wrong;
+// Resolve server public key on each viewer request (file may be stale/wrong;
 // fall back to live Go /api/server-key — issue #340).
 async function resolveServerPubKey() {
     try {
@@ -141,84 +147,119 @@ async function resolveServerPubKey() {
 }
 
 /**
- * GET /remote/login - RdClient operator login (when panel session expired)
+ * What the remote client's pages without a session may show: the console's
+ * name and logo, the languages and a CSRF token for the sign-in form. No
+ * user data.
  */
-router.get('/remote/login', rdClientPageLimiter, rdClientGuestOnly, (req, res) => {
-    const returnUrl = normalizeRdClientReturnUrl(req.query.return) || '/remote';
-    const sessionExpired = req.query.expired === '1' || req.query.expired === 'true';
-    res.render('rdclient-login', {
-        title: req.t('rdclient_login.title'),
-        activePage: 'remote',
-        returnUrl,
-        sessionExpired,
+function publicPageInfo(req, res) {
+    let branding = {};
+    let languages = [];
+    let appVersion = '';
+    try { branding = require('../services/brandingService').getBranding() || {}; } catch { branding = {}; }
+    try {
+        languages = require('../services/i18nService').manager.getAvailableList().map((l) => ({
+            code: l.code,
+            name: l.name,
+            native: l.native || l.name,
+            flag: l.flag || '',
+            rtl: !!l.rtl
+        }));
+    } catch { languages = []; }
+    try { appVersion = require('../config/config').appVersion || ''; } catch { appVersion = ''; }
+    return {
+        appName: branding.appName || 'BetterDesk',
+        appVersion,
+        branding: {
+            logoType: branding.logoType || null,
+            logoIcon: branding.logoIcon || '',
+            logoSvg: branding.logoSvg || '',
+            logoUrl: branding.logoUrl || '',
+            logoText: branding.logoText || '',
+            logoTextAccent: branding.logoTextAccent || ''
+        },
+        languages,
+        csrfToken: res.locals.csrfToken || ''
+    };
+}
+
+/**
+ * GET /api/remote/login-info?return=<path> - The new /remote/login page's data:
+ * where to go after sign-in (a path under /remote, as normalizeRdClientReturnUrl
+ * allows) and whether this browser is signed in with device.connect already
+ * (the page sends those straight on).
+ */
+router.get('/api/remote/login-info', rdClientPageLimiter, (req, res) => {
+    const role = req.session && req.session.user && req.session.user.role;
+    const signedIn = !!(req.session && req.session.userId && role !== 'pro' && requestHasPermission(req, 'device.connect'));
+    res.setHeader('Cache-Control', 'no-store');
+    res.json({
+        success: true,
+        signedIn,
+        returnUrl: normalizeRdClientReturnUrl(typeof req.query.return === 'string' ? req.query.return : '') || '/remote',
+        ...publicPageInfo(req, res)
     });
 });
 
 /**
- * GET /remote/guest - Guest Access Link entry (allowlist mini RdClient, no Console).
+ * GET /api/remote/guest-info?t=<token> - The new /remote/guest page's data:
+ * the token (query or guest cookie) must be valid on the Go server; a valid
+ * one is stored in the guest cookie.
  */
-router.get('/remote/guest', rdClientPageLimiter, async (req, res) => {
+router.get('/api/remote/guest-info', rdClientPageLimiter, async (req, res) => {
+    res.setHeader('Cache-Control', 'no-store');
+    const page = publicPageInfo(req, res);
     const token = getGuestToken(req);
     if (!token) {
-        return res.status(400).render('errors/403', {
-            title: req.t('guest_access.invalid_title', 'Invalid guest link'),
-            message: req.t('guest_access.missing_token', 'This guest link is missing a token.'),
+        return res.status(400).json({
+            success: false,
+            code: 'missing_token',
+            error: req.t('guest_access.missing_token', 'This guest link is missing a token.'),
+            page
         });
     }
     try {
-        const result = await betterdeskApi.apiClient.get('/guest/access-links/peers', {
-            params: { token },
-        });
+        const result = await betterdeskApi.apiClient.get('/guest/access-links/peers', { params: { token } });
         const data = result.data || {};
         if (!data.valid) {
-            logger.info('Guest peers invalid/expired');
-            return res.status(403).render('errors/403', {
-                title: req.t('guest_access.invalid_title', 'Invalid guest link'),
-                message: data.error || req.t('guest_access.expired', 'This guest link is invalid or expired.'),
+            return res.status(403).json({
+                success: false,
+                code: 'invalid',
+                error: data.error || req.t('guest_access.expired', 'This guest link is invalid or expired.'),
+                page
             });
         }
         setGuestCookie(res, token, data.expires_at);
-        const guestMeta = {
-            view_only: !!data.view_only,
-            expires_at: data.expires_at || '',
-            label: data.label || '',
-            devices: data.devices || [],
-        };
-        try {
-            res.render('remote-guest', {
-                title: req.t('guest_access.title', 'Guest Remote'),
-                activePage: 'remote',
-                guestToken: token,
-                guestMeta,
-            });
-        } catch (renderErr) {
-            logger.error('Guest remote-guest render failed:', renderErr);
-            if (!res.headersSent) {
-                res.status(500).type('text/plain').send(
-                    'Guest Remote page failed to render. Check console logs (LOG_LEVEL=info) and try again after updating.'
-                );
-            }
-        }
+        return res.json({
+            success: true,
+            token,
+            guest: {
+                view_only: !!data.view_only,
+                expires_at: data.expires_at || '',
+                label: data.label || '',
+                devices: Array.isArray(data.devices) ? data.devices : []
+            },
+            page
+        });
     } catch (err) {
-        logger.warn('Guest /remote/guest peers/API error:', err.response?.data?.error || err.message);
-        if (!res.headersSent) {
-            return res.status(403).render('errors/403', {
-                title: req.t('guest_access.invalid_title', 'Invalid guest link'),
-                message: err.response?.data?.error || err.message,
-            });
-        }
+        logger.warn('Guest guest-info peers/API error:', err.response?.data?.error || err.message);
+        return res.status(403).json({
+            success: false,
+            code: 'invalid',
+            error: err.response?.data?.error || req.t('guest_access.expired', 'This guest link is invalid or expired.'),
+            page
+        });
     }
 });
 
 /**
- * GET /remote - RdClient operator dashboard (device list + connect)
+ * GET /api/remote/desk - The new remote dashboard asks this first: it needs
+ * device.connect, and it drops a guest cookie left from a guest link so the
+ * console session is used from here on.
  */
-router.get('/remote', rdClientPageLimiter, requireRdClientAuth('device.connect'), (req, res) => {
+router.get('/api/remote/desk', rdClientPageLimiter, requireRdClientAuth('device.connect'), (req, res) => {
     clearGuestCookie(res);
-    res.render('remote-dashboard', {
-        title: req.t('remote_dashboard.title'),
-        activePage: 'remote',
-    });
+    res.setHeader('Cache-Control', 'no-store');
+    res.json({ success: true });
 });
 
 /** Legacy bottom-nav / bookmarks used this path; keep a permanent redirect. */
@@ -227,13 +268,15 @@ router.get('/remote-dashboard', (_req, res) => {
 });
 
 /**
- * GET /remote/:deviceId - Unified remote desktop viewer (single entry point).
+ * Everything the viewer (/api/remote/viewer/:deviceId) needs for one
+ * device, after requireRemoteAccess let the request through.
+ * Returns { status: 400 | 404 } when there is nothing to show.
  */
-router.get('/remote/:deviceId', rdClientPageLimiter, requireRemoteAccess, async (req, res) => {
+async function resolveViewer(req) {
     const deviceId = req.params.deviceId;
 
     if (!deviceId || deviceId === 'login' || !/^[A-Za-z0-9_-]{3,64}$/.test(deviceId)) {
-        return res.redirect('/devices');
+        return { status: 400 };
     }
 
     const isRemoteTarget = deviceId.startsWith('rt_');
@@ -245,6 +288,9 @@ router.get('/remote/:deviceId', rdClientPageLimiter, requireRemoteAccess, async 
     } catch {
         // Database lookup failure is non-blocking - viewer can still work
     }
+    // A remote target's protocol and settings come from its record: without
+    // one there is nothing to connect to
+    if (isRemoteTarget && !device) return { status: 404 };
 
     let isOsAgent = false;
     let isCdapConnected = false;
@@ -301,23 +347,62 @@ router.get('/remote/:deviceId', rdClientPageLimiter, requireRemoteAccess, async 
         guest_peer_ids: req.guestGrant && Array.isArray(req.guestGrant.peer_ids) ? req.guestGrant.peer_ids : [],
     };
 
-    res.render('remote', {
-        title: `${req.t('remote.title')} - ${deviceId}`,
-        activePage: 'remote',
-        deviceId: deviceId,
-        device: device || { id: deviceId, hostname: '', platform: '', note: '' },
+    return {
+        status: 200,
+        deviceId,
+        isRemoteTarget,
+        device,
+        capabilities,
         serverPubKey: await resolveServerPubKey(),
         connection: await resolveConnectionSnapshot(),
-        capabilities,
         guestToken: req.guestToken || getGuestTokenFromQuery(req) || '',
-        layout: 'viewer'
+        mockRemote: devMockRemote.forRequest(req, process.env, deviceId),
+    };
+}
+
+/**
+ * GET /api/remote/viewer/:deviceId - The new viewer's data (web-ui), with the
+ * viewer's access rules: a console session with device.connect
+ * (remote_target.connect for rt_ targets), a guest grant for this device or
+ * a mesh share. mockRemote is set only with BD_DEV_MOCK_REMOTE=1, for ?mock=1 or a seeded demo device.
+ */
+router.get('/api/remote/viewer/:deviceId', rdClientPageLimiter, requireRemoteAccess, async (req, res) => {
+    const v = await resolveViewer(req);
+    res.setHeader('Cache-Control', 'no-store');
+    if (v.status === 400) {
+        return res.status(400).json({ success: false, code: 'invalid_id', error: 'Invalid device ID' });
+    }
+    if (v.status === 404) {
+        return res.status(404).json({ success: false, code: 'not_found', error: req.t('errors.not_found_message') });
+    }
+    const d = v.device || {};
+    const user = req.session && req.session.userId && req.session.user ? req.session.user : null;
+    res.json({
+        success: true,
+        deviceId: v.deviceId,
+        device: {
+            name: d.display_name || d.hostname || (v.isRemoteTarget ? d.name || '' : ''),
+            platform: d.platform || d.os || ''
+        },
+        capabilities: v.capabilities,
+        serverPubKey: v.serverPubKey,
+        connection: v.connection,
+        guestToken: v.guestToken,
+        mockRemote: v.mockRemote,
+        user: user
+            ? { id: user.id != null ? user.id : req.session.userId, name: user.display_name || user.username || '' }
+            : null,
+        // The work report after a billed session needs billing.reports (its API does)
+        workReports: !!user && requestHasPermission(req, 'billing.reports'),
+        csrfToken: res.locals.csrfToken || ''
     });
 });
 
 /**
- * GET /remote-cdap/:deviceId - Legacy alias, redirects to unified entry.
+ * GET /remote-cdap/:deviceId - Legacy alias, redirects to unified entry
+ * (the viewer's data endpoint checks access).
  */
-router.get('/remote-cdap/:deviceId', rdClientPageLimiter, requireRdClientAuth('device.connect'), (req, res) => {
+router.get('/remote-cdap/:deviceId', rdClientPageLimiter, (req, res) => {
     const deviceId = req.params.deviceId;
     if (deviceId && /^[A-Za-z0-9_-]{3,64}$/.test(deviceId)) {
         return res.redirect(`/remote/${encodeURIComponent(deviceId)}?transport=cdap`);
@@ -327,8 +412,9 @@ router.get('/remote-cdap/:deviceId', rdClientPageLimiter, requireRdClientAuth('d
 
 /**
  * GET /remote-desktop/:deviceId - Legacy route, redirects to unified /remote/:deviceId
+ * (the viewer's data endpoint checks access).
  */
-router.get('/remote-desktop/:deviceId', rdClientPageLimiter, requireRdClientAuth('device.connect'), (req, res) => {
+router.get('/remote-desktop/:deviceId', rdClientPageLimiter, (req, res) => {
     const deviceId = req.params.deviceId;
     if (deviceId && /^[A-Za-z0-9_-]{3,64}$/.test(deviceId)) {
         return res.redirect(`/remote/${encodeURIComponent(deviceId)}`);

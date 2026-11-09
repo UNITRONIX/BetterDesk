@@ -209,6 +209,12 @@ cd /usr/local/BetterDeskConsole
 npm ci --omit=dev
 # Configure .env (RUSTDESK_DIR=/usr/local/betterdesk, etc.)
 
+# New web console (Node.js 22.17+): copy web-ui → /usr/local/BetterDeskConsole/web-ui, then:
+cd /usr/local/BetterDeskConsole/web-ui
+npx -y npm@11.6.2 ci --include=dev --no-audit --no-fund
+npm run build
+echo "WEB_UI_DIR=/usr/local/BetterDeskConsole/web-ui/build" >> ../.env
+
 install -m 755 /path/to/BetterDesk/contrib/freebsd/rc.d/betterdesk_server \
   /usr/local/etc/rc.d/betterdesk_server
 install -m 755 /path/to/BetterDesk/contrib/freebsd/rc.d/betterdesk_console \

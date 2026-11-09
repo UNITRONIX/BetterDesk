@@ -1,72 +1,84 @@
 /**
  * BetterDesk Console — CDAP SDK Studio Routes
- * Visual node editor for building CDAP bridge flows.
- * Phase 14 of the BetterDesk 3.0 Roadmap.
+ * Flow storage for the visual node editor that builds CDAP bridge flows.
+ * Phase 14 of the BetterDesk 3.0 Roadmap. The editor (/cdap-studio) is a page
+ * of the console (web-ui).
  */
 
 const express = require('express');
 const router = express.Router();
 const { requireAuth, requireRole, isSuperAdminRole } = require('../middleware/auth');
-const betterdeskApi = require('../services/betterdeskApi');
-const db = require('../services/dbAdapter');
+const { getAdapter } = require('../services/dbAdapter');
 const crypto = require('crypto');
 
-// ── Page Route ───────────────────────────────────────────────────────────
+// ── Flow storage (studio_flows table, see services/dbAdapter) ───────────
 
-/**
- * GET /cdap-studio
- * Renders the SDK Studio visual editor page.
- */
-router.get('/cdap-studio', requireAuth, requireRole('operator'), (req, res) => {
-    res.render('cdap-studio', {
-        title: req.t('sdk_studio.title'),
-        currentPage: 'cdap-studio'
-    });
-});
+const MAX_FLOW_BYTES = 5 * 1024 * 1024;
 
-// ── Flow persistence (stored in Node.js auth.db) ────────────────────────
+function store() {
+    return getAdapter();
+}
 
-// Ensure studio_flows table exists
-(async () => {
+/** Super admins see and change every flow; everyone else only their own. */
+function canAccessFlow(user, flow) {
+    return !!user && (isSuperAdminRole(user.role) || flow.created_by === user.username);
+}
+
+/** Read a flow the current user may see. Sends 404 and returns null otherwise. */
+async function findFlowForUser(req, res) {
+    const flow = await store().getStudioFlow(req.params.id);
+    if (!flow || !canAccessFlow(req.session.user, flow)) {
+        res.status(404).json({ success: false, error: 'Flow not found' });
+        return null;
+    }
+    return flow;
+}
+
+/** Read a flow the current user may change. Sends 404 or 403 and returns null otherwise. */
+async function findFlowToChange(req, res) {
+    const flow = await store().getStudioFlow(req.params.id);
+    if (!flow) {
+        res.status(404).json({ success: false, error: 'Flow not found' });
+        return null;
+    }
+    if (!canAccessFlow(req.session.user, flow)) {
+        res.status(403).json({ success: false, error: 'Not authorized' });
+        return null;
+    }
+    return flow;
+}
+
+/** flow_json as a JSON string, or an error message. */
+function normalizeFlowJson(value) {
+    const jsonStr = typeof value === 'string' ? value : JSON.stringify(value || {});
+    if (jsonStr.length > MAX_FLOW_BYTES) return { error: 'Flow data too large (max 5MB)' };
     try {
-        await db.run(`
-            CREATE TABLE IF NOT EXISTS studio_flows (
-                id TEXT PRIMARY KEY,
-                name TEXT NOT NULL,
-                description TEXT DEFAULT '',
-                flow_json TEXT NOT NULL DEFAULT '{}',
-                status TEXT DEFAULT 'draft',
-                version INTEGER DEFAULT 1,
-                created_by TEXT DEFAULT '',
-                created_at TEXT DEFAULT (datetime('now')),
-                updated_at TEXT DEFAULT (datetime('now'))
-            )
-        `);
-    } catch (_) { /* table may already exist */ }
-})();
+        JSON.parse(jsonStr);
+    } catch (_) {
+        return { error: 'Invalid flow JSON' };
+    }
+    return { json: jsonStr };
+}
+
+function cleanDescription(value) {
+    return typeof value === 'string' ? value.trim().slice(0, 500) : '';
+}
 
 // ── API Routes ───────────────────────────────────────────────────────────
 
 /**
  * GET /api/cdap-studio/flows
- * List all saved flows for the current user (or all for admin).
+ * List saved flows without their flow_json: all for super admins, own for others.
  */
 router.get('/api/cdap-studio/flows', requireAuth, async (req, res) => {
     try {
-        const isAdmin = isSuperAdminRole(req.session.user && req.session.user.role);
-        let rows;
-        if (isAdmin) {
-            rows = await db.all(
-                'SELECT id, name, description, status, version, created_by, created_at, updated_at FROM studio_flows ORDER BY updated_at DESC'
-            );
-        } else {
-            rows = await db.all(
-                'SELECT id, name, description, status, version, created_by, created_at, updated_at FROM studio_flows WHERE created_by = ? ORDER BY updated_at DESC',
-                [req.session.user.username]
-            );
-        }
-        res.json({ success: true, flows: rows || [] });
+        const user = req.session.user || {};
+        const flows = await store().listStudioFlows(
+            isSuperAdminRole(user.role) ? {} : { createdBy: user.username }
+        );
+        res.json({ success: true, flows: flows || [] });
     } catch (err) {
+        console.error('[cdap-studio] list flows:', err.message);
         res.status(500).json({ success: false, error: 'Failed to list flows' });
     }
 });
@@ -77,13 +89,11 @@ router.get('/api/cdap-studio/flows', requireAuth, async (req, res) => {
  */
 router.get('/api/cdap-studio/flows/:id', requireAuth, async (req, res) => {
     try {
-        const row = await db.get(
-            'SELECT * FROM studio_flows WHERE id = ?',
-            [req.params.id]
-        );
-        if (!row) return res.status(404).json({ success: false, error: 'Flow not found' });
-        res.json({ success: true, flow: row });
+        const flow = await findFlowForUser(req, res);
+        if (!flow) return;
+        res.json({ success: true, flow });
     } catch (err) {
+        console.error('[cdap-studio] get flow:', err.message);
         res.status(500).json({ success: false, error: 'Failed to get flow' });
     }
 });
@@ -94,60 +104,54 @@ router.get('/api/cdap-studio/flows/:id', requireAuth, async (req, res) => {
  */
 router.post('/api/cdap-studio/flows', requireAuth, requireRole('operator'), async (req, res) => {
     try {
-        const { name, description, flow_json } = req.body;
-        if (!name || typeof name !== 'string' || name.length > 100) {
+        const { name, description, flow_json } = req.body || {};
+        const cleanName = typeof name === 'string' ? name.trim() : '';
+        if (!cleanName || cleanName.length > 100) {
             return res.status(400).json({ success: false, error: 'Invalid flow name' });
         }
-        const id = crypto.randomBytes(8).toString('hex');
-        const jsonStr = typeof flow_json === 'string' ? flow_json : JSON.stringify(flow_json || {});
-        if (jsonStr.length > 5 * 1024 * 1024) {
-            return res.status(400).json({ success: false, error: 'Flow data too large (max 5MB)' });
-        }
+        const flowJson = normalizeFlowJson(flow_json);
+        if (flowJson.error) return res.status(400).json({ success: false, error: flowJson.error });
 
-        await db.run(
-            `INSERT INTO studio_flows (id, name, description, flow_json, created_by)
-             VALUES (?, ?, ?, ?, ?)`,
-            [id, name.trim(), (description || '').trim().slice(0, 500), jsonStr, req.session.user.username]
-        );
+        const id = crypto.randomBytes(8).toString('hex');
+        await store().createStudioFlow({
+            id,
+            name: cleanName,
+            description: cleanDescription(description),
+            flow_json: flowJson.json,
+            created_by: req.session.user.username
+        });
         res.json({ success: true, id });
     } catch (err) {
+        console.error('[cdap-studio] create flow:', err.message);
         res.status(500).json({ success: false, error: 'Failed to create flow' });
     }
 });
 
 /**
  * PUT /api/cdap-studio/flows/:id
- * Update an existing flow (name, description, flow_json).
+ * Update an existing flow (name, description, flow_json). Fields left out keep their value.
  */
 router.put('/api/cdap-studio/flows/:id', requireAuth, requireRole('operator'), async (req, res) => {
     try {
-        const { name, description, flow_json } = req.body;
-        const existing = await db.get('SELECT id, created_by FROM studio_flows WHERE id = ?', [req.params.id]);
-        if (!existing) return res.status(404).json({ success: false, error: 'Flow not found' });
+        const { name, description, flow_json } = req.body || {};
+        const existing = await findFlowToChange(req, res);
+        if (!existing) return;
 
-        // Only creator or admin can edit
-        const user = req.session.user;
-        if (user.role !== 'admin' && existing.created_by !== user.username) {
-            return res.status(403).json({ success: false, error: 'Not authorized' });
+        let flowJson = { json: existing.flow_json };
+        if (flow_json !== undefined) {
+            flowJson = normalizeFlowJson(flow_json);
+            if (flowJson.error) return res.status(400).json({ success: false, error: flowJson.error });
         }
+        const cleanName = typeof name === 'string' && name.trim() ? name.trim().slice(0, 100) : existing.name;
 
-        const jsonStr = typeof flow_json === 'string' ? flow_json : JSON.stringify(flow_json || {});
-        if (jsonStr.length > 5 * 1024 * 1024) {
-            return res.status(400).json({ success: false, error: 'Flow data too large (max 5MB)' });
-        }
-
-        await db.run(
-            `UPDATE studio_flows SET name = ?, description = ?, flow_json = ?,
-             version = version + 1, updated_at = datetime('now') WHERE id = ?`,
-            [
-                (name || existing.name || '').trim().slice(0, 100),
-                (description || '').trim().slice(0, 500),
-                jsonStr,
-                req.params.id
-            ]
-        );
+        await store().updateStudioFlow(req.params.id, {
+            name: cleanName,
+            description: description === undefined ? existing.description : cleanDescription(description),
+            flow_json: flowJson.json
+        });
         res.json({ success: true });
     } catch (err) {
+        console.error('[cdap-studio] update flow:', err.message);
         res.status(500).json({ success: false, error: 'Failed to update flow' });
     }
 });
@@ -158,38 +162,28 @@ router.put('/api/cdap-studio/flows/:id', requireAuth, requireRole('operator'), a
  */
 router.delete('/api/cdap-studio/flows/:id', requireAuth, requireRole('operator'), async (req, res) => {
     try {
-        const existing = await db.get('SELECT id, created_by FROM studio_flows WHERE id = ?', [req.params.id]);
-        if (!existing) return res.status(404).json({ success: false, error: 'Flow not found' });
-
-        const user = req.session.user;
-        if (user.role !== 'admin' && existing.created_by !== user.username) {
-            return res.status(403).json({ success: false, error: 'Not authorized' });
-        }
-
-        await db.run('DELETE FROM studio_flows WHERE id = ?', [req.params.id]);
+        const existing = await findFlowToChange(req, res);
+        if (!existing) return;
+        await store().deleteStudioFlow(req.params.id);
         res.json({ success: true });
     } catch (err) {
+        console.error('[cdap-studio] delete flow:', err.message);
         res.status(500).json({ success: false, error: 'Failed to delete flow' });
     }
 });
 
 /**
  * POST /api/cdap-studio/flows/:id/deploy
- * Deploy a flow to the Go server for execution.
+ * Mark a flow as deployed.
  */
 router.post('/api/cdap-studio/flows/:id/deploy', requireAuth, requireRole('operator'), async (req, res) => {
     try {
-        const row = await db.get('SELECT * FROM studio_flows WHERE id = ?', [req.params.id]);
-        if (!row) return res.status(404).json({ success: false, error: 'Flow not found' });
-
-        // Mark as deployed in local DB
-        await db.run(
-            `UPDATE studio_flows SET status = 'deployed', updated_at = datetime('now') WHERE id = ?`,
-            [req.params.id]
-        );
-
+        const existing = await findFlowToChange(req, res);
+        if (!existing) return;
+        await store().setStudioFlowStatus(req.params.id, 'deployed');
         res.json({ success: true, status: 'deployed' });
     } catch (err) {
+        console.error('[cdap-studio] deploy flow:', err.message);
         res.status(500).json({ success: false, error: 'Failed to deploy flow' });
     }
 });
@@ -200,8 +194,8 @@ router.post('/api/cdap-studio/flows/:id/deploy', requireAuth, requireRole('opera
  */
 router.post('/api/cdap-studio/flows/:id/test', requireAuth, requireRole('operator'), async (req, res) => {
     try {
-        const row = await db.get('SELECT * FROM studio_flows WHERE id = ?', [req.params.id]);
-        if (!row) return res.status(404).json({ success: false, error: 'Flow not found' });
+        const row = await findFlowForUser(req, res);
+        if (!row) return;
 
         let flowData;
         try {
@@ -211,8 +205,8 @@ router.post('/api/cdap-studio/flows/:id/test', requireAuth, requireRole('operato
         }
 
         // Simulate execution — walk nodes in topological order
-        const nodes = flowData.nodes || [];
-        const wires = flowData.wires || [];
+        const nodes = (flowData && flowData.nodes) || [];
+        const wires = (flowData && flowData.wires) || [];
         const results = [];
 
         for (const node of nodes) {
@@ -227,33 +221,41 @@ router.post('/api/cdap-studio/flows/:id/test', requireAuth, requireRole('operato
 
         res.json({ success: true, results, nodeCount: nodes.length, wireCount: wires.length });
     } catch (err) {
+        console.error('[cdap-studio] test flow:', err.message);
         res.status(500).json({ success: false, error: 'Failed to test flow' });
     }
 });
 
 /**
- * POST /api/cdap-studio/flows/:id/export
+ * GET /api/cdap-studio/flows/:id/export
  * Export flow as downloadable .bdflow JSON.
  */
 router.get('/api/cdap-studio/flows/:id/export', requireAuth, async (req, res) => {
     try {
-        const row = await db.get('SELECT * FROM studio_flows WHERE id = ?', [req.params.id]);
-        if (!row) return res.status(404).json({ success: false, error: 'Flow not found' });
+        const row = await findFlowForUser(req, res);
+        if (!row) return;
 
+        let flow;
+        try {
+            flow = JSON.parse(row.flow_json);
+        } catch (_) {
+            return res.status(400).json({ success: false, error: 'Invalid flow JSON' });
+        }
         const exportData = {
             version: '1.0',
             format: 'bdflow',
             name: row.name,
             description: row.description,
-            flow: JSON.parse(row.flow_json),
+            flow,
             exportedAt: new Date().toISOString(),
             exportedBy: req.session.user.username
         };
 
         res.setHeader('Content-Type', 'application/json');
-        res.setHeader('Content-Disposition', `attachment; filename="${row.name.replace(/[^a-zA-Z0-9_-]/g, '_')}.bdflow"`);
+        res.setHeader('Content-Disposition', `attachment; filename="${String(row.name).replace(/[^a-zA-Z0-9_-]/g, '_')}.bdflow"`);
         res.send(JSON.stringify(exportData, null, 2));
     } catch (err) {
+        console.error('[cdap-studio] export flow:', err.message);
         res.status(500).json({ success: false, error: 'Failed to export flow' });
     }
 });
@@ -264,22 +266,26 @@ router.get('/api/cdap-studio/flows/:id/export', requireAuth, async (req, res) =>
  */
 router.post('/api/cdap-studio/flows/import', requireAuth, requireRole('operator'), async (req, res) => {
     try {
-        const { name, description, flow } = req.body;
+        const { name, description, flow } = req.body || {};
         if (!flow || typeof flow !== 'object') {
             return res.status(400).json({ success: false, error: 'Invalid .bdflow format' });
         }
+        const flowJson = normalizeFlowJson(flow);
+        if (flowJson.error) return res.status(400).json({ success: false, error: flowJson.error });
 
         const id = crypto.randomBytes(8).toString('hex');
-        const flowName = (name || 'Imported Flow').trim().slice(0, 100);
-        const jsonStr = JSON.stringify(flow);
+        const flowName = (typeof name === 'string' && name.trim() ? name.trim() : 'Imported Flow').slice(0, 100);
 
-        await db.run(
-            `INSERT INTO studio_flows (id, name, description, flow_json, created_by)
-             VALUES (?, ?, ?, ?, ?)`,
-            [id, flowName, (description || '').trim().slice(0, 500), jsonStr, req.session.user.username]
-        );
+        await store().createStudioFlow({
+            id,
+            name: flowName,
+            description: cleanDescription(description),
+            flow_json: flowJson.json,
+            created_by: req.session.user.username
+        });
         res.json({ success: true, id });
     } catch (err) {
+        console.error('[cdap-studio] import flow:', err.message);
         res.status(500).json({ success: false, error: 'Failed to import flow' });
     }
 });

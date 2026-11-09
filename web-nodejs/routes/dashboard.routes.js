@@ -9,19 +9,7 @@ const keyService = require('../services/keyService');
 const clientConfigHost = require('../services/clientConfigHost');
 const config = require('../config/config');
 const serverBackend = require('../services/serverBackend');
-const { requireAuth } = require('../middleware/auth');
-
-/**
- * GET / - Dashboard page
- */
-router.get('/', requireAuth, (req, res) => {
-    const activateAgentNav = String(req.query.activateAgent || '') === '1';
-    res.render('dashboard', {
-        title: activateAgentNav ? req.t('nav.pair_agent') : req.t('nav.dashboard'),
-        activePage: 'dashboard',
-        activateAgentNav
-    });
-});
+const { requireAuth, requirePermission } = require('../middleware/auth');
 
 /**
  * GET /api/stats - Get dashboard statistics
@@ -59,7 +47,7 @@ router.get('/api/stats', requireAuth, async (req, res) => {
  * GET /api/server/status - Get server status
  * In betterdesk mode: probes the Go server /api/health (single binary serves all).
  * In rustdesk mode: probes hbbs (health) + hbbr (TCP connect).
- * Returns a unified shape consumed by dashboard.js.
+ * Returns a unified shape consumed by the dashboard.
  */
 router.get('/api/server/status', requireAuth, async (req, res) => {
     try {
@@ -222,9 +210,10 @@ router.post('/api/sync-status', requireAuth, async (req, res) => {
 
 /**
  * GET /api/dashboard/activity - Recent activity feed for dashboard
- * Returns last 10 events from audit log (connections, logins, bans)
+ * Returns last 10 events from audit log (connections, logins, bans).
+ * Audit data: needs audit.view, like the Go endpoint it reads.
  */
-router.get('/api/dashboard/activity', requireAuth, async (req, res) => {
+router.get('/api/dashboard/activity', requireAuth, requirePermission('audit.view'), async (req, res) => {
     try {
         const events = [];
         
@@ -232,13 +221,15 @@ router.get('/api/dashboard/activity', requireAuth, async (req, res) => {
         try {
             const betterdeskApi = require('../services/betterdeskApi');
             const audit = await betterdeskApi.getAuditEvents(10);
-            const entries = audit?.data?.entries || audit?.entries || (Array.isArray(audit?.data) ? audit.data : []);
-            for (const entry of entries.slice(0, 10)) {
+            // Go answers { enabled, total, count, events: [{ timestamp, action, actor, target, details }] }
+            const entries = audit?.data?.events || audit?.data?.entries || audit?.events || audit?.entries
+                || (Array.isArray(audit?.data) ? audit.data : []);
+            for (const entry of (Array.isArray(entries) ? entries : []).slice(0, 10)) {
                 events.push({
                     action: entry.action || 'info',
                     action_label: entry.action || 'Event',
-                    device_id: entry.peer_id || entry.details?.peer_id || '',
-                    details: entry.details?.message || '',
+                    device_id: entry.peer_id || entry.details?.peer_id || entry.target || '',
+                    details: entry.details?.message || entry.details?.reason || '',
                     timestamp: entry.timestamp || entry.created_at
                 });
             }

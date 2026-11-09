@@ -7,7 +7,8 @@ Current layout of the BetterDesk monorepo (Go server + Node.js console). Legacy 
 ```
 BetterDesk/
 ├── betterdesk-server/          # Go signal + relay + HTTP API (single binary)
-├── web-nodejs/                 # Express admin console (EJS + vanilla JS)
+├── web-nodejs/                 # Express server: API, sockets, serves the console
+├── web-ui/                     # The console's pages (Svelte 5, SvelteKit single-page app)
 ├── rdclient-desktop/           # Tauri v2 operator desktop shell (RdClient)
 ├── sdks/
 │   ├── nodejs/                 # CDAP Node.js SDK (betterdesk-cdap)
@@ -38,7 +39,10 @@ Docker images or the panel update path.
 Clean-room Go implementation replacing RustDesk `hbbs`+`hbbr`: UDP/TCP/WS signal, relay, REST API, JWT/RBAC, SQLite/PostgreSQL, CDAP gateway, MeshCentral compat. Pure Go (no CGO). Module: `go.mod` (toolchain pinned).
 
 ### `web-nodejs/`
-Node.js management panel: devices, users, policies, updates, remote viewer, i18n (26 locales). Talks to the Go API. Runtime: Node.js **22+** (Docker/CI/installers target **24 LTS**).
+Node.js server of the management panel: the JSON API for devices, users, policies, updates and the remote viewer, i18n (26 locales), sockets. Talks to the Go API and serves the console build from `web-ui/` at the root. Runtime: Node.js **22+** (Docker/CI/installers target **24 LTS**).
+
+### `web-ui/`
+The console's pages: Svelte 5 and SvelteKit as a single-page app, built with Vite into `web-ui/build`. See `web-ui/README.md`.
 
 ### `rdclient-desktop/`
 Tauri 2 **operator** desktop shell that hosts the panel remote UI. Vendored `wry` patch + documented glib/`RUSTSEC` ignore until GTK stack migration.

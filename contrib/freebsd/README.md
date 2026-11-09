@@ -21,7 +21,7 @@ Related: [GitHub #310](https://github.com/UNITRONIX/BetterDesk/issues/310).
 pkg install -y git go node npm python3 ca_root_nss
 ```
 
-Go version must satisfy `betterdesk-server/go.mod` (see toolchain line). Node.js 18+.
+Go version must satisfy `betterdesk-server/go.mod` (see toolchain line). Node.js 22.17 or newer (the new web console's build needs it).
 
 ## Suggested layout
 
@@ -62,6 +62,22 @@ cd /usr/local/BetterDeskConsole
 npm ci --omit=dev
 # Create .env (see docs/wiki/Configuration.md); set RUSTDESK_DIR=/usr/local/betterdesk
 ```
+
+## Build the new web console
+
+Pages that moved to the new console (`web-ui/`) only open once it is built. Build it inside the panel folder and point the panel at it. Repeat this after every `git pull`.
+
+```sh
+install -d /usr/local/BetterDeskConsole/web-ui
+# Copy the web-ui tree to /usr/local/BetterDeskConsole/web-ui
+# (without node_modules, build, .svelte-kit, tests and e2e)
+cd /usr/local/BetterDeskConsole/web-ui
+npx -y npm@11.6.2 ci --include=dev --no-audit --no-fund   # npm 10 can't resolve its dependencies
+npm run build
+echo "WEB_UI_DIR=/usr/local/BetterDeskConsole/web-ui/build" >> /usr/local/BetterDeskConsole/.env
+```
+
+The build dependencies take about 220 MB in `web-ui/node_modules`; only builds need them.
 
 ## Install rc.d scripts
 

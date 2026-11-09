@@ -4,12 +4,11 @@
  * Provides policy CRUD for organizations + device-facing policy fetch
  * + device attestation management.
  *
- * Page routes:
- *   GET /policies                          — Policy management page
- *   GET /policies/:orgId                   — Org-specific policies
- *   GET /attestation                       — Device attestation dashboard
+ * The pages (/policies, /policies/:orgId, /attestation) are in the
+ * console (web-ui).
  *
- * API routes (proxy to Go server /api/org/{id}/policy):
+ * API routes (proxy to Go server /api/org/{id}/policy). Reads and writes
+ * need the same roles as those pages (requireAdmin):
  *   GET    /api/panel/policies/:orgId              — Get all policies for org
  *   PUT    /api/panel/policies/:orgId/connection    — Set connection policy
  *   PUT    /api/panel/policies/:orgId/features      — Set feature policy
@@ -61,40 +60,11 @@ async function goApiProxy(req, res, method, path, body) {
 }
 
 // ---------------------------------------------------------------------------
-//  Page routes
-// ---------------------------------------------------------------------------
-
-router.get('/policies', requireAuth, requireAdmin, (req, res) => {
-    res.render('policies', {
-        title: 'Organization Policies',
-        user: req.session.user,
-        currentPage: 'policies',
-    });
-});
-
-router.get('/policies/:orgId', requireAuth, requireAdmin, (req, res) => {
-    res.render('policies', {
-        title: 'Organization Policies',
-        user: req.session.user,
-        currentPage: 'policies',
-        orgId: req.params.orgId,
-    });
-});
-
-router.get('/attestation', requireAuth, requireAdmin, (req, res) => {
-    res.render('attestation', {
-        title: 'Device Attestation',
-        user: req.session.user,
-        currentPage: 'attestation',
-    });
-});
-
-// ---------------------------------------------------------------------------
 //  API routes — Policy management (admin panel)
 // ---------------------------------------------------------------------------
 
 // Get all policies for organization
-router.get('/api/panel/policies/:orgId', requireAuth, (req, res) => {
+router.get('/api/panel/policies/:orgId', requireAuth, requireAdmin, (req, res) => {
     const orgId = assertSafeApiId(req.params.orgId, 'orgId');
     return goApiProxy(req, res, 'get', `/org/${encodeURIComponent(orgId)}/policy`);
 });
@@ -125,13 +95,13 @@ router.put('/api/panel/policies/:orgId/update', requireAdmin, (req, res) =>
     goApiProxy(req, res, 'put', orgPolicyPath(req, '/update'), req.body));
 
 // Get effective (merged) policy for a device
-router.get('/api/panel/policies/:orgId/effective/:deviceId', requireAuth, (req, res) => {
+router.get('/api/panel/policies/:orgId/effective/:deviceId', requireAuth, requireAdmin, (req, res) => {
     const deviceId = assertSafeApiId(req.params.deviceId, 'deviceId');
     return goApiProxy(req, res, 'get', `${orgPolicyPath(req, '')}/effective/${encodeURIComponent(deviceId)}`);
 });
 
 // Policy audit log
-router.get('/api/panel/policies/:orgId/audit', requireAuth, (req, res) =>
+router.get('/api/panel/policies/:orgId/audit', requireAuth, requireAdmin, (req, res) =>
     goApiProxy(req, res, 'get', orgPolicyPath(req, '/audit')));
 
 // ---------------------------------------------------------------------------
@@ -181,7 +151,7 @@ router.get('/api/panel/attestation', requireAuth, requireAdmin, async (req, res)
 });
 
 // Get attestation for specific device
-router.get('/api/panel/attestation/:deviceId', requireAuth, async (req, res) => {
+router.get('/api/panel/attestation/:deviceId', requireAuth, requireAdmin, async (req, res) => {
     let deviceId;
     try {
         deviceId = assertSafeApiId(req.params.deviceId, 'deviceId');

@@ -1180,7 +1180,7 @@ Pełna dokumentacja budowania: [BUILD_GUIDE.md](../docs/setup/BUILD_GUIDE.md)
 | **Go Backend Developer** | `betterdesk-server/` | Clean-room RustDesk-compatible server implementation. Protocol handling, crypto, database, API. |
 | **Node.js Backend Developer** | `web-nodejs/` | Express.js web console — authentication, CRUD, RustDesk Client API, WebSocket. |
 | **DevOps Engineer** | Scripts, Docker, CI/CD | ALL-IN-ONE installers (`betterdesk.sh`, `betterdesk.ps1`), Dockerfiles, GitHub Actions. |
-| **Frontend Developer** | `web-nodejs/views/`, `static/` | EJS templates, CSS, client-side JavaScript, i18n. |
+| **Frontend Developer** | `web-ui/` | The console pages: Svelte 5, SvelteKit (single-page app), TypeScript, CSS, i18n. |
 | **Documentation Maintainer** | `docs/`, `.github/` | Keep all documentation current with code changes. |
 
 ### Security-First Policy (DEFAULT BEHAVIOR)

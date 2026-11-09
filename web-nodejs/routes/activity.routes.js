@@ -25,8 +25,11 @@ const express = require('express');
 const router = express.Router();
 const db = require('../services/database');
 const { getAdapter } = require('../services/dbAdapter');
+const alertRulesEngine = require('../services/alertRulesEngine');
 
 const { requireAuth, requirePermission } = require('../middleware/auth');
+// Also mounted at /api/bd: the admin routes leave device paths to the device routes
+const { notOnDeviceMount } = require('../lib/adminMount');
 
 const {
     requireDeviceToken,
@@ -86,6 +89,11 @@ router.post('/activity', requireDeviceToken, requireTokenDeviceMatch, async (req
             reported_at: timestamp || new Date().toISOString(),
         });
 
+        // Idle-time alert rules
+        if (idle_seconds !== undefined && idle_seconds !== null) {
+            alertRulesEngine.evaluateInBackground(() => alertRulesEngine.evaluateRules(device_id, 'idle_duration', idle_seconds));
+        }
+
         console.log(`[Activity] Received ${sessions?.length || 0} sessions from ${device_id} (idle: ${idle_seconds ?? 0}s)`);
         res.json({ success: true });
     } catch (err) {
@@ -102,7 +110,7 @@ router.post('/activity', requireDeviceToken, requireTokenDeviceMatch, async (req
  * GET /api/activity — List all activity summaries.
  * Query params: from, to (ISO 8601 date strings)
  */
-router.get('/', requireAuth, requirePermission('audit.view'), async (req, res) => {
+router.get('/', notOnDeviceMount, requireAuth, requirePermission('audit.view'), async (req, res) => {
     try {
         const adapter = getAdapter();
         const { from, to } = req.query;
@@ -142,7 +150,7 @@ router.get('/', requireAuth, requirePermission('audit.view'), async (req, res) =
  * GET /api/activity/:id — Per-device activity detail.
  * Query params: from, to, limit
  */
-router.get('/:id', requireAuth, requirePermission('audit.view'), async (req, res) => {
+router.get('/:id', notOnDeviceMount, requireAuth, requirePermission('audit.view'), async (req, res) => {
     try {
         const adapter = getAdapter();
         const deviceId = req.params.id;
@@ -184,7 +192,7 @@ router.get('/:id', requireAuth, requirePermission('audit.view'), async (req, res
  * GET /api/activity/:id/top — Top applications for a device.
  * Query params: from, to, limit (default 10)
  */
-router.get('/:id/top', requireAuth, requirePermission('audit.view'), async (req, res) => {
+router.get('/:id/top', notOnDeviceMount, requireAuth, requirePermission('audit.view'), async (req, res) => {
     try {
         const adapter = getAdapter();
         const deviceId = req.params.id;

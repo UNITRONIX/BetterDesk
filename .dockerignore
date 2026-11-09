@@ -75,3 +75,10 @@ logs/
 *.backup
 *.bak
 rustdesk-backup-*/
+
+# Web UI: the image builds its own; e2e/.auth holds signed-in test sessions
+web-ui/build/
+web-ui/.svelte-kit/
+web-ui/test-results/
+web-ui/playwright-report/
+web-ui/e2e/.auth/

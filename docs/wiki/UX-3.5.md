@@ -18,7 +18,7 @@ If something looks wrong on a phone, update the panel — several 3.5.x fixes ta
 
 ## Developers
 
-Layout and CSS live under `web-nodejs/views/partials/ux35-*.ejs`, `public/css/ux35*.css`, `public/js/ui-shell.js`. Acceptance checklists belong in PRs, not in this operator page.
+The shell (sidebar, top bar, bottom bar on phones) is in the Svelte console, `web-ui/src/lib/shell/`. Acceptance checklists belong in PRs, not in this operator page.
 
 ---
 

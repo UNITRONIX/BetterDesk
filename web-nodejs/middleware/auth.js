@@ -7,6 +7,7 @@ const {
     getEffectivePermissions,
     loadEffectivePermissions,
 } = require('../services/rolePermissionService');
+const { loginRedirectUrl } = require('../lib/returnUrl');
 const {
     ACCESS_LEVEL_RANK,
     PANEL_ACCESS_CATALOG,
@@ -46,7 +47,8 @@ const DEFAULT_ROLE_PERMISSIONS = {
         'guest.create',
         'device.ban', 'device.change_id', 'device.connection_mode',
         'audit.view', 'metrics.view',
-        'cdap.view', 'cdap.command',
+        'cdap.view', 'cdap.command', 'cdap.terminal', 'cdap.files',
+        'mesh.terminal', 'mesh.files', 'mesh.power',
         'chat.access',
         'enrollment.manage', 'enrollment.approve',
         'branding.edit',
@@ -60,7 +62,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
         'user.view',
         'audit.view', 'metrics.view',
         'cdap.view', 'cdap.command',
-        'enrollment.approve',
+        'mesh.power',
         'chat.access',
         'org.manage_devices',
         'billing.view', 'billing.reports',
@@ -92,6 +94,28 @@ function proRoleBlocksPermission(role, permission) {
 
 // Roles that have full admin privileges (bypass all permission checks).
 const SUPER_ADMIN_ROLES = new Set(['super_admin', 'admin']);
+
+/**
+ * API requests get JSON answers, pages a redirect or an error page. The
+ * original URL, because req.path inside a router mounted at a prefix
+ * (app.use('/api/files', router)) has lost that prefix.
+ */
+function isApiRequest(req) {
+    return String(req.originalUrl || req.url || '').startsWith('/api/');
+}
+
+/**
+ * Refuse a page request (API requests get JSON from the callers): the
+ * console's error page at this address with the status (lib/webUi.js
+ * res.sendErrorPage), or plain text when there is no console build. A 403
+ * shows the console's own words; other statuses show the message.
+ */
+function refusePage(res, status, message) {
+    const shown = typeof res.sendErrorPage === 'function'
+        && res.sendErrorPage(status === 403 ? 403 : 500, status === 403 ? { status } : { status, message });
+    if (!shown) res.status(status).type('text').send(message || 'Forbidden');
+    return res;
+}
 
 /**
  * Check if a role is a super admin (or legacy admin).
@@ -193,7 +217,7 @@ function rdClientLoginRedirect(req) {
 function requireRdClientAuth(permission) {
     return function (req, res, next) {
         if (!req.session || !req.session.userId) {
-            if (req.path.startsWith('/api/')) {
+            if (isApiRequest(req)) {
                 return res.status(401).json({ success: false, error: 'Unauthorized. Please log in.' });
             }
             return res.redirect(rdClientLoginRedirect(req));
@@ -201,7 +225,7 @@ function requireRdClientAuth(permission) {
 
         if (req.session.user && req.session.user.role === 'pro') {
             req.session.destroy();
-            if (req.path.startsWith('/api/')) {
+            if (isApiRequest(req)) {
                 return res.status(403).json({
                     success: false,
                     error: 'Pro accounts can only access the RustDesk desktop client API'
@@ -213,32 +237,15 @@ function requireRdClientAuth(permission) {
         if (permission) {
             const role = req.session.user && req.session.user.role;
             if (!requestHasPermission(req, permission)) {
-                if (req.path.startsWith('/api/')) {
+                if (isApiRequest(req)) {
                     return res.status(403).json({ success: false, error: `Permission denied: ${permission}` });
                 }
-                return res.status(403).render('errors/403', {
-                    title: 'Forbidden',
-                    message: 'You do not have permission to access this resource'
-                });
+                return refusePage(res, 403);
             }
         }
 
-        res.locals.user = req.session.user;
-        res.locals.emergencyMode = !!req.session.emergencyMode;
         next();
     };
-}
-
-/**
- * RdClient login page — redirect away if already authenticated with device.connect.
- */
-function rdClientGuestOnly(req, res, next) {
-    const role = req.session && req.session.user && req.session.user.role;
-    if (req.session && req.session.userId && role !== 'pro' && requestHasPermission(req, 'device.connect')) {
-        const dest = normalizeRdClientReturnUrl(req.query.return) || '/remote';
-        return res.redirect(dest);
-    }
-    next();
 }
 
 /**
@@ -248,7 +255,7 @@ function rdClientGuestOnly(req, res, next) {
 function requireAuth(req, res, next) {
     if (!req.session || !req.session.userId) {
         // API request
-        if (req.path.startsWith('/api/')) {
+        if (isApiRequest(req)) {
             return res.status(401).json({
                 success: false,
                 error: 'Unauthorized. Please log in.',
@@ -256,14 +263,15 @@ function requireAuth(req, res, next) {
             });
         }
         
-        // HTML request - redirect to login (expired helps UX when cookie was revoked)
-        return res.redirect('/login?expired=1');
+        // HTML request: the sign-in page with the way back here; "expired"
+        // only when the browser still had a session cookie (lib/returnUrl.js)
+        return res.redirect(loginRedirectUrl(req));
     }
     
     // Block pro-only users from web panel (API-only role)
     if (req.session.user && req.session.user.role === 'pro') {
         req.session.destroy();
-        if (req.path.startsWith('/api/')) {
+        if (isApiRequest(req)) {
             return res.status(403).json({
                 success: false,
                 error: 'Pro accounts can only access the RustDesk desktop client API'
@@ -271,11 +279,6 @@ function requireAuth(req, res, next) {
         }
         return res.redirect('/login');
     }
-    
-    // Add user info to locals for templates
-    res.locals.user = req.session.user;
-    // Phase A: expose emergency mode flag to EJS templates
-    res.locals.emergencyMode = !!req.session.emergencyMode;
     
     next();
 }
@@ -286,7 +289,7 @@ function requireAuth(req, res, next) {
 function requireRole(role) {
     return function(req, res, next) {
         if (!req.session || !req.session.userId) {
-            if (req.path.startsWith('/api/')) {
+            if (isApiRequest(req)) {
                 return res.status(401).json({ success: false, error: 'Unauthorized' });
             }
             return res.redirect('/login');
@@ -295,46 +298,17 @@ function requireRole(role) {
         const userRole = req.session.user && req.session.user.role;
 
         // Super admin roles bypass all role checks.
-        if (isSuperAdminRole(userRole)) {
-            res.locals.user = req.session.user;
-            return next();
-        }
+        if (isSuperAdminRole(userRole)) return next();
 
         if (userRole !== role) {
-            if (req.path.startsWith('/api/')) {
+            if (isApiRequest(req)) {
                 return res.status(403).json({ success: false, error: 'Forbidden' });
             }
-            return res.status(403).render('errors/403', {
-                title: 'Forbidden',
-                message: 'You do not have permission to access this resource'
-            });
+            return refusePage(res, 403);
         }
         
-        res.locals.user = req.session.user;
         next();
     };
-}
-
-/**
- * Optional auth - add user to locals if logged in, but don't require it
- */
-function optionalAuth(req, res, next) {
-    if (req.session && req.session.userId) {
-        res.locals.user = req.session.user;
-    } else {
-        res.locals.user = null;
-    }
-    next();
-}
-
-/**
- * Guest only - redirect to dashboard if already logged in
- */
-function guestOnly(req, res, next) {
-    if (req.session && req.session.userId) {
-        return res.redirect('/');
-    }
-    next();
 }
 
 /**
@@ -343,7 +317,7 @@ function guestOnly(req, res, next) {
  */
 function requireAdmin(req, res, next) {
     if (!req.session || !req.session.userId) {
-        if (req.path.startsWith('/api/')) {
+        if (isApiRequest(req)) {
             return res.status(401).json({ success: false, error: 'Unauthorized' });
         }
         return res.redirect('/login');
@@ -354,16 +328,12 @@ function requireAdmin(req, res, next) {
         || userRole === 'global_admin'
         || userRole === 'server_admin';
     if (!allowed) {
-        if (req.path.startsWith('/api/')) {
+        if (isApiRequest(req)) {
             return res.status(403).json({ success: false, error: 'Admin access required' });
         }
-        return res.status(403).render('errors/403', {
-            title: 'Forbidden',
-            message: 'You do not have permission to access this resource'
-        });
+        return refusePage(res, 403);
     }
     
-    res.locals.user = req.session.user;
     next();
 }
 
@@ -375,7 +345,7 @@ function requireAdmin(req, res, next) {
 function requirePermission(permission) {
     return function(req, res, next) {
         if (!req.session || !req.session.userId) {
-            if (req.path.startsWith('/api/')) {
+            if (isApiRequest(req)) {
                 return res.status(401).json({ success: false, error: 'Unauthorized' });
             }
             return res.redirect('/login');
@@ -383,29 +353,22 @@ function requirePermission(permission) {
 
         const role = req.session.user && req.session.user.role;
         if (req.permissionContextLoaded && req.permissionLoadError) {
-            if (req.path.startsWith('/api/')) {
+            if (isApiRequest(req)) {
                 return res.status(503).json({
                     success: false,
                     error: 'Permission service unavailable',
                     code: 'permission_service_unavailable'
                 });
             }
-            return res.status(503).render('errors/500', {
-                title: 'Service unavailable',
-                message: 'Permission service unavailable'
-            });
+            return refusePage(res, 503, 'Permission service unavailable');
         }
         if (!requestHasPermission(req, permission)) {
-            if (req.path.startsWith('/api/')) {
+            if (isApiRequest(req)) {
                 return res.status(403).json({ success: false, error: `Permission denied: ${permission}` });
             }
-            return res.status(403).render('errors/403', {
-                title: 'Forbidden',
-                message: 'You do not have permission to access this resource'
-            });
+            return refusePage(res, 403);
         }
 
-        res.locals.user = req.session.user;
         next();
     };
 }
@@ -416,11 +379,8 @@ module.exports = {
     requireAdmin,
     requirePermission,
     requireRdClientAuth,
-    rdClientGuestOnly,
     normalizeRdClientReturnUrl,
     isSafeRdClientReturnUrl,
-    optionalAuth,
-    guestOnly,
     roleHasPermission,
     requestHasPermission,
     roleHasEffectivePermission,

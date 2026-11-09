@@ -105,10 +105,20 @@ function isPanelPollRequest(req) {
     return PANEL_POLL_PREFIXES.some((prefix) => path.startsWith(prefix));
 }
 
+/**
+ * Profile pictures: a page with many people loads one per person. These
+ * routes apply panelReadLimiter themselves (routes/avatars.routes.js).
+ */
+const PANEL_READ_PATTERNS = [
+    /^\/api\/users\/avatars$/,
+    /^\/api\/users\/\d+\/avatar$/
+];
+
 function isPanelReadRequest(req) {
     const method = String(req.method || 'GET').toUpperCase();
     if (method !== 'GET' && method !== 'HEAD') return false;
-    return PANEL_READ_PATHS.has(resolveApiPath(req));
+    const path = resolveApiPath(req);
+    return PANEL_READ_PATHS.has(path) || PANEL_READ_PATTERNS.some((re) => re.test(path));
 }
 
 /** Session-authenticated UI preference writes (desktop layout save). */
@@ -116,6 +126,17 @@ function isPanelPreferenceWrite(req) {
     const method = String(req.method || 'GET').toUpperCase();
     if (method !== 'POST') return false;
     return resolveApiPath(req) === '/api/desktop/layout';
+}
+
+/**
+ * A read (GET/HEAD) by someone signed in to the console. These count against
+ * that person's read budget (sessionReadLimiter), not against the address:
+ * people behind one address (an office) would otherwise share it.
+ */
+function isSessionRead(req) {
+    const method = String(req.method || 'GET').toUpperCase();
+    if (method !== 'GET' && method !== 'HEAD') return false;
+    return Boolean(req.session && (req.session.userId || req.session.user?.id));
 }
 
 /** Paths that receive widgetLimiter in server.js (exact paths only). */
@@ -146,7 +167,27 @@ const apiLimiter = rateLimit({
         error: 'Too many requests. Please try again later.'
     },
     keyGenerator: defaultKeyGenerator,
-    skip: (req) => isPanelPollRequest(req) || isPanelReadRequest(req) || isPanelPreferenceWrite(req)
+    skip: (req) =>
+        isSessionRead(req) || isPanelPollRequest(req) || isPanelReadRequest(req) || isPanelPreferenceWrite(req)
+});
+
+/**
+ * Reads by a signed-in person, keyed to that person: the console's pages load
+ * several lists at once, and the per-address limits would let one busy page
+ * (or several people behind one address) starve the others. Sign-in, writes
+ * and anything without a session stay with the per-address limits.
+ */
+const sessionReadLimiter = rateLimit({
+    windowMs: config.rateLimitWindowMs,
+    max: parseInt(process.env.PANEL_READ_RATE_LIMIT_MAX, 10) || 600,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+        success: false,
+        error: 'Too many requests. Please slow down.'
+    },
+    keyGenerator: (req) => `session-read:${req.session.userId || req.session.user.id}`,
+    skip: (req) => !isSessionRead(req)
 });
 
 /**
@@ -163,7 +204,9 @@ const widgetLimiter = rateLimit({
         success: false,
         error: 'Too many widget requests. Please slow down.'
     },
-    keyGenerator: defaultKeyGenerator
+    keyGenerator: defaultKeyGenerator,
+    // Signed-in reads count per person instead (sessionReadLimiter)
+    skip: (req) => isSessionRead(req)
 });
 
 /**
@@ -285,6 +328,7 @@ const fileAccessLimiter = rateLimit({
 
 module.exports = {
     apiLimiter,
+    sessionReadLimiter,
     widgetLimiter,
     panelReadLimiter,
     panelPreferenceLimiter,
@@ -296,6 +340,7 @@ module.exports = {
     isPanelPollRequest,
     isPanelReadRequest,
     isPanelPreferenceWrite,
+    isSessionRead,
     resolveApiPath,
     getPanelPollMountPaths,
     getPanelReadMountPaths,

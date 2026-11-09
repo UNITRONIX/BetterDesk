@@ -6,7 +6,11 @@
  *
  * Endpoints:
  *
- * Alert Rules (admin):
+ * Panel routes (all of them need server.config: command payloads and
+ * results come from scripts run on devices; they answer only under
+ * /api/automation, not under the /api/bd mount):
+ *
+ * Alert Rules:
  *   GET    /api/automation/rules          — List alert rules
  *   POST   /api/automation/rules          — Create rule
  *   GET    /api/automation/rules/:id      — Get rule
@@ -55,6 +59,7 @@ const VALID_COMMAND_TYPES = ['shell', 'powershell', 'script', 'restart_service',
 const { requireAuth, requirePermission } = require('../middleware/auth');
 
 const { requireDeviceToken } = require('../middleware/deviceAuth');
+const { notOnDeviceMount } = require('../lib/adminMount');
 
 // ===========================================================================
 //  Alert Rules
@@ -63,7 +68,7 @@ const { requireDeviceToken } = require('../middleware/deviceAuth');
 /**
  * GET /api/automation/rules — List all alert rules.
  */
-router.get('/rules', requireAuth, async (req, res) => {
+router.get('/rules', notOnDeviceMount, requireAuth, requirePermission('server.config'), async (req, res) => {
     try {
         const adapter = getAdapter();
         const rules = await adapter.getAlertRules();
@@ -77,10 +82,10 @@ router.get('/rules', requireAuth, async (req, res) => {
 /**
  * POST /api/automation/rules — Create an alert rule.
  */
-router.post('/rules', requireAuth, requirePermission('server.config'), async (req, res) => {
+router.post('/rules', notOnDeviceMount, requireAuth, requirePermission('server.config'), async (req, res) => {
     try {
         const { name, description, condition_type, condition_op, condition_value,
-            severity, scope_device_id, cooldown_secs, notify_emails } = req.body;
+            severity, scope_device_id, cooldown_secs, notify_emails, enabled } = req.body;
 
         if (!name || !name.trim()) {
             return res.status(400).json({ error: 'Rule name is required' });
@@ -103,6 +108,8 @@ router.post('/rules', requireAuth, requirePermission('server.config'), async (re
             scope_device_id: scope_device_id || null,
             cooldown_secs: cooldown_secs || 300,
             notify_emails: notify_emails || '',
+            // A rule is on unless the request turns it off
+            enabled: !(enabled === false || enabled === 0 || enabled === '0' || enabled === 'false'),
             created_by: req.session.user.username,
         });
 
@@ -121,7 +128,7 @@ router.post('/rules', requireAuth, requirePermission('server.config'), async (re
 /**
  * GET /api/automation/rules/:id — Get alert rule.
  */
-router.get('/rules/:id(\\d+)', requireAuth, async (req, res) => {
+router.get('/rules/:id(\\d+)', notOnDeviceMount, requireAuth, requirePermission('server.config'), async (req, res) => {
     try {
         const adapter = getAdapter();
         const rule = await adapter.getAlertRuleById(+req.params.id);
@@ -136,7 +143,7 @@ router.get('/rules/:id(\\d+)', requireAuth, async (req, res) => {
 /**
  * PATCH /api/automation/rules/:id — Update alert rule.
  */
-router.patch('/rules/:id(\d+)', requireAuth, requirePermission('server.config'), async (req, res) => {
+router.patch('/rules/:id(\\d+)', notOnDeviceMount, requireAuth, requirePermission('server.config'), async (req, res) => {
     try {
         const adapter = getAdapter();
         const rule = await adapter.getAlertRuleById(+req.params.id);
@@ -180,7 +187,7 @@ router.patch('/rules/:id(\d+)', requireAuth, requirePermission('server.config'),
 /**
  * DELETE /api/automation/rules/:id — Delete alert rule.
  */
-router.delete('/rules/:id(\d+)', requireAuth, requirePermission('server.config'), async (req, res) => {
+router.delete('/rules/:id(\\d+)', notOnDeviceMount, requireAuth, requirePermission('server.config'), async (req, res) => {
     try {
         const adapter = getAdapter();
         const rule = await adapter.getAlertRuleById(+req.params.id);
@@ -208,7 +215,7 @@ router.delete('/rules/:id(\d+)', requireAuth, requirePermission('server.config')
  * GET /api/automation/alerts — List alert history.
  * Query params: device_id, severity, acknowledged, limit
  */
-router.get('/alerts', requireAuth, async (req, res) => {
+router.get('/alerts', notOnDeviceMount, requireAuth, requirePermission('server.config'), async (req, res) => {
     try {
         const adapter = getAdapter();
         const filters = {};
@@ -228,7 +235,7 @@ router.get('/alerts', requireAuth, async (req, res) => {
 /**
  * POST /api/automation/alerts/:id/ack — Acknowledge an alert.
  */
-router.post('/alerts/:id(\\d+)/ack', requireAuth, async (req, res) => {
+router.post('/alerts/:id(\\d+)/ack', notOnDeviceMount, requireAuth, requirePermission('server.config'), async (req, res) => {
     try {
         const adapter = getAdapter();
         await adapter.acknowledgeAlert(+req.params.id, req.session.user.username);
@@ -247,7 +254,7 @@ router.post('/alerts/:id(\\d+)/ack', requireAuth, async (req, res) => {
 /**
  * POST /api/automation/commands — Send a command to a device.
  */
-router.post('/commands', requireAuth, requirePermission('server.config'), async (req, res) => {
+router.post('/commands', notOnDeviceMount, requireAuth, requirePermission('server.config'), async (req, res) => {
     try {
         const { device_id, command_type, payload } = req.body;
 
@@ -286,7 +293,7 @@ router.post('/commands', requireAuth, requirePermission('server.config'), async 
  * GET /api/automation/commands — List commands.
  * Query params: device_id, status, limit
  */
-router.get('/commands', requireAuth, async (req, res) => {
+router.get('/commands', notOnDeviceMount, requireAuth, requirePermission('server.config'), async (req, res) => {
     try {
         const adapter = getAdapter();
         const filters = {};
@@ -305,7 +312,7 @@ router.get('/commands', requireAuth, async (req, res) => {
 /**
  * GET /api/automation/commands/:id — Get command details.
  */
-router.get('/commands/:id(\\d+)', requireAuth, async (req, res) => {
+router.get('/commands/:id(\\d+)', notOnDeviceMount, requireAuth, requirePermission('server.config'), async (req, res) => {
     try {
         const adapter = getAdapter();
         const cmd = await adapter.getRemoteCommandById(+req.params.id);
@@ -374,8 +381,8 @@ router.post('/commands/:id(\\d+)/result', requireDeviceToken, async (req, res) =
 /**
  * GET /api/automation/smtp — Get SMTP config (password masked).
  */
-router.get('/smtp', requireAuth, requirePermission('server.config'), getSmtpSettings);
-router.put('/smtp', requireAuth, requirePermission('server.config'), putSmtpSettings);
-router.post('/smtp/test', requireAuth, requirePermission('server.config'), testSmtpSettings);
+router.get('/smtp', notOnDeviceMount, requireAuth, requirePermission('server.config'), getSmtpSettings);
+router.put('/smtp', notOnDeviceMount, requireAuth, requirePermission('server.config'), putSmtpSettings);
+router.post('/smtp/test', notOnDeviceMount, requireAuth, requirePermission('server.config'), testSmtpSettings);
 
 module.exports = router;

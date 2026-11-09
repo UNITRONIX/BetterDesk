@@ -38,7 +38,7 @@ const {
 const { readProductVersion, readEmbeddedServerVersion } = require('../lib/productVersion');
 const { createConsoleDeployGraph } = require('../lib/consoleDeployGraph');
 const { resolveChildPath, resolvePathUnderRoot, existsConfinedChild, removeConfinedChild } = require('../lib/safePath');
-const { runConsoleNpmInstall } = require('../lib/consoleNpmInstall');
+const { runConsoleNpmInstall, buildNpmInstallEnv } = require('../lib/consoleNpmInstall');
 const {
     NON_CRITICAL_UPDATE_FAILURES,
     isNonCriticalUpdateFailure,
@@ -169,6 +169,15 @@ const COMPONENTS = {
         service: IS_WINDOWS ? 'BetterDeskConsole' : 'betterdesk-console',
         autoUpdate: true
     },
+    // The new console (SvelteKit). Its sources are synced and built here;
+    // where they live depends on the install (resolveWebUiLayout).
+    webui: {
+        prefix: 'web-ui/',
+        label: 'Web Console (web-ui)',
+        localRoot: null,
+        service: null,
+        autoUpdate: true
+    },
     server: {
         prefix: 'betterdesk-server/',
         label: 'Go Server',
@@ -266,6 +275,28 @@ const EXCLUDE_PATTERNS = [
     /(^|\/)\.force_password_update$/,
     /(^|\/)\.env(\.|$)/                           // .env, .env.local, etc.
 ];
+
+// web-ui/ holds no runtime state, so the patterns above don't apply to it
+// (a src/lib/data/ folder must not be skipped). These folders are generated
+// or local and are never synced or deleted; tests and e2e only matter to the
+// test runners, which don't run on a server.
+const WEB_UI_LOCAL_DIRS = ['node_modules', 'build', '.build-prev', '.svelte-kit',
+    'test-results', 'playwright-report', 'coverage'];
+const WEB_UI_TEST_DIRS = ['tests', 'e2e'];
+
+function isWebUiSyncPath(localPath) {
+    const parts = String(localPath || '').replace(/\\/g, '/').split('/');
+    if (!parts[0] || parts.includes('..') || parts.includes('node_modules')) return false;
+    return !WEB_UI_LOCAL_DIRS.includes(parts[0]) && !WEB_UI_TEST_DIRS.includes(parts[0]);
+}
+
+/** A changed file that goes into the build; docs and unit tests don't */
+function isWebUiBuildInput(localPath) {
+    const p = String(localPath || '').replace(/\\/g, '/');
+    if (!isWebUiSyncPath(p)) return false;
+    if (/^docs\//.test(p) || /^[^/]+\.md$/i.test(p)) return false;
+    return !/\.(test|spec)\.[cm]?[jt]sx?$/.test(p);
+}
 
 /** Legacy hook — Support Generator now uses Client templates, not Go agent-source. */
 function shouldQueueAgentRebuild(_changedData) {
@@ -755,6 +786,9 @@ function classifyFile(filepath) {
 }
 
 function isExcluded(filepath) {
+    if (filepath.startsWith(COMPONENTS.webui.prefix)) {
+        return !isWebUiSyncPath(filepath.slice(COMPONENTS.webui.prefix.length));
+    }
     return EXCLUDE_PATTERNS.some(rx => rx.test(filepath));
 }
 
@@ -1632,6 +1666,351 @@ async function repairMissingConsoleFiles(remoteSHA, changedConsoleFiles = []) {
     return { repaired, checked: required.size, failed };
 }
 
+// ======================== Web UI (the new console) ======================
+//
+// web-ui/ is built where the console runs: its sources are synced from
+// GitHub, then `npm ci` and `npm run build` write web-ui/build, which
+// lib/webUi.js serves. Nothing here is critical to an update: when a step
+// fails the previous build stays (or, without one, the old pages), the
+// failure is reported, and the next update tries again.
+
+// npm 10 (bundled with Node 22) can't resolve web-ui's dependency tree
+const WEB_UI_NPM = 'npm@11.6.2';
+const WEB_UI_INSTALL_TIMEOUT_MS = 15 * 60 * 1000;
+const WEB_UI_BUILD_TIMEOUT_MS = 15 * 60 * 1000;
+// Set while a web-ui sync or build has to be redone: { reason, fullSync, sha, error, since }
+const WEB_UI_PENDING_FILE = path.join(config.dataDir, '.web_ui_build_pending');
+const WEB_UI_BUILD_LOG = path.join(config.dataDir, 'web-ui-build.log');
+
+/**
+ * Where web-ui's sources and build live on this install:
+ * - WEB_UI_DIR=<dir>/build (the installers write it to .env): sources in <dir>.
+ *   A WEB_UI_DIR that isn't a folder named build is managed by someone else
+ *   and left alone.
+ * - Beside the console (repo checkout, web-nodejs/ next to web-ui/): ../web-ui,
+ *   which lib/webUi.js serves without WEB_UI_DIR.
+ * - Otherwise (an install from an installer that didn't know web-ui):
+ *   <console>/web-ui, and WEB_UI_DIR is written to the console's .env.
+ */
+function resolveWebUiLayout(opts = {}) {
+    const env = opts.env || process.env;
+    const rootDir = path.resolve(opts.rootDir || ROOT_DIR);
+    const exists = opts.existsSync || fs.existsSync;
+    const fromEnv = String(env.WEB_UI_DIR || '').trim();
+    if (fromEnv) {
+        const buildDir = path.resolve(fromEnv);
+        if (path.basename(buildDir) !== 'build') return { root: null, buildDir, writeEnv: false };
+        return { root: path.dirname(buildDir), buildDir, writeEnv: false };
+    }
+    const sibling = path.resolve(rootDir, '..', 'web-ui');
+    if (path.basename(rootDir) === 'web-nodejs' || exists(path.join(sibling, 'package.json'))) {
+        return { root: sibling, buildDir: path.join(sibling, 'build'), writeEnv: false };
+    }
+    const nested = path.join(rootDir, 'web-ui');
+    return { root: nested, buildDir: path.join(nested, 'build'), writeEnv: true };
+}
+
+/**
+ * Checks this Node against engines.node of web-ui/package.json (">=22.17").
+ * @returns {string|null} why the build can't run here, or null
+ */
+function webUiNodeProblem(packageJsonText, nodeVersion = process.versions.node) {
+    let wanted = '';
+    try {
+        wanted = String(JSON.parse(packageJsonText)?.engines?.node || '').trim();
+    } catch (_) {
+        return null;
+    }
+    const m = /^>=\s*v?(\d+)(?:\.(\d+))?(?:\.(\d+))?$/.exec(wanted);
+    if (!m) return null;
+    const need = [m[1], m[2] || 0, m[3] || 0].map(Number);
+    const have = String(nodeVersion).replace(/^v/, '').split('.').map((n) => Number.parseInt(n, 10) || 0);
+    for (let i = 0; i < 3; i++) {
+        if ((have[i] || 0) > need[i]) return null;
+        if ((have[i] || 0) < need[i]) {
+            return `The new web console needs Node.js ${need.join('.')} or newer to build; this server has ${nodeVersion}`;
+        }
+    }
+    return null;
+}
+
+function readWebUiPending() {
+    try {
+        return JSON.parse(fs.readFileSync(WEB_UI_PENDING_FILE, 'utf8'));
+    } catch (_) {
+        return null;
+    }
+}
+
+function writeWebUiPending(info) {
+    try {
+        fs.mkdirSync(path.dirname(WEB_UI_PENDING_FILE), { recursive: true });
+        fs.writeFileSync(WEB_UI_PENDING_FILE, JSON.stringify({ ...info, since: new Date().toISOString() }, null, 2));
+    } catch (_) { /* best-effort marker */ }
+}
+
+function clearWebUiPending() {
+    try { fs.rmSync(WEB_UI_PENDING_FILE, { force: true }); } catch (_) { /* ok */ }
+}
+
+/** Files under the given top-level folders of web-ui/, as posix paths */
+function listLocalWebUiFiles(root, topDirs) {
+    const out = [];
+    const walk = (dir, rel) => {
+        let entries;
+        try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch (_) { return; }
+        for (const entry of entries) {
+            const relPath = rel ? `${rel}/${entry.name}` : entry.name;
+            if (entry.isDirectory()) {
+                if (entry.name !== 'node_modules') walk(path.join(dir, entry.name), relPath);
+            } else if (entry.isFile() || entry.isSymbolicLink()) {
+                out.push(relPath);
+            }
+        }
+    };
+    for (const top of topDirs) walk(path.join(root, top), top);
+    return out;
+}
+
+/**
+ * Brings web-ui/ to remoteSHA: the files in the compare list, or the whole
+ * tree when `full` is set. A full sync also deletes files under src/ and
+ * static/ that are gone upstream, because SvelteKit would still build them.
+ * `changed` is true when a file that goes into the build changed on disk.
+ */
+async function syncWebUiSource(remoteSHA, files, root, { full = false } = {}) {
+    const prefix = COMPONENTS.webui.prefix;
+    const out = { full, changed: false, downloaded: 0, removed: 0, failed: [] };
+
+    const removeLocal = (localPath) => {
+        const dest = resolvePathUnderRoot(root, localPath);
+        if (isProtectedRuntimePath(dest) || !fs.existsSync(dest)) return;
+        fs.rmSync(dest, { force: true });
+        out.removed++;
+        if (isWebUiBuildInput(localPath)) out.changed = true;
+    };
+    const writeLocal = async (localPath) => {
+        const dest = resolvePathUnderRoot(root, localPath);
+        if (isProtectedRuntimePath(dest)) throw new Error(`Refusing to write protected runtime path: ${localPath}`);
+        const content = await ghDownloadFile(GITHUB_OWNER, GITHUB_REPO, remoteSHA, `${prefix}${localPath}`);
+        try {
+            if (fs.readFileSync(dest).equals(content)) return;
+        } catch (_) { /* new file */ }
+        fs.mkdirSync(path.dirname(dest), { recursive: true });
+        fs.writeFileSync(dest, content);
+        out.downloaded++;
+        if (isWebUiBuildInput(localPath)) out.changed = true;
+    };
+    const attempt = async (localPath, fn) => {
+        try {
+            await fn(localPath);
+        } catch (err) {
+            out.failed.push({ path: `${prefix}${localPath}`, error: err.message });
+            console.error(`[UPDATE] web-ui: ${prefix}${localPath}: ${err.message}`);
+        }
+    };
+
+    if (full) {
+        const remote = (await ghListRepoBlobPathsUnderPrefix(remoteSHA, prefix))
+            .map((repoPath) => repoPath.slice(prefix.length))
+            .filter(isWebUiSyncPath);
+        const wanted = new Set(remote);
+        for (const localPath of remote) await attempt(localPath, writeLocal);
+        for (const localPath of listLocalWebUiFiles(root, ['src', 'static'])) {
+            if (!wanted.has(localPath)) await attempt(localPath, removeLocal);
+        }
+        return out;
+    }
+
+    for (const file of files) {
+        if (file.previousPath && file.previousPath !== file.localPath && isWebUiSyncPath(file.previousPath)) {
+            await attempt(file.previousPath, removeLocal);
+        }
+        if (!isWebUiSyncPath(file.localPath)) continue;
+        await attempt(file.localPath, file.status === 'removed' ? removeLocal : writeLocal);
+    }
+    return out;
+}
+
+/** Points the console at the build through WEB_UI_DIR in its .env */
+function ensureWebUiDirInEnv(envPath, buildDir) {
+    const { upsertEnvKey, parseEnvLines } = require('../lib/envMerge');
+    const existing = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf8') : '';
+    if (parseEnvLines(existing).map.get('WEB_UI_DIR') === buildDir) return false;
+    fs.writeFileSync(envPath, upsertEnvKey(existing, 'WEB_UI_DIR', buildDir), { mode: 0o600 });
+    return true;
+}
+
+function lastLines(text, count = 15, maxLength = 500) {
+    const lines = String(text || '').split(/\r?\n/).map((l) => l.trimEnd()).filter(Boolean);
+    return lines.slice(-count).join('\n').slice(-maxLength);
+}
+
+/**
+ * `npm ci` and `npm run build` in web-ui/. The static adapter empties build/
+ * only after the bundles are built, but when its own step fails (or the
+ * process is killed) build/ is left half written. So the current build is
+ * copied aside first and put back after any failure.
+ */
+async function buildWebUi(root, buildDir, opts = {}) {
+    const run = opts.spawn || spawnPromise;
+    const logPath = opts.logPath || WEB_UI_BUILD_LOG;
+    const prevDir = path.join(root, '.build-prev');
+    const start = Date.now();
+    const log = [];
+    // npm cache and HOME in the data folder (the service account has no home).
+    // NODE_ENV=production would make `npm ci` skip the build tools.
+    const env = buildNpmInstallEnv(config.dataDir);
+    const step = (cmd, args, timeout) => (IS_WINDOWS
+        // npx and npm are .cmd scripts on Windows, which need a shell
+        ? run([cmd, ...args].join(' '), [], { cwd: root, env, timeout, shell: true, windowsHide: true })
+        : run(cmd, args, { cwd: root, env, timeout }));
+
+    // An interrupted earlier build (the console was stopped mid-build) left
+    // the good copy in .build-prev
+    if (fs.existsSync(prevDir) && !fs.existsSync(path.join(buildDir, 'index.html'))) {
+        fs.rmSync(buildDir, { recursive: true, force: true });
+        fs.renameSync(prevDir, buildDir);
+    }
+    const hadBuild = fs.existsSync(path.join(buildDir, 'index.html'));
+    fs.rmSync(prevDir, { recursive: true, force: true });
+    if (hadBuild) fs.cpSync(buildDir, prevDir, { recursive: true });
+
+    let result;
+    try {
+        for (const [cmd, args, timeout] of [
+            ['npx', ['-y', WEB_UI_NPM, 'ci', '--include=dev', '--no-audit', '--no-fund'], WEB_UI_INSTALL_TIMEOUT_MS],
+            ['npm', ['run', 'build'], WEB_UI_BUILD_TIMEOUT_MS],
+        ]) {
+            log.push(`$ ${cmd} ${args.join(' ')}`);
+            try {
+                const out = await step(cmd, args, timeout);
+                log.push(out.stdout || '', out.stderr || '');
+            } catch (err) {
+                log.push(err.stdout || '', err.stderr || '', err.message);
+                err.detail = lastLines(`${err.stderr || ''}\n${err.stdout || ''}`) || err.message;
+                throw err;
+            }
+        }
+        if (!fs.existsSync(path.join(buildDir, 'index.html'))) {
+            throw new Error('The build finished without writing build/index.html');
+        }
+        fs.rmSync(prevDir, { recursive: true, force: true });
+        result = { success: true, duration: Date.now() - start, log: logPath };
+    } catch (err) {
+        log.push(err.message);
+        let restored = false;
+        try {
+            fs.rmSync(buildDir, { recursive: true, force: true });
+            if (hadBuild) {
+                fs.renameSync(prevDir, buildDir);
+                restored = true;
+            }
+        } catch (restoreErr) {
+            log.push(`Could not put the previous build back: ${restoreErr.message}`);
+        }
+        result = {
+            success: false,
+            duration: Date.now() - start,
+            error: err.detail || err.message,
+            previousBuildKept: restored,
+            log: logPath,
+        };
+    }
+    try {
+        fs.mkdirSync(path.dirname(logPath), { recursive: true });
+        fs.writeFileSync(logPath, log.filter(Boolean).join('\n') + '\n');
+    } catch (_) { /* the result still carries the error */ }
+    return result;
+}
+
+/**
+ * The web-ui part of an update. Syncs the sources (the whole tree when the
+ * install has none yet, the compare list was cut off, or an earlier sync
+ * failed) and builds when something that goes into the build changed, there
+ * is no build, or an earlier build failed. Failures are returned in `failed`
+ * as non-critical entries, like a failed npm install of the console.
+ *
+ * @returns {Promise<null|object>} null when there was nothing to do
+ */
+async function updateWebUi(remoteSHA, changedData = {}, opts = {}) {
+    if (isImageBasedDockerDeployment()) return null; // images ship their build
+    const files = changedData.grouped?.webui || [];
+    const layout = opts.layout || resolveWebUiLayout();
+    const result = { root: layout.root, buildDir: layout.buildDir, sync: null, build: null, failed: [] };
+    const fail = (file, error, extra = {}) => {
+        result.failed.push({ file, error, nonCritical: true, ...extra });
+    };
+
+    if (!layout.root) {
+        if (!files.length) return null;
+        result.skipped = `WEB_UI_DIR (${layout.buildDir}) is not a web-ui build folder; leaving it alone`;
+        return result;
+    }
+
+    const pending = readWebUiPending();
+    const installed = fs.existsSync(path.join(layout.root, 'package.json'));
+    const full = !installed || !!changedData.compareTruncated || !!pending?.fullSync;
+    if (!files.length && !pending && !full) return null;
+
+    if (!canWriteDirOrParent(layout.root)) {
+        fail('web-ui source', `Cannot write ${layout.root}`);
+        return result;
+    }
+
+    try {
+        result.sync = await syncWebUiSource(remoteSHA, files, layout.root, { full });
+    } catch (err) {
+        // A commit without web-ui/ (e.g. before it existed): nothing to install
+        if (!installed && !files.length && /has no web-ui\/ subtree/.test(err.message)) return null;
+        fail('web-ui source', err.message);
+        writeWebUiPending({ reason: 'sync_failed', fullSync: true, sha: remoteSHA, error: err.message });
+        return result;
+    }
+    for (const f of result.sync.failed) fail(f.path, f.error);
+    if (result.sync.failed.length) {
+        // Some files are missing or old: build nothing, sync everything next time
+        writeWebUiPending({ reason: 'sync_failed', fullSync: true, sha: remoteSHA, error: result.sync.failed[0].error });
+        return result;
+    }
+
+    if (layout.writeEnv) {
+        try {
+            ensureWebUiDirInEnv(opts.envPath || path.join(ROOT_DIR, '.env'), layout.buildDir);
+        } catch (err) {
+            fail('web-ui env', `Could not set WEB_UI_DIR in the console .env: ${err.message}`);
+        }
+    }
+
+    const hasBuild = fs.existsSync(path.join(layout.buildDir, 'index.html'));
+    if (!result.sync.changed && hasBuild && !pending) return result;
+
+    let packageJson = '';
+    try { packageJson = fs.readFileSync(path.join(layout.root, 'package.json'), 'utf8'); } catch (_) { /* checked by npm */ }
+    const nodeProblem = webUiNodeProblem(packageJson, opts.nodeVersion);
+    if (nodeProblem) {
+        fail('web-ui build', `${nodeProblem}. ${hasBuild ? 'The previous build stays.' : 'The old pages stay.'}`);
+        writeWebUiPending({ reason: 'node_too_old', fullSync: false, sha: remoteSHA, error: nodeProblem });
+        return result;
+    }
+
+    console.log(`[UPDATE] Building the new web console in ${layout.root} (log: ${opts.logPath || WEB_UI_BUILD_LOG})`);
+    result.build = await buildWebUi(layout.root, layout.buildDir, opts);
+    if (result.build.success) {
+        clearWebUiPending();
+        console.log(`[UPDATE] web-ui built in ${Math.round(result.build.duration / 1000)}s`);
+    } else {
+        const kept = result.build.previousBuildKept ? 'The previous build stays.' : 'The old pages stay.';
+        fail('web-ui build', `${result.build.error} (${kept} Log: ${result.build.log})`, {
+            log: result.build.log,
+            previousBuildKept: result.build.previousBuildKept,
+        });
+        writeWebUiPending({ reason: 'build_failed', fullSync: false, sha: remoteSHA, error: result.build.error });
+        console.error(`[UPDATE] web-ui build failed: ${result.build.error}`);
+    }
+    return result;
+}
+
 /**
  * Build the Go server binary from local source.
  * Uses async exec to avoid blocking the Node.js event loop.
@@ -2129,7 +2508,7 @@ function getServerUpdateInfo() {
 
 function getAutoUpdateComponents(changedData) {
     const grouped = changedData?.grouped || {};
-    return ['console', 'scripts', 'server'].filter(component => grouped[component]?.length > 0);
+    return ['console', 'webui', 'scripts', 'server'].filter(component => grouped[component]?.length > 0);
 }
 
 // ======================== Public API ====================================
@@ -2259,7 +2638,8 @@ async function getChangedFiles(remoteSHA) {
     const compare = await ghGet(`/repos/${GITHUB_OWNER}/${GITHUB_REPO}/compare/${localSHA}...${remoteSHA}`);
     const files = (compare.files || []).filter(f => !isExcluded(f.filename));
 
-    const grouped = { console: [], server: [], agent: [], scripts: [], other: [] };
+    const grouped = { console: [], webui: [], server: [], agent: [], scripts: [], other: [] };
+    const webUiPrefix = COMPONENTS.webui.prefix;
 
     for (const f of files) {
         const comp = classifyFile(f.filename);
@@ -2271,10 +2651,29 @@ async function getChangedFiles(remoteSHA) {
         };
         if (comp === 'console') {
             entry.localPath = f.filename.slice(COMPONENTS.console.prefix.length);
+        } else if (comp === 'webui') {
+            entry.localPath = f.filename.slice(webUiPrefix.length);
+            // A renamed file: the old name has to go, SvelteKit would still build it
+            if (f.previous_filename?.startsWith(webUiPrefix)) {
+                entry.previousPath = f.previous_filename.slice(webUiPrefix.length);
+            }
         } else if (comp === 'scripts') {
             entry.localPath = f.filename;
         }
         (grouped[comp] || grouped.other).push(entry);
+    }
+    // Files moved out of what is synced (e.g. into web-ui/tests/): remove the old copy
+    for (const f of compare.files || []) {
+        const prev = f.previous_filename;
+        if (!prev?.startsWith(webUiPrefix) || isExcluded(prev)) continue;
+        if (classifyFile(f.filename) === 'webui' && !isExcluded(f.filename)) continue;
+        grouped.webui.push({
+            path: prev,
+            status: 'removed',
+            sha: '',
+            component: 'webui',
+            localPath: prev.slice(webUiPrefix.length),
+        });
     }
 
     return {
@@ -2352,7 +2751,8 @@ async function createPreUpdateBackup(allFiles, opts = {}) {
             for (const entry of fs.readdirSync(currentDir, { withFileTypes: true })) {
                 const relativePath = path.join(relativeDir, entry.name);
                 const sourcePath = path.join(currentDir, entry.name);
-                if (['data', 'node_modules'].includes(entry.name) && !relativeDir) continue;
+                // web-ui/ sits inside the console folder on native installs; not console files
+                if (['data', 'node_modules', 'web-ui'].includes(entry.name) && !relativeDir) continue;
                 if (entry.isSymbolicLink()) continue;
                 if (entry.isDirectory()) {
                     walkConsoleTree(sourcePath, relativePath);
@@ -2877,6 +3277,24 @@ async function applyUpdate(remoteSHA, changedData, opts = {}) {
     }
 
     if (criticalFailures.length === 0) {
+        // ---- Web UI: sync and build once everything critical is in place ----
+        // Never critical: a failure keeps the previous build and is retried
+        // by the next update (WEB_UI_PENDING_FILE).
+        try {
+            const webUi = await updateWebUi(remoteSHA, changedData);
+            if (webUi) {
+                results.webUi = webUi;
+                results.failed.push(...webUi.failed);
+                if (webUi.sync?.downloaded || webUi.sync?.removed) {
+                    results.applied.push(`web-ui/ (${webUi.sync.downloaded} updated, ${webUi.sync.removed} removed)`);
+                }
+                // lib/webUi.js reads the build's index.html at start
+                if (webUi.build?.success) results.needsConsoleRestart = true;
+            }
+        } catch (err) {
+            results.failed.push({ file: 'web-ui', error: err.message, nonCritical: true });
+        }
+
         saveLocalSHA(remoteSHA);
         results.shaSaved = true;
 
@@ -3446,6 +3864,15 @@ async function runUpdatePreflight(opts = {}) {
         warnings.push('Free disk-space check is unavailable on this platform');
     }
 
+    const webUiRoot = resolveWebUiLayout().root;
+    if (webUiRoot) {
+        let webUiNode = null;
+        try {
+            webUiNode = webUiNodeProblem(fs.readFileSync(path.join(webUiRoot, 'package.json'), 'utf8'));
+        } catch (_) { /* not installed yet */ }
+        if (webUiNode) warnings.push(`${webUiNode}; the update keeps the current web-ui build`);
+    }
+
     try {
         const { ensureConsoleNpmDirs } = require('../lib/consoleNpmInstall');
         ensureConsoleNpmDirs(config.dataDir);
@@ -3588,6 +4015,12 @@ module.exports = {
     ensureConsoleSource,
     listRepoBlobPathsUnderPrefix: ghListRepoBlobPathsUnderPrefix,
     checkUpdateDiskSpace,
+    resolveWebUiLayout,
+    webUiNodeProblem,
+    isWebUiSyncPath,
+    isWebUiBuildInput,
+    updateWebUi,
+    WEB_UI_NPM,
 };
 
 bootstrapDockerImageDeployment();

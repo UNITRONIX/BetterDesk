@@ -29,15 +29,6 @@ const { requireAuth, requirePermission } = require('../middleware/auth');
 const { bodyInt, bodyBool } = require('../lib/bodyScalars');
 const { assertSafeResolvedHost, SsrfBlockedError } = require('../lib/ssrfGuard');
 
-// ── Page ────────────────────────────────────────────────────────────────────
-
-router.get('/toolkit', requireAuth, (req, res) => {
-    res.render('toolkit', {
-        title: req.t('toolkit.title'),
-        activePage: 'toolkit',
-    });
-});
-
 // ── SSL Certificate Inspector ───────────────────────────────────────────────
 
 router.post('/api/toolkit/ssl', requireAuth, async (req, res) => {

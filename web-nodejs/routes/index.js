@@ -65,37 +65,8 @@ const pairingRoutes = lazyRoute('./pairing.routes');
 const serverManagementRoutes = lazyRoute('./server-management.routes');
 const serverAttestationRoutes = lazyRoute('./server-attestation.routes');
 
-/**
- * Middleware to require JSON Content-Type for POST/PATCH/PUT requests to API routes.
- * This provides an additional layer of CSRF protection.
- */
-function requireJsonContentType(req, res, next) {
-    // Skip for GET, DELETE, OPTIONS, HEAD
-    if (['GET', 'DELETE', 'OPTIONS', 'HEAD'].includes(req.method)) {
-        return next();
-    }
-    // Skip for non-API routes (form submissions, file uploads)
-    if (!req.path.startsWith('/api/')) {
-        return next();
-    }
-    // Skip for specific routes that accept form data (file uploads)
-    if (req.path.includes('/upload') || req.path.includes('/import')) {
-        return next();
-    }
-    // Disaster-recovery restore uploads multipart/form-data (field "backup").
-    // Do not exempt /api/settings/updates/restore — that endpoint is JSON-only.
-    if (req.path === '/api/settings/restore') {
-        return next();
-    }
-    // Check Content-Type
-    if (!req.is('application/json')) {
-        return res.status(415).json({ 
-            success: false, 
-            error: 'Content-Type must be application/json' 
-        });
-    }
-    next();
-}
+// JSON-only writes to /api/* (lib/requireJsonContentType.js)
+const { requireJsonContentType } = require('../lib/requireJsonContentType');
 
 // Apply JSON content type check middleware
 router.use(requireJsonContentType);
@@ -107,12 +78,14 @@ router.get('/health', (req, res) => {
 
 // Mount routes
 router.use('/', authRoutes);
+router.use('/', require('./console.routes'));   // Svelte console: /console-boot.js, /api/console/*
 router.use('/', dashboardRoutes);
 router.use('/', devicesRoutes);
 router.use('/', keysRoutes);
 router.use('/', settingsRoutes);
 router.use('/', generatorRoutes);
 router.use('/', require('./client-branding.routes'));
+router.use('/', require('./avatars.routes'));    // profile pictures: /api/users/avatars, /api/users/:id/avatar
 router.use('/', usersRoutes);
 router.use('/', panelAccessRoutes);
 router.use('/', foldersRoutes);
@@ -122,8 +95,7 @@ router.use('/api/i18n', i18nRoutes);
 // bdApiRoutes now mounted in server.js (before CSRF) for desktop client access
 router.use('/api/bd', inventoryRoutes);     // device-facing: /api/bd/inventory, /api/bd/telemetry
 router.use('/api/inventory', inventoryRoutes); // admin-facing: /api/inventory, /api/inventory/:id
-router.use('/api/tickets', ticketsRoutes);      // admin-facing: /api/tickets CRUD
-router.use('/api/tickets', ticketsRoutes);      // device-facing: /api/tickets/bd (agent creates tickets)
+router.use('/api/tickets', ticketsRoutes);      // /api/tickets CRUD and device-facing /api/tickets/bd
 router.use('/api/bd', activityRoutes);           // device-facing: /api/bd/activity
 router.use('/api/activity', activityRoutes);     // admin-facing: /api/activity
 router.use('/api/automation', automationRoutes); // admin-facing: /api/automation/*
@@ -133,6 +105,7 @@ router.use('/api/bd', fileTransferRoutes);       // device-facing: /api/bd/file-
 router.use('/api/network', networkRoutes);       // admin-facing: /api/network/*
 router.use('/api/dataguard', dataguardRoutes);   // admin-facing: /api/dataguard/*
 router.use('/api/bd', dataguardRoutes);          // device-facing: /api/bd/dlp-policies, /api/bd/dlp-events
+router.use('/', lazyRoute('./trends.routes'));   // admin-facing: /api/reports/trends (before the reports router)
 router.use('/api/reports', reportsRoutes);       // admin-facing: /api/reports/*
 router.use('/api/tenants', tenantsRoutes);       // admin-facing: /api/tenants/*
 router.use('/', registrationRoutes);               // admin-facing: /registrations, /api/registrations/*
