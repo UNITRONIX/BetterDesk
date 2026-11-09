@@ -201,8 +201,10 @@
 		padding: var(--space-5);
 		overflow-y: auto;
 	}
+	/* A long unbroken name in the message wraps instead of scrolling sideways */
 	.modal-body > p {
 		margin: 0;
+		overflow-wrap: anywhere;
 	}
 	/* The message, then the body's own content */
 	.modal-body > p:not(:last-child) {
