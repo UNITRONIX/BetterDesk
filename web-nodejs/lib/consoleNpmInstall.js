@@ -5,7 +5,7 @@ const path = require('path');
 
 const DEFAULT_REQUIRED_PACKAGES = [
     'express',
-    'ejs',
+    'express-session',
     'better-sqlite3',
     'axios',
 ];

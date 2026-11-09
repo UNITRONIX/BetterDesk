@@ -135,7 +135,7 @@ const BOOT_SCRIPT = `(function (boot) {
     root.setAttribute('data-theme', theme);
     root.style.colorScheme = theme;
     // Accessibility panel settings: same key, defaults and limits as
-    // public/js/accessibility.js and web-ui/src/lib/shell/a11y.svelte.ts
+    // web-ui/src/lib/shell/a11y.svelte.ts
     var a = {};
     try { a = JSON.parse(get('betterdesk_accessibility_v1') || '{}') || {}; } catch (e) { a = {}; }
     function num(v, min, max, d) { v = Number(v); return isFinite(v) ? Math.min(max, Math.max(min, v)) : d; }
@@ -217,9 +217,9 @@ router.get('/api/console/bootstrap', requireAuth, async (req, res) => {
     const role = user.role;
     const can = (p) => requestHasPermission(req, p);
     const superAdmin = isSuperAdminRole(role);
-    const t = res.locals._ || req.t || ((k) => k);
+    const t = req.t || ((k) => k);
     const nav = buildNav({ can, isSuperAdmin: superAdmin, role, t, currentPage: '', currentTab: '' });
-    const branding = res.locals.branding || brandingService.getBranding() || {};
+    const branding = brandingService.getBranding() || {};
     const boot = publicBoot(req);
     // getAvatarVersion answers null on any failure: initials instead of the picture
     const avatarVersion = await avatarService.getAvatarVersion(req.session.userId || user.id);

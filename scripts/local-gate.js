@@ -596,9 +596,6 @@ async function runNodeChecks(report, tools) {
         ], { cwd, timeoutMs: SECURITY_TIMEOUT_MS });
     }
 
-    await runCheck(report, 'frontend-syntax', 'Check browser JavaScript syntax', npmCommand(tools), [
-        'run', 'check:frontend',
-    ], { cwd: WEB_ROOT });
     await runCheck(report, 'protocol-artifacts', 'Verify protocol schema artifacts', npmCommand(tools), [
         'run', 'protocols:check',
     ], { cwd: WEB_ROOT });

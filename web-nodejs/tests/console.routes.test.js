@@ -20,7 +20,7 @@ function appWith(user, extra = {}) {
     const app = createTestApp();
     app.use((req, res, next) => {
         req.lang = req.query.lang || 'en';
-        res.locals._ = (k) => manager.translate(req.lang, k);
+        req.t = (k) => manager.translate(req.lang, k);
         res.locals.csrfToken = 'csrf-test-token';
         if (user) {
             req.session.userId = user.id;

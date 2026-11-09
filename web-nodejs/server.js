@@ -8,7 +8,6 @@
  */
 
 const express = require('express');
-const { buildNav: buildConsoleNav } = require('./lib/consoleNav');
 const session = require('express-session');
 const cookieParser = require('cookie-parser');
 const path = require('path');
@@ -31,11 +30,7 @@ const {
     getPanelReadMountPaths
 } = require('./middleware/rateLimiter');
 const { csrfTokenProvider, csrfGate, downgradeToHttp: csrfDowngradeToHttp } = require('./middleware/csrf');
-const {
-    requestHasPermission,
-    isSuperAdminRole,
-    loadEffectivePermissions,
-} = require('./middleware/auth');
+const { loadEffectivePermissions } = require('./middleware/auth');
 const authService = require('./services/authService');
 const serverBackend = require('./services/serverBackend');
 const db = require('./services/database');
@@ -55,7 +50,6 @@ const { initRemoteTargetGateway } = require('./services/remoteTargetGateway');
 const { startDiscoveryService } = require('./services/lanDiscovery');
 const { initDeviceStatusPush } = require('./services/deviceStatusPush');
 const { initHelpRequestEmailService } = require('./services/helpRequestEmailService');
-const { loadSupporters } = require('./services/supportersService');
 const routes = require('./routes');
 const { mountRoutes } = require('./lib/mountRoutes');
 const rustdeskApiRoutes = require('./routes/rustdesk-api.routes');
@@ -76,10 +70,6 @@ const app = express();
 // Default: false (safest). Set TRUST_PROXY=1 when behind nginx/Apache/cloudflare
 const trustProxy = parseTrustProxy(process.env.TRUST_PROXY);
 app.set('trust proxy', trustProxy);
-
-// View engine setup
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
 
 // Ensure data directory exists (required before auth.db / session secret)
 try {
@@ -270,48 +260,10 @@ app.use('/api/bd', bdApiRoutes);
 // i18n middleware
 app.use(initI18n());
 
-// Embed mode — when ?embed=1 is present, layout renders without sidebar/navbar
-// Used by Desktop Mode to load pages inside floating windows (iframes)
+// Only static files may be cached: no answer that isn't one is stored
 app.use((req, res, next) => {
-    res.locals.embed = req.query.embed === '1';
-    // UX 3.5 is the only supported console shell. Legacy `ui` query
-    // parameters and `bd_ui_shell=classic` cookies are intentionally ignored.
-    res.locals.uiShell = 'ux35';
-    res.locals.supporters = loadSupporters();
-    // Inject permission helper for EJS templates (sidebar/button visibility)
-    const role = req.session?.user?.role;
-    res.locals.hasPermission = (perm) => role
-        ? requestHasPermission(req, perm)
-        : false;
-    res.locals.isSuperAdmin = role ? isSuperAdminRole(role) : false;
-    // Error pages render inside the console shell when someone is signed in
-    // (views/errors). Pro accounts have no console access, so they get none.
-    res.locals.sessionUser = req.session?.userId && role && role !== 'pro'
-        ? req.session.user
-        : null;
-    // Navigation for the sidebar and breadcrumb (lib/consoleNav.js)
-    res.locals.consoleNav = (opts) => buildConsoleNav({
-        can: res.locals.hasPermission,
-        isSuperAdmin: res.locals.isSuperAdmin,
-        role,
-        t: res.locals._ || ((key) => key),
-        ...opts
-    });
-    res.locals.sessionPolicy = panelSessionService.getPolicy();
-    // Prevent HTML page caching — only static assets should be cached
     if (!req.path.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff2?|ttf|eot|map|proto)$/)) {
         res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-    }
-    next();
-});
-
-// Signed-in user's profile picture version for the top bar (null: initials)
-app.use(async (req, res, next) => {
-    res.locals.userAvatarVersion = null;
-    if (req.method === 'GET' && req.session?.userId && !req.path.startsWith('/api/')) {
-        try {
-            res.locals.userAvatarVersion = await require('./services/avatarService').getAvatarVersion(req.session.userId);
-        } catch (_) { /* initials */ }
     }
     next();
 });

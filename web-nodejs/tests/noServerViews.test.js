@@ -26,4 +26,5 @@ test('no server code renders a view', () => {
         .filter((f) => /\bres\.render\s*\(|\.render\(\s*['"`]errors\//.test(fs.readFileSync(f, 'utf8')))
         .map((f) => path.relative(root, f));
     expect(found).toEqual([]);
+    expect(fs.readFileSync(path.join(root, 'server.js'), 'utf8')).not.toMatch(/view engine|app\.set\(\s*'views'/);
 });

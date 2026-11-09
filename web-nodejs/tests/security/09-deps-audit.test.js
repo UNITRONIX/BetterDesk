@@ -58,8 +58,9 @@ describe('[sec/09] Dependency audit floors (DEP-01…07)', () => {
         expect(gte(pkgVersion('bcrypt'), '6.0.0')).toBe(true);
     });
 
-    it('ejs >= 7.0.2 (removes vulnerable jake/filelist chain)', () => {
-        expect(gte(pkgVersion('ejs'), '7.0.2')).toBe(true);
+    it('ships no template engine (the server renders no views)', () => {
+        const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'package.json'), 'utf8'));
+        expect(Object.keys({ ...pkg.dependencies, ...pkg.optionalDependencies })).not.toContain('ejs');
     });
 
     it('brace-expansion >= 5.0.12', () => {

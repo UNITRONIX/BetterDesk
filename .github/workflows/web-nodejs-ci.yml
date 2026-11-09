@@ -5,14 +5,12 @@ on:
     branches: [main, dev]
     paths:
       - 'web-nodejs/**'
-      - 'web-ui/src/lib/nav.ts'
       - 'web-ui/static/rdclient/**'
       - '.github/workflows/web-nodejs-ci.yml'
   pull_request:
     branches: [main, dev]
     paths:
       - 'web-nodejs/**'
-      - 'web-ui/src/lib/nav.ts'
       - 'web-ui/static/rdclient/**'
       - '.github/workflows/web-nodejs-ci.yml'
 
@@ -40,9 +38,6 @@ jobs:
 
       - name: npm audit (moderate+)
         run: npm audit --omit=dev --audit-level=moderate
-
-      - name: Check browser JavaScript syntax
-        run: npm run check:frontend
 
       - name: Verify protocol schema artifacts
         run: npm run protocols:check

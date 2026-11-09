@@ -648,7 +648,7 @@ function bumpBrandingRevision() {
 }
 
 /**
- * Revision string for branding.css cache busting (EJS + autosave).
+ * Revision string for branding.css cache busting (console boot + autosave).
  * @returns {string}
  */
 function getBrandingRevision() {

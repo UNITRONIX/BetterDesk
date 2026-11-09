@@ -8,16 +8,16 @@
  * Usage (from repo root):
  *   node scripts/update-material-symbols.mjs
  *
- * Names come from icon spans, Utils.ICONS and other icon maps, `icon` properties
- * and variables, and CSS `content` ligatures, in the old console (web-nodejs)
- * and the new one (web-ui/src: `<Icon name="…">`, `icon="…"`, `icon={…}`). collectCandidateIcons() and
- * collectIcons() are exported so a check can compare the list with the font.
+ * Names come from the console (web-ui/src: `<Icon name="…">`, `icon="…"`,
+ * `icon={…}`, icon maps, CSS `content` ligatures) and from what the server
+ * sends it (web-nodejs: `icon` properties such as the navigation in
+ * lib/consoleNav.js). collectCandidateIcons() and collectIcons() are exported
+ * so a check can compare the list with the font.
  *
- * Writes the same files into both consoles' font folders
- * (web-nodejs/public/fonts/ and web-ui/static/fonts/):
+ * Writes into web-ui/static/fonts/:
  *   MaterialSymbolsOutlined.woff2, MaterialSymbolsRounded.woff2,
  *   MATERIAL_SYMBOLS_VERSION.txt
- * and the ?v= cache busters in both consoles' CSS and web-ui/src/app.html.
+ * and the ?v= cache busters in web-ui's base.css and src/app.html.
  */
 
 import crypto from 'node:crypto';
@@ -29,10 +29,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.join(__dirname, '..');
 const WEB = path.join(REPO_ROOT, 'web-nodejs');
 const UI = path.join(REPO_ROOT, 'web-ui');
-const FONTS_DIR = path.join(WEB, 'public', 'fonts');
-const UI_FONTS_DIR = path.join(UI, 'static', 'fonts');
+const FONTS_DIR = path.join(UI, 'static', 'fonts');
 const SCAN_ROOTS = [WEB, path.join(UI, 'src')];
-const SCAN_EXTS = new Set(['.ejs', '.js', '.html', '.css', '.json', '.svelte', '.ts']);
+const SCAN_EXTS = new Set(['.js', '.html', '.css', '.json', '.svelte', '.ts']);
 const CODEPOINTS_CACHE = path.join(__dirname, '.cache', 'MaterialSymbolsOutlined.codepoints');
 const CODEPOINTS_URL =
     'https://raw.githubusercontent.com/google/material-design-icons/master/variablefont/MaterialSymbolsOutlined%5BFILL%2CGRAD%2Copsz%2Cwght%5D.codepoints';
@@ -265,34 +264,18 @@ async function downloadFamily(familyLabel, familyApiName, outName, icons) {
     return { outName, size: buf.length, sha256: hash, fontUrl, cssUrl };
 }
 
-function updateFontCacheBusters(outlined, rounded) {
-    // The reworked console declares the font in ui/base.css, the new one in
-    // its base.css, and app.html preloads it.
+function updateFontCacheBusters(outlined) {
+    // base.css declares the font and app.html preloads it
     for (const basePath of [
-        path.join(WEB, 'public', 'css', 'ui', 'base.css'),
         path.join(UI, 'src', 'lib', 'styles', 'base.css'),
         path.join(UI, 'src', 'app.html'),
     ]) {
-        if (!fs.existsSync(basePath)) continue;
         const base = fs.readFileSync(basePath, 'utf8').replace(
             /MaterialSymbolsOutlined\.woff2(?:\?v=[^'")]+)?/g,
             `MaterialSymbolsOutlined.woff2?v=${outlined.sha256.slice(0, 12)}`
         );
         fs.writeFileSync(basePath, base, 'utf8');
     }
-    const cssPath = path.join(WEB, 'public', 'css', 'material-icons-local.css');
-    if (!fs.existsSync(cssPath)) return;
-    let css = fs.readFileSync(cssPath, 'utf8');
-    css = css
-        .replace(
-            /MaterialSymbolsOutlined\.woff2(?:\?v=[^'")]+)?/g,
-            `MaterialSymbolsOutlined.woff2?v=${outlined.sha256.slice(0, 12)}`
-        )
-        .replace(
-            /MaterialSymbolsRounded\.woff2(?:\?v=[^'")]+)?/g,
-            `MaterialSymbolsRounded.woff2?v=${rounded.sha256.slice(0, 12)}`
-        );
-    fs.writeFileSync(cssPath, css, 'utf8');
 }
 
 async function main() {
@@ -320,19 +303,7 @@ async function main() {
         'MaterialSymbolsRounded.woff2',
         icons
     );
-    updateFontCacheBusters(outlined, rounded);
-
-    for (const legacy of [
-        'MaterialIcons-Regular.woff2',
-        'MaterialIconsOutlined-Regular.woff2',
-        'MaterialIconsRound-Regular.woff2',
-    ]) {
-        const p = path.join(FONTS_DIR, legacy);
-        if (fs.existsSync(p)) {
-            fs.unlinkSync(p);
-            console.log(`Removed legacy ${legacy}`);
-        }
-    }
+    updateFontCacheBusters(outlined);
 
     const versionPath = path.join(FONTS_DIR, 'MATERIAL_SYMBOLS_VERSION.txt');
     const lines = [
@@ -361,12 +332,6 @@ async function main() {
     ];
     fs.writeFileSync(versionPath, lines.join('\n'), 'utf8');
     console.log(`Wrote ${path.relative(REPO_ROOT, versionPath)}`);
-    if (fs.existsSync(UI_FONTS_DIR)) {
-        for (const name of [outlined.outName, rounded.outName, 'MATERIAL_SYMBOLS_VERSION.txt']) {
-            fs.copyFileSync(path.join(FONTS_DIR, name), path.join(UI_FONTS_DIR, name));
-        }
-        console.log(`Copied the fonts to ${path.relative(REPO_ROOT, UI_FONTS_DIR)}`);
-    }
     console.log('Done. Review hashes, then commit fonts + CSS together.');
 }
 

@@ -3,8 +3,9 @@
  * Uses csrf-csrf (double-submit cookie pattern) for stateless CSRF protection.
  * 
  * Token flow:
- *   1. Server generates token, sets it as a cookie + passes to EJS views
- *   2. Client JS reads window.BetterDesk.csrfToken and sends it in X-CSRF-Token header
+ *   1. Server generates token and sets it as a cookie; the console gets it from
+ *      /api/auth/login-page and /api/console/bootstrap (res.locals.csrfToken)
+ *   2. The console sends it in the X-CSRF-Token header
  *   3. Middleware validates header matches cookie on state-changing requests (POST/PUT/DELETE/PATCH)
  */
 
@@ -31,16 +32,17 @@ const {
         path: '/'
     },
     getTokenFromRequest: (req) => {
-        // Read token from X-CSRF-Token header (set by public/js/utils.js)
+        // Read token from X-CSRF-Token header (set by web-ui src/lib/api/client.ts)
         return req.headers['x-csrf-token'] || req.body?._csrf || '';
     }
 });
 
-/** Safe HTTP methods that render views and need a fresh CSRF token. */
+/** Safe HTTP methods that get a fresh CSRF token. */
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
 /**
- * Middleware that generates a CSRF token and makes it available to views.
+ * Middleware that generates a CSRF token (res.locals.csrfToken) for the routes
+ * that hand it to the console.
  * Must be applied AFTER cookie-parser and session middleware.
  *
  * IMPORTANT: Token generation runs ONLY on safe methods (GET/HEAD/OPTIONS).
@@ -79,7 +81,7 @@ function csrfTokenProvider(req, res, next) {
             const token = generateToken(req, res);
             res.locals.csrfToken = token;
         } catch (_e) {
-            // Give views a harmless empty token so rendering never breaks
+            // An empty token: the console's writes fail the check, nothing else breaks
             res.locals.csrfToken = '';
         }
         return next();

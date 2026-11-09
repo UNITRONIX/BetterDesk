@@ -3,7 +3,6 @@
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
-const { syncSessionMediaCapture } = require('../lib/sessionMediaSync');
 
 function loadBrowserScript(relativePath, extraGlobals) {
     const filename = path.join(__dirname, '..', relativePath);
@@ -38,41 +37,6 @@ function loadBrowserScripts(relativePaths, extraGlobals) {
     }
     return sandbox;
 }
-
-describe('syncSessionMediaCapture', () => {
-    it('activates only the active streaming session', () => {
-        const clientA = { setSessionActive: jest.fn() };
-        const clientB = { setSessionActive: jest.fn() };
-        const sessions = new Map([
-            ['device-a', { deviceId: 'device-a', state: 'streaming', client: clientA }],
-            ['device-b', { deviceId: 'device-b', state: 'streaming', client: clientB }],
-        ]);
-
-        syncSessionMediaCapture(sessions, 'device-b');
-
-        expect(clientA.setSessionActive).toHaveBeenCalledWith(false);
-        expect(clientB.setSessionActive).toHaveBeenCalledWith(true);
-    });
-
-    it('does not activate a non-streaming tab even when selected', () => {
-        const client = { setSessionActive: jest.fn() };
-        const sessions = new Map([
-            ['device-a', { deviceId: 'device-a', state: 'connecting', client }],
-        ]);
-
-        syncSessionMediaCapture(sessions, 'device-a');
-
-        expect(client.setSessionActive).toHaveBeenCalledWith(false);
-    });
-
-    it('ignores sessions without a transport client', () => {
-        const sessions = new Map([
-            ['device-a', { deviceId: 'device-a', state: 'streaming', client: null }],
-        ]);
-
-        expect(() => syncSessionMediaCapture(sessions, 'device-a')).not.toThrow();
-    });
-});
 
 describe('RDAudio session isolation', () => {
     let RDAudio;

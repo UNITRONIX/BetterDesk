@@ -77,7 +77,7 @@ describe('hexToMutedRgba', () => {
         expect(hexToMutedRgba(null)).toBeNull();
     });
 
-    // The theme switch (theme-head.ejs) writes palette values to the page as they are,
+    // The console's theme switch (web-ui src/lib/state/theme.svelte.ts) writes palette values to the page as they are,
     // so muted colours must already be translucent tints, never solid hex.
     test('built-in muted palette keys are translucent tints', () => {
         for (const mode of ['dark', 'light']) {

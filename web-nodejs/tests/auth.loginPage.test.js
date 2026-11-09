@@ -54,13 +54,11 @@ const authService = require('../services/authService');
 const betterdeskApi = require('../services/betterdeskApi');
 const authRoutes = require('../routes/auth.routes');
 
-/** The app with res.render answering JSON, so views need no template locals */
 function app(user) {
     const a = createTestApp();
     a.use((req, res, next) => {
         req.cookies = {};
         res.locals.csrfToken = 'csrf-token-for-test';
-        res.render = (view, locals) => res.json({ view, locals });
         if (user) { req.session.userId = user.id; req.session.user = user; }
         next();
     });

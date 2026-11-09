@@ -89,7 +89,7 @@ const PROMO_MODES = new Set(['classic', 'single', 'slides']);
  * console, the languages and the capacity badge. No user data.
  */
 router.get('/api/auth/login-page', async (req, res) => {
-    const branding = res.locals.branding || brandingService.getBranding() || {};
+    const branding = brandingService.getBranding() || {};
     const mode = PROMO_MODES.has(branding.loginPromoMode) ? branding.loginPromoMode : 'classic';
     const slides = mode === 'slides' && Array.isArray(branding.loginSlides) ? branding.loginSlides : [];
     const badge = await attestationSummary(req);
@@ -97,7 +97,7 @@ router.get('/api/auth/login-page', async (req, res) => {
     res.json({
         success: true,
         csrfToken: res.locals.csrfToken || '',
-        appName: res.locals.appName || branding.appName || config.appName || 'BetterDesk',
+        appName: branding.appName || config.appName || 'BetterDesk',
         appVersion: config.appVersion || '',
         // The old desktop mode's cookie still asks for the compact sign-in
         desktopMode: !!(req.cookies && req.cookies.betterdesk_desktop_mode === 'true'),

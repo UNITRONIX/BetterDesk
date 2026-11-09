@@ -228,22 +228,8 @@ function requireRdClientAuth(permission) {
             }
         }
 
-        res.locals.user = req.session.user;
-        res.locals.emergencyMode = !!req.session.emergencyMode;
         next();
     };
-}
-
-/**
- * RdClient login page — redirect away if already authenticated with device.connect.
- */
-function rdClientGuestOnly(req, res, next) {
-    const role = req.session && req.session.user && req.session.user.role;
-    if (req.session && req.session.userId && role !== 'pro' && requestHasPermission(req, 'device.connect')) {
-        const dest = normalizeRdClientReturnUrl(req.query.return) || '/remote';
-        return res.redirect(dest);
-    }
-    next();
 }
 
 /**
@@ -278,11 +264,6 @@ function requireAuth(req, res, next) {
         return res.redirect('/login');
     }
     
-    // Add user info to locals for templates
-    res.locals.user = req.session.user;
-    // Phase A: expose emergency mode flag to EJS templates
-    res.locals.emergencyMode = !!req.session.emergencyMode;
-    
     next();
 }
 
@@ -301,10 +282,7 @@ function requireRole(role) {
         const userRole = req.session.user && req.session.user.role;
 
         // Super admin roles bypass all role checks.
-        if (isSuperAdminRole(userRole)) {
-            res.locals.user = req.session.user;
-            return next();
-        }
+        if (isSuperAdminRole(userRole)) return next();
 
         if (userRole !== role) {
             if (isApiRequest(req)) {
@@ -313,31 +291,8 @@ function requireRole(role) {
             return refusePage(res, 403);
         }
         
-        res.locals.user = req.session.user;
         next();
     };
-}
-
-/**
- * Optional auth - add user to locals if logged in, but don't require it
- */
-function optionalAuth(req, res, next) {
-    if (req.session && req.session.userId) {
-        res.locals.user = req.session.user;
-    } else {
-        res.locals.user = null;
-    }
-    next();
-}
-
-/**
- * Guest only - redirect to dashboard if already logged in
- */
-function guestOnly(req, res, next) {
-    if (req.session && req.session.userId) {
-        return res.redirect('/');
-    }
-    next();
 }
 
 /**
@@ -363,7 +318,6 @@ function requireAdmin(req, res, next) {
         return refusePage(res, 403);
     }
     
-    res.locals.user = req.session.user;
     next();
 }
 
@@ -399,7 +353,6 @@ function requirePermission(permission) {
             return refusePage(res, 403);
         }
 
-        res.locals.user = req.session.user;
         next();
     };
 }
@@ -410,11 +363,8 @@ module.exports = {
     requireAdmin,
     requirePermission,
     requireRdClientAuth,
-    rdClientGuestOnly,
     normalizeRdClientReturnUrl,
     isSafeRdClientReturnUrl,
-    optionalAuth,
-    guestOnly,
     roleHasPermission,
     requestHasPermission,
     roleHasEffectivePermission,

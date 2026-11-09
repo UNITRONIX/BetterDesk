@@ -126,8 +126,8 @@ describe('[sec/07] Connection WebSocket / BD relay auth', () => {
             );
             expect(src).toContain("scriptSrcAttr: [\"'none'\"]");
             expect(src).not.toContain("scriptSrcAttr: [\"'unsafe-inline'\"]");
-            expect(src).toContain('CSP_RELAX_REMOTE');
-            expect(src).toContain('allowRemoteUnsafeEval');
+            expect(src).toContain("scriptSrc: [\"'self'\"]");
+            expect(src).not.toContain('unsafe-eval');
         });
     });
 });

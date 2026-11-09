@@ -909,7 +909,8 @@ router.delete('/help-requests/:id', requireDeviceAuth, requireOperatorRole, asyn
 //  Notification Center (panel navbar bell)
 // ===========================================================================
 //
-//  These routes are consumed by web-nodejs/public/js/notif-center.js. They use
+//  These routes are consumed by the console's bell (web-ui
+//  src/lib/shell/notifications.svelte.ts). They use
 //  session-based auth (panel cookies) rather than Bearer tokens because the
 //  dropdown is part of the web UI, not the desktop client.
 //

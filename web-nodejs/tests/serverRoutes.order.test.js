@@ -13,6 +13,7 @@ const request = require('supertest');
 const { createTestApp } = require('./helpers');
 const { createWebUi } = require('../lib/webUi');
 const { mountRoutes } = require('../lib/mountRoutes');
+const securityMiddleware = require('../middleware/security');
 
 jest.setTimeout(60000);
 
@@ -22,7 +23,7 @@ beforeAll(() => {
     dir = fs.mkdtempSync(path.join(os.tmpdir(), 'webui-order-'));
     fs.mkdirSync(path.join(dir, '_ui', 'immutable'), { recursive: true });
     fs.writeFileSync(path.join(dir, 'index.html'),
-        '<!doctype html><html><head><meta http-equiv="content-security-policy" content="default-src &#39;self&#39;; script-src &#39;self&#39;"></head>'
+        '<!doctype html><html><head><meta http-equiv="content-security-policy" content="default-src &#39;self&#39;; script-src &#39;self&#39; &#39;sha256-boot=&#39;"></head>'
         + '<body>console app<script>{ __sveltekit_t = { base: "", assets: "" }; }</script></body></html>');
     fs.writeFileSync(path.join(dir, '_ui', 'immutable', 'start.js'), 'export {}');
     fs.writeFileSync(path.join(dir, 'routes.json'), JSON.stringify([
@@ -38,6 +39,7 @@ afterAll(() => fs.rmSync(dir, { recursive: true, force: true }));
 
 function app(user) {
     const a = createTestApp();
+    a.use(securityMiddleware);
     a.use((req, _res, next) => {
         if (user) { req.session.userId = user.id; req.session.user = user; }
         next();
@@ -102,6 +104,17 @@ describe('server routes before the console at the root', () => {
         expect(out.headers.location).toBe('/login?return=%2Fdevices');
         expect(isApp(await request(app(null)).get('/login'))).toBe(true);
         expect((await request(app(null)).get('/_ui/immutable/start.js')).status).toBe(200);
+    });
+
+    test('console pages carry the policy of their build; server answers keep the strict one', async () => {
+        const page = await request(app(admin)).get('/devices');
+        expect(page.headers['content-security-policy']).toContain("script-src 'self' 'sha256-boot='");
+        for (const p of ['/health', '/console-boot.js', '/api/no-such-endpoint']) {
+            const res = await request(app(admin)).get(p);
+            const csp = res.headers['content-security-policy'];
+            expect([p, /script-src 'self';/.test(csp), /sha256|nonce-/.test(csp)]).toEqual([p, true, false]);
+            expect(csp).toContain("frame-ancestors 'none'");
+        }
     });
 
     test('an address no page has gets the app with status 404', async () => {

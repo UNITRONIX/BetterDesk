@@ -275,12 +275,6 @@ describe('brandingService.generateThemeCss', () => {
         }
     });
 
-    it('uses glass tokens for the sidebar backgrounds', () => {
-        const css = fs.readFileSync(path.join(__dirname, '..', 'public', 'css', 'main.css'), 'utf8');
-        expect(css).toMatch(/\.sidebar-rail\s*\{[\s\S]*background: var\(--sidebar-glass-bg-rail/);
-        expect(css).toMatch(/\.sidebar-flyout\s*\{[\s\S]*background: var\(--sidebar-glass-bg-flyout/);
-    });
-
     it('exposes a safe public appearance contract for RdClient', () => {
         const appearance = brandingService.getPublicAppearance();
         expect(appearance.product).toBe('betterdesk-appearance');
@@ -390,38 +384,5 @@ describe('BetterDesk favicon and logo', () => {
     ])('keeps an own %s logo', async (type, rows) => {
         await loadWith(rows);
         expect(brandingService.getBranding().logoType).toBe(type);
-    });
-
-    describe('views/partials/brand-logo.ejs', () => {
-        const ejs = require('ejs');
-        const partial = path.join(__dirname, '..', 'views', 'partials', 'brand-logo.ejs');
-        const render = (data) => ejs.renderFile(partial, data);
-
-        it('draws mark and wordmark, named after the app, with the wordmark in the text colour', async () => {
-            const html = await render({ bdLogoName: 'BetterDesk', bdLogoHeight: 28 });
-            expect(html).toMatch(/<svg class="brand-logo brand-logo-full"[^>]* height="28" role="img" aria-label="BetterDesk"/);
-            expect(html).toContain('fill="currentColor"');
-            expect(html).toContain('var(--logo-square,#1f6feb)');
-            expect(html).toContain('var(--logo-circle,#4d8f06)');
-            expect(html).toContain('var(--logo-overlap,#0f9e96)');
-            expect(html).not.toMatch(/<text|font-family|gradient|filter/i);
-            expect(html).not.toContain('brand-logo-compact');
-        });
-
-        it('adds the mark alone for tight places when asked', async () => {
-            const html = await render({ bdLogoName: 'BetterDesk', bdLogoCompact: true });
-            expect(html).toMatch(/<svg class="brand-logo brand-logo-compact"[^>]* role="img" aria-label="BetterDesk"/);
-            // Each drawing clips with its own id
-            const ids = [...html.matchAll(/clipPath id="([^"]+)"/g)].map((m) => m[1]);
-            expect(new Set(ids).size).toBe(2);
-        });
-
-        it('keeps a custom app name as text next to a decorative mark, escaped', async () => {
-            const html = await render({ bdLogoName: '<b>Acme</b> Remote', bdLogoNameClass: 'login-logo-text' });
-            expect(html).not.toContain('brand-logo-full');
-            expect(html).not.toContain('currentColor');
-            expect(html).toMatch(/<svg class="brand-logo brand-logo-mark"[^>]* aria-hidden="true"/);
-            expect(html).toContain('<span class="login-logo-text">&lt;b&gt;Acme&lt;/b&gt; Remote</span>');
-        });
     });
 });
