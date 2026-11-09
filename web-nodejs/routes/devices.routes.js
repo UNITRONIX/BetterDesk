@@ -930,6 +930,9 @@ router.delete('/api/devices/:id', requireAuth, requirePermission('device.delete'
 router.post('/api/devices/:id/restore', requireAuth, requirePermission('device.delete'), async (req, res) => {
     try {
         const id = req.params.id;
+        // A soft-deleted device keeps its groups and folder: check scope first
+        const existing = await serverBackend.getDeviceById(id, { includeDeleted: true });
+        if (existing && await rejectIfDeviceOutOfScope(req, res, existing)) return;
         const result = await serverBackend.restoreDevice(id);
         if (!result || !result.success) {
             const status = result?.error === 'peer not found' ? 404 : 500;
@@ -1081,6 +1084,12 @@ router.post('/api/devices/:id/change-id', requireAuth, requirePermission('device
             });
         }
         
+        const current = await serverBackend.getDeviceById(oldId);
+        if (!current) {
+            return res.status(404).json({ success: false, error: req.t('devices.not_found') });
+        }
+        if (await rejectIfDeviceOutOfScope(req, res, current)) return;
+
         // Check if new ID already exists (active or soft-deleted reservation)
         const existingActive = await serverBackend.getDeviceById(newId);
         if (existingActive) {
@@ -1162,6 +1171,7 @@ router.put('/api/devices/:id/tags', requireAuth, requirePermission('device.edit'
                 error: req.t('devices.not_found')
             });
         }
+        if (await rejectIfDeviceOutOfScope(req, res, device)) return;
 
         // BetterDesk backend: delegate to Go server
         if (await serverBackend.isBetterDesk()) {
@@ -1616,6 +1626,7 @@ router.post('/api/devices/:id/rename', requireAuth, requirePermission('device.ed
         if (!device) {
             return res.status(404).json({ success: false, error: req.t('devices.not_found') });
         }
+        if (await rejectIfDeviceOutOfScope(req, res, device)) return;
         const result = await serverBackend.updateDevice(req.params.id, { display_name: displayName });
         await db.logAction(req.session.userId, 'device.rename',
             `Device ${req.params.id} renamed to "${displayName}"`, req.ip || null);

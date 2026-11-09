@@ -571,6 +571,7 @@ describe('Devices Routes', () => {
     describe('POST /api/devices/:id/change-id', () => {
         it('should return reserved-deleted error when target ID is soft-deleted', async () => {
             serverBackend.getDeviceById
+                .mockResolvedValueOnce({ id: 'NEWCLIENT' })
                 .mockResolvedValueOnce(null)
                 .mockResolvedValueOnce({ id: 'MACPRO', soft_deleted: true });
 
@@ -585,7 +586,8 @@ describe('Devices Routes', () => {
 
         it('should propagate soft-deleted ID conflicts from the backend', async () => {
             const message = 'This ID belongs to a deleted device. Restore or permanently delete that device before reusing the ID.';
-            serverBackend.getDeviceById.mockResolvedValue(null);
+            // The device being renamed exists; the new ID is free in the panel
+            serverBackend.getDeviceById.mockImplementation(async (id) => (id === 'NEWCLIENT' ? { id: 'NEWCLIENT' } : null));
             serverBackend.changePeerId.mockResolvedValue({ success: false, error: message });
 
             const res = await request(app)
