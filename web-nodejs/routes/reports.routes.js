@@ -26,15 +26,19 @@ const express = require('express');
 const router = express.Router();
 const { getAdapter } = require('../services/dbAdapter');
 const { generateReport, listReportTypes, toCsv } = require('../services/reportEngine');
-const { isSuperAdminRole } = require('../middleware/auth');
+const { isSuperAdminRole, requestHasPermission } = require('../middleware/auth');
 
 // ---------------------------------------------------------------------------
 //  Auth middleware
 // ---------------------------------------------------------------------------
 
+// Reports read device, audit and security data: audit.view, like the Reports page
 function requireSession(req, res, next) {
-    if (req.session && req.session.user) return next();
-    return res.status(401).json({ error: 'Authentication required' });
+    if (!req.session || !req.session.user) return res.status(401).json({ error: 'Authentication required' });
+    if (!requestHasPermission(req, 'audit.view')) {
+        return res.status(403).json({ success: false, error: 'Permission denied: audit.view' });
+    }
+    return next();
 }
 
 function requireAdmin(req, res, next) {
