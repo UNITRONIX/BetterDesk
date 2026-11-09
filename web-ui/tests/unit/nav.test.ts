@@ -8,7 +8,7 @@ describe('link', () => {
 	test('ported pages get the base, query and hash kept', () => {
 		expect(link('/devices')).toBe('/app/devices');
 		expect(link('/devices?open=900100001')).toBe('/app/devices?open=900100001');
-		expect(link('/')).toBe('/app');
+		expect(link('/')).toBe('/');
 	});
 	test('pages still in the old console keep their URL', () => {
 		expect(link('/settings?tab=auth')).toBe('/settings?tab=auth');

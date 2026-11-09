@@ -15,7 +15,7 @@ export const base = resolve('').replace(/\/$/, '');
  * Pages the new console serves (path without query). Add a page here in the
  * commit that ports it.
  */
-export const PORTED = new Set<string>(['/', '/devices']);
+export const PORTED = new Set<string>(['/devices']);
 
 function pathOf(href: string): string {
 	const cut = href.search(/[?#]/);
