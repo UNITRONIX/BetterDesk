@@ -130,14 +130,16 @@ describe('UX 3.6 beta shell contract', () => {
             assert.doesNotMatch(sidebar, /hasSectionAccess\(/);
         });
 
-        it('marks the beta shell in the shared topbar without a switch control', () => {
+        it('offers the shell switch in the topbar of both shells, with a beta badge', () => {
             const topbar = read('views', 'partials', 'ux35-topbar.ejs');
-            // Server-rendered flag only; the switch itself lives in Settings.
-            assert.match(topbar, /uiShellBeta/);
+            // Always the same control; only its target/icon/label flips.
+            assert.match(topbar, /id="ui-shell-toggle"/);
+            assert.match(topbar, /data-target-shell=/);
             assert.match(topbar, /ux36-beta-chip/);
+            // The switch is a plain settings action, never a competing shell switch widget.
             assert.doesNotMatch(topbar, /data-ui-shell-switch/);
-            // UX 3.5 never renders the chip.
-            const html = ejs.render(read('views', 'partials', 'ux35-topbar.ejs'), {
+
+            const render = (uiShellBeta) => ejs.render(topbar, {
                 _: (key) => key,
                 appName: 'BetterDesk',
                 branding: {},
@@ -145,9 +147,18 @@ describe('UX 3.6 beta shell contract', () => {
                 availableLanguageList: [],
                 lang: 'en',
                 currentPage: 'dashboard',
-                uiShellBeta: false,
+                uiShellBeta,
             }, { filename: path.join(root, 'views', 'partials', 'ux35-topbar.ejs') });
-            assert.doesNotMatch(html, /ux36-beta-chip/);
+
+            // UX 3.5: offers the beta, so it carries the BETA badge.
+            const stable = render(false);
+            assert.match(stable, /data-target-shell="ux36"/);
+            assert.match(stable, /ux36-beta-chip/);
+
+            // UX 3.6: the same button goes back, and no beta badge is needed.
+            const beta = render(true);
+            assert.match(beta, /data-target-shell="ux35"/);
+            assert.doesNotMatch(beta, /ux36-beta-chip/);
         });
 
         it('exposes the shell switch through a CSRF-protected endpoint', () => {
@@ -156,9 +167,17 @@ describe('UX 3.6 beta shell contract', () => {
             assert.match(routes, /SUPPORTED_SHELLS\.join/);
             assert.match(routes, /res\.cookie\(SHELL_COOKIE, shell/);
 
-            const client = read('public', 'js', 'ux36-shell.js');
+            // The client bridge owns the request, because the toggle renders in
+            // both shells (ux36-shell.js only adds beta-specific behaviour).
+            const client = read('public', 'js', 'ui-shell.js');
             assert.match(client, /X-CSRF-Token/);
             assert.match(client, /window\.location\.reload\(\)/);
+            assert.match(client, /initTopbarToggle/);
+            assert.match(client, /initSidebarSwitch/);
+            assert.match(client, /initSettingsChoice/);
+
+            const beta = read('public', 'js', 'ux36-shell.js');
+            assert.doesNotMatch(beta, /fetch\('\/api\/ui-shell'/);
         });
 
         it('offers the beta choice in Settings without touching branding logic', () => {
@@ -166,6 +185,10 @@ describe('UX 3.6 beta shell contract', () => {
             assert.match(settingsView, /id="ux36-shell-panel"/);
             assert.match(settingsView, /name="ui-shell" value="ux36"/);
             assert.match(settingsView, /ux36\.credits/);
+            // Credit links must point at the contributor and the design threads.
+            assert.match(settingsView, /href="https:\/\/github\.com\/rathlinus"/);
+            assert.match(settingsView, /issues\/493/);
+            assert.match(settingsView, /pull\/495/);
         });
     });
 

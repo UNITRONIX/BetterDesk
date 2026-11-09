@@ -10,20 +10,16 @@
  *  - first-visit default: expand the group that contains the active page and
  *    collapse the others (the redesign's "one open group" model);
  *  - keep groups open while the menu filter has a query, so matches cannot hide
- *    behind a collapsed heading;
- *  - the per-browser shell switch used by Settings.
+ *    behind a collapsed heading.
  *
- * No new dependencies, no framework.
+ * The shell switch itself lives in ui-shell.js, because the toggle is rendered
+ * in both shells.
  */
 (function () {
     'use strict';
 
     /* Shared with ux35-shell.js — do not introduce a second key. */
     var COLLAPSE_KEY = 'bd_ux35_sidebar_collapsed';
-
-    function t(key, fallback) {
-        return (typeof window._ === 'function' ? window._(key) : fallback) || fallback;
-    }
 
     function readCollapsed() {
         try {
@@ -84,75 +80,13 @@
         });
     }
 
-    /* ── Shell switch (Settings → Console interface) ─────────────────────── */
-
-    function setShell(shell) {
-        if (shell !== 'ux35' && shell !== 'ux36') {
-            return Promise.reject(new Error('unsupported shell'));
-        }
-        var token = window.BetterDesk && window.BetterDesk.csrfToken;
-        return fetch('/api/ui-shell', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                ...(token ? { 'X-CSRF-Token': token } : {}),
-            },
-            credentials: 'same-origin',
-            body: JSON.stringify({ shell: shell }),
-        }).then(function (res) {
-            if (!res.ok) throw new Error('request failed');
-            return res.json();
-        }).then(function (body) {
-            if (!body || body.success !== true) throw new Error('rejected');
-            return body;
-        });
-    }
-
-    function initShellChoice() {
-        var group = document.querySelector('.ux36-shell-choice');
-        if (!group) return;
-        var current = group.getAttribute('data-current-shell') || 'ux35';
-
-        function markActive(shell) {
-            group.querySelectorAll('.ux36-shell-choice-option').forEach(function (option) {
-                option.classList.toggle('is-active', option.getAttribute('data-shell-option') === shell);
-            });
-            group.querySelectorAll('input[name="ui-shell"]').forEach(function (radio) {
-                radio.checked = radio.value === shell;
-            });
-        }
-
-        group.querySelectorAll('input[name="ui-shell"]').forEach(function (input) {
-            input.addEventListener('change', function () {
-                if (!input.checked || input.value === current) return;
-                var target = input.value;
-                // Optimistic, then reload: the server is the single source of
-                // truth and SSR must re-render with the chosen shell.
-                markActive(target);
-                setShell(target).then(function () {
-                    window.location.reload();
-                }).catch(function () {
-                    markActive(current);
-                    var message = t('ux36.switch_failed', 'Could not change the console layout. Please try again.');
-                    if (window.Notifications && typeof window.Notifications.error === 'function') {
-                        window.Notifications.error(message);
-                    } else {
-                        window.alert(message);
-                    }
-                });
-            });
-        });
-    }
-
     function init() {
         if (window.BetterDesk && window.BetterDesk.embed) return;
         initSections();
         initFilterSync();
-        initShellChoice();
     }
 
     window.Ux36Shell = {
-        setShell: setShell,
         openSection: function (id) {
             var section = document.querySelector('.ux36-nav-section[data-panel="' + id + '"]');
             if (section) setSectionOpen(section, true);

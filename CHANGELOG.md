@@ -19,6 +19,11 @@
   Devices becomes list-first with folders and device groups in a rail beside the
   table and details in a side sheet on desktop; Settings keeps its tabs, gains
   `?tab=` deep links and its search. Only the active group starts expanded.
+  The switch is in the **top bar** on every page: in UX 3.5 the button carries a
+  small **BETA** badge and opens the beta; in UX 3.6 the same button returns to
+  UX 3.5 (also repeated at the bottom of the sidebar). **Settings → General →
+  Console interface** offers the same choice with a description and the design
+  credit.
   UX 3.5 stays the default and the safe fallback: the shell is resolved once in
   `web-nodejs/lib/uiShell.js`, stored per browser in the `bd_ui_shell` cookie, and
   switched from **Settings → General → Console interface** or `?ui=ux36`.

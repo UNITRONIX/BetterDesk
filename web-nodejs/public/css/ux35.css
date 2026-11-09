@@ -846,32 +846,87 @@ body.ux35-is-resizing {
 }
 
 /* ── UX 3.6 beta: shared chrome ─────────────────────────────────────────────
- * These two pieces must render in BOTH shells: UX 3.5 operators need the
- * Settings card to opt into the beta, and the badge only appears once they
- * have. Everything else specific to the new layout lives in ux36.css. */
+ * These pieces must render in BOTH shells: UX 3.5 operators need the topbar
+ * toggle to try the beta, and UX 3.6 users need the same control to go back.
+ * Everything else specific to the new layout lives in ux36.css. */
 
-.ux36-beta-chip {
-    flex-shrink: 0;
-    align-self: center;
-    margin-inline-start: 4px;
-    padding: 2px 6px;
-    border-radius: 4px;
+/* Topbar shell toggle — sits with the theme / refresh / language controls. */
+.ux36-shell-toggle {
+    position: relative;
+}
+
+.ux36-shell-toggle .ux36-beta-chip {
+    position: absolute;
+    top: 1px;
+    inset-inline-end: 0;
+    padding: 0 3px;
+    border-radius: 3px;
     background: var(--ux35-active-bg);
     color: var(--ux35-primary);
     font-family: var(--ux35-font-chrome);
-    font-size: 9px;
+    font-size: 8px;
     font-weight: 700;
-    letter-spacing: 0.06em;
-    line-height: 1.4;
+    letter-spacing: 0.04em;
+    line-height: 1.3;
     text-transform: uppercase;
+    pointer-events: none;
     user-select: none;
 }
 
-@media (max-width: 767px) {
-    .ux36-beta-chip {
-        display: none;
-    }
+.ux36-shell-toggle:disabled {
+    opacity: 0.6;
+    cursor: progress;
 }
+
+/* Sidebar entry that returns to UX 3.5 (UX 3.6 only). */
+.ux36-switch-back {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    margin-top: var(--ux35-space-2);
+    padding: 6px 8px;
+    border: 1px solid var(--ux35-border);
+    border-radius: var(--ux35-radius-sm);
+    background: transparent;
+    color: var(--ux35-muted);
+    font-family: var(--ux35-font-chrome);
+    font-size: 12px;
+    text-align: start;
+    cursor: pointer;
+}
+
+.ux36-switch-back:hover {
+    border-color: var(--ux35-primary);
+    color: var(--ux35-primary);
+}
+
+.ux36-switch-back:focus-visible {
+    outline: 2px solid var(--ux35-focus-ring, var(--ux35-primary));
+    outline-offset: -2px;
+}
+
+.ux36-switch-back:disabled {
+    opacity: 0.6;
+    cursor: progress;
+}
+
+.ux36-switch-back .material-icons {
+    font-size: 16px;
+    line-height: 1;
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.ux36-switch-back-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Settings → General: shell picker card (secondary entry point + credit). */
 
 .ux36-shell-choice {
     display: flex;

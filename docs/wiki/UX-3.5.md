@@ -12,9 +12,17 @@ Both render the same pages, routes, permissions and APIs. Only the chrome
 
 ## Switching
 
-**Settings → General → Console interface** offers the two layouts. The choice is
-stored in the `bd_ui_shell` cookie for that browser only — no database
-migration, no effect on other operators.
+The switch sits in the **top bar**, next to the theme / refresh / language controls:
+
+- In UX 3.5 the button is marked **BETA** and opens UX 3.6.
+- In UX 3.6 the same button returns to UX 3.5 (the sidebar footer repeats it as
+  **Switch back to UX 3.5**).
+
+**Settings → General → Console interface** offers the same choice with a
+description of each layout, and records the contributor credit.
+
+The choice is stored in the `bd_ui_shell` cookie for that browser only — no
+database migration, no effect on other operators.
 
 Support deep link: `?ui=ux36` (or `?ui=ux35`) on any console page applies the
 choice for that browser and survives later navigation.
@@ -54,7 +62,7 @@ panel, notifications and every API.
 | Grouped navigation model | `web-nodejs/lib/consoleNav.js` |
 | Sidebar partial | `web-nodejs/views/partials/ux36-sidebar.ejs` |
 | Styles | `web-nodejs/public/css/ux36.css` (layered on `ux35.css`) |
-| Client behaviour | `web-nodejs/public/js/ux36-shell.js` |
+| Client behaviour | `web-nodejs/public/js/ui-shell.js` (switch, both shells), `web-nodejs/public/js/ux36-shell.js` (beta layout only) |
 | Preference API | `web-nodejs/routes/ui-shell.routes.js` (`GET`/`POST /api/ui-shell`) |
 | Tests | `web-nodejs/tests/ux36-shell.test.js`, `ux35-ui-contract.test.js` |
 

@@ -108,6 +108,11 @@
             <% if (branding.showPoweredBy !== 'false') { %><span><%= _('branding.powered_by') %> BetterDesk</span><% } %>
         </div>
         <% } %>
+        <button type="button" class="ux36-switch-back" id="ux36-switch-back"
+                title="<%= _('ux36.switch_to_ux35') %>">
+            <span class="material-icons" aria-hidden="true">undo</span>
+            <span class="ux36-switch-back-label"><%= _('ux36.switch_to_ux35') %></span>
+        </button>
     </div>
 </aside>
 <div class="ux35-sidebar-overlay" id="ux35-sidebar-overlay" hidden></div>

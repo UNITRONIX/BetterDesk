@@ -154,6 +154,26 @@ Diagnostics → [issue](https://github.com/UNITRONIX/BetterDesk/issues) → fork
 
 ---
 
+## Credits
+
+### Console redesign — UX 3.6
+
+The **UX 3.6 beta** console layout is modelled on the community redesign by
+**[Linus Rath (@rathlinus)](https://github.com/rathlinus)** — the grouped
+sidebar (Devices / Support / People / Activity / Settings), the list-first
+device view with side panels, per-topic Settings with search, and light/dark
+coverage across all 26 locales. The redesign was proposed in
+[issue #493](https://github.com/UNITRONIX/BetterDesk/issues/493)
+([PR #495](https://github.com/UNITRONIX/BetterDesk/pull/495)) and is
+implemented in BetterDesk's existing EJS/JavaScript/CSS stack rather than
+merged as a branch.
+
+Design credit is recorded in
+[docs/development/CONTRIBUTOR-ATTRIBUTIONS.md](docs/development/CONTRIBUTOR-ATTRIBUTIONS.md)
+and shown in the console (Settings → General → Console interface).
+
+---
+
 ## License
 
 [AGPL-3.0](LICENSE). Optional Commercial Grant for eligible sponsors — [docs/COMMERCIAL-GRANT.md](docs/COMMERCIAL-GRANT.md).
