@@ -8,11 +8,11 @@
  * Usage (from repo root):
  *   node scripts/update-material-symbols.mjs
  *
- * Names come from the console (web-ui/src: `<Icon name="…">`, `icon="…"`,
- * `icon={…}`, icon maps, CSS `content` ligatures) and from what the server
- * sends it (web-nodejs: `icon` properties such as the navigation in
- * lib/consoleNav.js). collectCandidateIcons() and collectIcons() are exported
- * so a check can compare the list with the font.
+ * The icon names come from web-ui/scripts/icon-names.mjs, which scans the
+ * console (web-ui/src and the remote viewer's scripts in web-ui/static) and
+ * the icons the server sends it (web-nodejs, such as the navigation in
+ * lib/consoleNav.js). Its header says which ways of writing a name it reads.
+ * web-ui/tests/unit/icons.test.ts checks the font against the same scan.
  *
  * Writes into web-ui/static/fonts/:
  *   MaterialSymbolsOutlined.woff2, MaterialSymbolsRounded.woff2,
@@ -24,90 +24,20 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { collectCandidateIcons } from '../web-ui/scripts/icon-names.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.join(__dirname, '..');
-const WEB = path.join(REPO_ROOT, 'web-nodejs');
 const UI = path.join(REPO_ROOT, 'web-ui');
 const FONTS_DIR = path.join(UI, 'static', 'fonts');
-const SCAN_ROOTS = [WEB, path.join(UI, 'src')];
-const SCAN_EXTS = new Set(['.js', '.html', '.css', '.json', '.svelte', '.ts']);
 const CODEPOINTS_CACHE = path.join(__dirname, '.cache', 'MaterialSymbolsOutlined.codepoints');
 const CODEPOINTS_URL =
     'https://raw.githubusercontent.com/google/material-design-icons/master/variablefont/MaterialSymbolsOutlined%5BFILL%2CGRAD%2Copsz%2Cwght%5D.codepoints';
 
-/** Always include — may be set dynamically or only in docs/hints. */
-const EXTRA_ICONS = [
-    'monitoring',
-    'widgets',
-    'help',
-    'help_outline',
-    'error',
-    'error_outline',
-    'info',
-    'warning',
-    'check_circle',
-    'radio_button_unchecked',
-    'dns',
-    'cloud',
-    'security',
-    'home_repair_service',
-    'autorenew',
-    /* Used in markup; keep even if a scan pattern misses them */
-    'label',
-    'assignment',
-    'my_location',
-];
-
 const USER_AGENT =
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
-/** Only lowercase Material-style ligatures inside icon spans. */
-const LIGATURE_IN_ICON_SPAN =
-    /material-icons(?:-round|-outlined)?\b[^>]*>\s*([a-z][a-z0-9_]{1,48})\s*</g;
-
 const NAME_RE = /^[a-z][a-z0-9_]{1,48}$/;
-const ICON_PROPERTY = /\bicon\s*:\s*['"]([a-z][a-z0-9_]{1,48})['"]/g;
-const ICON_RETURN = /\breturn\s+['"]([a-z][a-z0-9_]{1,48})['"]/g;
-const PLATFORM_ICON_MAP =
-    /\b(?:windows|linux|mac|macos|android|ios)\s*:\s*['"]([a-z][a-z0-9_]{1,48})['"]/g;
-const ICON_HELPER_LINE =
-    /\b(?:createWindowCtrlBtn|createMaterialIconSpan|addItem|toggleButton)\b[^;\n]*/g;
-const TEXT_CONTENT_LINE = /\btextContent\s*=[^;\n]*/g;
-/* A line that builds an icon span: names in ternaries such as
-   `material-icons">' + (isDir ? 'folder' : 'insert_drive_file') + '<` */
-const ICON_SPAN_LINE = /^.*material-(?:icons|symbols)[^\n]*$/gm;
-/* Assignments to an icon variable: `var icon = running ? 'play_circle' : 'stop_circle'` */
-const ICON_VAR_LINE = /\b\w*[iI]con\w*\s*=(?![=>])[^;\n]*/g;
-/* Meaning-to-name maps: `ICONS: { … }`, `const iconMap = { … }`, `SVC_ICONS = { … }` */
-const ICON_MAP_BLOCK = /\b\w*icons?\w*\s*[:=]\s*(?:Object\.freeze\(\s*)?\{([^{}]*)\}/gi;
-const MAP_VALUE = /:\s*['"]([a-z][a-z0-9_]{1,48})['"]/g;
-/* Ligatures drawn from CSS, e.g. the disclosure chevron `content: "expand_more"` */
-const CSS_CONTENT = /\bcontent\s*:\s*['"]([a-z][a-z0-9_]{1,48})['"]/g;
-const QUOTED_ICON_NAME = /['"]([a-z][a-z0-9_]{1,48})['"]/g;
-/* Svelte: <Icon name="devices" />, and icon={online ? 'wifi' : 'wifi_off'} on any component */
-const ICON_COMPONENT = /<Icon\b[^>]*?\bname=["']([a-z][a-z0-9_]{1,48})["']/g;
-const ICON_ATTR_EXPR = /\b\w*[iI]con\w*=\{[^}\n]*\}/g;
-
-const SKIP_DIRS = new Set(['node_modules', '.git', 'coverage', 'vendor', 'tests', 'data']);
-/* Names picked inline a few lines from an icon span: `(on ? 'check_box' : 'check_box_outline_blank')` */
-const ICON_TERNARY_PAIR =
-    /\?\s*['"]([a-z][a-z0-9_]{1,48})['"]\s*:\s*['"]([a-z][a-z0-9_]{1,48})['"]/g;
-
-function walkFiles(dir, out = []) {
-    for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
-        if (SKIP_DIRS.has(ent.name)) {
-            continue;
-        }
-        const full = path.join(dir, ent.name);
-        if (ent.isDirectory()) {
-            walkFiles(full, out);
-        } else if (SCAN_EXTS.has(path.extname(ent.name)) && !ent.name.endsWith('.min.js')) {
-            out.push(full);
-        }
-    }
-    return out;
-}
 
 export async function loadValidIconNames() {
     fs.mkdirSync(path.dirname(CODEPOINTS_CACHE), { recursive: true });
@@ -132,86 +62,22 @@ export async function loadValidIconNames() {
     return valid;
 }
 
-/** Every ligature name the console may draw, with the files that use it. */
-export function collectCandidateIcons() {
-    const icons = new Map(EXTRA_ICONS.map((n) => [n, new Set(['(EXTRA_ICONS)'])]));
-    const add = (name, file) => {
-        if (!icons.has(name)) icons.set(name, new Set());
-        icons.get(name).add(path.relative(REPO_ROOT, file).split(path.sep).join('/'));
-    };
-    const files = SCAN_ROOTS.filter((dir) => fs.existsSync(dir)).flatMap((dir) => walkFiles(dir));
-    for (const file of files) {
-        const text = fs.readFileSync(file, 'utf8');
-        const patterns = [LIGATURE_IN_ICON_SPAN, ICON_PROPERTY, ICON_RETURN, PLATFORM_ICON_MAP, ICON_COMPONENT];
-        if (file.endsWith('.css')) patterns.push(CSS_CONTENT);
-        for (const pattern of patterns) {
-            pattern.lastIndex = 0;
-            let match;
-            while ((match = pattern.exec(text)) !== null) {
-                add(match[1], file);
-            }
-        }
-
-        // Desktop controls and a few widgets assign icon ligatures through
-        // textContent or helper calls instead of literal <span> markup.
-        for (const pattern of [ICON_HELPER_LINE, TEXT_CONTENT_LINE, ICON_SPAN_LINE, ICON_VAR_LINE, ICON_ATTR_EXPR]) {
-            pattern.lastIndex = 0;
-            let line;
-            while ((line = pattern.exec(text)) !== null) {
-                QUOTED_ICON_NAME.lastIndex = 0;
-                let match;
-                while ((match = QUOTED_ICON_NAME.exec(line[0])) !== null) {
-                    add(match[1], file);
-                }
-            }
-        }
-
-        // Meaning maps (Utils.ICONS and page-local icon tables).
-        if (!file.endsWith('.css')) {
-            ICON_MAP_BLOCK.lastIndex = 0;
-            let block;
-            while ((block = ICON_MAP_BLOCK.exec(text)) !== null) {
-                MAP_VALUE.lastIndex = 0;
-                let match;
-                while ((match = MAP_VALUE.exec(block[1])) !== null) {
-                    add(match[1], file);
-                }
-            }
-        }
-
-        // Icons picked inline inside markup:
-        // `(on ? 'check_box' : 'check_box_outline_blank')` next to an icon span.
-        const lines = text.split(/\r?\n/);
-        lines.forEach((line, idx) => {
-            if (!/material-(?:icons|symbols)/.test(line)) return;
-            const window = lines.slice(Math.max(0, idx - 3), idx + 4).join('\n');
-            ICON_TERNARY_PAIR.lastIndex = 0;
-            let pair;
-            while ((pair = ICON_TERNARY_PAIR.exec(window)) !== null) {
-                add(pair[1], file);
-                add(pair[2], file);
-            }
-        });
-    }
-    return icons;
-}
-
 /** Candidates that are real Material Symbols names, sorted; the rest is reported. */
 export function collectIcons(valid, candidates = collectCandidateIcons()) {
     const icons = [];
     const skipped = [];
-    for (const name of candidates.keys()) {
+    for (const [name, files] of candidates) {
         if (valid.has(name)) {
             icons.push(name);
         } else {
-            skipped.push(name);
+            skipped.push(`${name} (${[...files].join(', ')})`);
         }
     }
     icons.sort((a, b) => a.localeCompare(b));
     if (skipped.length) {
-        console.log(
-            `Skipped ${skipped.length} non-Material ligature candidates (e.g. ${skipped.slice(0, 8).join(', ')})`
-        );
+        // An icon place holds a name the font doesn't know: a typo, or a word the scan shouldn't read.
+        // web-ui's icons.test.ts fails until it is fixed.
+        console.warn(`Not Material Symbols names, left out:\n  ${skipped.join('\n  ')}`);
     }
     return icons;
 }
@@ -303,8 +169,8 @@ async function main() {
     if (icons.length < 20) {
         throw new Error(`Suspiciously few icons scanned (${icons.length}); aborting.`);
     }
-    if (!icons.includes('monitoring')) {
-        throw new Error('Required ligature "monitoring" missing from icon list.');
+    if (!icons.includes('expand_more') || !icons.includes('devices')) {
+        throw new Error('The scan missed expand_more or devices; check web-ui/scripts/icon-names.mjs.');
     }
 
     console.log(`Collected ${icons.length} unique Material Symbols ligatures.`);
