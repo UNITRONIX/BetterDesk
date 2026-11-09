@@ -6,12 +6,14 @@ on:
     paths:
       - 'web-nodejs/**'
       - 'web-ui/src/lib/nav.ts'
+      - 'web-ui/static/rdclient/**'
       - '.github/workflows/web-nodejs-ci.yml'
   pull_request:
     branches: [main, dev]
     paths:
       - 'web-nodejs/**'
       - 'web-ui/src/lib/nav.ts'
+      - 'web-ui/static/rdclient/**'
       - '.github/workflows/web-nodejs-ci.yml'
 
 permissions:

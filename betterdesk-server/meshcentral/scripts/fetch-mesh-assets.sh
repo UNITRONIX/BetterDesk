@@ -4,5 +4,5 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../assets" && pwd)"
 echo "BetterDesk mesh assets live in: $ROOT"
 echo "  - bettercore.js (BetterCore — embedded in betterdesk-server)"
-echo "  - betterviewer.js (BetterViewer — panel: web-nodejs/public/js/rdclient/)"
+echo "  - betterviewer.js (BetterViewer — panel: web-ui/static/rdclient/)"
 ls -la "$ROOT/bettercore.js" 2>/dev/null || true

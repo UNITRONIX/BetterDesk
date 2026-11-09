@@ -52,10 +52,9 @@ fails when a bundled package is under a license other than MIT, ISC, 0BSD,
 BSD-2-Clause, BSD-3-Clause or Apache-2.0 (`web-ui/vite-plugins/licenses.ts`).
 Keep this list in step with that file.
 
-The browser remote desktop client (`web-ui/static/rdclient/`, copied from
-`web-nodejs/public/js/rdclient/` and `public/js/vendor/`) is served as plain
-files, not bundled, so `licenses.txt` doesn't cover the libraries in its
-`vendor/` folder (the old console serves the same files):
+The browser remote desktop client (`web-ui/static/rdclient/`) is served as
+plain files, not bundled, so `licenses.txt` doesn't cover the libraries in its
+`vendor/` folder:
 
 - protobuf.js 7.6.5, BSD-3-Clause, copyright Daniel Wirtz
 - TweetNaCl-js (`nacl.min.js`) and tweetnacl-util (`nacl-util.min.js`), public
