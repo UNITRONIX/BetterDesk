@@ -93,11 +93,14 @@
 		min-height: var(--control-h);
 		cursor: pointer;
 	}
+	/* At least 24px per row, so checkboxes stacked without a gap (a list of
+	   members) are each a 24px target (WCAG 2.5.8) */
 	.check-field {
 		display: grid;
 		grid-template-columns: auto minmax(0, 1fr);
 		gap: 2px var(--check-gap);
 		align-items: start;
+		min-height: 24px;
 		cursor: pointer;
 	}
 	.check-field > input {
