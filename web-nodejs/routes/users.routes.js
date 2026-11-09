@@ -128,6 +128,11 @@ function normalizeUserGroupPayload(body) {
     return { name, note, team_id: teamId };
 }
 
+// SQLite stores 0/1, Postgres true/false; the list says only whether it is on
+function totpEnabled(u) {
+    return u.totp_enabled === true || u.totp_enabled === 1 || u.totp_enabled === '1';
+}
+
 async function serializeUserForList(u) {
     try {
         const folderIds = await userScopeService.getUserFolderIds(db, u.username);
@@ -149,7 +154,8 @@ async function serializeUserForList(u) {
             user_groups: await getUserGroupGuids(u.id),
             folder_ids: folderIds,
             peer_grants: peerGrants,
-            strategy_guid: strategyGuid
+            strategy_guid: strategyGuid,
+            totp_enabled: totpEnabled(u)
         };
     } catch (err) {
         console.warn(`[users] scope enrichment failed for ${u?.username || u?.id}:`, err.message);
@@ -164,7 +170,8 @@ async function serializeUserForList(u) {
             user_groups: [],
             folder_ids: [],
             peer_grants: [],
-            strategy_guid: ''
+            strategy_guid: '',
+            totp_enabled: totpEnabled(u)
         };
     }
 }
