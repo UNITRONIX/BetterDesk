@@ -3,8 +3,8 @@
  *
  * Proxies organization CRUD operations to the Go server REST API.
  *
- * The pages (/organizations, /organizations/:id) are in the new console
- * (web-ui); the old addresses redirect there (lib/portedPages.js).
+ * The pages (/organizations, /organizations/:id) are in the console
+ * (web-ui).
  *
  * API routes (proxy to Go server /api/org/*):
  *   GET    /api/panel/org              — List organizations

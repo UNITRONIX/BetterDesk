@@ -3,8 +3,8 @@
  * server still decides when a request gets 403, 404 or 500, and with which
  * status; it answers with the app page marked with the error, and the app
  * shows the error page at that address (web-ui src/hooks.ts). Outside the
- * app's base (old pages while both run) it declines, and the caller renders
- * the old error view.
+ * app's base (a build for /app, say) it declines, and the caller answers in
+ * plain text.
  */
 
 const fs = require('fs');
@@ -58,13 +58,13 @@ describe('res.sendErrorPage', () => {
         expect(down.text).toContain('content="500"');
     });
 
-    test('outside the base (old pages) it declines and the old view answers', async () => {
+    test('outside the base it declines and the caller answers', async () => {
         const res = await request(app('/app', (req, res) => res.sendErrorPage(404) || res.status(404).send('old view'))).post('/x/old-page');
         expect(res.status).toBe(404);
         expect(res.text).toBe('old view');
     });
 
-    test('with the base at the root (after switch-over) every address gets the new page', async () => {
+    test('with the base at the root every address gets the app page', async () => {
         const res = await request(app('', (req, res) => res.sendErrorPage(404) || res.status(404).send('old view'))).post('/x/anything');
         expect(res.status).toBe(404);
         expect(res.text).toContain('content="404"');

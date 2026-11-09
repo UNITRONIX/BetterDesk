@@ -4,8 +4,8 @@
  * Provides policy CRUD for organizations + device-facing policy fetch
  * + device attestation management.
  *
- * The pages (/policies, /policies/:orgId, /attestation) are in the new
- * console (web-ui); the old addresses redirect there (lib/portedPages.js).
+ * The pages (/policies, /policies/:orgId, /attestation) are in the
+ * console (web-ui).
  *
  * API routes (proxy to Go server /api/org/{id}/policy). Reads and writes
  * need the same roles as those pages (requireAdmin):

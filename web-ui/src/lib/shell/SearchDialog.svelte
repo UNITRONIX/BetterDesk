@@ -15,7 +15,7 @@
 	import { goto } from '$app/navigation';
 	import { listDevices } from '#lib/api/devices.ts';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
-	import { isPorted, link } from '#lib/nav.ts';
+	import { link } from '#lib/nav.ts';
 	import { can, session } from '#lib/state/session.svelte.ts';
 	import Icon from '#lib/ui/Icon.svelte';
 	import { openLayer } from '#lib/ui/layers.ts';
@@ -111,10 +111,8 @@
 			window.open(href, '_blank', 'noopener');
 			return;
 		}
-		if (isPorted(r.href)) {
-			// eslint-disable-next-line svelte/no-navigation-without-resolve -- link() adds the base
-			await goto(href);
-		} else location.assign(href);
+		// eslint-disable-next-line svelte/no-navigation-without-resolve -- link() adds the base
+		await goto(href);
 	}
 
 	function onkeydown(e: KeyboardEvent) {

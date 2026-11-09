@@ -1,14 +1,20 @@
 /**
- * Serves the Svelte console build (web-ui/build) next to the old pages.
+ * Serves the console (web-ui/build) at the base its build was made for: ""
+ * (the root) unless the build says otherwise.
  *
+ * - server.js mounts the router after the server's own routes (lib/mountRoutes.js),
+ *   so /health, /logout, /console-boot.js, /css/branding.css and the other
+ *   server addresses answer first. /api and /ws never get the app page.
+ * - The console's old addresses under /app (while old and new pages ran
+ *   side by side) answer 301 with the same address at the root.
  * - Hashed assets under <base>/_ui/immutable/ are cached for a year and sent
  *   precompressed (brotli or gzip) when the browser accepts it.
- * - Every other GET under <base> gets the app's fallback page. Console pages
- *   need a session (the same redirect as requireAuth); public pages do not.
- *   An address no page of the app has (routes.json in the build) gets the
- *   page with status 404, and the app shows its not-found page there.
- * - The old URL of a page the new console serves (lib/portedPages.js)
- *   redirects to the same URL under <base>, once there is a build.
+ * - Every other GET gets the app's fallback page. Console pages need a
+ *   session (the same redirect as requireAuth); public pages do not. An
+ *   address no page of the app has (routes.json in the build) gets the page
+ *   with status 404, and the app shows its not-found page there.
+ * - res.sendErrorPage() answers with the app's error page for errors the
+ *   server decides (router.errorPages, mounted before everything else).
  * - The page's Content-Security-Policy comes from the build: SvelteKit writes
  *   the hashes of its inline scripts into a <meta> tag, and the header carries
  *   the same policy plus the directives a <meta> tag can't set.
@@ -20,7 +26,6 @@ const fs = require('fs');
 const path = require('path');
 const express = require('express');
 const config = require('../config/config');
-const { PORTED_PAGES, isPortedPath } = require('./portedPages');
 const { safeReturnPath, loginRedirectUrl } = require('./returnUrl');
 
 // The console sign-in page (the remote client has its own at /remote/login)
@@ -29,9 +34,9 @@ const LOGIN_PATH = /^\/login(\/|$)/;
 const DEFAULT_DIR = process.env.WEB_UI_DIR
     || path.join(__dirname, '..', '..', 'web-ui', 'build');
 
-// Paths of the new app that anyone may open (login and friends). Everything
-// else under the base needs a signed-in, non-pro session.
-const PUBLIC_PATHS = [/^\/login(\/|$)/, /^\/portal(\/|$)/, /^\/d\//, /^\/desktop-login(\/|$)/, /^\/remote\/login(\/|$)/, /^\/remote\/guest(\/|$)/];
+// Paths of the app that anyone may open (login and friends). Every other
+// page needs a signed-in, non-pro session.
+const PUBLIC_PATHS = [/^\/login(\/|$)/, /^\/portal(\/|$)/, /^\/d\//, /^\/remote\/login(\/|$)/, /^\/remote\/guest(\/|$)/];
 
 // The remote viewer (/remote/<device id>) also opens for guest links and mesh
 // shares, which have no console session. The page holds no data: it asks
@@ -40,8 +45,14 @@ const PUBLIC_PATHS = [/^\/login(\/|$)/, /^\/portal(\/|$)/, /^\/d\//, /^\/desktop
 const VIEWER_PATH = /^\/remote\/(?!login(\/|$)|guest(\/|$))[A-Za-z0-9_-]{3,64}$/;
 
 // Remote client pages send signed-out people to the remote client's own
-// sign-in (/remote/login), as requireRdClientAuth does for the old pages.
+// sign-in (/remote/login), as requireRdClientAuth does for its API.
 const REMOTE_PATH = /^\/remote(\/|$)/;
+
+// The server's API and sockets: never the app page, also at base ""
+const SERVER_PATH = /^\/(api|ws)(\/|$)/i;
+
+// Where the console lived while old and new pages ran side by side
+const OLD_BASE = '/app';
 
 const TYPES = {
     '.js': 'application/javascript; charset=utf-8',
@@ -125,7 +136,7 @@ function isAppPage(routes, sub) {
 
 /**
  * The base the build was made for: SvelteKit writes it into the start script
- * of index.html (`base: "/app"`). Only "" or a plain path counts.
+ * of index.html (`base: ""`). Only "" or a plain path counts.
  * @param {string} html
  * @returns {string|null}
  */
@@ -136,16 +147,25 @@ function readBase(html) {
 }
 
 /**
- * @param {object} opts
- * @param {string} [opts.base]  URL prefix, e.g. "/app"; by default the one the build was made for
- * @param {string} [opts.dir]  build directory
- * @param {string[]} [opts.ported]  old pages to redirect (lib/portedPages.js)
+ * The same address without /app: "/app/devices?open=1" is "/devices?open=1".
+ * Slashes after /app collapse into one, so "/app//evil.example" stays on
+ * this server.
+ * @param {string} originalUrl  starts with /app
  */
-function createWebUi({ base: wanted, dir = DEFAULT_DIR, ported = PORTED_PAGES } = {}) {
+function withoutOldBase(originalUrl) {
+    return '/' + originalUrl.slice(OLD_BASE.length).replace(/^[/\\]+/, '');
+}
+
+/**
+ * @param {object} opts
+ * @param {string} [opts.base]  URL prefix ("" for the root); by default the one the build was made for
+ * @param {string} [opts.dir]  build directory
+ */
+function createWebUi({ base: wanted, dir = DEFAULT_DIR } = {}) {
     const router = express.Router();
     let index = loadIndex(dir);
-    // The build's own base, so the pages and their files always agree; /app without a build
-    const base = wanted !== undefined ? wanted : (index && readBase(index.html)) ?? '/app';
+    // The build's own base, so the pages and their files always agree; the root without a build
+    const base = wanted !== undefined ? wanted : (index && readBase(index.html)) ?? '';
     const devReload = process.env.NODE_ENV !== 'production';
 
     function current() {
@@ -161,21 +181,20 @@ function createWebUi({ base: wanted, dir = DEFAULT_DIR, ported = PORTED_PAGES } 
         return index;
     }
 
-    function sendPage(res, page, status) {
+    function sendPage(res, page, status, html = page.html) {
         res.status(status);
         res.setHeader('Content-Security-Policy', page.csp);
         res.setHeader('Cache-Control', 'no-store');
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
-        return res.send(page.html);
+        return res.send(html);
     }
 
     // res.sendErrorPage(kind, { status, title, message }): the error page in the
-    // new console, for addresses the app serves (all of them once the base is
-    // ''). The server decides the error and the status; the app page carries
+    // console. The server decides the error and the status; the app page carries
     // <meta name="bd-error" content="403|404|500"> and shows the error page at
     // this address (web-ui src/hooks.ts). Answers false when it can't (no
-    // build, or an old page's address), and the caller renders the old view.
-    router.use((req, res, next) => {
+    // build, or an address outside the base), and the caller answers in plain text.
+    function errorPages(req, res, next) {
         res.sendErrorPage = (kind, opts = {}) => {
             const page = current();
             if (!page || res.headersSent) return false;
@@ -184,22 +203,18 @@ function createWebUi({ base: wanted, dir = DEFAULT_DIR, ported = PORTED_PAGES } 
             const attrs = (opts.title ? ` data-title="${escapeAttr(opts.title)}"` : '')
                 + (opts.message ? ` data-message="${escapeAttr(opts.message)}"` : '');
             const html = page.html.replace(/<head(\s[^>]*)?>/i, (m) => `${m}<meta name="bd-error" content="${code}"${attrs}>`);
-            res.status(opts.status || kind);
-            res.setHeader('Content-Security-Policy', page.csp);
-            res.setHeader('Cache-Control', 'no-store');
-            res.setHeader('Content-Type', 'text/html; charset=utf-8');
-            res.send(html);
+            sendPage(res, page, opts.status || kind, html);
             return true;
         };
         next();
-    });
+    }
+    router.use(errorPages);
 
-    // Old URLs of ported pages: the same URL in the new console
-    router.get('*', (req, res, next) => {
-        if (!isPortedPath(req.path, ported) || !current()) return next();
-        const url = req.originalUrl;
-        return res.redirect(302, base + (req.path === '/' ? url.slice(1) : url));
-    });
+    // Bookmarks, open tabs and cached pages from when the console lived under
+    // /app, its files (/app/_ui/immutable/...) included
+    if (base === '') {
+        router.get([OLD_BASE, `${OLD_BASE}/*`], (req, res) => res.redirect(301, withoutOldBase(req.originalUrl)));
+    }
 
     // Hashed build output: precompressed, cached for a year
     router.get(`${base}/_ui/immutable/*`, (req, res, next) => {
@@ -223,7 +238,7 @@ function createWebUi({ base: wanted, dir = DEFAULT_DIR, ported = PORTED_PAGES } 
         return next();
     });
 
-    // Other files of the build (version.json, fonts copied from static/).
+    // Other files of the build (version.json, fonts and images copied from static/).
     // HTML only ever comes from the page handler below, behind the session check.
     const files = express.static(dir, {
         index: false,
@@ -234,6 +249,7 @@ function createWebUi({ base: wanted, dir = DEFAULT_DIR, ported = PORTED_PAGES } 
         }
     });
     router.use(base || '/', (req, res, next) => {
+        if (req.method !== 'GET' && req.method !== 'HEAD') return next();
         let p;
         try { p = decodeURIComponent(req.path); } catch (_) { return res.status(400).end(); }
         return /\.html?$/i.test(p) ? next() : files(req, res, next);
@@ -241,6 +257,7 @@ function createWebUi({ base: wanted, dir = DEFAULT_DIR, ported = PORTED_PAGES } 
 
     // The app's pages
     router.get(base ? [base, `${base}/*`] : '*', (req, res, next) => {
+        if (SERVER_PATH.test(req.path)) return next();
         const page = current();
         if (!page) return next();
         const sub = req.path.slice(base.length) || '/';
@@ -268,7 +285,8 @@ function createWebUi({ base: wanted, dir = DEFAULT_DIR, ported = PORTED_PAGES } 
         return sendPage(res, page, 200);
     });
 
+    router.errorPages = errorPages;
     return router;
 }
 
-module.exports = { createWebUi, headerPolicy, readCsp, readBase, PUBLIC_PATHS, VIEWER_PATH };
+module.exports = { createWebUi, headerPolicy, readCsp, readBase, withoutOldBase, PUBLIC_PATHS, VIEWER_PATH };

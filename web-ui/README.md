@@ -4,9 +4,10 @@ The web console's frontend: Svelte 5 (runes), SvelteKit 3 as a single-page
 app (adapter-static, `ssr = false`), Vite 8, TypeScript (strict). The
 Express server in `web-nodejs/` serves the build and the JSON API.
 
-While old and new pages run side by side, the app lives under `/app`
-(`/app/devices` is the new `/devices`). Set `BD_UI_BASE=""` to build it
-for the root.
+The app lives at the root: its pages have the console's addresses
+(`/devices`, `/settings?tab=auth`). The build writes `routes.json` next to
+`index.html` (`vite-plugins/routes.ts`), and Express answers an address no
+page has with 404. `BD_UI_BASE=/path` builds it for another base.
 
 ## Commands
 
@@ -21,8 +22,9 @@ docker run --rm -v "$PWD/web-ui:/w" -v bd-webui-nm:/w/node_modules -w /w node:22
 
 Scripts: `build`, `check` (svelte-check, fails on warnings), `lint`
 (ESLint and Prettier), `format`, `test` (Vitest), `e2e` (Playwright),
-`dev` (Vite on :5173, proxies everything outside the base to Express on
-:5000; set `BD_BACKEND=http://host.docker.internal:5000` in a container).
+`dev` (Vite on :5173, proxies the API and the server's own addresses to
+Express on :5000; set `BD_BACKEND=http://host.docker.internal:5000` in a
+container).
 
 ## Layout
 
@@ -54,6 +56,7 @@ These come from the owner's design rules (IMPLEMENT-PROMPT-UI.md,
 svelte-check, the unit tests and the e2e suite.
 
 Svelte:
+
 - Runes only: `$state`, `$derived`, `$effect`, `$props`, `$bindable`.
   No `export let`, no stores. Shared state is a class with `$state`
   fields in a `.svelte.ts` module.
@@ -63,6 +66,7 @@ Svelte:
   never `on:click` or slots.
 
 Text:
+
 - No visible string literals in markup; lint rejects them. Use `t('key')`
   for existing keys, `tf('key', 'English fallback')` for keys added since
   the last container restart. New keys go to all 26 languages through
@@ -71,6 +75,7 @@ Text:
   (lint rejects it). Icons are `<Icon name="...">`.
 
 Styles:
+
 - Port the rules from `web-nodejs/public/css/ui/components.css` into the
   component's `<style>`, keeping the class names, so `.ui-rework/ui-kit.html`
   stays the visual reference. Tokens only (`var(--text)`, `var(--space-3)`),
@@ -85,6 +90,7 @@ Styles:
   (the token is 0 then).
 
 Components (`src/lib/ui/`):
+
 - One file per component, PascalCase. Props typed with an interface;
   extend `HTMLButtonAttributes` etc. when the root is a native control.
 - Every control has an accessible name. Icon-only buttons are
@@ -98,6 +104,7 @@ Components (`src/lib/ui/`):
   broken; check that before relying on it.
 
 API:
+
 - One file per area in `lib/api/` with typed functions and valibot
   schemas for responses (`api(schema, path, opts)`). Keep request and
   response shapes as the server has them.
@@ -105,10 +112,12 @@ API:
   into a sign-in redirect and 403 into a plain sentence.
 
 Permissions:
+
 - `can('device.ban')` from `state/session.svelte.ts` hides what would fail.
   The server checks every request; never use `can()` to widen anything.
 
 Storage:
+
 - `readPref`/`writePref` from `util/storage.ts` for per-browser
   preferences only (same keys as the old console). Never tokens or
   secrets.

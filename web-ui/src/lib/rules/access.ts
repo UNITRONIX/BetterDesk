@@ -1,6 +1,6 @@
 /**
  * Who may open the Rules pages, as the server checks it. The console has no
- * page gate of its own yet (lib/webUi.js only checks the session for /app),
+ * page gate of its own yet (lib/webUi.js only checks the session),
  * so each page shows the 403 text itself instead of loading data that
  * would fail.
  *

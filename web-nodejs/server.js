@@ -57,6 +57,7 @@ const { initDeviceStatusPush } = require('./services/deviceStatusPush');
 const { initHelpRequestEmailService } = require('./services/helpRequestEmailService');
 const { loadSupporters } = require('./services/supportersService');
 const routes = require('./routes');
+const { mountRoutes } = require('./lib/mountRoutes');
 const rustdeskApiRoutes = require('./routes/rustdesk-api.routes');
 const bdApiRoutes = require('./routes/bd-api.routes');
 const { getWanMiddlewareStack } = require('./middleware/wanSecurity');
@@ -95,6 +96,12 @@ try {
 
 // Security headers (Helmet)
 app.use(securityMiddleware);
+
+// The console (web-ui/build) at the root. Its pages are mounted after the
+// routes (lib/mountRoutes.js); res.sendErrorPage() is there for every
+// handler from here on, the error handlers included.
+const webUi = require('./lib/webUi').createWebUi();
+app.use(webUi.errorPages);
 
 // CORS for BetterDesk desktop clients (Tauri webview origins)
 app.use('/api/', (req, res, next) => {
@@ -327,91 +334,8 @@ app.use(csrfGate);
 // The console API's JSON answers go out compressed when the browser asks
 app.use('/api/', require('./lib/jsonCompression').jsonCompression());
 
-// The Svelte console (web-ui/build), under the base it was built for (/app beside the old pages)
-app.use(require('./lib/webUi').createWebUi());
-
-app.use('/', routes);
-
-// ============ Error Handlers ============
-
-// CSRF token mismatch
-app.use((err, req, res, next) => {
-    if (err.code === 'EBADCSRFTOKEN' || err.message?.includes('csrf') || err.message?.includes('CSRF')) {
-        res.status(403);
-        // Detect likely SSL→HTTP transition: cookie missing because browser held Secure cookie
-        const likelySslTransition = !config.httpsEnabled && !req.secure;
-        const hint = likelySslTransition
-            ? ' If you recently disabled SSL, clear your browser cookies for this site and reload.'
-            : '';
-        // Always return JSON for API routes (fetch sends Accept: */*)
-        if (req.path.startsWith('/api/') || (req.headers['content-type'] && req.headers['content-type'].includes('application/json'))) {
-            return res.json({ success: false, error: 'Invalid CSRF token. Please refresh the page and try again.' + hint });
-        }
-        if (req.accepts('html')) {
-            return res.render('errors/500', {
-                title: 'Forbidden',
-                activePage: 'error',
-                error: 'Invalid or missing CSRF token. Please refresh the page and try again.' + hint
-            });
-        }
-        return res.json({ success: false, error: 'Invalid CSRF token' + hint });
-    }
-    next(err);
-});
-
-// 404 Not Found
-app.use((req, res, next) => {
-    res.status(404);
-
-    // Log unmatched /api/* and /ws/* paths only (avoid noise from missing
-    // static assets like favicons).  Diagnostics suggestion credit:
-    // progloto (PR #81).
-    if (req.originalUrl.startsWith('/api/') || req.originalUrl.startsWith('/ws/')) {
-        const ip = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown';
-        const ua = String(req.headers['user-agent'] || '').slice(0, 80);
-        console.warn(`[panel] 404 ${req.method} ${req.originalUrl} from ${ip} ua="${ua}"`);
-    }
-
-    if (req.accepts('html')) {
-        res.render('errors/404', {
-            title: req.t ? req.t('errors.not_found') : 'Not Found',
-            activePage: 'error'
-        });
-    } else {
-        res.json({
-            success: false,
-            error: 'Not Found'
-        });
-    }
-});
-
-// 500 Server Error
-app.use((err, req, res, next) => {
-    logger.error('Server error:', err);
-    
-    res.status(err.status || 500);
-    
-    // Always return JSON for API routes
-    if (req.path.startsWith('/api/') || (req.headers['content-type'] && req.headers['content-type'].includes('application/json'))) {
-        return res.json({
-            success: false,
-            error: config.isProduction ? 'Internal Server Error' : err.message
-        });
-    }
-    
-    if (req.accepts('html')) {
-        res.render('errors/500', {
-            title: req.t ? req.t('errors.server_error') : 'Server Error',
-            activePage: 'error',
-            error: config.isProduction ? null : err.message
-        });
-    } else {
-        res.json({
-            success: false,
-            error: config.isProduction ? 'Internal Server Error' : err.message
-        });
-    }
-});
+// The server's routes, then the console's pages, then the error handlers
+mountRoutes(app, { routes, webUi });
 
 // ============ Startup ============
 

@@ -15,8 +15,7 @@
  *   PUT    /api/registrations/:id/reject  — Reject a pending request
  *   DELETE /api/registrations/:id      — Delete a registration record
  *
- * The page (/registrations) is in the new console (web-ui); the old
- * address redirects there (lib/portedPages.js).
+ * The page (/registrations) is in the console (web-ui).
  *
  * @module routes/registration.routes
  */

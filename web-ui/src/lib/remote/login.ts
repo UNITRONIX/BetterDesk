@@ -1,8 +1,8 @@
 /**
  * The remote client's sign-in (/remote/login): where to go afterwards. Only
  * paths under /remote (not /remote/login itself), as the server's
- * normalizeRdClientReturnUrl allows; while the new console runs under its
- * base (/app), a return path under the base stays there.
+ * normalizeRdClientReturnUrl allows; in a build for another base, a return
+ * path under the base stays there.
  */
 
 export function splitBase(returnParam: string, base: string): { path: string; underBase: boolean } {

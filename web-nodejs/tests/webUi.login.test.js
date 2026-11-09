@@ -18,46 +18,44 @@ beforeAll(() => {
 });
 afterAll(() => fs.rmSync(dir, { recursive: true, force: true }));
 
-function app(user, ported = []) {
+function app(user) {
     const a = createTestApp();
     a.use((req, _res, next) => {
         if (user) { req.session.userId = user.id; req.session.user = user; }
         next();
     });
-    a.use(createWebUi({ base: '/app', dir, ported }));
-    a.use((req, res) => res.status(404).send('old console'));
+    a.use(createWebUi({ base: '', dir }));
+    a.use((req, res) => res.status(404).send('server 404'));
     return a;
 }
 
 describe('sign-in page in the new console', () => {
-    test('answers 200 without a session, also through the old URL once it has moved', async () => {
-        expect((await request(app(null)).get('/app/login')).status).toBe(200);
-        expect((await request(app(null)).get('/app/login?desktop=1')).status).toBe(200);
-        const moved = await request(app(null, ['/login'])).get('/login?autoLaunch=0');
-        expect(moved.status).toBe(302);
-        expect(moved.headers.location).toBe('/app/login?autoLaunch=0');
+    test('answers 200 without a session, the desktop sign-in too', async () => {
+        expect((await request(app(null)).get('/login')).status).toBe(200);
+        expect((await request(app(null)).get('/login?desktop=1')).status).toBe(200);
+        expect((await request(app(null)).get('/login?autoLaunch=0')).status).toBe(200);
     });
 
     test('someone signed in goes to the return path, or to the start', async () => {
         const admin = { id: 1, role: 'admin' };
-        const back = await request(app(admin)).get('/app/login?return=%2Fdevices%3Fopen%3D7');
+        const back = await request(app(admin)).get('/login?return=%2Fdevices%3Fopen%3D7');
         expect(back.status).toBe(302);
         expect(back.headers.location).toBe('/devices?open=7');
         for (const bad of ['//evil.example', 'https://evil.example', '/%5Cevil', '/login']) {
-            const res = await request(app(admin)).get('/app/login?return=' + encodeURIComponent(bad));
+            const res = await request(app(admin)).get('/login?return=' + encodeURIComponent(bad));
             expect(res.status).toBe(302);
             expect(res.headers.location).toBe('/');
         }
     });
 
     test('a pro account (no console) still gets the sign-in page', async () => {
-        expect((await request(app({ id: 9, role: 'pro' })).get('/app/login')).status).toBe(200);
+        expect((await request(app({ id: 9, role: 'pro' })).get('/login')).status).toBe(200);
     });
 
     test('console pages: the way back, and "expired" only after a session ended', async () => {
-        const first = await request(app(null)).get('/app/devices?open=1');
-        expect(first.headers.location).toBe('/login?return=%2Fapp%2Fdevices%3Fopen%3D1');
-        const ended = await request(app(null)).get('/app/devices').set('Cookie', 'bd.sid=s%3Agone.sig');
-        expect(ended.headers.location).toBe('/login?expired=1&return=%2Fapp%2Fdevices');
+        const first = await request(app(null)).get('/devices?open=1');
+        expect(first.headers.location).toBe('/login?return=%2Fdevices%3Fopen%3D1');
+        const ended = await request(app(null)).get('/devices').set('Cookie', 'bd.sid=s%3Agone.sig');
+        expect(ended.headers.location).toBe('/login?expired=1&return=%2Fdevices');
     });
 });

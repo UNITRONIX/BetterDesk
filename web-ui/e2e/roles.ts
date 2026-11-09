@@ -12,5 +12,5 @@ export type Role = keyof typeof ROLES;
 
 export const authFile = (role: Role) => `e2e/.auth/${role}.json`;
 
-/** Where the new console lives: /app now, '' after switch-over */
-export const UI = process.env.BD_UI_BASE ?? '/app';
+/** Where the console lives: the root, or the base the build was made for */
+export const UI = process.env.BD_UI_BASE ?? '';

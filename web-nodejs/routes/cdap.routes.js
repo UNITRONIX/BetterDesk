@@ -2,7 +2,7 @@
  * BetterDesk Console - CDAP Routes
  * API routes for CDAP (Custom Device Automation Protocol) device management
  * and widgets. The pages (/cdap, /cdap/devices, /cdap/devices/:id) are in the
- * new console (web-ui); the old addresses redirect there (lib/portedPages.js).
+ * console (web-ui).
  */
 
 const express = require('express');

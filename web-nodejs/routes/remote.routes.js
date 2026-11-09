@@ -2,8 +2,7 @@
  * BetterDesk Console - Remote Desktop Routes
  * The data the web remote client asks for (RustDesk compat + BetterDesk
  * native) and its old aliases. The pages (/remote, /remote/:deviceId,
- * /remote/login, /remote/guest) are in the new console (web-ui); the old
- * addresses redirect there (lib/portedPages.js).
+ * /remote/login, /remote/guest) are in the console (web-ui).
  */
 
 const express = require('express');

@@ -1,9 +1,8 @@
 /**
  * BetterDesk Console — old page addresses
  *
- * The pages that lived here are in the new console (web-ui) and their old
- * addresses redirect there (lib/portedPages.js). /tenants is left: it sends
- * people to Organizations.
+ * The pages that lived here are in the console (web-ui) at the same
+ * addresses. /tenants is left: it sends people to Organizations.
  *
  * @module routes/pages.routes
  */

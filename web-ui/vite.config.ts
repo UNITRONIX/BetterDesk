@@ -5,11 +5,18 @@ import { defineConfig } from 'vitest/config';
 import { licenses } from './vite-plugins/licenses.ts';
 import { withRoutesList } from './vite-plugins/routes.ts';
 
-// Where the console is served from. "/app" while old and new pages run side
-// by side; "" once every page has moved over.
-const base = (process.env.BD_UI_BASE ?? '/app') as '' | `/${string}`;
-// The Express console that answers /api, /socket and every non-UI path in dev
+// Where the console is served from: the root, or the path in BD_UI_BASE
+const base = (process.env.BD_UI_BASE ?? '') as '' | `/${string}`;
+// The Express console that answers the API, sockets and its own addresses in dev
 const backend = process.env.BD_BACKEND ?? 'http://localhost:5000';
+// What Express answers at the root: the API, sockets, the server's own
+// addresses (sign-out, downloads, branding, uploaded files, the old addresses
+// that redirect), user fonts in /fonts/<family>/ and the images only Express
+// has. The app's own fonts and images come from static/.
+const expressPaths =
+	'^/(?:api|ws|health|logout|register-status|downloads|dev|generator|tenants|remote-dashboard|remote-cdap|remote-desktop' +
+	'|css|branding|uploads|wallpapers|protos|console-boot[.]js|favicon[.]svg|img/betterdesk_icon[.]png)(?=[/?]|$)' +
+	'|^/img/(?:login-slides|supporters)/|^/fonts/[^/?]+/';
 // The proxy keeps its connections to Express open and reuses them. Without an
 // agent it opens a new connection for every request, and from a container
 // through host.docker.internal some of those connects stall for 10 to 60 s
@@ -69,10 +76,8 @@ export default defineConfig({
 		// Windows bind mounts don't deliver file events into containers
 		watch: process.env.BD_POLL ? { usePolling: true, interval: 300 } : undefined,
 		proxy: {
-			// Everything outside the UI base goes to Express (API, sockets, branding.css, fonts, old pages)
-			[base === ''
-				? '^/(api|socket|ws|css|fonts|branding|uploads|wallpapers|protos|console-boot[.]js)(/|$)'
-				: `^/(?!${base.slice(1)}(/|$))`]: {
+			// Under another base, everything outside it goes to Express
+			[base === '' ? expressPaths : `^/(?!${base.slice(1)}(/|$))`]: {
 				target: backend,
 				changeOrigin: false,
 				ws: true,

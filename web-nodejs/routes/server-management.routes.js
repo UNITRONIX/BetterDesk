@@ -1,8 +1,7 @@
 /**
  * BetterDesk Console — Server Management Routes (BETA)
  *
- * The page (/server-management) is in the new console (web-ui); the old
- * address redirects there (lib/portedPages.js).
+ * The page (/server-management) is in the console (web-ui).
  *
  * REST API (all require server.config permission):
  *   GET    /api/server-management/info

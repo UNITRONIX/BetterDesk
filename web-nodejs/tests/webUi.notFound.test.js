@@ -40,7 +40,7 @@ function app(dir, user) {
         if (user) { req.session.userId = user.id; req.session.user = user; }
         next();
     });
-    a.use(createWebUi({ base: '', dir, ported: [] }));
+    a.use(createWebUi({ base: '', dir }));
     a.use((req, res) => res.status(404).send('server 404'));
     return a;
 }

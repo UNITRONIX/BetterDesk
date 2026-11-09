@@ -170,7 +170,6 @@ const BOOT_SCRIPT = `(function (boot) {
     window.__BD_BOOT__.strings = fetch(boot.stringsUrl, opts);
     // Public pages (login, portal, downloads) have no session to ask for
     var path = location.pathname || '/';
-    if (path === '/app' || path.indexOf('/app/') === 0) path = path.slice(4) || '/';
     var isPublic = false;
     for (var i = 0; i < boot.publicPaths.length; i++) { if (path === boot.publicPaths[i] || path.indexOf(boot.publicPaths[i] + '/') === 0) isPublic = true; }
     if (!isPublic) window.__BD_BOOT__.session = fetch('/api/console/bootstrap', opts);
@@ -180,7 +179,7 @@ const BOOT_SCRIPT = `(function (boot) {
 // '/remote' covers the remote client: the viewer opens for guest links too
 // and gets its data from /api/remote/viewer/<id>; the remote dashboard asks
 // for the bootstrap itself.
-const PUBLIC_PATHS = ['/login', '/portal', '/d', '/desktop-login', '/remote'];
+const PUBLIC_PATHS = ['/login', '/portal', '/d', '/remote'];
 
 router.get('/console-boot.js', (req, res) => {
     const boot = { ...publicBoot(req), publicPaths: PUBLIC_PATHS };

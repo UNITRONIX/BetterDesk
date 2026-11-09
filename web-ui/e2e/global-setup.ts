@@ -32,7 +32,7 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
 				continue;
 			}
 		}
-		// /login redirects to the new console's sign-in page (/app/login while the base is /app)
+		// The console's sign-in page (under the base when there is one)
 		const onSignIn = (u: URL) => /(^|\/)login$/.test(u.pathname);
 		// The server allows a few sign-ins a minute per address (LOGIN_RATE_LIMIT_MAX, 5 by
 		// default) and there are six accounts: after a 429, wait as long as it says, once

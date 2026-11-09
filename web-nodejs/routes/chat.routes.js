@@ -1,7 +1,7 @@
 /**
  * BetterDesk Console — Chat Routes
- * API endpoints for Chat 2.0. The chat page (/chat) is in the new console
- * (web-ui); the old address redirects there (lib/portedPages.js).
+ * API endpoints for Chat 2.0. The chat page (/chat) is in the console
+ * (web-ui).
  */
 
 'use strict';

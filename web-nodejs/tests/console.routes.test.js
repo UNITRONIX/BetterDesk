@@ -202,14 +202,15 @@ describe('GET /console-boot.js', () => {
     test('public pages skip the session request', async () => {
         const res = await request(appWith(null)).get('/console-boot.js');
         expect(run(res.text, {}, false, '/login').fetched).toHaveLength(1);
-        expect(run(res.text, {}, false, '/app/login').fetched).toHaveLength(1);
-        expect(run(res.text, {}, false, '/app/d/abc').fetched).toHaveLength(1);
-        expect(run(res.text, {}, false, '/app/loginx').fetched).toHaveLength(2);
-        expect(run(res.text, {}, false, '/app').fetched).toHaveLength(2);
+        expect(run(res.text, {}, false, '/d/abc').fetched).toHaveLength(1);
+        expect(run(res.text, {}, false, '/portal').fetched).toHaveLength(1);
+        expect(run(res.text, {}, false, '/loginx').fetched).toHaveLength(2);
+        expect(run(res.text, {}, false, '/').fetched).toHaveLength(2);
+        expect(run(res.text, {}, false, '/devices').fetched).toHaveLength(2);
         // The remote client: guest links have no session; the pages ask for their own data
-        expect(run(res.text, {}, false, '/app/remote/900100012').fetched).toHaveLength(1);
-        expect(run(res.text, {}, false, '/app/remote/guest').fetched).toHaveLength(1);
-        expect(run(res.text, {}, false, '/app/remotex').fetched).toHaveLength(2);
+        expect(run(res.text, {}, false, '/remote/900100012').fetched).toHaveLength(1);
+        expect(run(res.text, {}, false, '/remote/guest').fetched).toHaveLength(1);
+        expect(run(res.text, {}, false, '/remotex').fetched).toHaveLength(2);
     });
 
     test('applies the per-browser theme, RTL and accessibility settings before paint', async () => {

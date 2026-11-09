@@ -82,7 +82,7 @@
 		return goto(url, opts);
 	}
 
-	/** /app/settings?tab=x#id */
+	/** /settings?tab=x#id (under the base) */
 	function tabHref(name: TabId, id?: string): string {
 		return `${base}/settings${tabSearch(name)}${id ? `#${encodeURIComponent(id)}` : ''}`;
 	}

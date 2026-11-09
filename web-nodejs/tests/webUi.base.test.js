@@ -30,7 +30,7 @@ function app(dir, opts = {}) {
         next();
     });
     a.use(createWebUi({ dir, ...opts }));
-    a.use((req, res) => res.status(404).send('old console'));
+    a.use((req, res) => res.status(404).send('server 404'));
     return a;
 }
 
@@ -51,13 +51,26 @@ describe('the base comes from the build', () => {
         const a = app(dir);
         expect((await request(a).get('/console/devices')).status).toBe(200);
         expect((await request(a).get('/console/_ui/immutable/start.js')).status).toBe(200);
-        expect((await request(a).get('/app/devices')).text).toBe('old console');
+        expect((await request(a).get('/devices')).text).toBe('server 404');
+        // The move from /app to the root only applies to a build for the root
+        expect((await request(a).get('/app/devices')).text).toBe('server 404');
     });
 
-    test('without a build, or without a base in it, the console stays under /app', async () => {
+    test('a build for the root is served there, and old /app addresses move to it', async () => {
+        const dir = build('');
+        dirs.push(dir);
+        const a = app(dir);
+        expect((await request(a).get('/devices')).status).toBe(200);
+        expect((await request(a).get('/_ui/immutable/start.js')).status).toBe(200);
+        const old = await request(a).get('/app/devices?open=1');
+        expect(old.status).toBe(301);
+        expect(old.headers.location).toBe('/devices?open=1');
+    });
+
+    test('without a base in the build, the console is at the root', async () => {
         const dir = build('/app');
         dirs.push(dir);
         fs.writeFileSync(path.join(dir, 'index.html'), '<html><head></head><body>no base</body></html>');
-        expect((await request(app(dir)).get('/app/devices')).status).toBe(200);
+        expect((await request(app(dir)).get('/devices')).status).toBe(200);
     });
 });
