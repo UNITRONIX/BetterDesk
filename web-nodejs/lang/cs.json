@@ -2788,7 +2788,12 @@
         "status_actions": "Stav a řešitel",
         "title_hint": "Krátké shrnutí, podle kterého ho ostatní poznají v seznamu.",
         "section_sorting": "Podrobnosti",
-        "saving": "Ukládání…"
+        "saving": "Ukládání…",
+        "attach_file": "Přiložit soubor",
+        "attach_hint": "Soubory do 25 MB. Stáhnout si je může každý, kdo tento tiket vidí.",
+        "attach_too_large": "Tento soubor je větší než 25 MB.",
+        "attach_uploading": "Nahrává se {name}…",
+        "attach_done": "Soubor {name} je přiložen."
     },
     "activity": {
         "title": "Monitoring aktivity",

@@ -2788,7 +2788,12 @@
         "status_actions": "ステータスと担当者",
         "title_hint": "一覧でほかの人が見分けられる短い要約です。",
         "section_sorting": "詳細",
-        "saving": "保存中…"
+        "saving": "保存中…",
+        "attach_file": "ファイルを添付",
+        "attach_hint": "25 MB までのファイル。このチケットを見られる人は誰でもダウンロードできます。",
+        "attach_too_large": "このファイルは 25 MB を超えています。",
+        "attach_uploading": "{name} をアップロードしています…",
+        "attach_done": "{name} を添付しました。"
     },
     "activity": {
         "title": "アクティビティの監視",

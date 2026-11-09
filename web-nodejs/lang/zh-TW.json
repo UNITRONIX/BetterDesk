@@ -2810,7 +2810,12 @@
         "status_actions": "狀態和負責人",
         "title_hint": "簡短摘要，方便其他人在清單中辨認。",
         "section_sorting": "詳細資料",
-        "saving": "正在儲存…"
+        "saving": "正在儲存…",
+        "attach_file": "附加檔案",
+        "attach_hint": "檔案上限 25 MB。能看到此工單的人都能下載。",
+        "attach_too_large": "此檔案超過 25 MB。",
+        "attach_uploading": "正在上傳 {name}…",
+        "attach_done": "已附加 {name}。"
     },
     "activity": {
         "title": "活動監控",

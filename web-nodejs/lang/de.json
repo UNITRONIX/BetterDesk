@@ -2788,7 +2788,12 @@
         "status_actions": "Status und Zuständigkeit",
         "title_hint": "Eine kurze Zusammenfassung, an der andere das Ticket in der Liste erkennen.",
         "section_sorting": "Details",
-        "saving": "Wird gespeichert…"
+        "saving": "Wird gespeichert…",
+        "attach_file": "Datei anhängen",
+        "attach_hint": "Dateien bis 25 MB. Alle, die dieses Ticket sehen, können sie herunterladen.",
+        "attach_too_large": "Diese Datei ist größer als 25 MB.",
+        "attach_uploading": "{name} wird hochgeladen…",
+        "attach_done": "{name} angehängt."
     },
     "activity": {
         "title": "App-Nutzung",

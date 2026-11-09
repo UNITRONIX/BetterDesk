@@ -2794,7 +2794,12 @@
         "status_actions": "Status och ansvarig",
         "title_hint": "En kort sammanfattning som andra känner igen i listan.",
         "section_sorting": "Detaljer",
-        "saving": "Sparar…"
+        "saving": "Sparar…",
+        "attach_file": "Bifoga en fil",
+        "attach_hint": "Filer på upp till 25 MB. Alla som kan se ärendet kan ladda ned dem.",
+        "attach_too_large": "Filen är större än 25 MB.",
+        "attach_uploading": "Laddar upp {name}…",
+        "attach_done": "{name} bifogad."
     },
     "activity": {
         "title": "Aktivitetsövervakning",

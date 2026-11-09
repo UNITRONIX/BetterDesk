@@ -2794,7 +2794,12 @@
         "status_actions": "Status dan penanggung jawab",
         "title_hint": "Ringkasan singkat yang mudah dikenali orang lain di daftar.",
         "section_sorting": "Detail",
-        "saving": "Menyimpan…"
+        "saving": "Menyimpan…",
+        "attach_file": "Lampirkan file",
+        "attach_hint": "File hingga 25 MB. Semua orang yang dapat melihat tiket ini dapat mengunduhnya.",
+        "attach_too_large": "File ini lebih besar dari 25 MB.",
+        "attach_uploading": "Mengunggah {name}…",
+        "attach_done": "{name} dilampirkan."
     },
     "activity": {
         "title": "Pemantauan Aktivitas",

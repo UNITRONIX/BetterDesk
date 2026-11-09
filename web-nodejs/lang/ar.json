@@ -2795,7 +2795,12 @@
         "status_actions": "الحالة والمسؤول",
         "title_hint": "ملخص قصير يتعرّف عليه الآخرون في القائمة.",
         "section_sorting": "التفاصيل",
-        "saving": "جارٍ الحفظ…"
+        "saving": "جارٍ الحفظ…",
+        "attach_file": "إرفاق ملف",
+        "attach_hint": "ملفات حتى 25 ميغابايت. يمكن لكل من يرى هذه التذكرة تنزيلها.",
+        "attach_too_large": "هذا الملف أكبر من 25 ميغابايت.",
+        "attach_uploading": "جارٍ رفع {name}…",
+        "attach_done": "تم إرفاق {name}."
     },
     "activity": {
         "title": "مراقبة النشاط",

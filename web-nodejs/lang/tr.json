@@ -2794,7 +2794,12 @@
         "status_actions": "Durum ve atanan kişi",
         "title_hint": "Başkalarının listede tanıyabileceği kısa bir özet.",
         "section_sorting": "Ayrıntılar",
-        "saving": "Kaydediliyor…"
+        "saving": "Kaydediliyor…",
+        "attach_file": "Dosya ekle",
+        "attach_hint": "En fazla 25 MB'lık dosyalar. Bu talebi görebilen herkes indirebilir.",
+        "attach_too_large": "Bu dosya 25 MB'tan büyük.",
+        "attach_uploading": "{name} yükleniyor…",
+        "attach_done": "{name} eklendi."
     },
     "activity": {
         "title": "Etkinlik İzleme",

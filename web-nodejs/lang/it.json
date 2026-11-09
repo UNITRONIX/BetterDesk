@@ -2788,7 +2788,12 @@
         "status_actions": "Stato e assegnatario",
         "title_hint": "Un breve riassunto che gli altri possano riconoscere nell’elenco.",
         "section_sorting": "Dettagli",
-        "saving": "Salvataggio…"
+        "saving": "Salvataggio…",
+        "attach_file": "Allega un file",
+        "attach_hint": "File fino a 25 MB. Chiunque veda questo ticket può scaricarli.",
+        "attach_too_large": "Questo file supera i 25 MB.",
+        "attach_uploading": "Caricamento di {name}…",
+        "attach_done": "{name} allegato."
     },
     "activity": {
         "title": "Monitoraggio attività",

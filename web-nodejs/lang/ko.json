@@ -2788,7 +2788,12 @@
         "status_actions": "상태 및 담당자",
         "title_hint": "목록에서 다른 사람이 알아볼 수 있는 짧은 요약입니다.",
         "section_sorting": "세부 정보",
-        "saving": "저장 중…"
+        "saving": "저장 중…",
+        "attach_file": "파일 첨부",
+        "attach_hint": "최대 25MB 파일. 이 티켓을 볼 수 있는 사람은 누구나 다운로드할 수 있습니다.",
+        "attach_too_large": "이 파일은 25MB보다 큽니다.",
+        "attach_uploading": "{name} 업로드 중…",
+        "attach_done": "{name}을(를) 첨부했습니다."
     },
     "activity": {
         "title": "활동 모니터링",

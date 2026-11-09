@@ -2788,7 +2788,12 @@
         "status_actions": "Status en behandelaar",
         "title_hint": "Een korte samenvatting die anderen in de lijst herkennen.",
         "section_sorting": "Details",
-        "saving": "Opslaan…"
+        "saving": "Opslaan…",
+        "attach_file": "Bestand bijvoegen",
+        "attach_hint": "Bestanden tot 25 MB. Iedereen die dit ticket kan zien, kan ze downloaden.",
+        "attach_too_large": "Dit bestand is groter dan 25 MB.",
+        "attach_uploading": "{name} wordt geüpload…",
+        "attach_done": "{name} bijgevoegd."
     },
     "activity": {
         "title": "Activiteitsmonitoring",

@@ -2788,7 +2788,12 @@
         "status_actions": "状态和负责人",
         "title_hint": "简短摘要，方便其他人在列表中识别。",
         "section_sorting": "详细信息",
-        "saving": "正在保存…"
+        "saving": "正在保存…",
+        "attach_file": "附加文件",
+        "attach_hint": "文件最大 25 MB。能看到此工单的人都可以下载。",
+        "attach_too_large": "此文件超过 25 MB。",
+        "attach_uploading": "正在上传 {name}…",
+        "attach_done": "已附加 {name}。"
     },
     "activity": {
         "title": "活动监控",

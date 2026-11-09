@@ -2794,7 +2794,12 @@
         "status_actions": "Trạng thái và người phụ trách",
         "title_hint": "Một bản tóm tắt ngắn để người khác nhận ra trong danh sách.",
         "section_sorting": "Chi tiết",
-        "saving": "Đang lưu…"
+        "saving": "Đang lưu…",
+        "attach_file": "Đính kèm tệp",
+        "attach_hint": "Tệp tối đa 25 MB. Bất kỳ ai xem được phiếu này đều tải xuống được.",
+        "attach_too_large": "Tệp này lớn hơn 25 MB.",
+        "attach_uploading": "Đang tải lên {name}…",
+        "attach_done": "Đã đính kèm {name}."
     },
     "activity": {
         "title": "Giám sát hoạt động",

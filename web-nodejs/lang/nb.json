@@ -2794,7 +2794,12 @@
         "status_actions": "Status og ansvarlig",
         "title_hint": "Et kort sammendrag som andre kjenner igjen i listen.",
         "section_sorting": "Detaljer",
-        "saving": "Lagrer…"
+        "saving": "Lagrer…",
+        "attach_file": "Legg ved en fil",
+        "attach_hint": "Filer på opptil 25 MB. Alle som kan se denne saken, kan laste dem ned.",
+        "attach_too_large": "Filen er større enn 25 MB.",
+        "attach_uploading": "Laster opp {name}…",
+        "attach_done": "{name} er lagt ved."
     },
     "activity": {
         "title": "Aktivitetsovervåking",

@@ -2794,7 +2794,12 @@
         "status_actions": "สถานะและผู้รับผิดชอบ",
         "title_hint": "สรุปสั้น ๆ ที่ผู้อื่นจำได้ในรายการ",
         "section_sorting": "รายละเอียด",
-        "saving": "กำลังบันทึก…"
+        "saving": "กำลังบันทึก…",
+        "attach_file": "แนบไฟล์",
+        "attach_hint": "ไฟล์ขนาดไม่เกิน 25 MB ทุกคนที่เห็นตั๋วนี้ดาวน์โหลดได้",
+        "attach_too_large": "ไฟล์นี้ใหญ่กว่า 25 MB",
+        "attach_uploading": "กำลังอัปโหลด {name}…",
+        "attach_done": "แนบ {name} แล้ว"
     },
     "activity": {
         "title": "การตรวจสอบกิจกรรม",

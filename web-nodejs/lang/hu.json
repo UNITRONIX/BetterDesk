@@ -2794,7 +2794,12 @@
         "status_actions": "Állapot és felelős",
         "title_hint": "Rövid összefoglaló, amelyről mások felismerik a listában.",
         "section_sorting": "Részletek",
-        "saving": "Mentés…"
+        "saving": "Mentés…",
+        "attach_file": "Fájl csatolása",
+        "attach_hint": "Legfeljebb 25 MB-os fájlok. Mindenki letöltheti őket, aki látja ezt a jegyet.",
+        "attach_too_large": "Ez a fájl nagyobb 25 MB-nál.",
+        "attach_uploading": "{name} feltöltése…",
+        "attach_done": "{name} csatolva."
     },
     "activity": {
         "title": "Tevékenységfigyelés",

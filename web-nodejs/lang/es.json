@@ -2788,7 +2788,12 @@
         "status_actions": "Estado y responsable",
         "title_hint": "Un resumen breve que otros puedan reconocer en la lista.",
         "section_sorting": "Detalles",
-        "saving": "Guardando…"
+        "saving": "Guardando…",
+        "attach_file": "Adjuntar un archivo",
+        "attach_hint": "Archivos de hasta 25 MB. Cualquiera que pueda ver este ticket puede descargarlos.",
+        "attach_too_large": "Este archivo supera los 25 MB.",
+        "attach_uploading": "Subiendo {name}…",
+        "attach_done": "{name} adjuntado."
     },
     "activity": {
         "title": "Panel",

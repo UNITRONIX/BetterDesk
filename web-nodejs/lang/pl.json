@@ -2806,7 +2806,12 @@
         "status_actions": "Status i osoba przypisana",
         "title_hint": "Krótkie podsumowanie, po którym inni rozpoznają zgłoszenie na liście.",
         "section_sorting": "Szczegóły",
-        "saving": "Zapisywanie…"
+        "saving": "Zapisywanie…",
+        "attach_file": "Dołącz plik",
+        "attach_hint": "Pliki do 25 MB. Może je pobrać każdy, kto widzi to zgłoszenie.",
+        "attach_too_large": "Ten plik jest większy niż 25 MB.",
+        "attach_uploading": "Przesyłanie {name}…",
+        "attach_done": "Dołączono {name}."
     },
     "activity": {
         "title": "Monitorowanie aktywności",

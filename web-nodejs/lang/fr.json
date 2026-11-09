@@ -2810,7 +2810,12 @@
         "status_actions": "Statut et responsable",
         "title_hint": "Un résumé court que les autres reconnaîtront dans la liste.",
         "section_sorting": "Détails",
-        "saving": "Enregistrement…"
+        "saving": "Enregistrement…",
+        "attach_file": "Joindre un fichier",
+        "attach_hint": "Fichiers jusqu'à 25 Mo. Toute personne qui voit ce ticket peut les télécharger.",
+        "attach_too_large": "Ce fichier dépasse 25 Mo.",
+        "attach_uploading": "Envoi de {name}…",
+        "attach_done": "{name} joint."
     },
     "activity": {
         "title": "Tableau de bord",

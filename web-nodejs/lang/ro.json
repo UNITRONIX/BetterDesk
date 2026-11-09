@@ -2794,7 +2794,12 @@
         "status_actions": "Stare și responsabil",
         "title_hint": "Un rezumat scurt pe care alții îl recunosc în listă.",
         "section_sorting": "Detalii",
-        "saving": "Se salvează…"
+        "saving": "Se salvează…",
+        "attach_file": "Atașați un fișier",
+        "attach_hint": "Fișiere de până la 25 MB. Oricine vede acest tichet le poate descărca.",
+        "attach_too_large": "Acest fișier depășește 25 MB.",
+        "attach_uploading": "Se încarcă {name}…",
+        "attach_done": "{name} a fost atașat."
     },
     "activity": {
         "title": "Monitorizarea activității",

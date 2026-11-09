@@ -2788,7 +2788,12 @@
         "status_actions": "Status e responsável",
         "title_hint": "Um resumo curto que outras pessoas reconheçam na lista.",
         "section_sorting": "Detalhes",
-        "saving": "A guardar…"
+        "saving": "A guardar…",
+        "attach_file": "Anexar um ficheiro",
+        "attach_hint": "Ficheiros até 25 MB. Qualquer pessoa que veja este ticket pode transferi-los.",
+        "attach_too_large": "Este ficheiro tem mais de 25 MB.",
+        "attach_uploading": "A carregar {name}…",
+        "attach_done": "{name} anexado."
     },
     "activity": {
         "title": "Monitorização de atividade",

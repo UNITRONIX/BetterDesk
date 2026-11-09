@@ -2794,7 +2794,12 @@
         "status_actions": "Tila ja vastuuhenkilö",
         "title_hint": "Lyhyt yhteenveto, josta muut tunnistavat sen luettelossa.",
         "section_sorting": "Tiedot",
-        "saving": "Tallennetaan…"
+        "saving": "Tallennetaan…",
+        "attach_file": "Liitä tiedosto",
+        "attach_hint": "Enintään 25 Mt:n tiedostot. Kaikki, jotka näkevät tämän tiketin, voivat ladata ne.",
+        "attach_too_large": "Tiedosto on suurempi kuin 25 Mt.",
+        "attach_uploading": "Ladataan {name}…",
+        "attach_done": "{name} liitetty."
     },
     "activity": {
         "title": "Toiminnan seuranta",

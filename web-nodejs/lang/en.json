@@ -2867,7 +2867,12 @@
         "status_actions": "Status and assignee",
         "title_hint": "A short summary others can recognise in the list.",
         "section_sorting": "Details",
-        "saving": "Saving…"
+        "saving": "Saving…",
+        "attach_file": "Attach a file",
+        "attach_hint": "Files up to 25 MB. Everyone who can see this ticket can download them.",
+        "attach_too_large": "This file is larger than 25 MB.",
+        "attach_uploading": "Uploading {name}…",
+        "attach_done": "{name} attached."
     },
     "activity": {
         "title": "App usage",
