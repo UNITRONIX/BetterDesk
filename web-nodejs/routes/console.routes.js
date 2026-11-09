@@ -17,6 +17,7 @@
 'use strict';
 
 const crypto = require('crypto');
+const zlib = require('zlib');
 const express = require('express');
 const config = require('../config/config');
 const { requireAuth, requestHasPermission, isSuperAdminRole } = require('../middleware/auth');
@@ -55,10 +56,22 @@ function stringsFor(code) {
     if (!entry) {
         const body = JSON.stringify(manager.getMergedTranslations(code));
         const revision = crypto.createHash('sha256').update(body).digest('hex').slice(0, 16);
-        entry = { body, revision };
+        entry = { body, revision, br: null, gzip: null };
         stringsCache.set(code, entry);
     }
     return entry;
+}
+
+/** The strings compressed once per language (about 423 KB of JSON for English) */
+function compressed(entry, encoding) {
+    if (encoding === 'br') {
+        entry.br = entry.br || zlib.brotliCompressSync(entry.body, {
+            params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 9 }
+        });
+        return entry.br;
+    }
+    entry.gzip = entry.gzip || zlib.gzipSync(entry.body, { level: 9 });
+    return entry.gzip;
 }
 
 function languageList() {
@@ -183,7 +196,14 @@ router.get('/api/console/strings/:code', (req, res) => {
     res.setHeader('Cache-Control', req.query.v === revision
         ? 'public, max-age=31536000, immutable'
         : 'no-cache');
+    res.setHeader('Vary', 'Accept-Encoding');
     if (req.headers['if-none-match'] === etag) return res.status(304).end();
+    const accept = String(req.headers['accept-encoding'] || '');
+    const encoding = /\bbr\b/.test(accept) ? 'br' : /\bgzip\b/.test(accept) ? 'gzip' : null;
+    if (encoding) {
+        res.setHeader('Content-Encoding', encoding);
+        return res.send(compressed(stringsFor(code), encoding));
+    }
     return res.send(body);
 });
 

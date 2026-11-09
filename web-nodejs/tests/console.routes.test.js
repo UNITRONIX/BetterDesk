@@ -97,6 +97,21 @@ describe('GET /api/console/strings/:code', () => {
         expect(again.status).toBe(304);
     });
 
+    test('sends the strings compressed when the browser accepts it', async () => {
+        const zlib = require('zlib');
+        const app = appWith(null);
+        const raw = await request(app).get('/api/console/strings/en').set('Accept-Encoding', 'identity');
+        const br = await request(app).get('/api/console/strings/en').set('Accept-Encoding', 'gzip, br')
+            .buffer(true).parse((res, cb) => { const c = []; res.on('data', (d) => c.push(d)); res.on('end', () => cb(null, Buffer.concat(c))); });
+        expect(raw.headers['content-encoding']).toBeUndefined();
+        expect(br.headers['content-encoding']).toBe('br');
+        expect(br.headers.vary).toContain('Accept-Encoding');
+        const bytes = Buffer.isBuffer(br.body) ? br.body : Buffer.from(br.text || '');
+        const decoded = (() => { try { return zlib.brotliDecompressSync(bytes).toString(); } catch { return bytes.toString(); } })();
+        expect(JSON.parse(decoded).common.cancel).toBe(raw.body.common.cancel);
+        expect(Number(br.headers['content-length'] || bytes.length)).toBeLessThan(raw.text.length / 3);
+    });
+
     test('rejects unknown and malformed codes', async () => {
         const app = appWith(null);
         expect((await request(app).get('/api/console/strings/xx')).status).toBe(404);
