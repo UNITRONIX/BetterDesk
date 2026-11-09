@@ -12,10 +12,21 @@ import { resolve } from '$app/paths';
 export const base = resolve('').replace(/\/$/, '');
 
 /**
- * Pages the new console serves (path without query). Add a page here in the
- * commit that ports it.
+ * Pages the new console serves: an old path, or "/path/*" for pages with an
+ * id in the path (/organizations/7). Add a page in the commit that ports it.
+ * Once a page switches over, web-nodejs/lib/portedPages.js lists it too and
+ * the server redirects its old URL here.
  */
-export const PORTED = new Set<string>(['/devices']);
+export const PORTED: readonly string[] = ['/devices'];
+
+/** Whether a path (no query) is one of the entries */
+export function matchesPorted(list: readonly string[], path: string): boolean {
+	return list.some((entry) =>
+		entry.endsWith('/*')
+			? path.length > entry.length - 1 && path.startsWith(entry.slice(0, -1))
+			: path === entry
+	);
+}
 
 function pathOf(href: string): string {
 	const cut = href.search(/[?#]/);
@@ -23,7 +34,7 @@ function pathOf(href: string): string {
 }
 
 export function isPorted(href: string): boolean {
-	return PORTED.has(pathOf(href));
+	return matchesPorted(PORTED, pathOf(href));
 }
 
 export function link(href: string): string {

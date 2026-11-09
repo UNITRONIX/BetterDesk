@@ -5,6 +5,8 @@
  *   precompressed (brotli or gzip) when the browser accepts it.
  * - Every other GET under <base> gets the app's fallback page. Console pages
  *   need a session (the same redirect as requireAuth); public pages do not.
+ * - The old URL of a page the new console serves (lib/portedPages.js)
+ *   redirects to the same URL under <base>, once there is a build.
  * - The page's Content-Security-Policy comes from the build: SvelteKit writes
  *   the hashes of its inline scripts into a <meta> tag, and the header carries
  *   the same policy plus the directives a <meta> tag can't set.
@@ -16,6 +18,7 @@ const fs = require('fs');
 const path = require('path');
 const express = require('express');
 const config = require('../config/config');
+const { PORTED_PAGES, isPortedPath } = require('./portedPages');
 
 const DEFAULT_DIR = process.env.WEB_UI_DIR
     || path.join(__dirname, '..', '..', 'web-ui', 'build');
@@ -63,8 +66,9 @@ function loadIndex(dir) {
  * @param {object} opts
  * @param {string} opts.base   URL prefix, e.g. "/app"
  * @param {string} [opts.dir]  build directory
+ * @param {string[]} [opts.ported]  old pages to redirect (lib/portedPages.js)
  */
-function createWebUi({ base, dir = DEFAULT_DIR }) {
+function createWebUi({ base, dir = DEFAULT_DIR, ported = PORTED_PAGES }) {
     const router = express.Router();
     let index = loadIndex(dir);
     const devReload = process.env.NODE_ENV !== 'production';
@@ -80,6 +84,13 @@ function createWebUi({ base, dir = DEFAULT_DIR }) {
         }
         return index;
     }
+
+    // Old URLs of ported pages: the same URL in the new console
+    router.get('*', (req, res, next) => {
+        if (!isPortedPath(req.path, ported) || !current()) return next();
+        const url = req.originalUrl;
+        return res.redirect(302, base + (req.path === '/' ? url.slice(1) : url));
+    });
 
     // Hashed build output: precompressed, cached for a year
     router.get(`${base}/_ui/immutable/*`, (req, res, next) => {
