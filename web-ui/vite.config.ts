@@ -86,8 +86,20 @@ export default defineConfig({
 				// valibot, "core" the shell, components, state and API client every
 				// page uses. Parts that load on demand stay out (terminal, chart, QR,
 				// diagram), and so does each page's own code.
+				// A group also takes in what its modules import, which here includes
+				// SvelteKit's runtime. "boot" keeps the two modules SvelteKit's start
+				// and app entries need (Vite's preload helper and SvelteKit's payload)
+				// in a chunk of their own: if they sat in "core", the entries would
+				// load core, and with it `version = payload.version` in $app/env,
+				// before SvelteKit has set the payload. The version would never match
+				// and every not-found page would reload forever.
 				codeSplitting: {
 					groups: [
+						{
+							name: 'boot',
+							test: /(\0vite\/preload-helper\.js|@sveltejs[\\/]kit[\\/]src[\\/]runtime[\\/]client[\\/]payload\.js)$/,
+							priority: 4
+						},
 						{
 							name: 'runtime',
 							test: /node_modules[\\/](svelte|esm-env|devalue|clsx|valibot)[\\/]/,
