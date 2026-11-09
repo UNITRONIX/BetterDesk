@@ -7,9 +7,10 @@
  */
 
 import * as v from 'valibot';
-import { Bootstrap, type NavSection } from '#lib/api/console.ts';
+import { Bootstrap, saveLanguage, type NavSection } from '#lib/api/console.ts';
 import { ApiError, clientMessages, setCsrfToken } from '#lib/api/client.ts';
-import { setStrings, t, has } from '#lib/i18n/i18n.svelte.ts';
+import { setStrings, t, has, savedLanguage, switchLanguage } from '#lib/i18n/i18n.svelte.ts';
+import { PREF, writePref } from '#lib/util/storage.ts';
 
 export type User = Bootstrap['user'];
 
@@ -114,6 +115,23 @@ export async function startSession(): Promise<void> {
 	applyBootstrap(b);
 	localiseClientMessages();
 	session.ready = true;
+	restoreLanguage(b);
+}
+
+/**
+ * A language picked in this browser (before signing in, or on another
+ * account) comes back when neither the account nor a cookie has one; it is
+ * then saved on the account. Otherwise the browser remembers the current one.
+ */
+function restoreLanguage(b: Bootstrap): void {
+	const saved = savedLanguage();
+	const cookie = document.cookie.split(';').some((c) => c.trim().startsWith('betterdesk_lang='));
+	const known = b.lang.available.some((l) => l.code === saved);
+	if (saved && saved !== b.lang.code && known && !cookie && !b.user.preferredLanguage) {
+		void switchLanguage(saved, saveLanguage).catch(() => {});
+	} else {
+		writePref(PREF.lang, b.lang.code);
+	}
 }
 
 /** Forget everything about the signed-in person (after sign-out) */

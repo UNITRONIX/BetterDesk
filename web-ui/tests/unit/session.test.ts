@@ -80,4 +80,45 @@ describe('startSession', () => {
 		expect(session.user?.avatarVersion).toBe('pic-1');
 		vi.unstubAllGlobals();
 	});
+
+	describe('a language picked in this browser before', () => {
+		const withDe = {
+			...boot,
+			lang: {
+				...boot.lang,
+				available: [
+					...boot.lang.available,
+					{ code: 'de', name: 'German', native: 'Deutsch', flag: 'de', rtl: false }
+				]
+			}
+		};
+		const setup = (b: typeof withDe) => {
+			const fetchMock = vi.fn((url: string) =>
+				Promise.resolve(ok(url.includes('strings') ? {} : url.includes('/i18n/set/') ? { success: true } : b))
+			);
+			vi.stubGlobal('fetch', fetchMock);
+			return () => fetchMock.mock.calls.map((c) => c[0]);
+		};
+		afterEach(() => {
+			localStorage.clear();
+			vi.unstubAllGlobals();
+		});
+
+		test('comes back when the account has none', async () => {
+			localStorage.setItem('betterdesk_lang', 'de');
+			const urls = setup(withDe);
+			await startSession();
+			await vi.waitFor(() => expect(urls()).toContain('/api/i18n/set/de'));
+			expect(urls()).toContain('/api/console/strings/de');
+		});
+
+		test('stays away when the account has its own language, and the current one is remembered', async () => {
+			localStorage.setItem('betterdesk_lang', 'de');
+			const urls = setup({ ...withDe, user: { ...withDe.user, preferredLanguage: 'en' } });
+			await startSession();
+			await new Promise((r) => setTimeout(r, 20));
+			expect(urls().some((u) => u.includes('/i18n/set/'))).toBe(false);
+			expect(localStorage.getItem('betterdesk_lang')).toBe('en');
+		});
+	});
 });
