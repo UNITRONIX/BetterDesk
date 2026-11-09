@@ -1138,7 +1138,11 @@
             "search_none": "No setting matches “{query}”.",
             "search_count": "{count} settings found",
             "shown_when_on": "Shown when \"{switch}\" is on.",
-            "shown_when_only": "Shown only for: {choices}."
+            "shown_when_only": "Shown only for: {choices}.",
+            "discard_title": "Discard unsaved changes?",
+            "discard_message": "The changes on this page are not saved yet.",
+            "discard_confirm": "Discard changes",
+            "shown_when_off": "Shown when \"{switch}\" is off."
         },
         "general": {
             "endpoint_id_hint": "Host name or IP address of the ID server, as clients on the internet reach it.",
@@ -1295,7 +1299,11 @@
             "import_effect": "Importing replaces the current appearance for everyone right away.",
             "reset_title": "Reset",
             "reset_desc": "Removes your name, logo, colours, fonts and backgrounds and goes back to the BetterDesk defaults for everyone.",
-            "reset_button": "Reset appearance…"
+            "reset_button": "Reset appearance…",
+            "font_cat_sans": "Sans-serif",
+            "font_cat_serif": "Serif",
+            "font_cat_mono": "Monospace",
+            "font_cat_display": "Display"
         },
         "signin": {
             "your_account": "Your account",
@@ -1443,6 +1451,33 @@
             "email_on": "Set up",
             "email_off": "Not set up. The console sends no email.",
             "clock_title": "Server clock"
+        },
+        "restart_prompt": {
+            "title_pending": "Restart needed",
+            "message_pending": "The settings you saved take effect after the BetterDesk services restart. Restart now, or cancel to put the previous values back.",
+            "waiting": "Waiting for your answer.",
+            "cancel": "Cancel and restore",
+            "confirm": "Restart services",
+            "title_progress": "Restarting BetterDesk",
+            "message_progress": "The BetterDesk services are restarting. Keep this page open.",
+            "stopping": "Stopping and starting the services…",
+            "checking": "Checking whether the services are back ({n} of {max})",
+            "title_ready": "BetterDesk is back",
+            "message_ready": "The services have restarted. Sign in again to start a fresh session.",
+            "ready_status": "Restart finished.",
+            "ready_button": "Go to sign-in",
+            "title_failed": "The restart needs attention",
+            "message_failed": "BetterDesk could not finish the restart. Check the service permissions, then try again.",
+            "failed_status": "The restart failed.",
+            "retry": "Try the restart again",
+            "continue": "Keep the saved values",
+            "dismissed": "The saved values were kept. The services still need a restart outside the console.",
+            "canceled": "The changes were cancelled and the previous values are back.",
+            "rollback_failed": "Could not put the previous values back.",
+            "timeout": "The services did not come back in time. Check the service logs (systemd or NSSM), then reload this page.",
+            "reason_rolled_back": "The services could not be restarted, so the previous values were put back.",
+            "reason_rollback_failed": "The services could not be restarted, and the previous values could not be put back.",
+            "changes_label": "Changed settings"
         }
     },
     "audit": {
@@ -6387,7 +6422,15 @@
         "proxy_timeout_recovering": "Gateway/proxy timeout — checking whether the update is still running on the server…",
         "install_still_running": "Update is still running on the server…",
         "install_recovered": "Update finished on the server after the browser connection dropped",
-        "install_recovery_timeout": "Timed out waiting for the update to finish after a gateway disconnect. Check Settings → Updates, data/.last_update_result.json, or run: node scripts/update-cli.js"
+        "install_recovery_timeout": "Timed out waiting for the update to finish after a gateway disconnect. Check Settings → Updates, data/.last_update_result.json, or run: node scripts/update-cli.js",
+        "check_failed": "Could not check for updates",
+        "restart_timeout": "The console did not come back in time. Reload the page in a minute, or check the service logs.",
+        "step_waiting": "Waiting",
+        "step_running": "Running",
+        "step_done": "Done",
+        "step_warning": "Needs a look",
+        "step_failed": "Failed",
+        "step_skipped": "Skipped"
     },
     "accessibility": {
         "title": "Accessibility",

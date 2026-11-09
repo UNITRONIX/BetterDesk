@@ -142,8 +142,12 @@
 			{/each}
 		</div>
 		<MenuDivider />
-		<MenuItem icon="key" href={link('/settings')}>{t('auth.change_password')}</MenuItem>
-		<MenuItem icon="verified_user" href={link('/settings?tab=auth')}>{t('nav.account_2fa')}</MenuItem>
+		<MenuItem icon="key" href={link('/settings?tab=auth#account-password')}
+			>{t('auth.change_password')}</MenuItem
+		>
+		<MenuItem icon="verified_user" href={link('/settings?tab=auth#auth-panel-totp')}
+			>{t('nav.account_2fa')}</MenuItem
+		>
 		<MenuDivider />
 		<MenuItem icon="logout" onselect={signOut}>{t('user_menu.sign_out')}</MenuItem>
 	</Menu>

@@ -1130,7 +1130,11 @@
             "search_none": "Brak ustawień pasujących do „{query}”.",
             "search_count": "Znalezione ustawienia: {count}",
             "shown_when_on": "Widoczne, gdy \"{switch}\" jest włączone.",
-            "shown_when_only": "Widoczne tylko dla: {choices}."
+            "shown_when_only": "Widoczne tylko dla: {choices}.",
+            "discard_title": "Odrzucić niezapisane zmiany?",
+            "discard_message": "Zmiany na tej stronie nie zostały jeszcze zapisane.",
+            "discard_confirm": "Odrzuć zmiany",
+            "shown_when_off": "Widoczne, gdy \"{switch}\" jest wyłączone."
         },
         "general": {
             "endpoint_id_hint": "Nazwa hosta lub adres IP serwera ID, pod którym klienci łączą się z internetu.",
@@ -1287,7 +1291,11 @@
             "import_effect": "Import od razu zastępuje obecny wygląd dla wszystkich.",
             "reset_title": "Resetuj",
             "reset_desc": "Usuwa nazwę, logo, kolory, czcionki i tła oraz przywraca domyślne ustawienia BetterDesk dla wszystkich.",
-            "reset_button": "Resetuj wygląd…"
+            "reset_button": "Resetuj wygląd…",
+            "font_cat_sans": "Bezszeryfowe",
+            "font_cat_serif": "Szeryfowe",
+            "font_cat_mono": "O stałej szerokości",
+            "font_cat_display": "Ozdobne"
         },
         "signin": {
             "your_account": "Własne konto",
@@ -1435,6 +1443,33 @@
             "email_on": "Skonfigurowane",
             "email_off": "Nieskonfigurowane. Konsola nie wysyła e-maili.",
             "clock_title": "Zegar serwera"
+        },
+        "restart_prompt": {
+            "title_pending": "Wymagany restart",
+            "message_pending": "Zapisane ustawienia zaczną działać po restarcie usług BetterDesk. Uruchom ponownie teraz albo anuluj, aby przywrócić poprzednie wartości.",
+            "waiting": "Czekam na Twoją odpowiedź.",
+            "cancel": "Anuluj i przywróć",
+            "confirm": "Uruchom usługi ponownie",
+            "title_progress": "Restart BetterDesk",
+            "message_progress": "Usługi BetterDesk uruchamiają się ponownie. Nie zamykaj tej strony.",
+            "stopping": "Zatrzymywanie i uruchamianie usług…",
+            "checking": "Sprawdzanie, czy usługi znów działają ({n} z {max})",
+            "title_ready": "BetterDesk znów działa",
+            "message_ready": "Usługi zostały uruchomione ponownie. Zaloguj się ponownie, aby rozpocząć nową sesję.",
+            "ready_status": "Restart zakończony.",
+            "ready_button": "Przejdź do logowania",
+            "title_failed": "Restart wymaga uwagi",
+            "message_failed": "BetterDesk nie mógł dokończyć restartu. Sprawdź uprawnienia usług i spróbuj ponownie.",
+            "failed_status": "Restart się nie powiódł.",
+            "retry": "Spróbuj ponownie zrestartować",
+            "continue": "Zachowaj zapisane wartości",
+            "dismissed": "Zapisane wartości zostały zachowane. Usługi trzeba jeszcze zrestartować poza konsolą.",
+            "canceled": "Zmiany anulowano i przywrócono poprzednie wartości.",
+            "rollback_failed": "Nie udało się przywrócić poprzednich wartości.",
+            "timeout": "Usługi nie wróciły na czas. Sprawdź dzienniki usług (systemd lub NSSM), a potem odśwież tę stronę.",
+            "reason_rolled_back": "Nie udało się zrestartować usług, więc przywrócono poprzednie wartości.",
+            "reason_rollback_failed": "Nie udało się zrestartować usług ani przywrócić poprzednich wartości.",
+            "changes_label": "Zmienione ustawienia"
         }
     },
     "audit": {
@@ -6314,7 +6349,15 @@
         "proxy_timeout_recovering": "Timeout bramy/proxy — sprawdzam, czy aktualizacja nadal trwa na serwerze…",
         "install_still_running": "Aktualizacja nadal trwa na serwerze…",
         "install_recovered": "Aktualizacja zakończyła się na serwerze po zerwaniu połączenia przeglądarki",
-        "install_recovery_timeout": "Przekroczono czas oczekiwania na zakończenie aktualizacji po rozłączeniu bramy. Sprawdź Ustawienia → Aktualizacje, data/.last_update_result.json lub uruchom: node scripts/update-cli.js"
+        "install_recovery_timeout": "Przekroczono czas oczekiwania na zakończenie aktualizacji po rozłączeniu bramy. Sprawdź Ustawienia → Aktualizacje, data/.last_update_result.json lub uruchom: node scripts/update-cli.js",
+        "check_failed": "Nie udało się sprawdzić aktualizacji",
+        "restart_timeout": "Konsola nie wróciła na czas. Odśwież stronę za minutę albo sprawdź dzienniki usług.",
+        "step_waiting": "Oczekuje",
+        "step_running": "W toku",
+        "step_done": "Gotowe",
+        "step_warning": "Do sprawdzenia",
+        "step_failed": "Nieudane",
+        "step_skipped": "Pominięto"
     },
     "accessibility": {
         "title": "Dostępność",

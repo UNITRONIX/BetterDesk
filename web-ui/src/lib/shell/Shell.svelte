@@ -253,6 +253,10 @@
 {/if}
 <IdleWarning />
 <DialogHost />
+{#if can('server.config')}
+	<!-- "Restart required" after a save, and a restart still waiting from before; loaded only for those who can restart -->
+	{#await import('#lib/settings/RestartPrompt.svelte') then prompt}<prompt.default />{/await}
+{/if}
 <ToastHost />
 <DevicePanelHost />
 

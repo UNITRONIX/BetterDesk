@@ -17,7 +17,14 @@ export const base = resolve('').replace(/\/$/, '');
  * Once a page switches over, web-nodejs/lib/portedPages.js lists it too and
  * the server redirects its old URL here.
  */
-export const PORTED: readonly string[] = ['/devices', '/help-requests', '/tickets', '/chat', '/toolkit'];
+export const PORTED: readonly string[] = [
+	'/devices',
+	'/help-requests',
+	'/tickets',
+	'/chat',
+	'/toolkit',
+	'/settings'
+];
 
 /** Whether a path (no query) is one of the entries */
 export function matchesPorted(list: readonly string[], path: string): boolean {
