@@ -64,11 +64,13 @@ describe('[sec/03] Authorization bypass', () => {
         expect(res.body.leaked).toBeUndefined();
     });
 
-    it('HTML unauthenticated access redirects to login with expired flag', async () => {
+    it('HTML unauthenticated access redirects to login, with the expired flag only when a session ended', async () => {
         const app = createTestApp();
         app.get('/dashboard', requireAuth, (_req, res) => res.send('ok'));
         const res = await request(app).get('/dashboard');
         expect(res.status).toBe(302);
-        expect(res.headers.location).toBe('/login?expired=1');
+        expect(res.headers.location).toBe('/login?return=%2Fdashboard');
+        const ended = await request(app).get('/dashboard').set('Cookie', 'bd.sid=s%3Agone.sig');
+        expect(ended.headers.location).toBe('/login?expired=1&return=%2Fdashboard');
     });
 });

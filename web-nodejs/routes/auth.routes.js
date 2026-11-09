@@ -23,24 +23,45 @@ try {
         getBadgePresentation: async () => null
     };
 }
-const { guestOnly, requireAuth } = require('../middleware/auth');
+const { requireAuth } = require('../middleware/auth');
 const { clearGuestCookie } = require('../middleware/guestAccess');
 const { loginLimiter, passwordChangeLimiter } = require('../middleware/rateLimiter');
 const panelSessionService = require('../services/panelSessionService');
 const { END_REASONS } = require('../lib/sessionPolicy');
+const { safeReturnPath } = require('../lib/returnUrl');
+const { manager: i18nManager } = require('../services/i18nService');
+const config = require('../config/config');
 
 /**
- * Validate that a return URL is a safe relative path. Mirrors
- * auth.IsRelativeReturnURL in the Go server. Rejects absolute URLs,
- * protocol-relative URLs (//evil.com/...), CR/LF (response splitting),
- * and anything not starting with a single "/".
+ * Where to go after sign-in: the ?return= path when it is a path on this
+ * console (lib/returnUrl.js, stricter than auth.IsRelativeReturnURL in the
+ * Go server), otherwise the start page.
  */
-function isSafeReturnUrl(u) {
-    if (typeof u !== 'string' || u.length === 0) return false;
-    if (/[\r\n\x00]/.test(u)) return false;
-    if (!u.startsWith('/')) return false;
-    if (u.startsWith('//') || u.startsWith('/\\')) return false;
-    return true;
+function returnPathOr(raw, fallback = '/') {
+    return safeReturnPath(raw) || fallback;
+}
+
+/** The sign-in page is for people who aren't signed in; someone who is goes back (R3) */
+function loginGuestOnly(req, res, next) {
+    if (req.session && req.session.userId) {
+        return res.redirect(returnPathOr(req.query.return));
+    }
+    next();
+}
+
+/** The sign-in page's capacity badge (Settings › Server attestation), or one that says nothing */
+async function attestationSummary(req) {
+    try {
+        const last = await serverAttestation.getLastResult();
+        const presentation = await serverAttestation.getBadgePresentation({
+            tier: last && last.tier,
+            translate: req.t,
+            brandName: brandingService.getBranding().appName
+        });
+        return serverAttestation.buildPublicSummary(last, presentation);
+    } catch (_) {
+        return { tier: null, maxConnections: null };
+    }
 }
 
 function isPrivateClientIp(rawIp) {
@@ -72,36 +93,18 @@ async function bestEffortUserSync(action, label) {
  * Serves desktop-style login when user previously had desktop mode active
  * (detected via localStorage preference or explicit ?desktop=1 query param).
  */
-router.get('/login', guestOnly, async (req, res) => {
-    const useDesktop = req.query.desktop === '1' || req.cookies.betterdesk_desktop_mode === 'true';
-
-    let attestationBadge = { tier: null, maxConnections: null };
-    try {
-        const last = await serverAttestation.getLastResult();
-        const presentation = await serverAttestation.getBadgePresentation({
-            tier: last && last.tier,
-            translate: req.t,
-            brandName: brandingService.getBranding().appName
-        });
-        attestationBadge = serverAttestation.buildPublicSummary(last, presentation);
-    } catch (_) { /* optional */ }
+router.get('/login', loginGuestOnly, async (req, res) => {
+    const useDesktop = req.query.desktop === '1' || (req.cookies && req.cookies.betterdesk_desktop_mode === 'true');
+    const attestationBadge = await attestationSummary(req);
 
     if (useDesktop) {
-        // Fetch user list for multi-user selector (usernames + roles only, no secrets)
-        let loginUsers = [];
-        try {
-            const users = typeof db.getAllUsersForBackup === 'function'
-                ? await db.getAllUsersForBackup() : [];
-            loginUsers = (Array.isArray(users) ? users : []).map(u => ({
-                username: u.username,
-                role: u.role || 'operator'
-            }));
-        } catch (_) { /* empty list is fine */ }
-
+        // No list of the server's accounts: visitors who aren't signed in must
+        // not learn usernames and roles (S4). The browser's own saved
+        // sign-ins fill the username field (autocomplete="username").
         return res.render('desktop-login', {
             title: req.t('nav.login'),
             activePage: 'login',
-            loginUsers,
+            loginUsers: [],
             attestationBadge
         });
     }
@@ -110,6 +113,69 @@ router.get('/login', guestOnly, async (req, res) => {
         title: req.t('nav.login'),
         activePage: 'login',
         attestationBadge
+    });
+});
+
+const PROMO_MODES = new Set(['classic', 'single', 'slides']);
+
+/**
+ * GET /api/auth/login-page - What the new sign-in page (web-ui) shows before
+ * anyone is signed in, the same values the old page rendered: the CSRF
+ * token for the sign-in requests, name, version and branding of the
+ * console, the languages and the capacity badge. No user data.
+ */
+router.get('/api/auth/login-page', async (req, res) => {
+    const branding = res.locals.branding || brandingService.getBranding() || {};
+    const mode = PROMO_MODES.has(branding.loginPromoMode) ? branding.loginPromoMode : 'classic';
+    const slides = mode === 'slides' && Array.isArray(branding.loginSlides) ? branding.loginSlides : [];
+    const badge = await attestationSummary(req);
+    res.setHeader('Cache-Control', 'no-store');
+    res.json({
+        success: true,
+        csrfToken: res.locals.csrfToken || '',
+        appName: res.locals.appName || branding.appName || config.appName || 'BetterDesk',
+        appVersion: config.appVersion || '',
+        // The old desktop mode's cookie still asks for the compact sign-in
+        desktopMode: !!(req.cookies && req.cookies.betterdesk_desktop_mode === 'true'),
+        // Whether this browser has a console session: error pages then keep the
+        // console shell, and nobody else gets a refused session request
+        signedIn: !!(req.session && req.session.userId
+            && !(req.session.user && req.session.user.role === 'pro')),
+        branding: {
+            logoType: branding.logoType || 'default',
+            logoSvg: branding.logoSvg || '',
+            logoUrl: branding.logoUrl || '',
+            logoText: branding.logoText || '',
+            logoTextAccent: branding.logoTextAccent || '',
+            loginTitle: branding.loginTitle || '',
+            loginSubtitle: branding.loginSubtitle || '',
+            loginPromoMode: mode,
+            loginSlides: slides.map((s) => ({
+                id: String(s.id || ''),
+                slideKey: String(s.slideKey || ''),
+                imageUrl: String(s.imageUrl || ''),
+                title: String(s.title || ''),
+                body: String(s.body || ''),
+                overlay: Number(s.overlay) || 0
+            })),
+            footerText: branding.footerText || '',
+            showPoweredBy: String(branding.showPoweredBy) !== 'false'
+        },
+        languages: i18nManager.getAvailableList().map((l) => ({
+            code: l.code,
+            name: l.name,
+            native: l.native || l.name,
+            flag: l.flag || '',
+            rtl: !!l.rtl
+        })),
+        attestation: badge && badge.valid && badge.tier
+            ? {
+                tier: String(badge.tier),
+                brand: badge.brand || '',
+                badgeTitle: badge.badgeTitle || '',
+                tierLabel: badge.tierLabel || ''
+            }
+            : null
     });
 });
 
@@ -244,6 +310,8 @@ router.post('/api/auth/login', loginLimiter, async (req, res) => {
                         username: user.username,
                         role: user.role
                     },
+                    // Where the page goes next: the ?return= path it sent, when safe (R3)
+                    redirect: returnPathOr(req.body && req.body.return),
                     session: {
                         replacedPriorSessions: replaced.length,
                         idleTimeoutMs: panelSessionService.getPolicy().idleTimeoutMs,
@@ -440,7 +508,7 @@ router.get('/api/auth/oidc/status', async (req, res) => {
  */
 router.get('/api/auth/oidc/authorize', async (req, res) => {
     const requested = typeof req.query.return_url === 'string' ? req.query.return_url : '/';
-    const returnUrl = isSafeReturnUrl(requested) ? requested : '/';
+    const returnUrl = returnPathOr(requested);
     try {
         const result = await betterdeskApi.startOIDCAuthorize(returnUrl);
         if (!result.success || !result.data?.auth_url) {
@@ -506,7 +574,7 @@ router.get('/api/auth/oidc/session', async (req, res) => {
         const { token, username, role, return_url } = exchange.data;
 
         // Defense in depth: re-validate the return URL Go provided.
-        const safeReturnUrl = isSafeReturnUrl(return_url) ? return_url : '/';
+        const safeReturnUrl = returnPathOr(return_url);
 
         // Look up the local user (may have been auto-provisioned by Go).
         let user = await db.getUserByUsername(username);
@@ -740,6 +808,7 @@ function finalizeLoginSession(req, res, pendingUser, method) {
                         username: pendingUser.username,
                         role: pendingUser.role
                     },
+                    redirect: returnPathOr(req.body && req.body.return),
                     session: {
                         replacedPriorSessions: replaced.length,
                         idleTimeoutMs: panelSessionService.getPolicy().idleTimeoutMs,

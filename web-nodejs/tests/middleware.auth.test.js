@@ -31,7 +31,8 @@ describe('Auth Middleware', () => {
             const res = await request(app).get('/dashboard');
 
             expect(res.status).toBe(302);
-            expect(res.headers.location).toBe('/login?expired=1');
+            // The way back, no "expired" on a first visit (tests/authLoginRedirect.test.js)
+            expect(res.headers.location).toBe('/login?return=%2Fdashboard');
         });
 
         it('should pass through for authenticated requests', async () => {

@@ -4,8 +4,8 @@
  *   server address (the old page had it rendered into the HTML), with the
  *   page's own permission (enrollment.approve).
  * - GET /registrations sends a signed-out visitor to the sign-in page like
- *   every other page (BUGS.md R8: it had no requireAuth and skipped
- *   ?expired=1).
+ *   every other page (BUGS.md R8: it had no requireAuth and skipped the
+ *   redirect the other pages make).
  */
 
 'use strict';
@@ -76,9 +76,10 @@ describe('GET /api/panel/pairing/host', () => {
 });
 
 describe('GET /registrations signed out (R8)', () => {
-    test('goes to the sign-in page with ?expired=1, like the other pages', async () => {
+    test('goes to the sign-in page with the way back, like the other pages', async () => {
         const res = await request(app(null)).get('/registrations');
         expect(res.status).toBe(302);
-        expect(res.headers.location).toBe('/login?expired=1');
+        // No "expired" on a first visit (R4), the page to come back to (R3)
+        expect(res.headers.location).toBe('/login?return=%2Fregistrations');
     });
 });

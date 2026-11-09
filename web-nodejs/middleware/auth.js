@@ -7,6 +7,7 @@ const {
     getEffectivePermissions,
     loadEffectivePermissions,
 } = require('../services/rolePermissionService');
+const { loginRedirectUrl } = require('../lib/returnUrl');
 
 // Default role-permission map (mirrors Go auth/permissions.go — Phase 52+)
 //
@@ -250,8 +251,9 @@ function requireAuth(req, res, next) {
             });
         }
         
-        // HTML request - redirect to login (expired helps UX when cookie was revoked)
-        return res.redirect('/login?expired=1');
+        // HTML request: the sign-in page with the way back here; "expired"
+        // only when the browser still had a session cookie (lib/returnUrl.js)
+        return res.redirect(loginRedirectUrl(req));
     }
     
     // Block pro-only users from web panel (API-only role)

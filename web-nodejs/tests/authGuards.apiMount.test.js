@@ -57,7 +57,7 @@ describe('guards in a router mounted under /api', () => {
     test('pages mounted elsewhere still redirect', async () => {
         const res = await request(app(null)).get('/pages/open');
         expect(res.status).toBe(302);
-        expect(res.headers.location).toBe('/login?expired=1');
+        expect(res.headers.location).toBe('/login?return=%2Fpages%2Fopen');
     });
 
     test('allowed requests pass', async () => {

@@ -182,7 +182,8 @@ app.use((req, res, next) => {
                         code: reason === 'idle' ? 'session_idle' : 'session_expired'
                     });
                 }
-                return res.redirect('/login?expired=1');
+                // The way back to this page after signing in again (lib/returnUrl.js, R3)
+                return res.redirect(require('./lib/returnUrl').loginRedirectUrl(req));
             });
         });
         db.logAction(userId, 'session_expired', `reason=${reason}`, req.ip).catch(() => {});
