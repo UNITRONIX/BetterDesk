@@ -1825,8 +1825,9 @@ router.get('/api/panel/strategies/:guid', requireAuth, requirePermission('device
         }
         let strategy = await db.getStrategyByGuid(guid);
         if (!strategy && (await serverBackend.isBetterDesk())) {
+            // getStrategy answers { success, data } like the other Go calls
             const remote = await betterdeskApi.getStrategy(guid);
-            if (remote.success !== false && remote.guid) strategy = remote;
+            if (remote && remote.success && remote.data && remote.data.guid) strategy = remote.data;
         }
         if (!strategy) {
             return res.status(404).json({ success: false, error: req.t('devices.strategy_not_found') });
@@ -1912,6 +1913,13 @@ router.delete('/api/panel/strategies/:guid', requireAuth, requirePermission('dev
             return res.status(404).json({ success: false, error: req.t('devices.strategy_not_found') });
         }
         await db.deleteStrategy(guid);
+        // The Go server keeps its own copy and applies it to clients
+        if (await serverBackend.isBetterDesk()) {
+            const remote = await betterdeskApi.deleteStrategy(guid);
+            if (remote && !remote.success && !/not found/i.test(String(remote.error || ''))) {
+                console.warn('[strategies] Go delete failed:', remote.error);
+            }
+        }
         await db.logAction(req.session.userId, 'strategy_deleted', `Deleted strategy: ${existing.name}`, req.ip);
         res.json({ success: true });
     } catch (err) {
