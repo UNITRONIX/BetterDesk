@@ -1,64 +1,15 @@
 /**
  * BetterDesk Console - CDAP Routes
- * Routes for CDAP (Custom Device Automation Protocol) device management
- * and widget rendering in the admin panel.
+ * API routes for CDAP (Custom Device Automation Protocol) device management
+ * and widgets. The pages (/cdap, /cdap/devices, /cdap/devices/:id) are in the
+ * new console (web-ui); the old addresses redirect there (lib/portedPages.js).
  */
 
 const express = require('express');
 const router = express.Router();
-const { assertSafeApiId } = require('../lib/goApiPath');
 const { requireAuth, requirePermission } = require('../middleware/auth');
 const betterdeskApi = require('../services/betterdeskApi');
 const restartCoordinator = require('../services/restartCoordinator');
-
-// ── Page Routes ──────────────────────────────────────────────────────────
-
-/**
- * CDAP devices list page
- * GET /cdap
- */
-router.get('/cdap', requireAuth, (req, res) => {
-    res.render('cdap-devices', {
-        title: req.t('cdap.devices_title'),
-        activePage: 'cdap',
-        currentPage: 'cdap'
-    });
-});
-
-/**
- * CDAP devices list page (alternative path, used by desktop embed)
- * GET /cdap/devices
- */
-router.get('/cdap/devices', requireAuth, (req, res) => {
-    res.render('cdap-devices', {
-        title: req.t('cdap.devices_title'),
-        activePage: 'cdap',
-        currentPage: 'cdap'
-    });
-});
-
-/**
- * CDAP device detail page with widget panel
- * GET /cdap/devices/:id
- */
-router.get('/cdap/devices/:id', requireAuth, (req, res) => {
-    try {
-        const deviceId = assertSafeApiId(req.params.id, 'deviceId');
-        res.render('cdap-device', {
-            title: req.t('cdap.device_detail'),
-            activePage: 'devices',
-            deviceId,
-        });
-    } catch (err) {
-        if (err.message && /^Invalid /.test(err.message)) {
-            return res.status(400).render('errors/404', {
-                title: 'Bad Request',
-                activePage: 'error',
-            });
-        }
-        throw err;
-    }
-});
 
 // ── API Routes ───────────────────────────────────────────────────────────
 

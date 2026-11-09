@@ -1,7 +1,9 @@
 /**
- * BetterDesk Console — Page Render Routes
+ * BetterDesk Console — old page addresses
  *
- * Serves HTML pages for management modules. API endpoints are in separate route files.
+ * The pages that lived here are in the new console (web-ui) and their old
+ * addresses redirect there (lib/portedPages.js). /tenants is left: it sends
+ * people to Organizations.
  *
  * @module routes/pages.routes
  */
@@ -11,24 +13,6 @@
 const express = require('express');
 const router = express.Router();
 const { requireAuth, requireRole } = require('../middleware/auth');
-
-// ── Inventory ──
-
-router.get('/inventory', requireAuth, (req, res) => {
-    res.render('inventory', {
-        title: req.t('inventory.title'),
-        activePage: 'inventory',
-    });
-});
-
-// ── Network Monitoring ──
-
-router.get('/network', requireAuth, (req, res) => {
-    res.render('network', {
-        title: req.t('network.title'),
-        activePage: 'network',
-    });
-});
 
 // ── Tenants — redirect to Organizations (merged) ──
 

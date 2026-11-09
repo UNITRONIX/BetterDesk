@@ -149,8 +149,6 @@ query-filters:
       id: js/xss
       paths:
         - web-nodejs/views/layouts/main.ejs
-        - web-nodejs/public/js/cdap-filebrowser.js
-        - web-nodejs/public/js/cdap-desktop.js
 
   # --- Modal / settings DOM updates use escaped template fragments ---
   - exclude:

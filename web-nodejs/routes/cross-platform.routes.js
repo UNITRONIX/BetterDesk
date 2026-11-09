@@ -7,21 +7,6 @@ const { apiClient } = require('../services/betterdeskApi');
 const { proxyToGo, safeSegment } = require('../lib/goApiProxy');
 
 // ---------------------------------------------------------------------------
-// Page route
-// ---------------------------------------------------------------------------
-router.get('/cross-platform', requireAuth, requirePermission('device.view'), (req, res) => {
-    const tab = req.query.tab || 'matrix';
-    res.render('cross-platform', {
-        title: req.t('cross_platform.title'),
-        pageStyles: ['cross-platform'],
-        pageScripts: ['cross-platform'],
-        currentPage: 'cross-platform',
-        breadcrumb: [{ label: req.t('cross_platform.title') }],
-        activeTab: tab
-    });
-});
-
-// ---------------------------------------------------------------------------
 // Platform Distribution — aggregate from Go server peers
 // ---------------------------------------------------------------------------
 router.get('/api/panel/cross-platform/distribution', requireAuth, requirePermission('device.view'), async (req, res) => {

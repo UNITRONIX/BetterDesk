@@ -52,10 +52,4 @@ describe('Material Symbols self-hosted subset', () => {
             'Icons missing from self-hosted subset — run: node scripts/update-material-symbols.mjs'
         );
     });
-
-    it('keeps Devices toolbar icons from overflowing as raw ligature text', () => {
-        const devicesCss = fs.readFileSync(path.join(root, 'public', 'css', 'devices.css'), 'utf8');
-        assert.match(devicesCss, /\.toolbar-icon\s*\{[\s\S]*?overflow:\s*hidden/);
-        assert.match(devicesCss, /\.toolbar-icon \.material-icons\s*\{[\s\S]*?overflow:\s*hidden/);
-    });
 });

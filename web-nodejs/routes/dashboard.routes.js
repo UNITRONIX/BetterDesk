@@ -12,18 +12,6 @@ const serverBackend = require('../services/serverBackend');
 const { requireAuth, requirePermission } = require('../middleware/auth');
 
 /**
- * GET / - Dashboard page
- */
-router.get('/', requireAuth, (req, res) => {
-    const activateAgentNav = String(req.query.activateAgent || '') === '1';
-    res.render('dashboard', {
-        title: activateAgentNav ? req.t('nav.activate_agent') : req.t('nav.dashboard'),
-        activePage: 'dashboard',
-        activateAgentNav
-    });
-});
-
-/**
  * GET /api/stats - Get dashboard statistics
  */
 router.get('/api/stats', requireAuth, async (req, res) => {
@@ -59,7 +47,7 @@ router.get('/api/stats', requireAuth, async (req, res) => {
  * GET /api/server/status - Get server status
  * In betterdesk mode: probes the Go server /api/health (single binary serves all).
  * In rustdesk mode: probes hbbs (health) + hbbr (TCP connect).
- * Returns a unified shape consumed by dashboard.js.
+ * Returns a unified shape consumed by the dashboard.
  */
 router.get('/api/server/status', requireAuth, async (req, res) => {
     try {

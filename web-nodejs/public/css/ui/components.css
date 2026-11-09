@@ -833,13 +833,12 @@ th.sortable.sort-desc {
 
 /* Focus: the usual ring, drawn around the label: inside the tab top and
    bottom (clear of the underline, so it never reads as "selected") and
-   --tab-ring-room past the label at the sides. The device panel's tabs
-   (device-detail.css) use it too. */
-:is(.tab, .tab-btn, .device-panel-tab):focus-visible {
+   --tab-ring-room past the label at the sides. */
+:is(.tab, .tab-btn):focus-visible {
     outline: none;
 }
 
-:is(.tab, .tab-btn, .device-panel-tab):focus-visible::after {
+:is(.tab, .tab-btn):focus-visible::after {
     content: "";
     position: absolute;
     inset-block: 3px;
@@ -849,7 +848,7 @@ th.sortable.sort-desc {
     pointer-events: none;
 }
 
-html[data-a11y-strong-focus="true"] :is(.tab, .tab-btn, .device-panel-tab):focus-visible::after {
+html[data-a11y-strong-focus="true"] :is(.tab, .tab-btn):focus-visible::after {
     border-width: 3px;
 }
 

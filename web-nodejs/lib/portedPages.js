@@ -43,7 +43,15 @@ const PORTED_PAGES = Object.freeze([
     '/settings',
     '/languages',
     '/cdap-studio',
-    '/fleet'
+    '/fleet',
+    '/',
+    '/devices',
+    '/inventory',
+    '/network',
+    '/cross-platform',
+    '/cdap',
+    '/cdap/devices',
+    '/cdap/devices/*'
 ]);
 
 function isPortedPath(pathname, list = PORTED_PAGES) {

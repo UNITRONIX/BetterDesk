@@ -14,16 +14,6 @@ const { requireAuth, requirePermission, requestHasPermission } = require('../mid
 const { bodyInt, bodyString, bodyBool, plainBodyObject } = require('../lib/bodyScalars');
 
 /**
- * GET /devices - Devices list page
- */
-router.get('/devices', requireAuth, (req, res) => {
-    res.render('devices', {
-        title: req.t('nav.devices'),
-        activePage: 'devices'
-    });
-});
-
-/**
  * GET /api/devices - Get devices list (JSON)
  */
 // Allowed values for sort parameters (prevent SQL injection via sort columns)
