@@ -81,10 +81,6 @@
 	import { ICONS } from '#lib/util/display.ts';
 	import { readJsonPref, readPref, writeJsonPref, writePref } from '#lib/util/storage.ts';
 	import AccessRules from './AccessRules.svelte';
-	import FolderDialog from './FolderDialog.svelte';
-	import GroupBillingSheet from './GroupBillingSheet.svelte';
-	import GroupSheet from './GroupSheet.svelte';
-	import ManageTagsSheet from './ManageTagsSheet.svelte';
 	import ScopeList, { type DropTarget } from './ScopeList.svelte';
 	import TagFilter from './TagFilter.svelte';
 
@@ -840,45 +836,54 @@
 	</div>
 {/if}
 
+<!-- Dialogs and sheets that open on demand load then, so the list's first load stays small -->
 {#if folderDialog}
-	<FolderDialog
-		folder={folderDialog.folder}
-		onclose={() => (folderDialog = null)}
-		onsaved={() => {
-			folderDialog = null;
-			void loadFolders();
-		}}
-	/>
+	{#await import('./FolderDialog.svelte') then { default: FolderDialog }}
+		<FolderDialog
+			folder={folderDialog.folder}
+			onclose={() => (folderDialog = null)}
+			onsaved={() => {
+				folderDialog = null;
+				void loadFolders();
+			}}
+		/>
+	{/await}
 {/if}
 
 {#if groupSheet}
-	<GroupSheet
-		group={groupSheet.group}
-		tags={knownTags}
-		onclose={() => (groupSheet = null)}
-		onsaved={() => {
-			groupSheet = null;
-			void loadGroups();
-		}}
-	/>
+	{#await import('./GroupSheet.svelte') then { default: GroupSheet }}
+		<GroupSheet
+			group={groupSheet.group}
+			tags={knownTags}
+			onclose={() => (groupSheet = null)}
+			onsaved={() => {
+				groupSheet = null;
+				void loadGroups();
+			}}
+		/>
+	{/await}
 {/if}
 
 {#if billingFor}
-	<GroupBillingSheet group={billingFor} onclose={() => (billingFor = null)} />
+	{#await import('./GroupBillingSheet.svelte') then { default: GroupBillingSheet }}
+		<GroupBillingSheet group={billingFor} onclose={() => (billingFor = null)} />
+	{/await}
 {/if}
 
 {#if manageTags}
-	<ManageTagsSheet
-		tags={knownTags}
-		{devices}
-		{groups}
-		onclose={() => (manageTags = false)}
-		onchanged={async (from, to) => {
-			if (from && tagFilter.includes(from))
-				tagFilter = to ? tagFilter.map((x) => (x === from ? to : x)) : tagFilter.filter((x) => x !== from);
-			await Promise.all([loadTags(), loadGroups(), quiet(loadDevices())]);
-		}}
-	/>
+	{#await import('./ManageTagsSheet.svelte') then { default: ManageTagsSheet }}
+		<ManageTagsSheet
+			tags={knownTags}
+			{devices}
+			{groups}
+			onclose={() => (manageTags = false)}
+			onchanged={async (from, to) => {
+				if (from && tagFilter.includes(from))
+					tagFilter = to ? tagFilter.map((x) => (x === from ? to : x)) : tagFilter.filter((x) => x !== from);
+				await Promise.all([loadTags(), loadGroups(), quiet(loadDevices())]);
+			}}
+		/>
+	{/await}
 {/if}
 
 <style>

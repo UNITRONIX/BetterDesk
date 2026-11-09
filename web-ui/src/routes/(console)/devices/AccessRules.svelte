@@ -22,8 +22,6 @@
 	import type { Column } from '#lib/ui/table.ts';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
 	import { ICONS } from '#lib/util/display.ts';
-	import StrategyAssignSheet from './StrategyAssignSheet.svelte';
-	import StrategySheet from './StrategySheet.svelte';
 
 	let { groups, devices }: { groups: DeviceGroup[]; devices: Device[] } = $props();
 
@@ -192,29 +190,34 @@
 	</div>
 </Disclosure>
 
+<!-- The sheets load when they open, so the device list's first load stays small -->
 {#if editing}
-	<StrategySheet
-		rule={editing.rule}
-		{groups}
-		onclose={() => (editing = null)}
-		onsaved={async () => {
-			editing = null;
-			await reload();
-		}}
-	/>
+	{#await import('./StrategySheet.svelte') then { default: StrategySheet }}
+		<StrategySheet
+			rule={editing.rule}
+			{groups}
+			onclose={() => (editing = null)}
+			onsaved={async () => {
+				editing = null;
+				await reload();
+			}}
+		/>
+	{/await}
 {/if}
 
 {#if assigning}
-	<StrategyAssignSheet
-		rule={assigning}
-		{groups}
-		{devices}
-		onclose={() => (assigning = null)}
-		onsaved={async () => {
-			assigning = null;
-			await loadApplied();
-		}}
-	/>
+	{#await import('./StrategyAssignSheet.svelte') then { default: StrategyAssignSheet }}
+		<StrategyAssignSheet
+			rule={assigning}
+			{groups}
+			{devices}
+			onclose={() => (assigning = null)}
+			onsaved={async () => {
+				assigning = null;
+				await loadApplied();
+			}}
+		/>
+	{/await}
 {/if}
 
 <style>
