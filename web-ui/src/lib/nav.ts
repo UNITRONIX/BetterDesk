@@ -46,7 +46,8 @@ export const PORTED: readonly string[] = [
 	'/cdap/devices',
 	'/cdap/devices/*',
 	'/registrations',
-	'/keys'
+	'/keys',
+	'/tokens'
 ];
 
 /** Whether a path (no query) is one of the entries */
