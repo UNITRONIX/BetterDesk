@@ -2388,11 +2388,16 @@
                 for (let i = 0; i < 4; i++) {
                     const idx = i + 1;
                     const on = active.indexOf(idx) !== -1;
+                    // Same row as a monitor: a screen icon and the name; a plugged-in
+                    // display gets the menu's check at the end (.active)
                     const item = document.createElement('button');
+                    item.type = 'button';
                     item.className = 'dropdown-item virtual-display-item' + (on ? ' active' : '');
-                    item.innerHTML = '<span class="material-icons">' +
-                        (on ? 'check_box' : 'check_box_outline_blank') + '</span> ' +
-                        escapeHtml(t('remote.virtual_display', 'Virtual display') + ' ' + idx);
+                    item.setAttribute('aria-pressed', on ? 'true' : 'false');
+                    item.innerHTML = '<span class="material-icons" aria-hidden="true">monitor</span>' +
+                        '<span class="monitor-item-text"><span class="monitor-item-name">' +
+                        escapeHtml(t('remote.virtual_display', 'Virtual display') + ' ' + idx) +
+                        '</span></span>';
                     item.addEventListener('click', () => {
                         session.client.toggleVirtualDisplay(idx, !on);
                     });
