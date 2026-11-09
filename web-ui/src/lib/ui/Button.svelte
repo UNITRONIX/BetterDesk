@@ -10,7 +10,7 @@
 -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import type { HTMLButtonAttributes } from 'svelte/elements';
+	import type { HTMLAnchorAttributes, HTMLButtonAttributes } from 'svelte/elements';
 	import Icon from './Icon.svelte';
 
 	type Variant = 'secondary' | 'primary' | 'ghost' | 'danger' | 'danger-quiet' | 'link';
@@ -46,6 +46,10 @@
 		...rest
 	}: Props = $props();
 
+	// The same attributes on a link (aria-label, aria-describedby, data-*, onclick...);
+	// the button-only ones (form, formaction, name, value) mean nothing there
+	const linkAttrs = $derived(rest as HTMLAnchorAttributes);
+
 	const classes = $derived([
 		'btn',
 		variant !== 'secondary' && `btn-${variant}`,
@@ -58,6 +62,7 @@
 {#if href}
 	<a
 		bind:this={element}
+		{...linkAttrs}
 		{href}
 		download={download === true ? '' : download || undefined}
 		class={classes}

@@ -38,6 +38,20 @@ describe('Button', () => {
 		render(Button, { href: '/devices', children: text('Devices') });
 		expect(screen.getByRole('link', { name: 'Devices' })).not.toHaveAttribute('download');
 	});
+	test('a link keeps its other attributes (name, description, click handler)', async () => {
+		const onclick = vi.fn((e: MouseEvent) => e.preventDefault());
+		render(Button, {
+			href: '/languages#de',
+			'aria-label': 'Open German',
+			'aria-describedby': 'lang-de-status',
+			onclick,
+			children: text('Open')
+		});
+		const a = screen.getByRole('link', { name: 'Open German' });
+		expect(a).toHaveAttribute('aria-describedby', 'lang-de-status');
+		await userEvent.click(a);
+		expect(onclick).toHaveBeenCalledOnce();
+	});
 });
 
 describe('MenuButton', () => {
