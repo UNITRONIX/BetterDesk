@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.222] — 2026-11-09
+
 ### Added
 - **UX 3.6 beta console shell (opt-in).** An alternative layout modelled on the
   community redesign by [@rathlinus](https://github.com/rathlinus)
@@ -4712,3 +4719,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.219]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.218...v3.5.219
 [3.5.220]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.219...v3.5.220
 [3.5.221]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.220...v3.5.221
+[3.5.222]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.221...v3.5.222
