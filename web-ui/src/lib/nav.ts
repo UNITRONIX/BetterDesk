@@ -27,7 +27,8 @@ export const PORTED: readonly string[] = [
 	'/languages',
 	'/users',
 	'/organizations',
-	'/organizations/*'
+	'/organizations/*',
+	'/permissions'
 ];
 
 /** Whether a path (no query) is one of the entries */
