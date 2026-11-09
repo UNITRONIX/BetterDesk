@@ -6450,7 +6450,7 @@
         "term_error": "Lost the connection to the terminal.",
         "term_warning": "Commands run as the account that runs the console. It can use sudo only if a sudoers rule allows it.",
         "term_hint": "Tip: type `sudo -i` to escalate (requires sudoers configuration).",
-        "term_lib_failed": "Could not load the terminal. The browser has to reach cdn.jsdelivr.net.",
+        "term_lib_failed": "Could not load the terminal. Reload the page and try again.",
         "files_up": "Up one level",
         "files_go": "Open",
         "files_mkdir": "New folder",
@@ -7288,7 +7288,8 @@
     "ui_form": {
         "unsaved": "Unsaved changes",
         "saved": "Saved",
-        "save_failed": "Could not save. Your changes are still here."
+        "save_failed": "Could not save. Your changes are still here.",
+        "saving": "Saving…"
     },
     "chart": {
         "role": "chart",
@@ -7456,5 +7457,18 @@
     "user_menu": {
         "label": "Account",
         "sign_out": "Sign out"
+    },
+    "table": {
+        "select_all": "Select all",
+        "select_row": "Select {name}",
+        "columns": "Columns"
+    },
+    "pagination": {
+        "showing": "Showing {start}–{end} of {total}",
+        "per_page": "Per page",
+        "label": "Pages",
+        "previous": "Previous page",
+        "next": "Next page",
+        "page": "Page {page}"
     }
 }

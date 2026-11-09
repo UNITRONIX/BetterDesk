@@ -6381,7 +6381,7 @@
         "term_error": "與終端機的連線中斷。",
         "term_warning": "指令會以執行主控台的帳號執行。只有 sudoers 規則允許時才能使用 sudo。",
         "term_hint": "提示：輸入 `sudo -i` 進行提權（需要 sudoers 配置）。",
-        "term_lib_failed": "無法載入終端機。瀏覽器必須能連到 cdn.jsdelivr.net。",
+        "term_lib_failed": "無法載入終端機。請重新載入頁面後再試一次。",
         "files_up": "上一級",
         "files_go": "開啟",
         "files_mkdir": "New folder",
@@ -7292,7 +7292,8 @@
     "ui_form": {
         "unsaved": "有未儲存的變更",
         "saved": "已儲存",
-        "save_failed": "無法儲存。您的變更仍保留著。"
+        "save_failed": "無法儲存。您的變更仍保留著。",
+        "saving": "正在儲存…"
     },
     "chart": {
         "role": "圖表",
@@ -7460,5 +7461,18 @@
     "user_menu": {
         "label": "帳戶",
         "sign_out": "登出"
+    },
+    "table": {
+        "select_all": "全選",
+        "select_row": "選取 {name}",
+        "columns": "欄"
+    },
+    "pagination": {
+        "showing": "第 {start}–{end} 筆，共 {total} 筆",
+        "per_page": "每頁",
+        "label": "頁面",
+        "previous": "上一頁",
+        "next": "下一頁",
+        "page": "第 {page} 頁"
     }
 }

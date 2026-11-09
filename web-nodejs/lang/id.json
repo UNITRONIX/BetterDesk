@@ -6365,7 +6365,7 @@
         "term_error": "Koneksi ke terminal terputus.",
         "term_warning": "Perintah berjalan sebagai akun yang menjalankan konsol. Akun itu hanya dapat memakai sudo jika aturan sudoers mengizinkannya.",
         "term_hint": "Tip: ketik `sudo -i` untuk melakukan eskalasi (memerlukan konfigurasi sudoers).",
-        "term_lib_failed": "Terminal tidak dapat dimuat. Browser harus dapat menjangkau cdn.jsdelivr.net.",
+        "term_lib_failed": "Terminal tidak dapat dimuat. Muat ulang halaman lalu coba lagi.",
         "files_up": "Naik satu tingkat",
         "files_go": "Buka",
         "files_mkdir": "New folder",
@@ -7294,7 +7294,8 @@
     "ui_form": {
         "unsaved": "Perubahan belum disimpan",
         "saved": "Tersimpan",
-        "save_failed": "Gagal menyimpan. Perubahan Anda masih ada."
+        "save_failed": "Gagal menyimpan. Perubahan Anda masih ada.",
+        "saving": "Menyimpan…"
     },
     "chart": {
         "role": "grafik",
@@ -7462,5 +7463,18 @@
     "user_menu": {
         "label": "Akun",
         "sign_out": "Keluar"
+    },
+    "table": {
+        "select_all": "Pilih semua",
+        "select_row": "Pilih {name}",
+        "columns": "Kolom"
+    },
+    "pagination": {
+        "showing": "Menampilkan {start}–{end} dari {total}",
+        "per_page": "Per halaman",
+        "label": "Halaman",
+        "previous": "Halaman sebelumnya",
+        "next": "Halaman berikutnya",
+        "page": "Halaman {page}"
     }
 }

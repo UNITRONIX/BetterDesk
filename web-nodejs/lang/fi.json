@@ -6365,7 +6365,7 @@
         "term_error": "Yhteys päätteeseen katkesi.",
         "term_warning": "Komennot ajetaan tilillä, joka ajaa konsolia. Se voi käyttää sudoa vain, jos sudoers-sääntö sallii sen.",
         "term_hint": "Vinkki: kirjoita `sudo -i` eskaloidaksesi (vaatii sudoers-määrityksen).",
-        "term_lib_failed": "Päätettä ei voitu ladata. Selaimen on tavoitettava cdn.jsdelivr.net.",
+        "term_lib_failed": "Päätettä ei voitu ladata. Lataa sivu uudelleen ja yritä uudelleen.",
         "files_up": "Yksi taso ylöspäin",
         "files_go": "Avaa",
         "files_mkdir": "New folder",
@@ -7294,7 +7294,8 @@
     "ui_form": {
         "unsaved": "Tallentamattomia muutoksia",
         "saved": "Tallennettu",
-        "save_failed": "Tallennus epäonnistui. Muutoksesi ovat yhä tallessa."
+        "save_failed": "Tallennus epäonnistui. Muutoksesi ovat yhä tallessa.",
+        "saving": "Tallennetaan…"
     },
     "chart": {
         "role": "kaavio",
@@ -7462,5 +7463,18 @@
     "user_menu": {
         "label": "Tili",
         "sign_out": "Kirjaudu ulos"
+    },
+    "table": {
+        "select_all": "Valitse kaikki",
+        "select_row": "Valitse {name}",
+        "columns": "Sarakkeet"
+    },
+    "pagination": {
+        "showing": "{start}–{end} / {total}",
+        "per_page": "Sivulla",
+        "label": "Sivut",
+        "previous": "Edellinen sivu",
+        "next": "Seuraava sivu",
+        "page": "Sivu {page}"
     }
 }

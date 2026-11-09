@@ -6365,7 +6365,7 @@
         "term_error": "Anslutningen till terminalen bröts.",
         "term_warning": "Kommandon körs som kontot som kör konsolen. Det kan bara använda sudo om en sudoers-regel tillåter det.",
         "term_hint": "Tips: skriv `sudo -i` för att eskalera (kräver sudoers-konfiguration).",
-        "term_lib_failed": "Det gick inte att läsa in terminalen. Webbläsaren måste nå cdn.jsdelivr.net.",
+        "term_lib_failed": "Det gick inte att läsa in terminalen. Läs in sidan igen och försök på nytt.",
         "files_up": "Upp en nivå",
         "files_go": "Öppna",
         "files_mkdir": "New folder",
@@ -7294,7 +7294,8 @@
     "ui_form": {
         "unsaved": "Osparade ändringar",
         "saved": "Sparat",
-        "save_failed": "Det gick inte att spara. Dina ändringar finns kvar."
+        "save_failed": "Det gick inte att spara. Dina ändringar finns kvar.",
+        "saving": "Sparar…"
     },
     "chart": {
         "role": "diagram",
@@ -7462,5 +7463,18 @@
     "user_menu": {
         "label": "Konto",
         "sign_out": "Logga ut"
+    },
+    "table": {
+        "select_all": "Markera alla",
+        "select_row": "Markera {name}",
+        "columns": "Kolumner"
+    },
+    "pagination": {
+        "showing": "Visar {start}–{end} av {total}",
+        "per_page": "Per sida",
+        "label": "Sidor",
+        "previous": "Föregående sida",
+        "next": "Nästa sida",
+        "page": "Sida {page}"
     }
 }

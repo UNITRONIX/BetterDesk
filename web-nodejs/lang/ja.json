@@ -6359,7 +6359,7 @@
         "term_error": "ターミナルへの接続が切れました。",
         "term_warning": "コマンドはコンソールを動かしているアカウントで実行されます。sudo は sudoers のルールで許可されている場合のみ使えます。",
         "term_hint": "ヒント: エスカレーションするには、「sudo -i」と入力します (sudoers の設定が必要です)。",
-        "term_lib_failed": "ターミナルを読み込めませんでした。ブラウザーが cdn.jsdelivr.net に接続できる必要があります。",
+        "term_lib_failed": "ターミナルを読み込めませんでした。ページを再読み込みしてもう一度お試しください。",
         "files_up": "一つ上のレベルへ",
         "files_go": "開く",
         "files_mkdir": "New folder",
@@ -7288,7 +7288,8 @@
     "ui_form": {
         "unsaved": "未保存の変更があります",
         "saved": "保存しました",
-        "save_failed": "保存できませんでした。変更内容は残っています。"
+        "save_failed": "保存できませんでした。変更内容は残っています。",
+        "saving": "保存中…"
     },
     "chart": {
         "role": "グラフ",
@@ -7456,5 +7457,18 @@
     "user_menu": {
         "label": "アカウント",
         "sign_out": "サインアウト"
+    },
+    "table": {
+        "select_all": "すべて選択",
+        "select_row": "{name} を選択",
+        "columns": "列"
+    },
+    "pagination": {
+        "showing": "{total} 件中 {start}–{end} 件",
+        "per_page": "1 ページの件数",
+        "label": "ページ",
+        "previous": "前のページ",
+        "next": "次のページ",
+        "page": "{page} ページ"
     }
 }

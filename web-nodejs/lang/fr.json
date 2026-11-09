@@ -6381,7 +6381,7 @@
         "term_error": "La connexion au terminal a été perdue.",
         "term_warning": "Les commandes s'exécutent avec le compte qui exécute la console. Il ne peut utiliser sudo que si une règle sudoers l'autorise.",
         "term_hint": "Tipp: Geben Sie `sudo -i` ein, um Root-Rechte zu erhalten (sudoers-Konfiguration erforderlich).",
-        "term_lib_failed": "Impossible de charger le terminal. Le navigateur doit pouvoir joindre cdn.jsdelivr.net.",
+        "term_lib_failed": "Impossible de charger le terminal. Rechargez la page et réessayez.",
         "files_up": "Eine Ebene höher",
         "files_go": "Ouvrir",
         "files_mkdir": "New folder",
@@ -7292,7 +7292,8 @@
     "ui_form": {
         "unsaved": "Modifications non enregistrées",
         "saved": "Enregistré",
-        "save_failed": "Échec de l'enregistrement. Vos modifications sont conservées."
+        "save_failed": "Échec de l'enregistrement. Vos modifications sont conservées.",
+        "saving": "Enregistrement…"
     },
     "chart": {
         "role": "graphique",
@@ -7460,5 +7461,18 @@
     "user_menu": {
         "label": "Compte",
         "sign_out": "Se déconnecter"
+    },
+    "table": {
+        "select_all": "Tout sélectionner",
+        "select_row": "Sélectionner {name}",
+        "columns": "Colonnes"
+    },
+    "pagination": {
+        "showing": "{start}–{end} sur {total}",
+        "per_page": "Par page",
+        "label": "Pages",
+        "previous": "Page précédente",
+        "next": "Page suivante",
+        "page": "Page {page}"
     }
 }

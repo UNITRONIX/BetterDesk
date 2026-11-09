@@ -6365,7 +6365,7 @@
         "term_error": "Terminal bağlantısı koptu.",
         "term_warning": "Komutlar konsolu çalıştıran hesapla çalışır. Bu hesap sudo'yu yalnızca bir sudoers kuralı izin verirse kullanabilir.",
         "term_hint": "İpucu: Sorunu iletmek için \"sudo -i\" yazın (sudoers yapılandırması gerektirir).",
-        "term_lib_failed": "Terminal yüklenemedi. Tarayıcının cdn.jsdelivr.net adresine ulaşması gerekir.",
+        "term_lib_failed": "Terminal yüklenemedi. Sayfayı yeniden yükleyip tekrar deneyin.",
         "files_up": "Bir seviye yukarı",
         "files_go": "Aç",
         "files_mkdir": "New folder",
@@ -7294,7 +7294,8 @@
     "ui_form": {
         "unsaved": "Kaydedilmemiş değişiklikler",
         "saved": "Kaydedildi",
-        "save_failed": "Kaydedilemedi. Değişiklikleriniz duruyor."
+        "save_failed": "Kaydedilemedi. Değişiklikleriniz duruyor.",
+        "saving": "Kaydediliyor…"
     },
     "chart": {
         "role": "grafik",
@@ -7462,5 +7463,18 @@
     "user_menu": {
         "label": "Hesap",
         "sign_out": "Oturumu kapat"
+    },
+    "table": {
+        "select_all": "Tümünü seç",
+        "select_row": "{name} seç",
+        "columns": "Sütunlar"
+    },
+    "pagination": {
+        "showing": "{total} içinden {start}–{end}",
+        "per_page": "Sayfa başına",
+        "label": "Sayfalar",
+        "previous": "Önceki sayfa",
+        "next": "Sonraki sayfa",
+        "page": "Sayfa {page}"
     }
 }

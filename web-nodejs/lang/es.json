@@ -6359,7 +6359,7 @@
         "term_error": "Se perdió la conexión con la terminal.",
         "term_warning": "Los comandos se ejecutan con la cuenta que ejecuta la consola. Solo puede usar sudo si una regla de sudoers lo permite.",
         "term_hint": "Consejo: escribe `sudo -i` para obtener privilegios root (requiere configuración sudoers).",
-        "term_lib_failed": "No se pudo cargar la terminal. El navegador tiene que llegar a cdn.jsdelivr.net.",
+        "term_lib_failed": "No se pudo cargar el terminal. Vuelva a cargar la página e inténtelo de nuevo.",
         "files_up": "Subir un nivel",
         "files_go": "Abrir",
         "files_mkdir": "New folder",
@@ -7288,7 +7288,8 @@
     "ui_form": {
         "unsaved": "Cambios sin guardar",
         "saved": "Guardado",
-        "save_failed": "No se pudo guardar. Sus cambios siguen aquí."
+        "save_failed": "No se pudo guardar. Sus cambios siguen aquí.",
+        "saving": "Guardando…"
     },
     "chart": {
         "role": "gráfico",
@@ -7456,5 +7457,18 @@
     "user_menu": {
         "label": "Cuenta",
         "sign_out": "Cerrar sesión"
+    },
+    "table": {
+        "select_all": "Seleccionar todo",
+        "select_row": "Seleccionar {name}",
+        "columns": "Columnas"
+    },
+    "pagination": {
+        "showing": "Mostrando {start}–{end} de {total}",
+        "per_page": "Por página",
+        "label": "Páginas",
+        "previous": "Página anterior",
+        "next": "Página siguiente",
+        "page": "Página {page}"
     }
 }

@@ -6359,7 +6359,7 @@
         "term_error": "De verbinding met de terminal is verbroken.",
         "term_warning": "Opdrachten draaien onder het account waaronder de console draait. Het kan sudo alleen gebruiken als een sudoers-regel dat toestaat.",
         "term_hint": "Voer opdrachten uit met dezelfde zorg als op de server zelf.",
-        "term_lib_failed": "Kan de terminal niet laden. De browser moet cdn.jsdelivr.net kunnen bereiken.",
+        "term_lib_failed": "De terminal kon niet worden geladen. Laad de pagina opnieuw en probeer het nog eens.",
         "files_up": "Omhoog",
         "files_go": "Openen",
         "files_mkdir": "New folder",
@@ -7288,7 +7288,8 @@
     "ui_form": {
         "unsaved": "Niet-opgeslagen wijzigingen",
         "saved": "Opgeslagen",
-        "save_failed": "Opslaan mislukt. Uw wijzigingen staan er nog."
+        "save_failed": "Opslaan mislukt. Uw wijzigingen staan er nog.",
+        "saving": "Opslaan…"
     },
     "chart": {
         "role": "grafiek",
@@ -7456,5 +7457,18 @@
     "user_menu": {
         "label": "Account",
         "sign_out": "Afmelden"
+    },
+    "table": {
+        "select_all": "Alles selecteren",
+        "select_row": "{name} selecteren",
+        "columns": "Kolommen"
+    },
+    "pagination": {
+        "showing": "{start}–{end} van {total}",
+        "per_page": "Per pagina",
+        "label": "Pagina's",
+        "previous": "Vorige pagina",
+        "next": "Volgende pagina",
+        "page": "Pagina {page}"
     }
 }

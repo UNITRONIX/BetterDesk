@@ -6359,7 +6359,7 @@
         "term_error": "Die Verbindung zum Terminal ist abgebrochen.",
         "term_warning": "Befehle laufen unter dem Konto, unter dem die Konsole läuft. sudo funktioniert nur, wenn eine sudoers-Regel es erlaubt.",
         "term_hint": "Tipp: Geben Sie `sudo -i` ein, um Root-Rechte zu erhalten (sudoers-Konfiguration erforderlich).",
-        "term_lib_failed": "Das Terminal konnte nicht geladen werden. Der Browser muss cdn.jsdelivr.net erreichen.",
+        "term_lib_failed": "Das Terminal konnte nicht geladen werden. Laden Sie die Seite neu und versuchen Sie es noch einmal.",
         "files_up": "Eine Ebene höher",
         "files_go": "Öffnen",
         "files_mkdir": "New folder",
@@ -7288,7 +7288,8 @@
     "ui_form": {
         "unsaved": "Ungespeicherte Änderungen",
         "saved": "Gespeichert",
-        "save_failed": "Speichern fehlgeschlagen. Ihre Änderungen sind noch da."
+        "save_failed": "Speichern fehlgeschlagen. Ihre Änderungen sind noch da.",
+        "saving": "Wird gespeichert…"
     },
     "chart": {
         "role": "Diagramm",
@@ -7456,5 +7457,18 @@
     "user_menu": {
         "label": "Konto",
         "sign_out": "Abmelden"
+    },
+    "table": {
+        "select_all": "Alle auswählen",
+        "select_row": "{name} auswählen",
+        "columns": "Spalten"
+    },
+    "pagination": {
+        "showing": "{start}–{end} von {total}",
+        "per_page": "Pro Seite",
+        "label": "Seiten",
+        "previous": "Vorherige Seite",
+        "next": "Nächste Seite",
+        "page": "Seite {page}"
     }
 }

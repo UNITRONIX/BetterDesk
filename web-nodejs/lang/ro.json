@@ -6365,7 +6365,7 @@
         "term_error": "Conexiunea cu terminalul s-a pierdut.",
         "term_warning": "Comenzile rulează cu contul care rulează consola. Poate folosi sudo doar dacă o regulă sudoers permite.",
         "term_hint": "Sfat: tastați `sudo -i` pentru a escalada (necesită configurarea sudoers).",
-        "term_lib_failed": "Terminalul nu s-a putut încărca. Browserul trebuie să ajungă la cdn.jsdelivr.net.",
+        "term_lib_failed": "Terminalul nu a putut fi încărcat. Reîncărcați pagina și încercați din nou.",
         "files_up": "Sus cu un nivel",
         "files_go": "Deschide",
         "files_mkdir": "New folder",
@@ -7294,7 +7294,8 @@
     "ui_form": {
         "unsaved": "Modificări nesalvate",
         "saved": "Salvat",
-        "save_failed": "Nu s-a putut salva. Modificările sunt încă aici."
+        "save_failed": "Nu s-a putut salva. Modificările sunt încă aici.",
+        "saving": "Se salvează…"
     },
     "chart": {
         "role": "grafic",
@@ -7462,5 +7463,18 @@
     "user_menu": {
         "label": "Cont",
         "sign_out": "Deconectare"
+    },
+    "table": {
+        "select_all": "Selectează tot",
+        "select_row": "Selectează {name}",
+        "columns": "Coloane"
+    },
+    "pagination": {
+        "showing": "{start}–{end} din {total}",
+        "per_page": "Pe pagină",
+        "label": "Pagini",
+        "previous": "Pagina anterioară",
+        "next": "Pagina următoare",
+        "page": "Pagina {page}"
     }
 }

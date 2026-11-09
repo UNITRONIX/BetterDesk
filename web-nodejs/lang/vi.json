@@ -6365,7 +6365,7 @@
         "term_error": "Mất kết nối tới terminal.",
         "term_warning": "Lệnh chạy dưới tài khoản đang chạy bảng điều khiển. Tài khoản này chỉ dùng được sudo nếu có quy tắc sudoers cho phép.",
         "term_hint": "Mẹo: gõ `sudo -i` để chuyển cấp (yêu cầu cấu hình sudoers).",
-        "term_lib_failed": "Không tải được terminal. Trình duyệt cần truy cập được cdn.jsdelivr.net.",
+        "term_lib_failed": "Không tải được terminal. Hãy tải lại trang rồi thử lại.",
         "files_up": "Lên một cấp",
         "files_go": "Mở",
         "files_mkdir": "New folder",
@@ -7294,7 +7294,8 @@
     "ui_form": {
         "unsaved": "Thay đổi chưa lưu",
         "saved": "Đã lưu",
-        "save_failed": "Không lưu được. Thay đổi của bạn vẫn còn đây."
+        "save_failed": "Không lưu được. Thay đổi của bạn vẫn còn đây.",
+        "saving": "Đang lưu…"
     },
     "chart": {
         "role": "biểu đồ",
@@ -7462,5 +7463,18 @@
     "user_menu": {
         "label": "Tài khoản",
         "sign_out": "Đăng xuất"
+    },
+    "table": {
+        "select_all": "Chọn tất cả",
+        "select_row": "Chọn {name}",
+        "columns": "Cột"
+    },
+    "pagination": {
+        "showing": "Hiển thị {start}–{end} trên {total}",
+        "per_page": "Mỗi trang",
+        "label": "Trang",
+        "previous": "Trang trước",
+        "next": "Trang sau",
+        "page": "Trang {page}"
     }
 }

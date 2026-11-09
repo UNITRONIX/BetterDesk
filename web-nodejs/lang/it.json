@@ -6359,7 +6359,7 @@
         "term_error": "Connessione al terminale persa.",
         "term_warning": "I comandi vengono eseguiti con l'account che esegue la console. Può usare sudo solo se una regola sudoers lo consente.",
         "term_hint": "Esegui comandi con la stessa attenzione che useresti sul server.",
-        "term_lib_failed": "Impossibile caricare il terminale. Il browser deve raggiungere cdn.jsdelivr.net.",
+        "term_lib_failed": "Impossibile caricare il terminale. Ricarica la pagina e riprova.",
         "files_up": "Su",
         "files_go": "Apri",
         "files_mkdir": "New folder",
@@ -7288,7 +7288,8 @@
     "ui_form": {
         "unsaved": "Modifiche non salvate",
         "saved": "Salvato",
-        "save_failed": "Impossibile salvare. Le modifiche sono ancora qui."
+        "save_failed": "Impossibile salvare. Le modifiche sono ancora qui.",
+        "saving": "Salvataggio…"
     },
     "chart": {
         "role": "grafico",
@@ -7456,5 +7457,18 @@
     "user_menu": {
         "label": "Account",
         "sign_out": "Esci"
+    },
+    "table": {
+        "select_all": "Seleziona tutto",
+        "select_row": "Seleziona {name}",
+        "columns": "Colonne"
+    },
+    "pagination": {
+        "showing": "{start}–{end} di {total}",
+        "per_page": "Per pagina",
+        "label": "Pagine",
+        "previous": "Pagina precedente",
+        "next": "Pagina successiva",
+        "page": "Pagina {page}"
     }
 }

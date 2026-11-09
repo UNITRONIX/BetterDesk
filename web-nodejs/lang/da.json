@@ -6365,7 +6365,7 @@
         "term_error": "Forbindelsen til terminalen blev afbrudt.",
         "term_warning": "Kommandoer kører som den konto, der kører konsollen. Den kan kun bruge sudo, hvis en sudoers-regel tillader det.",
         "term_hint": "Tip: skriv `sudo -i` for at eskalere (kræver sudoers-konfiguration).",
-        "term_lib_failed": "Kunne ikke indlæse terminalen. Browseren skal kunne nå cdn.jsdelivr.net.",
+        "term_lib_failed": "Terminalen kunne ikke indlæses. Genindlæs siden, og prøv igen.",
         "files_up": "Et niveau op",
         "files_go": "Åbn",
         "files_mkdir": "New folder",
@@ -7294,7 +7294,8 @@
     "ui_form": {
         "unsaved": "Ændringer er ikke gemt",
         "saved": "Gemt",
-        "save_failed": "Kunne ikke gemme. Dine ændringer er der stadig."
+        "save_failed": "Kunne ikke gemme. Dine ændringer er der stadig.",
+        "saving": "Gemmer…"
     },
     "chart": {
         "role": "diagram",
@@ -7462,5 +7463,18 @@
     "user_menu": {
         "label": "Konto",
         "sign_out": "Log ud"
+    },
+    "table": {
+        "select_all": "Vælg alle",
+        "select_row": "Vælg {name}",
+        "columns": "Kolonner"
+    },
+    "pagination": {
+        "showing": "Viser {start}–{end} af {total}",
+        "per_page": "Pr. side",
+        "label": "Sider",
+        "previous": "Forrige side",
+        "next": "Næste side",
+        "page": "Side {page}"
     }
 }

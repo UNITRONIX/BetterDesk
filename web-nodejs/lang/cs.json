@@ -6359,7 +6359,7 @@
         "term_error": "Spojení s terminálem bylo ztraceno.",
         "term_warning": "Příkazy běží pod účtem, pod kterým běží konzole. sudo může použít jen tehdy, když to povolí pravidlo v sudoers.",
         "term_hint": "Tip: zadejte `sudo -i` pro zvýšení oprávnění (vyžaduje konfiguraci sudoers).",
-        "term_lib_failed": "Terminál se nepodařilo načíst. Prohlížeč musí mít přístup k cdn.jsdelivr.net.",
+        "term_lib_failed": "Terminál se nepodařilo načíst. Načtěte stránku znovu a zkuste to znovu.",
         "files_up": "O úroveň výš",
         "files_go": "Otevřít",
         "files_mkdir": "Nová složka",
@@ -7288,7 +7288,8 @@
     "ui_form": {
         "unsaved": "Neuložené změny",
         "saved": "Uloženo",
-        "save_failed": "Uložení se nezdařilo. Vaše změny zůstaly zachovány."
+        "save_failed": "Uložení se nezdařilo. Vaše změny zůstaly zachovány.",
+        "saving": "Ukládání…"
     },
     "chart": {
         "role": "graf",
@@ -7456,5 +7457,18 @@
     "user_menu": {
         "label": "Účet",
         "sign_out": "Odhlásit se"
+    },
+    "table": {
+        "select_all": "Vybrat vše",
+        "select_row": "Vybrat {name}",
+        "columns": "Sloupce"
+    },
+    "pagination": {
+        "showing": "Zobrazeno {start}–{end} z {total}",
+        "per_page": "Na stránku",
+        "label": "Stránky",
+        "previous": "Předchozí stránka",
+        "next": "Další stránka",
+        "page": "Stránka {page}"
     }
 }

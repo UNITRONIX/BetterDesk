@@ -6377,7 +6377,7 @@
         "term_error": "Utracono połączenie z terminalem.",
         "term_warning": "Polecenia działają na koncie, na którym działa konsola. Może ono używać sudo tylko wtedy, gdy pozwala na to reguła sudoers.",
         "term_hint": "Wskazówka: wpisz `sudo -i`, aby uzyskać uprawnienia root (wymaga konfiguracji sudoers).",
-        "term_lib_failed": "Nie udało się załadować terminala. Przeglądarka musi mieć dostęp do cdn.jsdelivr.net.",
+        "term_lib_failed": "Nie udało się wczytać terminala. Odśwież stronę i spróbuj ponownie.",
         "files_up": "Poziom wyżej",
         "files_go": "Otwórz",
         "files_mkdir": "Nowy folder",
@@ -7288,7 +7288,8 @@
     "ui_form": {
         "unsaved": "Niezapisane zmiany",
         "saved": "Zapisano",
-        "save_failed": "Nie udało się zapisać. Zmiany nadal tu są."
+        "save_failed": "Nie udało się zapisać. Zmiany nadal tu są.",
+        "saving": "Zapisywanie…"
     },
     "chart": {
         "role": "wykres",
@@ -7456,5 +7457,18 @@
     "user_menu": {
         "label": "Konto",
         "sign_out": "Wyloguj się"
+    },
+    "table": {
+        "select_all": "Zaznacz wszystko",
+        "select_row": "Zaznacz {name}",
+        "columns": "Kolumny"
+    },
+    "pagination": {
+        "showing": "{start}–{end} z {total}",
+        "per_page": "Na stronę",
+        "label": "Strony",
+        "previous": "Poprzednia strona",
+        "next": "Następna strona",
+        "page": "Strona {page}"
     }
 }

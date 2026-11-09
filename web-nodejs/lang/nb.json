@@ -6365,7 +6365,7 @@
         "term_error": "Forbindelsen til terminalen ble brutt.",
         "term_warning": "Kommandoer kjøres som kontoen som kjører konsollen. Den kan bare bruke sudo hvis en sudoers-regel tillater det.",
         "term_hint": "Tips: skriv `sudo -i` for å eskalere (krever sudoers-konfigurasjon).",
-        "term_lib_failed": "Kunne ikke laste inn terminalen. Nettleseren må nå cdn.jsdelivr.net.",
+        "term_lib_failed": "Terminalen kunne ikke lastes inn. Last inn siden på nytt og prøv igjen.",
         "files_up": "Opp ett nivå",
         "files_go": "Åpne",
         "files_mkdir": "New folder",
@@ -7294,7 +7294,8 @@
     "ui_form": {
         "unsaved": "Endringer er ikke lagret",
         "saved": "Lagret",
-        "save_failed": "Kunne ikke lagre. Endringene dine er fortsatt her."
+        "save_failed": "Kunne ikke lagre. Endringene dine er fortsatt her.",
+        "saving": "Lagrer…"
     },
     "chart": {
         "role": "diagram",
@@ -7462,5 +7463,18 @@
     "user_menu": {
         "label": "Konto",
         "sign_out": "Logg ut"
+    },
+    "table": {
+        "select_all": "Velg alle",
+        "select_row": "Velg {name}",
+        "columns": "Kolonner"
+    },
+    "pagination": {
+        "showing": "Viser {start}–{end} av {total}",
+        "per_page": "Per side",
+        "label": "Sider",
+        "previous": "Forrige side",
+        "next": "Neste side",
+        "page": "Side {page}"
     }
 }

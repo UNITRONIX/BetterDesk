@@ -6365,7 +6365,7 @@
         "term_error": "Megszakadt a kapcsolat a terminállal.",
         "term_warning": "A parancsok a konzolt futtató fiókkal futnak. A sudo csak akkor használható, ha egy sudoers-szabály engedi.",
         "term_hint": "Tipp: írja be a `sudo -i` parancsot az eszkalációhoz (sudoers konfigurációja szükséges).",
-        "term_lib_failed": "Nem sikerült betölteni a terminált. A böngészőnek el kell érnie a cdn.jsdelivr.net címet.",
+        "term_lib_failed": "A terminált nem sikerült betölteni. Töltse újra az oldalt, és próbálja újra.",
         "files_up": "Egy szinttel feljebb",
         "files_go": "Megnyitás",
         "files_mkdir": "New folder",
@@ -7294,7 +7294,8 @@
     "ui_form": {
         "unsaved": "Nem mentett módosítások",
         "saved": "Mentve",
-        "save_failed": "A mentés nem sikerült. A módosítások megmaradtak."
+        "save_failed": "A mentés nem sikerült. A módosítások megmaradtak.",
+        "saving": "Mentés…"
     },
     "chart": {
         "role": "diagram",
@@ -7462,5 +7463,18 @@
     "user_menu": {
         "label": "Fiók",
         "sign_out": "Kijelentkezés"
+    },
+    "table": {
+        "select_all": "Összes kijelölése",
+        "select_row": "{name} kijelölése",
+        "columns": "Oszlopok"
+    },
+    "pagination": {
+        "showing": "{start}–{end} / {total}",
+        "per_page": "Oldalanként",
+        "label": "Oldalak",
+        "previous": "Előző oldal",
+        "next": "Következő oldal",
+        "page": "{page}. oldal"
     }
 }
