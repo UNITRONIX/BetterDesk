@@ -81,14 +81,28 @@ function loadIndex(dir) {
 }
 
 /**
+ * The base the build was made for: SvelteKit writes it into the start script
+ * of index.html (`base: "/app"`). Only "" or a plain path counts.
+ * @param {string} html
+ * @returns {string|null}
+ */
+function readBase(html) {
+    const m = /__sveltekit_\w+\s*=\s*\{\s*base:\s*"([^"]*)"/.exec(String(html || ''));
+    if (!m) return null;
+    return m[1] === '' || /^\/[A-Za-z0-9._~-]+(\/[A-Za-z0-9._~-]+)*$/.test(m[1]) ? m[1] : null;
+}
+
+/**
  * @param {object} opts
- * @param {string} opts.base   URL prefix, e.g. "/app"
+ * @param {string} [opts.base]  URL prefix, e.g. "/app"; by default the one the build was made for
  * @param {string} [opts.dir]  build directory
  * @param {string[]} [opts.ported]  old pages to redirect (lib/portedPages.js)
  */
-function createWebUi({ base, dir = DEFAULT_DIR, ported = PORTED_PAGES }) {
+function createWebUi({ base: wanted, dir = DEFAULT_DIR, ported = PORTED_PAGES } = {}) {
     const router = express.Router();
     let index = loadIndex(dir);
+    // The build's own base, so the pages and their files always agree; /app without a build
+    const base = wanted !== undefined ? wanted : (index && readBase(index.html)) ?? '/app';
     const devReload = process.env.NODE_ENV !== 'production';
 
     function current() {
@@ -206,4 +220,4 @@ function createWebUi({ base, dir = DEFAULT_DIR, ported = PORTED_PAGES }) {
     return router;
 }
 
-module.exports = { createWebUi, headerPolicy, readCsp, PUBLIC_PATHS, VIEWER_PATH };
+module.exports = { createWebUi, headerPolicy, readCsp, readBase, PUBLIC_PATHS, VIEWER_PATH };
