@@ -128,8 +128,9 @@ export const SessionInfo = v.looseObject({
 });
 export type SessionInfo = v.InferOutput<typeof SessionInfo>;
 
-export function verifySession(): Promise<SessionInfo> {
-	return api(SessionInfo, '/api/auth/verify');
+/** activity: the person is here (the session guard's ping), so the server's idle clock restarts */
+export function verifySession(activity = false): Promise<SessionInfo> {
+	return api(SessionInfo, '/api/auth/verify', { activity });
 }
 
 /* ── People for the global search: GET /api/users ── */

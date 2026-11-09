@@ -11,6 +11,11 @@
  *   end the session is checked once; if it is gone, sign-in.
  * - Every 5 minutes (while the tab is visible) GET /api/auth/verify brings
  *   the policy and the server's last activity.
+ * - The server counts writes and page loads as activity, not reads or polls
+ *   (the API client marks those as background). Activity here reaches the
+ *   server as a ping at most once a minute; activity inside the minute is
+ *   sent when it ends, so the server never thinks the person left earlier
+ *   than this tab does.
  */
 
 import { setUnauthorizedHandler } from '#lib/api/client.ts';
@@ -40,6 +45,8 @@ let channel: BroadcastChannel | null = null;
 let policy: Policy = DEFAULT_POLICY;
 let lastActivity = Date.now();
 let lastMark = 0;
+let lastPing = 0;
+let pingTimer: ReturnType<typeof setTimeout> | null = null;
 let warnTimer: ReturnType<typeof setTimeout> | null = null;
 let expireTimer: ReturnType<typeof setTimeout> | null = null;
 let stopSync: (() => void) | null = null;
@@ -104,6 +111,21 @@ function schedule(): void {
 	);
 }
 
+function ping(): void {
+	lastPing = Date.now();
+	verifySession(true).catch(() => {});
+}
+
+/** Tell the server someone is here, once a minute at most (a quarter of a short idle time) */
+function reportActivity(): void {
+	const wait = lastPing + Math.min(60_000, policy.idleTimeoutMs / 4) - Date.now();
+	if (wait <= 0) return ping();
+	pingTimer ??= setTimeout(() => {
+		pingTimer = null;
+		ping();
+	}, wait);
+}
+
 /** Someone used the page: hide the warning and start the idle clock again */
 export function markActivity(): void {
 	const now = Date.now();
@@ -113,13 +135,14 @@ export function markActivity(): void {
 	lastActivity = now;
 	guard.warning = null;
 	schedule();
+	reportActivity();
 }
 
 /** "Stay signed in": activity here and on the server */
 export function staySignedIn(): void {
 	lastMark = 0;
+	lastPing = 0;
 	markActivity();
-	verifySession().catch(() => {});
 }
 
 function applyPolicy(info: SessionInfo): void {
@@ -154,6 +177,8 @@ export function startGuard(sessionPolicy: Record<string, unknown> | null | undef
 	leaving = false;
 	policy = readPolicy(sessionPolicy);
 	lastActivity = Date.now();
+	// Loading the console was activity on the server
+	lastPing = lastActivity;
 	// A 401 anywhere also signs out the other tabs (Utils.api did the same)
 	setUnauthorizedHandler((code) => goLogin(code));
 	try {
@@ -177,6 +202,8 @@ export function stopGuard(): void {
 	if (!started) return;
 	started = false;
 	clearTimers();
+	if (pingTimer) clearTimeout(pingTimer);
+	pingTimer = null;
 	stopSync?.();
 	stopSync = null;
 	channel?.close();

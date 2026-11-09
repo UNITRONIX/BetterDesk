@@ -71,6 +71,21 @@ describe('request', () => {
 		expect(calls[1]!.init.keepalive).toBe(false);
 	});
 
+	test('reads are marked as background so they do not hold off the idle sign-out', async () => {
+		replies.push(
+			() => json({}),
+			() => json({}),
+			() => json({})
+		);
+		await request('/api/x');
+		await request('/api/x', { method: 'POST' });
+		await request('/api/auth/verify', { activity: true });
+		const bg = (i: number) => (calls[i]!.init.headers as Record<string, string>)['X-BD-Background'];
+		expect(bg(0)).toBe('1');
+		expect(bg(1)).toBeUndefined();
+		expect(bg(2)).toBeUndefined();
+	});
+
 	test('refuses other origins and protocol-relative paths', async () => {
 		await expect(request('//evil.example/api')).rejects.toBeInstanceOf(ApiError);
 		await expect(request('https://evil.example/api')).rejects.toBeInstanceOf(ApiError);

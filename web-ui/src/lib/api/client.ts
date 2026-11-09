@@ -52,6 +52,12 @@ export interface RequestOptions {
 	headers?: Record<string, string>;
 	/** Let the request finish when the page is left (a small write before navigating away) */
 	keepalive?: boolean;
+	/**
+	 * Whether the request counts as the person's activity for the idle
+	 * sign-out. Default: writes do, reads (polls, page data) don't; the
+	 * session guard reports keys, clicks and touches itself.
+	 */
+	activity?: boolean;
 }
 
 /** Messages the client itself writes; set from the strings once they load. */
@@ -123,6 +129,7 @@ export async function request(path: string, opts: RequestOptions = {}): Promise<
 	const method = opts.method ?? 'GET';
 	const url = safePath(path, opts.query);
 	const headers: Record<string, string> = { Accept: 'application/json', ...opts.headers };
+	if (!(opts.activity ?? method !== 'GET')) headers['X-BD-Background'] = '1';
 	let body: BodyInit | undefined;
 	if (method !== 'GET') {
 		if (csrfToken) headers['X-CSRF-Token'] = csrfToken;

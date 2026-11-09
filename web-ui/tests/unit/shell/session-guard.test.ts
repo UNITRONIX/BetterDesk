@@ -81,6 +81,31 @@ describe('session guard', () => {
 		expect(localStorage.getItem('betterdesk.session.expired')).toContain('session_idle');
 	});
 
+	test('activity here reaches the server at most once a minute, the last one late', async () => {
+		const g = await import('../../../src/lib/shell/session-guard.svelte.ts');
+		g.startGuard({ idleTimeoutMs: 30 * 60_000, warnBeforeMs: 60_000 });
+		vi.mocked(fetch).mockClear();
+		vi.mocked(fetch).mockImplementation(() =>
+			Promise.resolve(new Response('{"success":true}', { headers: { 'Content-Type': 'application/json' } }))
+		);
+		const pings = () =>
+			vi
+				.mocked(fetch)
+				.mock.calls.filter(([url]) => String(url).startsWith('/api/auth/verify'))
+				.map(([, init]) => (init?.headers as Record<string, string>)['X-BD-Background']);
+		// Loading the page counted on the server; a key right away doesn't ping
+		document.dispatchEvent(new Event('keydown'));
+		expect(pings()).toEqual([]);
+		await vi.advanceTimersByTimeAsync(61_000);
+		// The key press reaches the server when the minute is over, as activity
+		expect(pings()).toEqual([undefined]);
+		await vi.advanceTimersByTimeAsync(5 * 60_000);
+		// No more activity: only the 5-minute sync, which doesn't count
+		expect(pings()).toEqual([undefined, '1']);
+		document.dispatchEvent(new Event('mousedown'));
+		expect(pings()).toEqual([undefined, '1', undefined]);
+	});
+
 	test('idle: a warning before the timeout, hidden again by any activity', async () => {
 		const g = await import('../../../src/lib/shell/session-guard.svelte.ts');
 		g.startGuard({ idleTimeoutMs: 120_000, warnBeforeMs: 30_000 });
