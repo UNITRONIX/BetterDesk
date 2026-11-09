@@ -12,7 +12,6 @@ describe('UX 3.5 mobile and accessibility contracts', () => {
     const pagesCss = read('public', 'css', 'pages.css');
     const ux35Css = read('public', 'css', 'ux35.css');
     const shellJs = read('public', 'js', 'ux35-shell.js');
-    const settingsJs = read('public', 'js', 'settings.js');
     const mobileJs = read('public', 'js', 'mobile-nav.js');
     const topbar = read('views', 'partials', 'ux35-topbar.ejs');
     const bottomNav = read('views', 'partials', 'mobile-bottom-nav.ejs');
@@ -26,7 +25,6 @@ describe('UX 3.5 mobile and accessibility contracts', () => {
     const notifCenter = read('public', 'js', 'notif-center.js');
     const uiShell = read('public', 'js', 'ui-shell.js');
     const classicNavbar = read('views', 'partials', 'navbar.ejs');
-    const settingsView = read('views', 'settings.ejs');
     const loginJs = read('public', 'js', 'login.js');
     const loginView = read('views', 'login.ejs');
     const desktopLoginJs = read('public', 'js', 'desktop-login.js');
@@ -111,17 +109,6 @@ describe('UX 3.5 mobile and accessibility contracts', () => {
         assert.doesNotMatch(classicNavbar, /navbar-btn--shell-beta|ui-shell-beta-badge|data-ui-shell-switch/);
     });
 
-    it('renders the settings tab named by currentTab (?tab=) and sends old #tab links there', () => {
-        // Each settings tab is its own page in the sidebar; there is no in-page tab bar.
-        assert.match(settingsView, /typeof currentTab !== 'undefined' && currentTab \? currentTab : 'general'/);
-        assert.match(settingsView, /currentTab: tab,/);
-        assert.match(settingsView, /name === tab \? '' : 'hidden'/);
-        assert.match(settingsView, /data-current-tab="\$\{tab\}"/);
-        assert.doesNotMatch(settingsView, /settings-shell-nav/);
-        assert.match(settingsJs, /function redirectHashTab\(\)/);
-        assert.match(settingsJs, /params\.set\('tab', name\)/);
-    });
-
     it('keeps OIDC password recovery explicit on the login page', () => {
         assert.match(loginJs, /params\.get\('autoLaunch'\) === '0'/);
         assert.match(loginJs, /data\.prefer_sso && !passwordBypass && !data\.local_bypass && !hasOidcError/);
@@ -138,32 +125,9 @@ describe('UX 3.5 mobile and accessibility contracts', () => {
         assert.match(desktopLoginJs, /Notifications\.error\(message\)/);
     });
 
-    it('supports split login promo modes and editable slides in branding', () => {
+    it('supports split login promo modes', () => {
         assert.match(loginView, /login-layout-<%= promoMode %>/);
         assert.match(loginView, /login-promo-slide/);
         assert.match(loginJs, /function initLoginPromoCarousel/);
-        assert.match(settingsView, /name="login-promo-mode"/);
-        assert.match(settingsView, /id="login-slides-panel"/);
-        assert.match(settingsJs, /MAX_LOGIN_SLIDES = 10/);
-        assert.match(settingsJs, /function renderLoginSlidesEditor/);
-        assert.match(settingsJs, /loginPromoMode/);
-        assert.match(settingsJs, /loginSlides/);
-    });
-
-    it('keeps personal TOTP in Sign-in for everyone while gating admin panels', () => {
-        const auth = settingsView.slice(settingsView.indexOf("panelAttrs('auth')"), settingsView.indexOf("panelAttrs('backup')"));
-        const everyoneAt = auth.lastIndexOf('${canServerConfig', auth.indexOf('for-everyone-title'));
-        const yourAccount = auth.slice(auth.indexOf('your-account-title'), everyoneAt);
-        // Your own password and two-factor setup are not behind a permission check
-        assert.match(yourAccount, /id="password-form"/);
-        assert.match(yourAccount, /id="auth-panel-totp"/);
-        assert.doesNotMatch(yourAccount, /canServerConfig/);
-        const accountAt = auth.indexOf('<section class="section" aria-labelledby="your-account-title">');
-        assert.ok(accountAt > 0);
-        assert.doesNotMatch(auth.slice(Math.max(0, accountAt - 40), accountAt), /canServerConfig \? `\s*$/);
-        // Server-wide sign-in options need server.config
-        assert.match(auth, /\$\{canServerConfig \? `\s*<section class="section" aria-labelledby="for-everyone-title">/);
-        assert.match(auth.slice(auth.indexOf('for-everyone-title')), /id="ldap-form"[\s\S]*id="oidc-form"/);
-        assert.match(settingsJs, /initTotpSection\(\)/);
     });
 });

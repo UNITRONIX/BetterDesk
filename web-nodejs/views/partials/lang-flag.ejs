@@ -1,6 +1,6 @@
 <%_
 /*
- * Flag next to a language name: language menu, sign-in pages, Translations page.
+ * Flag next to a language name: language menu and sign-in pages.
  *
  * Language code -> country whose flag stands for it. /img/flags/<code>.svg is
  * that country's Twemoji flag (CC-BY 4.0, see THIRD_PARTY_NOTICES.md).
@@ -13,8 +13,7 @@
  *   pt -> Portugal: lang/pt.json is European Portuguese (utilizador, ficheiro).
  *   All others: the country with the same two letters (de -> DE, fr -> FR, ...).
  *
- * Locals: flagCode ("de") prints the <img>; flagCodeList (true) prints the
- * mapped codes, comma-separated, for scripts that build markup (languages.js).
+ * Locals: flagCode ("de") prints the <img>.
  * After changing the map, copy the SVGs with .ui-rework/tools/flags-copy.mjs.
  */
 var LANG_FLAG_COUNTRY = {
@@ -25,8 +24,6 @@ var LANG_FLAG_COUNTRY = {
     'zh': 'CN', 'zh-TW': 'TW'
 };
 var hasFlag = typeof flagCode === 'string' && Object.prototype.hasOwnProperty.call(LANG_FLAG_COUNTRY, flagCode);
-if (typeof flagCodeList !== 'undefined' && flagCodeList) { _%>
-<%= Object.keys(LANG_FLAG_COUNTRY).join(',') -%>
-<%_ } else if (hasFlag) { _%>
+if (hasFlag) { _%>
 <img class="lang-flag" src="/img/flags/<%= flagCode %>.svg" alt="" width="20" height="20">
 <%_ } _%>

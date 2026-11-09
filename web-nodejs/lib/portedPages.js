@@ -39,7 +39,9 @@ const PORTED_PAGES = Object.freeze([
     '/help-requests',
     '/tickets',
     '/chat',
-    '/toolkit'
+    '/toolkit',
+    '/settings',
+    '/languages'
 ]);
 
 function isPortedPath(pathname, list = PORTED_PAGES) {

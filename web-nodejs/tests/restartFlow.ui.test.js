@@ -5,7 +5,6 @@ const path = require('path');
 
 describe('restart failure recovery UI contract', () => {
     test.each([
-        ['settings.js', 'dismissFailedRestart'],
         ['restart-flow.js', 'dismissFailure'],
     ])(
         'allows a failed restart transaction to be dismissed in %s',

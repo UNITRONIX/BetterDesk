@@ -157,7 +157,6 @@ query-filters:
       id: js/xss-through-dom
       paths:
         - web-nodejs/public/js/modal.js
-        - web-nodejs/public/js/settings.js
 
   # --- Branding SVG/CSS: intentional multi-pass sanitization (stable strip loop) ---
   - exclude:

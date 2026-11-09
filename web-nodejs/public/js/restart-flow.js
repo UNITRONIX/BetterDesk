@@ -1,6 +1,6 @@
 /**
- * Shared restart-required settings flow for pages outside Settings.
- * Settings has an additional tab-navigation guard in settings.js.
+ * Shared restart-required settings flow for the old console's pages
+ * (Settings itself is in the new console).
  */
 (function () {
     'use strict';

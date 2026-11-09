@@ -34,28 +34,11 @@ const { getSmtpSettings, putSmtpSettings, testSmtpSettings } = require('../lib/s
 const betterdeskApi = require('../services/betterdeskApi');
 const { apiClient } = betterdeskApi;
 const { canUsePrivilegedUpdate, invokePrivilegedUpdate } = require('../lib/privilegedUpdateHelper');
-const { requireAuth, requirePermission, requestHasPermission } = require('../middleware/auth');
+const { requireAuth, requirePermission } = require('../middleware/auth');
 const deviceGroupService = require('../services/deviceGroupService');
 const managementCapabilities = require('../lib/managementCapabilities');
 const os = require('os');
 const multer = require('multer');
-
-/**
- * GET /settings - Settings page
- */
-router.get('/settings', requireAuth, (req, res) => {
-    // Each settings tab is its own sub-page in the navigation (?tab=backup)
-    const validTabs = ['general', 'branding', 'auth', 'backup', 'updates', 'email', 'time', 'advanced'];
-    const requested = String(req.query.tab || 'general').toLowerCase();
-    const currentTab = validTabs.includes(requested) ? requested : 'general';
-    res.render('settings', {
-        title: req.t('nav.settings'),
-        activePage: 'settings',
-        currentTab,
-        canServerConfig: requestHasPermission(req, 'server.config'),
-        canBrandingEdit: requestHasPermission(req, 'branding.edit')
-    });
-});
 
 /**
  * GET /api/settings/restart-status - Lightweight liveness probe used by the

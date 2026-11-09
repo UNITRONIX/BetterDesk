@@ -58,18 +58,6 @@ function loadReferenceKeys() {
     return { references, keySet };
 }
 
-// --- Page Route ---
-
-router.get('/languages', requireAuth, requirePermission('server.config'), (req, res) => {
-    res.render('languages', {
-        title: req.t('nav.languages'),
-        pageStyles: ['languages'],
-        pageScripts: ['languages'],
-        currentPage: 'languages',
-        breadcrumb: [{ label: req.t('nav.languages') }]
-    });
-});
-
 // --- API Routes ---
 
 /**
