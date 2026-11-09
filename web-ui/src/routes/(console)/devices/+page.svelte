@@ -242,7 +242,14 @@
 	/* ── The open device in the URL ── */
 
 	type PanelState = { devicesOpen?: string };
-	const urlOpen = $derived(page.url.searchParams.get(OPEN_PARAM) || null);
+	// pushState and replaceState change the address bar and page.state but not
+	// page.url, so ?open= is read from the address bar: again after every
+	// navigation (page.url) and every history step of our own (page.state)
+	const urlOpen = $derived.by(() => {
+		void page.url;
+		void page.state;
+		return new URL(location.href).searchParams.get(OPEN_PARAM) || null;
+	});
 	let lastPanelId: string | null = null;
 
 	// The URL changed (deep link, Back, Forward): open or close the panel
