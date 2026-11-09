@@ -10,7 +10,7 @@
 	import { confirm } from '../../../src/lib/ui/dialogs.svelte.ts';
 
 	interface Props {
-		scene: 'menus' | 'dialog' | 'sheet' | 'sheets';
+		scene: 'menus' | 'radio' | 'dialog' | 'sheet' | 'sheets';
 		blocking?: boolean;
 		onselect?: (what: string) => void;
 		onanswer?: (answer: boolean) => void;
@@ -22,6 +22,7 @@
 	let sheetOpen = $state(false);
 	let otherOpen = $state(false);
 	let platform = $state(true);
+	let lang = $state('en');
 	let status = $state('');
 	let tone = $state<'neutral' | 'ok' | 'error'>('neutral');
 
@@ -55,6 +56,23 @@
 		<MenuItem icon="copy" onselect={() => onselect?.('copy')}>Copy ID</MenuItem>
 	</MenuButton>
 	<button type="button">After</button>
+{:else if scene === 'radio'}
+	<MenuButton label="Language">
+		{#each [['en', 'English'], ['de', 'Deutsch']] as [code, name] (code)}
+			<MenuItem
+				type="radio"
+				checked={lang === code}
+				lang={code}
+				onselect={() => {
+					lang = code!;
+					onselect?.(code!);
+				}}
+			>
+				{#snippet lead()}<span class="flag">{code}</span>{/snippet}
+				{name}
+			</MenuItem>
+		{/each}
+	</MenuButton>
 {:else if scene === 'dialog'}
 	<Button onclick={() => (dialogOpen = true)}>Open</Button>
 	<Dialog bind:open={dialogOpen} title="Rename tag" message="The new name shows on every device." {blocking}>

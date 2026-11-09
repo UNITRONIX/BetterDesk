@@ -175,6 +175,26 @@ describe('Menu', () => {
 		expect(item.querySelector('.menu-check')).toHaveAttribute('aria-hidden', 'true');
 	});
 
+	test('a radio item marks the one chosen, closes the menu and returns focus', async () => {
+		const onselect = vi.fn();
+		render(Harness, { scene: 'radio', onselect });
+		const user = userEvent.setup();
+		const trigger = screen.getByRole('button', { name: 'Language' });
+		await user.click(trigger);
+		const en = screen.getByRole('menuitemradio', { name: /English/ });
+		const de = screen.getByRole('menuitemradio', { name: /Deutsch/ });
+		expect(en).toHaveAttribute('aria-checked', 'true');
+		expect(de).toHaveAttribute('aria-checked', 'false');
+		expect(de).toHaveAttribute('lang', 'de');
+		expect(de.querySelector('.flag')?.textContent).toBe('de');
+		await user.click(de);
+		expect(onselect).toHaveBeenCalledWith('de');
+		expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+		expect(trigger).toHaveFocus();
+		await user.click(trigger);
+		expect(screen.getByRole('menuitemradio', { name: /Deutsch/ })).toHaveAttribute('aria-checked', 'true');
+	});
+
 	test('scrolling a long menu keeps its height (and so its scroll); scrolling the page places it again', async () => {
 		// Placing clears max-height first, which puts a scrolled menu back to the top
 		const { trigger, user } = setup();

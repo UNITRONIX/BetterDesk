@@ -21,7 +21,6 @@
 	import Presence from '#lib/ui/Presence.svelte';
 	import { confirm } from '#lib/ui/dialogs.svelte.ts';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
-	import RadioItem from './RadioItem.svelte';
 	import { logout } from './api.ts';
 	import { broadcastExpired, stopGuard } from './session-guard.svelte.ts';
 
@@ -136,10 +135,10 @@
 		<div role="group" aria-labelledby={`${uid}-status`}>
 			<div class="menu-label" id={`${uid}-status`}>{t('chat.my_presence')}</div>
 			{#each PRESENCE_VALUES as s (s)}
-				<RadioItem checked={myPresence.status === s} onselect={() => setPresence(s)}>
+				<MenuItem type="radio" checked={myPresence.status === s} onselect={() => setPresence(s)}>
 					{#snippet lead()}<span class="status-dot"><Presence status={s} /></span>{/snippet}
 					{statusLabel(s)}
-				</RadioItem>
+				</MenuItem>
 			{/each}
 		</div>
 		<MenuDivider />

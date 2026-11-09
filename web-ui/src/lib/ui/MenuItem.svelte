@@ -8,6 +8,11 @@
   before `onselect` runs, so a dialog it opens returns focus there.
   type="checkbox" is a menuitemcheckbox (column choices): it toggles the
   bindable `checked`, calls `onselect`, and leaves the menu open.
+  type="radio" is a menuitemradio, one choice of several (My status, the
+  language): `checked` marks the chosen one with a tick at the end, and
+  choosing closes the menu like a plain item. `lead` draws what goes
+  before the label instead of an icon (a presence dot, a flag); `lang`
+  marks a label in another language.
   `href` makes it a link (type item only).
 -->
 <script lang="ts">
@@ -19,9 +24,11 @@
 		icon?: string;
 		danger?: boolean;
 		disabled?: boolean;
-		type?: 'item' | 'checkbox';
+		type?: 'item' | 'checkbox' | 'radio';
 		checked?: boolean;
 		href?: string;
+		lang?: string;
+		lead?: Snippet;
 		class?: string;
 		onselect?: () => void;
 		children: Snippet;
@@ -34,13 +41,18 @@
 		type = 'item',
 		checked = $bindable(false),
 		href,
+		lang,
+		lead,
 		class: cls = '',
 		onselect,
 		children
 	}: Props = $props();
 
 	const menu = getMenu();
-	const classes = $derived(['menu-item', danger && 'danger', cls]);
+	const classes = $derived(['menu-item', danger && 'danger', type === 'radio' && 'is-radio', cls]);
+	const role = $derived(
+		type === 'checkbox' ? 'menuitemcheckbox' : type === 'radio' ? 'menuitemradio' : 'menuitem'
+	);
 
 	function choose(event: MouseEvent) {
 		if (disabled) {
@@ -72,17 +84,24 @@
 	<button
 		type="button"
 		class={classes}
-		role={type === 'checkbox' ? 'menuitemcheckbox' : 'menuitem'}
-		aria-checked={type === 'checkbox' ? checked : undefined}
+		{role}
+		aria-checked={type === 'item' ? undefined : checked}
 		tabindex="-1"
 		{disabled}
+		{lang}
 		onclick={choose}
 	>
 		{#if type === 'checkbox'}
 			<span class="menu-check" aria-hidden="true"></span>
+		{:else if lead}
+			{@render lead()}
 		{:else if icon}
 			<Icon name={icon} />
 		{/if}<span class="menu-item-label">{@render children()}</span>
+		{#if type === 'radio'}
+			<!-- Always there (hidden unless chosen), so Menu sees an icon in every item and adds no spacer -->
+			<Icon name="check" class={checked ? 'menu-item-tick' : 'menu-item-tick is-off'} />
+		{/if}
 	</button>
 {/if}
 
@@ -184,5 +203,20 @@
 		min-width: 0;
 		overflow: hidden;
 		text-overflow: ellipsis;
+	}
+	.is-radio > .menu-item-label {
+		flex: 1;
+	}
+	.is-radio[aria-checked='true'] {
+		font-weight: 600;
+	}
+	.menu-item > :global(.menu-item-tick) {
+		flex-shrink: 0;
+		margin-inline-start: var(--space-2);
+		color: var(--accent);
+		font-size: 18px;
+	}
+	.menu-item > :global(.menu-item-tick.is-off) {
+		visibility: hidden;
 	}
 </style>

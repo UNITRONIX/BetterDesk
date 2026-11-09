@@ -4,6 +4,7 @@
   switches the strings, the direction and the navigation without a reload.
 -->
 <script lang="ts">
+	import MenuItem from '#lib/ui/MenuItem.svelte';
 	import { getBootstrap, saveLanguage } from '#lib/api/console.ts';
 	import { i18n, switchLanguage, t } from '#lib/i18n/i18n.svelte.ts';
 	import { applyBootstrap } from '#lib/state/session.svelte.ts';
@@ -11,7 +12,6 @@
 	import LangFlag from '#lib/ui/LangFlag.svelte';
 	import Menu from '#lib/ui/Menu.svelte';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
-	import RadioItem from './RadioItem.svelte';
 
 	const uid = $props.id();
 	let open = $state(false);
@@ -72,10 +72,10 @@
 		{onclose}
 	>
 		{#each i18n.available as l (l.code)}
-			<RadioItem checked={l.code === i18n.lang} lang={l.code} onselect={() => choose(l.code)}>
+			<MenuItem type="radio" checked={l.code === i18n.lang} lang={l.code} onselect={() => choose(l.code)}>
 				{#snippet lead()}<LangFlag code={l.code} />{/snippet}
 				{l.native || l.name || l.code}
-			</RadioItem>
+			</MenuItem>
 		{/each}
 	</Menu>
 </span>
