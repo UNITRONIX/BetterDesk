@@ -66,7 +66,36 @@ export default defineConfig({
 	build: {
 		target: 'es2022',
 		cssMinify: true,
-		reportCompressedSize: true
+		reportCompressedSize: true,
+		rolldownOptions: {
+			output: {
+				// Fewer files on first load (about 8 instead of 24 for the device list):
+				// over HTTP/1.1 a browser fetches six at a time. "runtime" is Svelte and
+				// valibot, "core" the shell, components, state and API client every
+				// page uses. Parts that load on demand stay out (terminal, chart, QR,
+				// diagram), and so does each page's own code.
+				codeSplitting: {
+					groups: [
+						{
+							name: 'runtime',
+							test: /node_modules[\\/](svelte|esm-env|devalue|clsx|valibot)[\\/]/,
+							priority: 3
+						},
+						{
+							name: 'core',
+							test: (id) =>
+								/src[\\/]lib[\\/]((ui|state|shell|i18n|util)[\\/]|nav\.ts|api[\\/](client|console)\.ts)/.test(
+									id
+								) &&
+								!/[\\/](Terminal\.svelte|terminal\.ts|Chart\.svelte|QR\.svelte|ConnectionDiagram\.svelte)/.test(
+									id
+								),
+							priority: 2
+						}
+					]
+				}
+			}
+		}
 	},
 	test: {
 		include: ['tests/unit/**/*.test.ts', 'src/**/*.test.ts'],
