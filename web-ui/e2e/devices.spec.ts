@@ -51,6 +51,8 @@ for (const role of ROLES) {
 			await page.getByRole('searchbox').first().fill(deviceId);
 			const row = rows(page).filter({ hasText: deviceId });
 			await expect(row).toHaveCount(1);
+			// The count line says the filter is applied (no re-render under the next click)
+			await expect(page.locator('.list-head[role="status"]')).toContainText('1');
 
 			// Row menu: exactly the actions the permissions allow
 			await row.getByRole('button', { name: /^Actions:/ }).click();
@@ -94,7 +96,11 @@ test.describe('devices links', () => {
 		const panel = page.getByRole('dialog');
 		await expect(panel).toBeVisible();
 		await expect(panel).toContainText(deviceId);
+		// Let the panel's fonts and styles finish loading: leaving cuts them off, which Firefox reports
+		await page.waitForLoadState('networkidle');
 		await page.goto(`${UI}/devices`);
+		// Search first: in a long list the row may be far down
+		await page.getByRole('searchbox').first().fill(deviceId);
 		await rows(page).filter({ hasText: deviceId }).locator('.device-name').click();
 		await expect(panel).toBeVisible();
 		await page.goBack();
