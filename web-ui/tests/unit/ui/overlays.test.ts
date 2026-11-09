@@ -174,6 +174,18 @@ describe('Menu', () => {
 		expect(item.textContent?.trim()).toBe('Platform');
 		expect(item.querySelector('.menu-check')).toHaveAttribute('aria-hidden', 'true');
 	});
+
+	test('scrolling a long menu keeps its height (and so its scroll); scrolling the page places it again', async () => {
+		// Placing clears max-height first, which puts a scrolled menu back to the top
+		const { trigger, user } = setup();
+		await user.click(trigger);
+		const menu = screen.getByRole('menu');
+		menu.style.maxHeight = '123px';
+		menu.dispatchEvent(new Event('scroll'));
+		expect(menu.style.maxHeight).toBe('123px');
+		document.dispatchEvent(new Event('scroll'));
+		expect(menu.style.maxHeight).toBe('');
+	});
 });
 
 describe('Dialog', () => {

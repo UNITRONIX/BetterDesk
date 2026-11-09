@@ -172,7 +172,12 @@
 				close(false);
 			};
 			const keydown = (e: KeyboardEvent) => move(el, e);
-			const reposition = () => place(el);
+			// The page or a scroll box around the anchor moved; the menu's own
+			// scrolling is not a reason (placing resets its height and so its scroll)
+			const reposition = (e: Event) => {
+				if (e.type === 'scroll' && e.target instanceof Node && el.contains(e.target)) return;
+				place(el);
+			};
 			document.addEventListener('pointerdown', outside, true);
 			el.addEventListener('keydown', keydown);
 			window.addEventListener('resize', reposition);
