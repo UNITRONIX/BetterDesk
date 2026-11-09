@@ -23,6 +23,7 @@ const securityMiddleware = require('./middleware/security');
 const { initI18n } = require('./middleware/i18n');
 const {
     apiLimiter,
+    sessionReadLimiter,
     widgetLimiter,
     panelReadLimiter,
     panelPreferenceLimiter,
@@ -237,6 +238,8 @@ app.use(loadEffectivePermissions);
 // SECURITY (audit fix M-03, 2026-04-10): high-frequency widget refresh paths
 // have their own higher-quota limiter mounted BEFORE the general one so they
 // are still bounded but do not eat into the regular API budget.
+// Reads by someone signed in count per person (the per-address limiters skip them).
+app.use('/api/', sessionReadLimiter);
 for (const p of getPanelPollMountPaths()) {
     app.use(p, widgetLimiter);
 }
