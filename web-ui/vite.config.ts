@@ -1,5 +1,6 @@
 import adapter from '@sveltejs/adapter-static';
 import { sveltekit } from '@sveltejs/kit/vite';
+import { Agent } from 'node:http';
 import { defineConfig } from 'vitest/config';
 import { licenses } from './vite-plugins/licenses.ts';
 
@@ -8,6 +9,12 @@ import { licenses } from './vite-plugins/licenses.ts';
 const base = (process.env.BD_UI_BASE ?? '/app') as '' | `/${string}`;
 // The Express console that answers /api, /socket and every non-UI path in dev
 const backend = process.env.BD_BACKEND ?? 'http://localhost:5000';
+// The proxy keeps its connections to Express open and reuses them. Without an
+// agent it opens a new connection for every request, and from a container
+// through host.docker.internal some of those connects stall for 10 to 60 s
+// under load. Idle connections close after 4 s, before Express closes them
+// at 5 s, so a request never goes out on a connection that is being closed.
+const backendAgent = new Agent({ keepAlive: true, timeout: 4000 });
 
 export default defineConfig({
 	// Several dev servers share this folder (one per worker); each keeps its own dependency cache
@@ -60,7 +67,12 @@ export default defineConfig({
 			// Everything outside the UI base goes to Express (API, sockets, branding.css, fonts, old pages)
 			[base === ''
 				? '^/(api|socket|ws|css|fonts|branding|uploads|wallpapers|protos|console-boot[.]js)(/|$)'
-				: `^/(?!${base.slice(1)}(/|$))`]: { target: backend, changeOrigin: false, ws: true }
+				: `^/(?!${base.slice(1)}(/|$))`]: {
+				target: backend,
+				changeOrigin: false,
+				ws: true,
+				agent: backendAgent
+			}
 		}
 	},
 	build: {
