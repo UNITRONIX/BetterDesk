@@ -14,19 +14,6 @@ const superAdminOnly = requireRole('super_admin');
 const betterdeskApi = require('../services/betterdeskApi');
 const { invalidateRole } = require('../services/rolePermissionService');
 
-// ── Page Route ───────────────────────────────────
-
-/**
- * GET /permissions - Permissions management page
- */
-router.get('/permissions', requireAuth, superAdminOnly, (req, res) => {
-    res.render('permissions', {
-        title: req.t('permissions.title'),
-        activePage: 'permissions',
-        currentPage: 'permissions'
-    });
-});
-
 // ── API Proxy Routes ─────────────────────────────
 
 /**

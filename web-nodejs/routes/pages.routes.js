@@ -39,24 +39,6 @@ router.get('/network', requireAuth, (req, res) => {
     });
 });
 
-// ── Activity Monitoring ──
-
-router.get('/activity', requireAuth, (req, res) => {
-    res.render('activity', {
-        title: req.t('activity.title'),
-        activePage: 'activity',
-    });
-});
-
-// ── Reports ──
-
-router.get('/reports', requireAuth, (req, res) => {
-    res.render('reports', {
-        title: req.t('reports.title'),
-        activePage: 'reports',
-    });
-});
-
 // ── Tenants — redirect to Organizations (merged) ──
 
 router.get('/tenants', requireAuth, requireRole('admin'), (req, res) => {

@@ -314,16 +314,6 @@ function requireAnyPermission(...permissions) {
 }
 
 /**
- * GET /users - Users management page (admin only)
- */
-router.get('/users', requireAuth, requirePermission('user.view'), (req, res) => {
-    res.render('users', {
-        title: req.t('nav.users'),
-        activePage: 'users'
-    });
-});
-
-/**
  * GET /api/users - Get all users (admin only)
  */
 router.get('/api/users', requireAuth, requirePermission('user.view'), async (req, res) => {

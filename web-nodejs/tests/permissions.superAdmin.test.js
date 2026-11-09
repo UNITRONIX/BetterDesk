@@ -1,7 +1,6 @@
 /**
- * Only super admins open the permissions page and change role overrides.
- * server_admin has server.config, which used to be enough to grant its own
- * role any permission.
+ * Only super admins change role overrides. server_admin has server.config,
+ * which used to be enough to grant its own role any permission.
  */
 
 const request = require('supertest');
@@ -23,10 +22,9 @@ const permissionsRoutes = require('../routes/permissions.routes');
 
 function app(role) {
     const a = createTestApp();
-    a.use((req, res, next) => {
+    a.use((req, _res, next) => {
         req.session.userId = 5;
         req.session.user = { id: 5, username: 'u', role };
-        res.render = (view) => res.send('rendered ' + view);
         next();
     });
     a.use(permissionsRoutes);
@@ -44,8 +42,6 @@ describe('role permission overrides', () => {
         const del = await request(app(role)).delete('/api/panel/role-permissions/operator/device.view');
         expect(del.status).toBe(403);
         expect(betterdeskApi.deleteRolePermission).not.toHaveBeenCalled();
-        const page = await request(app(role)).get('/permissions');
-        expect(page.status).toBe(403);
     });
 
     test.each(['super_admin', 'admin'])('%s can', async (role) => {
@@ -53,6 +49,5 @@ describe('role permission overrides', () => {
             .send({ role: 'operator', permission: 'device.delete', granted: true });
         expect(res.status).toBe(200);
         expect(betterdeskApi.setRolePermission).toHaveBeenCalledWith('operator', 'device.delete', true);
-        expect((await request(app(role)).get('/permissions')).text).toBe('rendered permissions');
     });
 });

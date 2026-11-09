@@ -2,11 +2,9 @@
  * BetterDesk Console — Organization Management Routes (v3.0.0)
  *
  * Proxies organization CRUD operations to the Go server REST API.
- * Provides page routes for the web panel and API routes for AJAX calls.
  *
- * Page routes:
- *   GET /organizations          — Organizations management page
- *   GET /organizations/:id      — Organization detail page
+ * The pages (/organizations, /organizations/:id) are in the new console
+ * (web-ui); the old addresses redirect there (lib/portedPages.js).
  *
  * API routes (proxy to Go server /api/org/*):
  *   GET    /api/panel/org              — List organizations
@@ -91,38 +89,6 @@ async function resolveGoMemberId(userId) {
     const resolved = await userSync.resolveGoUserId(userId);
     return resolved || userId;
 }
-
-// ---------------------------------------------------------------------------
-//  Page routes
-// ---------------------------------------------------------------------------
-
-router.get('/organizations', requireAuth, (req, res) => {
-    res.render('organizations', {
-        title: 'Organizations',
-        user: req.session.user,
-        currentPage: 'organizations',
-    });
-});
-
-router.get('/organizations/:id', requireAuth, (req, res) => {
-    try {
-        const orgId = assertSafeApiId(req.params.id, 'orgId');
-        res.render('organization-detail', {
-            title: 'Organization Details',
-            user: req.session.user,
-            currentPage: 'organizations',
-            orgId,
-        });
-    } catch (err) {
-        if (err.message && /^Invalid /.test(err.message)) {
-            return res.status(400).render('errors/404', {
-                title: 'Bad Request',
-                activePage: 'error',
-            });
-        }
-        throw err;
-    }
-});
 
 // ---------------------------------------------------------------------------
 //  API routes (proxy to Go server)

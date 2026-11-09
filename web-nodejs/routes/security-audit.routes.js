@@ -22,19 +22,6 @@ function goApiProxy(req, res, method, path, body) {
     });
 }
 
-// ── Page ─────────────────────────────────────────────────────
-router.get('/security-audit', requireAuth, requirePermission('audit.view'), (req, res) => {
-  const tab = req.query.tab || 'audit';
-  res.render('security-audit', {
-    title: req.t('security_audit.title'),
-    pageStyles: ['security-audit'],
-    pageScripts: ['security-audit'],
-    currentPage: 'security-audit',
-    breadcrumb: [{ label: req.t('security_audit.title') }],
-    activeTab: tab
-  });
-});
-
 // ── API: Security overview ───────────────────────────────────
 router.get('/api/panel/security-audit/overview', requireAuth, requirePermission('audit.view'), async (req, res) => {
   try {
