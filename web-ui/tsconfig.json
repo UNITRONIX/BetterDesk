@@ -1,0 +1,21 @@
+{
+	"extends": "$app/tsconfig",
+	"compilerOptions": {
+		"allowJs": false,
+		"checkJs": false,
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true,
+		"resolveJsonModule": true,
+		"skipLibCheck": true,
+		"sourceMap": true,
+		"strict": true,
+		"noUncheckedIndexedAccess": true,
+		"noImplicitOverride": true,
+		"noFallthroughCasesInSwitch": true,
+		"exactOptionalPropertyTypes": false,
+		"moduleResolution": "bundler",
+		"types": ["$app/types", "vitest/globals", "@testing-library/jest-dom"]
+	},
+	"include": ["src", "tests", "e2e", "*"],
+	"exclude": ["src/service-worker"]
+}
