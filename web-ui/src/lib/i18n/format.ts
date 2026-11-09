@@ -35,10 +35,54 @@ const DEFAULT_DATE: Intl.DateTimeFormatOptions = {
 	minute: '2-digit'
 };
 
+/* Building an Intl formatter is slow next to using one, and a long list
+   formats thousands of values: keep one per language and options. */
+const dateFormats = new Map<string, Intl.DateTimeFormat>();
+const numberFormats = new Map<string, Intl.NumberFormat>();
+
+/** The fields that make toLocaleString show only what was asked for */
+const DATE_FIELDS = [
+	'weekday',
+	'era',
+	'year',
+	'month',
+	'day',
+	'dayPeriod',
+	'hour',
+	'minute',
+	'second',
+	'fractionalSecondDigits',
+	'dateStyle',
+	'timeStyle'
+] as const;
+
+function dateFormat(locale: string | undefined, options: Intl.DateTimeFormatOptions): Intl.DateTimeFormat {
+	const key = `${locale ?? ''}|${JSON.stringify(options)}`;
+	let fmt = dateFormats.get(key);
+	if (!fmt) {
+		// Same output as Date#toLocaleString: with no field given it shows date and time
+		const asked = DATE_FIELDS.some((k) => options[k] !== undefined);
+		const opts = asked
+			? options
+			: ({
+					...options,
+					year: 'numeric',
+					month: 'numeric',
+					day: 'numeric',
+					hour: 'numeric',
+					minute: 'numeric',
+					second: 'numeric'
+				} as const);
+		fmt = new Intl.DateTimeFormat(locale, opts);
+		dateFormats.set(key, fmt);
+	}
+	return fmt;
+}
+
 export function formatDate(value: unknown, format: Intl.DateTimeFormatOptions = {}, empty = '-'): string {
 	const date = parseDate(value);
 	if (!date) return empty;
-	return date.toLocaleString(i18n.locale, { ...DEFAULT_DATE, ...format });
+	return dateFormat(i18n.locale, { ...DEFAULT_DATE, ...format }).format(date);
 }
 
 /** "just now", "5 minutes ago" ... up to a week, then the date */
@@ -65,7 +109,14 @@ function isBlank(value: unknown): boolean {
 export function formatNumber(value: unknown, options: Intl.NumberFormatOptions = {}): string {
 	const n = Number(value);
 	if (isBlank(value) || !Number.isFinite(n)) return '';
-	return new Intl.NumberFormat(i18n.locale, options).format(n);
+	const locale = i18n.locale;
+	const key = `${locale ?? ''}|${JSON.stringify(options)}`;
+	let fmt = numberFormats.get(key);
+	if (!fmt) {
+		fmt = new Intl.NumberFormat(locale, options);
+		numberFormats.set(key, fmt);
+	}
+	return fmt.format(n);
 }
 
 /** Bytes as B, kB, MB, GB, TB with one decimal: "1.5 GB" */

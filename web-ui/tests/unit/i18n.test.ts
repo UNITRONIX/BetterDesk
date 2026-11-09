@@ -95,3 +95,45 @@ describe('numbers', () => {
 		expect(formatNumber(12345.5)).toBe('12.345,5');
 	});
 });
+
+describe('formatter reuse (a long list formats thousands of values)', () => {
+	test('one date and one number formatter per language and options', () => {
+		const dates = vi.spyOn(Intl, 'DateTimeFormat');
+		const numbers = vi.spyOn(Intl, 'NumberFormat');
+		const when = '2026-11-08T17:05:28Z';
+		const first = formatDate(when, { weekday: 'long' });
+		for (let i = 0; i < 50; i++) {
+			formatDate(when, { weekday: 'long' });
+			formatNumber(i, { minimumIntegerDigits: 3 });
+		}
+		expect(dates).toHaveBeenCalledTimes(1);
+		expect(numbers).toHaveBeenCalledTimes(1);
+		// Same output as before the cache, and another language gets its own
+		expect(first).toBe(new Date(when).toLocaleString('en', { ...DEFAULT_DATE_FOR_TEST, weekday: 'long' }));
+		setStrings('de', 'ltr', EN);
+		expect(formatDate(when, { weekday: 'long' })).toBe(
+			new Date(when).toLocaleString('de', { ...DEFAULT_DATE_FOR_TEST, weekday: 'long' })
+		);
+	});
+
+	test('with no date or time field the output matches toLocaleString (date and time)', () => {
+		const when = new Date('2026-11-08T17:05:28Z');
+		const none = { year: undefined, month: undefined, day: undefined, hour: undefined, minute: undefined };
+		expect(formatDate(when, none)).toBe(when.toLocaleString('en', none));
+	});
+
+	test('the language check runs once per language', () => {
+		const check = vi.spyOn(Intl.DateTimeFormat, 'supportedLocalesOf');
+		setStrings('fr', 'ltr', EN);
+		for (let i = 0; i < 20; i++) expect(i18n.locale).toBe('fr');
+		expect(check).toHaveBeenCalledTimes(1);
+	});
+});
+
+const DEFAULT_DATE_FOR_TEST: Intl.DateTimeFormatOptions = {
+	year: 'numeric',
+	month: 'short',
+	day: 'numeric',
+	hour: '2-digit',
+	minute: '2-digit'
+};

@@ -23,6 +23,10 @@ export interface Language {
 	rtl: boolean;
 }
 
+/** Whether the browser formats dates for a language (asked once per language; the locale getter runs for every formatted value) */
+// eslint-disable-next-line svelte/prefer-svelte-reactivity -- a cache, nothing renders from it
+const supported = new Map<string, boolean>();
+
 class I18n {
 	strings = $state.raw<Strings>({});
 	lang = $state('en');
@@ -31,11 +35,17 @@ class I18n {
 
 	/** Locale for Intl, or undefined to use the browser's when the console language isn't supported */
 	get locale(): string | undefined {
-		try {
-			return Intl.DateTimeFormat.supportedLocalesOf([this.lang]).length ? this.lang : undefined;
-		} catch {
-			return undefined;
+		const lang = this.lang;
+		if (!supported.has(lang)) {
+			let ok = false;
+			try {
+				ok = Intl.DateTimeFormat.supportedLocalesOf([lang]).length > 0;
+			} catch {
+				/* not a valid language tag */
+			}
+			supported.set(lang, ok);
 		}
+		return supported.get(lang) ? lang : undefined;
 	}
 }
 
