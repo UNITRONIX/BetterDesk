@@ -116,6 +116,7 @@ function panelAccessGuard(req, res, next) {
 }
 
 module.exports = {
+    ROUTE_RULES,
     findRule,
     getRequiredLevel,
     panelAccessGuard,

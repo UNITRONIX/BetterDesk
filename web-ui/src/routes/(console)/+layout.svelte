@@ -8,12 +8,15 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import { onMount } from 'svelte';
+	import { page } from '$app/state';
 	import { ApiError } from '#lib/api/client.ts';
 	import { tf } from '#lib/i18n/i18n.svelte.ts';
-	import { session, startSession } from '#lib/state/session.svelte.ts';
+	import { appPath } from '#lib/nav.ts';
+	import { session, sectionDenied, startSession } from '#lib/state/session.svelte.ts';
 	import { initPresence } from '#lib/state/presence.svelte.ts';
 	import { initTheme } from '#lib/state/theme.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
+	import NoAccess from '#lib/shell/NoAccess.svelte';
 	import Shell from '#lib/shell/Shell.svelte';
 	import { goLogin } from '#lib/shell/session-guard.svelte.ts';
 
@@ -45,10 +48,20 @@
 	}
 
 	onMount(() => void start());
+
+	// The page's panel access section decides can() there and whether it opens
+	// at all, as the server's guard does for a page load
+	const path = $derived(appPath(page.url.pathname));
+	$effect.pre(() => {
+		session.path = path;
+	});
+	const denied = $derived(sectionDenied(path));
 </script>
 
 {#if session.ready}
-	<Shell>{@render children()}</Shell>
+	<Shell
+		>{#if denied}<NoAccess />{:else}{@render children()}{/if}</Shell
+	>
 {:else if session.error}
 	<div class="start-error" role="alert">
 		<p>{session.error}</p>

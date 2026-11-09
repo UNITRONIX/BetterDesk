@@ -7,7 +7,7 @@
  */
 
 import * as v from 'valibot';
-import { Bootstrap, saveLanguage, type NavSection } from '#lib/api/console.ts';
+import { Bootstrap, saveLanguage, type NavSection, type PanelAccess } from '#lib/api/console.ts';
 import { ApiError, clientMessages, setCsrfToken } from '#lib/api/client.ts';
 import { setStrings, t, has, savedLanguage, switchLanguage } from '#lib/i18n/i18n.svelte.ts';
 import { PREF, writePref } from '#lib/util/storage.ts';
@@ -17,6 +17,10 @@ export type User = Bootstrap['user'];
 class Session {
 	user = $state.raw<User | null>(null);
 	permissions = $state.raw<readonly string[]>([]);
+	/** Panel access policy; null without one (the role alone decides) */
+	access = $state.raw<PanelAccess | null>(null);
+	/** The page being shown, without the base: the console layout keeps it current */
+	path = $state('');
 	isSuperAdmin = $state(false);
 	nav = $state.raw<NavSection[]>([]);
 	appName = $state('BetterDesk');
@@ -30,8 +34,44 @@ class Session {
 
 export const session = new Session();
 
+const RANK = { none: 0, read: 1, write: 2 } as const;
+
+/** The panel access section a page belongs to: the longest matching rule, as the server's findRule */
+function sectionAt(path: string): string | null {
+	let best: { length: number; section: string } | null = null;
+	for (const rule of session.access?.pages ?? []) {
+		const at = rule.path ?? rule.prefix ?? '';
+		const hit = rule.path !== undefined ? path === rule.path : path === at || path.startsWith(at + '/');
+		if (hit && (!best || at.length > best.length)) best = { length: at.length, section: rule.section };
+	}
+	return best?.section ?? null;
+}
+
+/**
+ * Whether the signed-in person may do something here. On a page of a panel
+ * access section, the section's level decides the permission it stands for
+ * (read or write), as requestHasPermission does on the server.
+ */
 export function can(permission: string): boolean {
-	return session.isSuperAdmin || session.permissions.includes(permission);
+	if (session.isSuperAdmin) return true;
+	const access = session.access;
+	const section = access ? sectionAt(session.path) : null;
+	if (access && section) {
+		const entry = access.catalog.find((e) => e.key === section);
+		const level = access.sections[section];
+		const needed = entry?.write === permission ? 'write' : entry?.read === permission ? 'read' : null;
+		if (level && needed) return RANK[level] >= RANK[needed];
+	}
+	return session.permissions.includes(permission);
+}
+
+/** The server's panel access guard refuses this page (its section is not readable) */
+export function sectionDenied(path: string): boolean {
+	const access = session.access;
+	const section = access ? sectionAt(path) : null;
+	if (!access || !section) return false;
+	const level = access.sections[section];
+	return !level || level === 'none';
 }
 
 export function canAny(...permissions: string[]): boolean {
@@ -43,6 +83,7 @@ export function applyBootstrap(boot: Bootstrap): void {
 	session.raw = boot;
 	session.user = boot.user;
 	session.permissions = boot.permissions;
+	session.access = boot.access ?? null;
 	session.isSuperAdmin = boot.isSuperAdmin;
 	session.nav = boot.nav;
 	session.appName = boot.branding.appName;
@@ -138,6 +179,8 @@ function restoreLanguage(b: Bootstrap): void {
 export function clearSession(): void {
 	session.user = null;
 	session.permissions = [];
+	session.access = null;
+	session.path = '';
 	session.isSuperAdmin = false;
 	session.nav = [];
 	session.raw = null;

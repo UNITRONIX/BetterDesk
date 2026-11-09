@@ -1,4 +1,4 @@
-import { session, startSession, clearSession } from '#lib/state/session.svelte.ts';
+import { can, clearSession, sectionDenied, session, startSession } from '#lib/state/session.svelte.ts';
 
 const boot = {
 	success: true,
@@ -126,5 +126,67 @@ describe('startSession', () => {
 			expect(urls().some((u) => u.includes('/i18n/set/'))).toBe(false);
 			expect(localStorage.getItem('betterdesk_lang')).toBe('en');
 		});
+	});
+});
+
+describe('panel access policies (as the server applies them)', () => {
+	const access = {
+		sections: { dashboard: 'read', devices: 'read', users: 'none' } as Record<
+			string,
+			'none' | 'read' | 'write'
+		>,
+		pages: [
+			{ path: '/', section: 'dashboard' },
+			{ prefix: '/devices', section: 'devices' },
+			{ prefix: '/users', section: 'users' }
+		],
+		catalog: [
+			{ key: 'devices', read: 'device.view', write: 'device.edit' },
+			{ key: 'users', read: 'user.view', write: 'user.edit' }
+		]
+	};
+	beforeEach(() => {
+		session.permissions = ['device.view', 'device.edit', 'user.view'];
+		session.isSuperAdmin = false;
+		session.access = access;
+	});
+
+	test('a read-only section turns off its write permission on its pages only', () => {
+		session.path = '/devices';
+		expect(can('device.view')).toBe(true);
+		expect(can('device.edit')).toBe(false);
+		session.path = '/devices/900100012';
+		expect(can('device.edit')).toBe(false);
+		// A page outside any section: the role decides
+		session.path = '/pairing';
+		expect(can('device.edit')).toBe(true);
+	});
+
+	test('super admins keep every permission, as requestHasPermission does', () => {
+		session.isSuperAdmin = true;
+		session.path = '/devices';
+		expect(can('device.edit')).toBe(true);
+	});
+
+	test('a section without read access is refused, as the guard does; other pages and no policy never are', () => {
+		expect(sectionDenied('/users')).toBe(true);
+		expect(sectionDenied('/users/7')).toBe(true);
+		expect(sectionDenied('/usersfoo')).toBe(false);
+		expect(sectionDenied('/devices')).toBe(false);
+		expect(sectionDenied('/pairing')).toBe(false);
+		session.access = null;
+		expect(sectionDenied('/users')).toBe(false);
+	});
+
+	test('the bootstrap brings the access block, and signing out forgets it', async () => {
+		const withAccess = { ...boot, access };
+		vi.stubGlobal(
+			'fetch',
+			vi.fn((url: string) => Promise.resolve(ok(url.includes('strings') ? {} : withAccess)))
+		);
+		await startSession();
+		expect(session.access?.sections.users).toBe('none');
+		clearSession();
+		expect(session.access).toBeNull();
 	});
 });

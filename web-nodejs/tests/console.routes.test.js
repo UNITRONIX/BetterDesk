@@ -261,3 +261,52 @@ describe('GET /console-boot.js', () => {
         expect(payload).not.toMatch(/<\//);
     });
 });
+
+describe('panel access policies in the bootstrap', () => {
+    const policy = (levels) => ({
+        sections: Object.fromEntries(Object.entries(levels).map(([key, access]) => [key, { access }]))
+    });
+    const admin = { id: 1, username: 'a', role: 'super_admin' };
+
+    test('without a policy on the request: no access block, the navigation follows the role', async () => {
+        const res = await request(appWith(admin)).get('/api/console/bootstrap');
+        expect(res.body.access).toBeNull();
+        expect(res.body.nav.flatMap((s) => s.pages.map((p) => p.href))).toContain('/devices');
+    });
+
+    test('pages of a section the person may not read leave the navigation, as the guard refuses them', async () => {
+        const res = await request(appWith(admin, {
+            panelAccessPolicy: policy({ dashboard: 'read', devices: 'none', registrations: 'none', users: 'read', settings: 'write' })
+        })).get('/api/console/bootstrap');
+        const pages = res.body.nav.flatMap((s) => s.pages.map((p) => p.href));
+        expect(pages).not.toContain('/devices');
+        expect(pages).not.toContain('/inventory');
+        expect(pages).not.toContain('/registrations');
+        // Pairing an agent belongs to registrations, as in the old sidebar
+        expect(pages).not.toContain('/?activateAgent=1');
+        expect(pages).toEqual(expect.arrayContaining(['/', '/users', '/settings', '/keys']));
+    });
+
+    test('the levels, the page rules and the catalog reach the browser, without the API rules', async () => {
+        const res = await request(appWith(admin, {
+            panelAccessPolicy: policy({ devices: 'read', users: 'write' })
+        })).get('/api/console/bootstrap');
+        expect(res.body.access.sections).toMatchObject({ devices: 'read', users: 'write' });
+        expect(res.body.access.pages).toEqual(expect.arrayContaining([
+            { path: '/', section: 'dashboard' },
+            { prefix: '/devices', section: 'devices' },
+            { prefix: '/keys', section: 'settings' }
+        ]));
+        expect(res.body.access.pages.some((r) => (r.prefix || r.path).startsWith('/api/'))).toBe(false);
+        expect(res.body.access.catalog).toEqual(expect.arrayContaining([
+            { key: 'devices', read: 'device.view', write: 'device.edit' },
+            { key: 'reports', read: 'metrics.view', write: null }
+        ]));
+    });
+
+    test('the agent pairing entry is called Pair agent', async () => {
+        const res = await request(appWith(admin)).get('/api/console/bootstrap');
+        const pair = res.body.nav.flatMap((s) => s.pages).find((p) => p.href === '/?activateAgent=1');
+        expect(pair.text).toBe(manager.translate('en', 'nav.pair_agent'));
+    });
+});

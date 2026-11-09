@@ -7,7 +7,9 @@
  * is shown when at least one of its pages is visible.
  *
  * `when` receives { can, isSuperAdmin, role } where can(perm) is the
- * request's permission check. A few routes check role names instead of
+ * request's permission check. `allows(page)` then applies the person's
+ * panel access policy (routes/console.routes.js); `access` names a page's
+ * section where its address alone doesn't. A few routes check role names instead of
  * permissions (requireAdmin, requireRole); their pages use the same check
  * here, so the menu shows them to exactly the roles the route lets in.
  */
@@ -32,7 +34,7 @@ const SECTIONS = [
             { page: 'dashboard', keywords: 'home dashboard start', core: true, href: '/', label: 'nav.dashboard', when: always },
             { page: 'devices', keywords: 'computers peers machines connect', core: true, href: '/devices', label: 'folders.all_devices', when: perm('device.view') },
             { page: 'registrations', keywords: 'enrollment approve new device registration pending', core: true, href: '/registrations', label: 'nav.registrations', when: perm('enrollment.approve'), countId: 'reg-sidebar-badge' },
-            { page: 'activate-agent', keywords: 'qr agent activation', href: '/?activateAgent=1', label: 'nav.activate_agent', when: perm('enrollment.approve'), id: 'nav-activate-agent' },
+            { page: 'activate-agent', keywords: 'pair agent code activation', href: '/?activateAgent=1', label: 'nav.pair_agent', when: perm('enrollment.approve'), access: 'registrations', id: 'nav-activate-agent' },
             { page: 'remote', keywords: 'web client browser remote control', core: true, href: '/remote', label: 'nav.remote', when: perm('device.connect'), external: true },
             { page: 'inventory', keywords: 'hardware software', href: '/inventory', label: 'nav.inventory', when: perm('device.view') },
             { page: 'network', keywords: 'ping monitor latency targets', href: '/network', label: 'nav.network', when: perm('device.view') },
@@ -134,7 +136,7 @@ function pageKey(currentPage, currentTab, activateAgentNav) {
  * Build the visible navigation for one request.
  * @returns {{ sections: Array, activeSection: object|null, activePage: object|null }}
  */
-function buildNav({ can, isSuperAdmin, role, t, currentPage, currentTab, activateAgentNav }) {
+function buildNav({ can, isSuperAdmin, role, t, currentPage, currentTab, activateAgentNav, allows }) {
     const key = pageKey(currentPage, currentTab, activateAgentNav);
     const ctx = { can: can || (() => false), isSuperAdmin: !!isSuperAdmin, role: role || '' };
     let activeSection = null;
@@ -142,11 +144,12 @@ function buildNav({ can, isSuperAdmin, role, t, currentPage, currentTab, activat
 
     const sections = SECTIONS.map((section) => {
         const pages = section.pages
-            .filter((p) => p.when(ctx))
+            .filter((p) => p.when(ctx) && (!allows || allows(p)))
             .map((p) => {
                 const active = p.page === key || (p.alsoActiveFor || []).includes(key);
                 const item = { ...p, text: t(p.label), groupText: p.group ? t(p.group) : '', active };
                 delete item.when;
+                delete item.access;
                 if (active) activePage = item;
                 return item;
             });

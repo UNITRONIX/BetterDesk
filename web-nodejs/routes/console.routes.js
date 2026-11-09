@@ -23,6 +23,9 @@ const express = require('express');
 const config = require('../config/config');
 const { requireAuth, requestHasPermission, isSuperAdminRole } = require('../middleware/auth');
 const { buildNav } = require('../lib/consoleNav');
+const { ROUTE_RULES, findRule } = require('../middleware/panelAccess');
+const { accessAllows } = require('../services/panelAccessPolicyService');
+const { PANEL_ACCESS_CATALOG, normalizeAccessLevel } = require('../lib/panelAccessCatalog');
 const { manager } = require('../services/i18nService');
 const brandingService = require('../services/brandingService');
 const panelSessionService = require('../services/panelSessionService');
@@ -212,13 +215,41 @@ router.get('/api/console/strings/:code', (req, res) => {
     return res.send(body);
 });
 
+// The panel access guard's page rules (middleware/panelAccess.js), for the browser
+const PAGE_RULES = ROUTE_RULES.filter((r) => !(r.prefix || r.path).startsWith('/api/'));
+const ACCESS_CATALOG = PANEL_ACCESS_CATALOG.map((e) => ({ key: e.key, read: e.readPermission, write: e.writePermission }));
+
+/**
+ * The person's panel access (services/panelAccessPolicyService.js): each
+ * section's level, which page belongs to which section, and the permission
+ * pair each section stands for. The app hides what the guard would refuse
+ * and turns off write actions in read-only sections, as requestHasPermission
+ * does on the server. null when no policy was loaded for the request.
+ */
+function accessFor(policy) {
+    if (!policy || !policy.sections) return null;
+    const sections = {};
+    for (const [key, s] of Object.entries(policy.sections)) sections[key] = normalizeAccessLevel(s && s.access);
+    return { sections, pages: PAGE_RULES, catalog: ACCESS_CATALOG };
+}
+
+/** A navigation page passes when the guard would let its address through */
+function pageAllowed(policy) {
+    if (!policy) return () => true;
+    return (p) => {
+        const section = p.access || (findRule(new URL(p.href, 'http://console.invalid').pathname) || {}).section;
+        return !section || accessAllows(policy, section, 'read');
+    };
+}
+
 router.get('/api/console/bootstrap', requireAuth, async (req, res) => {
     const user = req.session.user || {};
     const role = user.role;
     const can = (p) => requestHasPermission(req, p);
     const superAdmin = isSuperAdminRole(role);
     const t = req.t || ((k) => k);
-    const nav = buildNav({ can, isSuperAdmin: superAdmin, role, t, currentPage: '', currentTab: '' });
+    const policy = req.panelAccessPolicy || null;
+    const nav = buildNav({ can, isSuperAdmin: superAdmin, role, t, currentPage: '', currentTab: '', allows: pageAllowed(policy) });
     const branding = brandingService.getBranding() || {};
     const boot = publicBoot(req);
     // getAvatarVersion answers null on any failure: initials instead of the picture
@@ -235,6 +266,7 @@ router.get('/api/console/bootstrap', requireAuth, async (req, res) => {
             avatarVersion: avatarVersion || null
         },
         permissions: UI_PERMISSIONS.filter(can),
+        access: accessFor(policy),
         isSuperAdmin: superAdmin,
         emergencyMode: !!req.session.emergencyMode,
         nav: nav.sections.map((s) => ({

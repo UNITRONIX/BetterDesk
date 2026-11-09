@@ -33,6 +33,21 @@ export const Language = v.object({
 
 const Palette = v.nullable(v.record(v.string(), v.string()));
 
+/**
+ * The person's panel access policy (web-nodejs routes/console.routes.js
+ * accessFor): each section's level, which page belongs to which section (the
+ * server guard's rules, path exact or prefix with its sub-pages), and the
+ * read and write permission each section stands for.
+ */
+export const PanelAccess = v.object({
+	sections: v.record(v.string(), v.picklist(['none', 'read', 'write'])),
+	pages: v.array(
+		v.object({ path: v.optional(v.string()), prefix: v.optional(v.string()), section: v.string() })
+	),
+	catalog: v.array(v.object({ key: v.string(), read: v.nullable(v.string()), write: v.nullable(v.string()) }))
+});
+export type PanelAccess = v.InferOutput<typeof PanelAccess>;
+
 export const Bootstrap = v.object({
 	success: v.literal(true),
 	user: v.object({
@@ -43,6 +58,8 @@ export const Bootstrap = v.object({
 		avatarVersion: v.nullable(v.union([v.string(), v.number()]))
 	}),
 	permissions: v.array(v.string()),
+	/* Older servers send none */
+	access: v.optional(v.nullable(PanelAccess), null),
 	isSuperAdmin: v.boolean(),
 	emergencyMode: v.boolean(),
 	nav: v.array(NavSection),
