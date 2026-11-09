@@ -9,13 +9,15 @@
  *   node scripts/update-material-symbols.mjs
  *
  * Names come from icon spans, Utils.ICONS and other icon maps, `icon` properties
- * and variables, and CSS `content` ligatures. collectCandidateIcons() and
+ * and variables, and CSS `content` ligatures, in the old console (web-nodejs)
+ * and the new one (web-ui/src: `<Icon name="…">`, `icon="…"`, `icon={…}`). collectCandidateIcons() and
  * collectIcons() are exported so a check can compare the list with the font.
  *
- * Writes:
- *   web-nodejs/public/fonts/MaterialSymbolsOutlined.woff2
- *   web-nodejs/public/fonts/MaterialSymbolsRounded.woff2
- *   web-nodejs/public/fonts/MATERIAL_SYMBOLS_VERSION.txt
+ * Writes the same files into both consoles' font folders
+ * (web-nodejs/public/fonts/ and web-ui/static/fonts/):
+ *   MaterialSymbolsOutlined.woff2, MaterialSymbolsRounded.woff2,
+ *   MATERIAL_SYMBOLS_VERSION.txt
+ * and the ?v= cache busters in both consoles' CSS and web-ui/src/app.html.
  */
 
 import crypto from 'node:crypto';
@@ -26,9 +28,11 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.join(__dirname, '..');
 const WEB = path.join(REPO_ROOT, 'web-nodejs');
+const UI = path.join(REPO_ROOT, 'web-ui');
 const FONTS_DIR = path.join(WEB, 'public', 'fonts');
-const SCAN_ROOT = WEB;
-const SCAN_EXTS = new Set(['.ejs', '.js', '.html', '.css', '.json']);
+const UI_FONTS_DIR = path.join(UI, 'static', 'fonts');
+const SCAN_ROOTS = [WEB, path.join(UI, 'src')];
+const SCAN_EXTS = new Set(['.ejs', '.js', '.html', '.css', '.json', '.svelte', '.ts']);
 const CODEPOINTS_CACHE = path.join(__dirname, '.cache', 'MaterialSymbolsOutlined.codepoints');
 const CODEPOINTS_URL =
     'https://raw.githubusercontent.com/google/material-design-icons/master/variablefont/MaterialSymbolsOutlined%5BFILL%2CGRAD%2Copsz%2Cwght%5D.codepoints';
@@ -81,6 +85,9 @@ const MAP_VALUE = /:\s*['"]([a-z][a-z0-9_]{1,48})['"]/g;
 /* Ligatures drawn from CSS, e.g. the disclosure chevron `content: "expand_more"` */
 const CSS_CONTENT = /\bcontent\s*:\s*['"]([a-z][a-z0-9_]{1,48})['"]/g;
 const QUOTED_ICON_NAME = /['"]([a-z][a-z0-9_]{1,48})['"]/g;
+/* Svelte: <Icon name="devices" />, and icon={online ? 'wifi' : 'wifi_off'} on any component */
+const ICON_COMPONENT = /<Icon\b[^>]*?\bname=["']([a-z][a-z0-9_]{1,48})["']/g;
+const ICON_ATTR_EXPR = /\b\w*[iI]con\w*=\{[^}\n]*\}/g;
 
 const SKIP_DIRS = new Set(['node_modules', '.git', 'coverage', 'vendor', 'tests', 'data']);
 
@@ -127,11 +134,12 @@ export function collectCandidateIcons() {
     const icons = new Map(EXTRA_ICONS.map((n) => [n, new Set(['(EXTRA_ICONS)'])]));
     const add = (name, file) => {
         if (!icons.has(name)) icons.set(name, new Set());
-        icons.get(name).add(path.relative(WEB, file).split(path.sep).join('/'));
+        icons.get(name).add(path.relative(REPO_ROOT, file).split(path.sep).join('/'));
     };
-    for (const file of walkFiles(SCAN_ROOT)) {
+    const files = SCAN_ROOTS.filter((dir) => fs.existsSync(dir)).flatMap((dir) => walkFiles(dir));
+    for (const file of files) {
         const text = fs.readFileSync(file, 'utf8');
-        const patterns = [LIGATURE_IN_ICON_SPAN, ICON_PROPERTY, ICON_RETURN, PLATFORM_ICON_MAP];
+        const patterns = [LIGATURE_IN_ICON_SPAN, ICON_PROPERTY, ICON_RETURN, PLATFORM_ICON_MAP, ICON_COMPONENT];
         if (file.endsWith('.css')) patterns.push(CSS_CONTENT);
         for (const pattern of patterns) {
             pattern.lastIndex = 0;
@@ -143,7 +151,7 @@ export function collectCandidateIcons() {
 
         // Desktop controls and a few widgets assign icon ligatures through
         // textContent or helper calls instead of literal <span> markup.
-        for (const pattern of [ICON_HELPER_LINE, TEXT_CONTENT_LINE, ICON_SPAN_LINE, ICON_VAR_LINE]) {
+        for (const pattern of [ICON_HELPER_LINE, TEXT_CONTENT_LINE, ICON_SPAN_LINE, ICON_VAR_LINE, ICON_ATTR_EXPR]) {
             pattern.lastIndex = 0;
             let line;
             while ((line = pattern.exec(text)) !== null) {
@@ -258,9 +266,14 @@ async function downloadFamily(familyLabel, familyApiName, outName, icons) {
 }
 
 function updateFontCacheBusters(outlined, rounded) {
-    // The reworked console declares the font in ui/base.css.
-    const basePath = path.join(WEB, 'public', 'css', 'ui', 'base.css');
-    if (fs.existsSync(basePath)) {
+    // The reworked console declares the font in ui/base.css, the new one in
+    // its base.css, and app.html preloads it.
+    for (const basePath of [
+        path.join(WEB, 'public', 'css', 'ui', 'base.css'),
+        path.join(UI, 'src', 'lib', 'styles', 'base.css'),
+        path.join(UI, 'src', 'app.html'),
+    ]) {
+        if (!fs.existsSync(basePath)) continue;
         const base = fs.readFileSync(basePath, 'utf8').replace(
             /MaterialSymbolsOutlined\.woff2(?:\?v=[^'")]+)?/g,
             `MaterialSymbolsOutlined.woff2?v=${outlined.sha256.slice(0, 12)}`
@@ -268,6 +281,7 @@ function updateFontCacheBusters(outlined, rounded) {
         fs.writeFileSync(basePath, base, 'utf8');
     }
     const cssPath = path.join(WEB, 'public', 'css', 'material-icons-local.css');
+    if (!fs.existsSync(cssPath)) return;
     let css = fs.readFileSync(cssPath, 'utf8');
     css = css
         .replace(
@@ -347,6 +361,12 @@ async function main() {
     ];
     fs.writeFileSync(versionPath, lines.join('\n'), 'utf8');
     console.log(`Wrote ${path.relative(REPO_ROOT, versionPath)}`);
+    if (fs.existsSync(UI_FONTS_DIR)) {
+        for (const name of [outlined.outName, rounded.outName, 'MATERIAL_SYMBOLS_VERSION.txt']) {
+            fs.copyFileSync(path.join(FONTS_DIR, name), path.join(UI_FONTS_DIR, name));
+        }
+        console.log(`Copied the fonts to ${path.relative(REPO_ROOT, UI_FONTS_DIR)}`);
+    }
     console.log('Done. Review hashes, then commit fonts + CSS together.');
 }
 
