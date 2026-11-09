@@ -165,6 +165,15 @@ describe('Menu', () => {
 		);
 		expect(screen.getByRole('menu')).toBeInTheDocument();
 	});
+
+	test('a checkbox item draws its box and is named by its label alone', async () => {
+		// The icon font has no checkbox symbols: a ligature name would show as text
+		const { trigger, user } = setup();
+		await user.click(trigger);
+		const item = screen.getByRole('menuitemcheckbox', { name: /platform/i });
+		expect(item.textContent?.trim()).toBe('Platform');
+		expect(item.querySelector('.menu-check')).toHaveAttribute('aria-hidden', 'true');
+	});
 });
 
 describe('Dialog', () => {

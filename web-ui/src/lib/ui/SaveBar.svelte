@@ -1,18 +1,25 @@
 <!--
   The save bar at the end of a form (components.css .save-bar): the status
-  line in a polite live region and the one save button. The button is
-  primary only while the form has unsaved changes, so a page with several
-  forms shows one primary action at a time; it is the form's submit button,
-  so Enter in a field saves. While there are unsaved changes the bar sticks
-  to the bottom of the view and says so.
+  line in a polite live region and the one save button. On a page with one
+  save bar the button is always primary; with several, it is primary only
+  while its form has unsaved changes (also after a failed save of them), so
+  the page shows one primary action at a time (as ui-form.js did). It is the
+  form's submit button, so Enter in a field saves. While there are unsaved
+  changes the bar sticks to the bottom of the view and says so.
 
     <SaveBar {form} label={t('settings.save_sign_in')} />
 
   Without the form helper pass dirty, busy and status yourself. `children`:
   other buttons that belong to the form, before Save.
 -->
+<script module lang="ts">
+	// Save bars on screen: a page with only one keeps its button primary
+	const bars = $state({ count: 0 });
+</script>
+
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import { untrack } from 'svelte';
 	import { tf } from '#lib/i18n/i18n.svelte.ts';
 	import Button from './Button.svelte';
 	import type { FormStatus } from './form.svelte.ts';
@@ -40,6 +47,12 @@
 		if (st.state === 'saved') return { text: st.message, kind: 'ok' };
 		return { text: '', kind: '' };
 	});
+
+	$effect(() => {
+		untrack(() => bars.count++);
+		return () => untrack(() => bars.count--);
+	});
+	const primary = $derived(isDirty || bars.count < 2);
 </script>
 
 <div class={['save-bar', view.kind === 'dirty' && 'is-dirty', cls]}>
@@ -48,7 +61,7 @@
 		aria-live="polite">{view.text}</span
 	>
 	{@render children?.()}
-	<Button type="submit" form={form?.id} variant={isDirty ? 'primary' : 'secondary'} busy={isBusy}
+	<Button type="submit" form={form?.id} variant={primary ? 'primary' : 'secondary'} busy={isBusy}
 		>{label}</Button
 	>
 </div>

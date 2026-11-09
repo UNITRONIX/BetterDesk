@@ -115,6 +115,24 @@
 	let box = $state<HTMLDivElement | null>(null);
 	let tbody = $state<HTMLTableSectionElement | null>(null);
 
+	/* A box that scrolls must be reachable with the keyboard (arrow keys
+	   scroll it), also when nothing in the table can take focus: while it
+	   scrolls it is a focusable region named by the caption. */
+	let scrolls = $state(false);
+	$effect(() => {
+		const el = box;
+		if (!el || typeof ResizeObserver === 'undefined') return;
+		const check = () => {
+			scrolls = el.scrollWidth > el.clientWidth + 1 || (!!height && el.scrollHeight > el.clientHeight + 1);
+		};
+		check();
+		const ro = new ResizeObserver(check);
+		ro.observe(el);
+		const table = el.querySelector('table');
+		if (table) ro.observe(table);
+		return () => ro.disconnect();
+	});
+
 	const shown = $derived(columns.filter((c) => c.visible !== false));
 	const colspan = $derived(shown.length + (selectable ? 1 : 0));
 
@@ -351,10 +369,14 @@
 	}
 </script>
 
+<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 <div
 	bind:this={box}
 	class={['table-scroll', height && 'is-box', !scrollX && 'no-scroll-x', cls]}
 	style:max-height={height}
+	role={scrolls ? 'region' : undefined}
+	aria-labelledby={scrolls ? captionId : undefined}
+	tabindex={scrolls ? 0 : undefined}
 >
 	<table
 		class={['data-table', virtual && 'is-virtual']}
@@ -366,7 +388,14 @@
 		<thead>
 			<tr aria-rowindex={virtual ? 1 : undefined}>
 				{#if selectable}
-					<th scope="col" class="select-col">
+					<!-- Mouse and touch convenience: the space around the checkbox toggles it too (the checkbox itself is the keyboard way) -->
+					<th
+						scope="col"
+						class="select-col"
+						onclick={(e) => {
+							if (e.target === e.currentTarget && sorted.length) toggleAll();
+						}}
+					>
 						<input
 							type="checkbox"
 							class="row-check-all"
@@ -564,11 +593,12 @@
 	.data-table th.sortable {
 		padding: 0;
 	}
+	/* The header row is 40px with its rules; the button fills it inside them */
 	.sort-btn {
 		display: flex;
 		align-items: center;
 		width: 100%;
-		min-height: 40px;
+		min-height: calc(40px - 1px);
 		padding: var(--row-pad-y) var(--row-pad-x);
 		border: 0;
 		background: transparent;
@@ -603,6 +633,7 @@
 	th.is-num .sort-btn {
 		justify-content: flex-end;
 	}
+	/* On touch a sortable header is a 44px target */
 	@media (pointer: coarse) {
 		.sort-btn {
 			min-height: var(--control-h);
@@ -634,6 +665,12 @@
 	}
 	.data-table th.select-col {
 		cursor: default;
+	}
+	/* On touch the checkbox's cell (a click anywhere in it toggles) is 44px wide */
+	@media (pointer: coarse) {
+		.data-table .select-col {
+			padding-inline-end: var(--row-pad-x);
+		}
 	}
 	.select-col input {
 		display: block;

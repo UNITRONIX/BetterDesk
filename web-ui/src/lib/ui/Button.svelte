@@ -142,11 +142,18 @@
 		border-color: transparent;
 		background: transparent;
 	}
+	/* A link in running text: it sits on the text's baseline and wraps with
+	   it, as the old .btn-link (which had no .btn box) did */
 	.btn-link {
+		display: inline;
 		color: var(--accent);
 		padding: 0;
 		min-height: 0;
+		border: 0;
 		font: inherit;
+		white-space: normal;
+		vertical-align: baseline;
+		text-align: inherit;
 		text-decoration: underline;
 		text-underline-offset: 2px;
 	}

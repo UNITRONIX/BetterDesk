@@ -22,7 +22,6 @@
 	<div class="code-block-head">
 		{#if title}<span class="code-block-title" id="{id}-title">{title}</span>{/if}
 		<Button
-			variant="ghost"
 			size="sm"
 			icon={copier.copied ? 'check' : 'copy'}
 			aria-describedby={title ? `${id}-title` : undefined}

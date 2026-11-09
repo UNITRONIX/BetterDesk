@@ -304,6 +304,22 @@ html[data-a11y-strong-focus='true'] :focus-visible {
 	color: var(--warning);
 }
 
+/* ── Checkboxes and radios ──
+   Native, in the accent colour, --check-size (16px, 20px on touch); from
+   components.css "Checkboxes and radios", where the rule applied to every
+   checkbox and radio. It stays global so a bare one in a page (a table's
+   row selection, a checkbox in a menu or a page's own form) looks like the
+   ones in the Checkbox, Radio and ChoiceList components. */
+input[type='checkbox'],
+input[type='radio'] {
+	flex-shrink: 0;
+	width: var(--check-size);
+	height: var(--check-size);
+	margin: 0;
+	accent-color: var(--accent);
+	cursor: pointer;
+}
+
 /* ── Page column ──
    Every page has one left edge: the content column. Headers, toolbars,
    lists, tables and forms all start there. Sections are separated by

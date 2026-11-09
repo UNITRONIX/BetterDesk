@@ -288,11 +288,16 @@
 </div>
 
 <style>
+	/* The terminal takes the height its container gives it (a sheet's body, a
+	   page area of a set height), at least 360px for the box. The box needs a
+	   set height: with an automatic one, every fit adds rows, the box grows by
+	   them and the next fit adds more. */
 	.terminal {
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-2);
 		min-width: 0;
+		height: 100%;
 	}
 	.terminal-bar {
 		display: flex;
@@ -312,7 +317,10 @@
 	}
 	/* Dark in both themes, like a real terminal */
 	.terminal-box {
+		flex: 1 1 auto;
+		height: 360px;
 		min-height: 360px;
+		overflow: hidden;
 		padding: var(--space-2);
 		border: 1px solid var(--rule);
 		border-radius: var(--radius);

@@ -137,25 +137,24 @@
 </div>
 
 <style>
+	/* The summary and the page size on the start side, the pages at the end
+	   (the old device list's pagination bar) */
 	.pagination-bar {
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
-		gap: var(--space-2) var(--space-4);
+		gap: var(--space-2) var(--space-5);
 		padding-block: var(--space-3);
+		color: var(--text-muted);
+		font-size: var(--text-sm);
 	}
 	.pagination-summary {
 		margin: 0;
-		margin-inline-end: auto;
-		color: var(--text-muted);
-		font-size: var(--text-sm);
 	}
 	.pagination-size {
 		display: inline-flex;
 		align-items: center;
 		gap: var(--space-2);
-		color: var(--text-muted);
-		font-size: var(--text-sm);
 	}
 	.pagination-size :global(.form-select) {
 		width: auto;
@@ -165,6 +164,7 @@
 		flex-wrap: wrap;
 		align-items: center;
 		gap: var(--space-1);
+		margin-inline-start: auto;
 	}
 	.pagination-btn {
 		display: inline-flex;

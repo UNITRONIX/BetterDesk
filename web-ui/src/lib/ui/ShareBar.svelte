@@ -48,10 +48,11 @@
 </div>
 
 <style>
+	/* The bar and its legend a section's gap apart, as on the old pages */
 	.share {
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-2);
+		gap: var(--space-3);
 	}
 	.share-bar {
 		display: flex;

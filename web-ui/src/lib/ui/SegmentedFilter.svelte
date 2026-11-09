@@ -99,4 +99,10 @@
 		opacity: 0.5;
 		cursor: not-allowed;
 	}
+	/* On touch a short label ("All") still gets a 44px wide target */
+	@media (pointer: coarse) {
+		.filter-btn {
+			min-width: var(--control-h);
+		}
+	}
 </style>

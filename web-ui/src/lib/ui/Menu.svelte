@@ -226,8 +226,10 @@
 	.menu:focus {
 		outline: none;
 	}
-	/* In a menu with icons, items without one keep the labels aligned */
-	.menu:has(:global(.material-icons)) :global(.menu-item:not(:has(.material-icons))::before) {
+	/* In a menu with icons, items without one keep the labels aligned (a
+	   checkbox item's box takes the icon's place) */
+	.menu:has(:global(.material-icons))
+		:global(.menu-item:not(:has(.material-icons)):not([role='menuitemcheckbox'])::before) {
 		content: '';
 		width: 20px;
 		flex-shrink: 0;

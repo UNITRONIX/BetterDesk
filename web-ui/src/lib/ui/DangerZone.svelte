@@ -116,5 +116,6 @@
 		flex-shrink: 0;
 		align-items: center;
 		gap: var(--space-2);
+		color: var(--text-muted);
 	}
 </style>

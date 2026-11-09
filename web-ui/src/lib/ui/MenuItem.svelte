@@ -79,7 +79,7 @@
 		onclick={choose}
 	>
 		{#if type === 'checkbox'}
-			<Icon name={checked ? 'check_box' : 'check_box_outline_blank'} class="menu-check" />
+			<span class="menu-check" aria-hidden="true"></span>
 		{:else if icon}
 			<Icon name={icon} />
 		{/if}<span class="menu-item-label">{@render children()}</span>
@@ -128,8 +128,49 @@
 		color: var(--text-muted);
 		text-align: center;
 	}
-	.menu-item[aria-checked='true'] > :global(.menu-check) {
-		color: var(--accent);
+	/* The box of a checkbox item, drawn like the native checkbox the old
+	   console's menus had (accent fill and a tick when checked, --check-size).
+	   It is not a glyph: the icon font has no checkbox symbols. */
+	.menu-check {
+		display: inline-flex;
+		flex-shrink: 0;
+		align-items: center;
+		justify-content: center;
+		box-sizing: border-box;
+		width: var(--check-size);
+		height: var(--check-size);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-sm);
+		background: var(--bg);
+	}
+	/* Next to 20px icons in a mixed menu, centred in their slot */
+	:global(.menu:has(.material-icons)) .menu-check {
+		margin-inline: 2px;
+	}
+	.menu-item[aria-checked='true'] > .menu-check {
+		border-color: var(--accent);
+		background: var(--accent);
+	}
+	.menu-item[aria-checked='true'] > .menu-check::after {
+		content: '';
+		width: 30%;
+		height: 60%;
+		margin-top: -10%;
+		border: solid var(--on-accent);
+		border-width: 0 2px 2px 0;
+		transform: rotate(45deg);
+	}
+	@media (forced-colors: active) {
+		.menu-check {
+			border-color: CanvasText;
+		}
+		.menu-item[aria-checked='true'] > .menu-check {
+			background: Highlight;
+			border-color: Highlight;
+		}
+		.menu-item[aria-checked='true'] > .menu-check::after {
+			border-color: HighlightText;
+		}
 	}
 	.danger,
 	.danger:hover,

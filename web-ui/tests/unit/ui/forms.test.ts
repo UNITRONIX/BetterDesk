@@ -242,7 +242,16 @@ describe('ChoiceList', () => {
 });
 
 describe('SaveBar', () => {
-	test('the save button is primary only while there are unsaved changes', async () => {
+	test('with one save bar on the page, its button is always primary', async () => {
+		const { rerender } = render(SaveBar, { label: 'Save', dirty: false });
+		const button = screen.getByRole('button', { name: 'Save' });
+		expect(button).toHaveClass('btn-primary');
+		await rerender({ label: 'Save', dirty: true });
+		expect(button).toHaveClass('btn-primary');
+	});
+
+	test('with several, a save button is primary only while there are unsaved changes', async () => {
+		render(SaveBar, { label: 'Save other settings', dirty: false });
 		const { rerender } = render(SaveBar, { label: 'Save', dirty: false });
 		const button = screen.getByRole('button', { name: 'Save' });
 		expect(button).toHaveAttribute('type', 'submit');
@@ -253,9 +262,11 @@ describe('SaveBar', () => {
 		expect(button).toHaveClass('btn-primary');
 		expect(button.closest('.save-bar')).toHaveClass('is-dirty');
 		expect(screen.getByText('Unsaved changes')).toHaveAttribute('aria-live', 'polite');
+		expect(screen.getByRole('button', { name: 'Save other settings' })).not.toHaveClass('btn-primary');
 	});
 
 	test('a failed save keeps the button primary and shows why', async () => {
+		render(SaveBar, { label: 'Save other settings', dirty: false });
 		render(SaveBar, {
 			label: 'Save',
 			dirty: true,
@@ -266,6 +277,7 @@ describe('SaveBar', () => {
 	});
 
 	test('editing a form makes its save primary; saving makes it plain again', async () => {
+		render(SaveBar, { label: 'Save other settings', dirty: false });
 		render(FormFixture, { submit: vi.fn() });
 		const save = screen.getByRole('button', { name: 'Save' });
 		expect(save).not.toHaveClass('btn-primary');

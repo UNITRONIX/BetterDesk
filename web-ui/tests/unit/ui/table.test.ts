@@ -165,6 +165,22 @@ describe('Table: selection', () => {
 		expect(onrowclick).not.toHaveBeenCalled();
 	});
 
+	test('a click beside the select-all checkbox in its header cell toggles it', async () => {
+		render(Table<Dev>, {
+			...base,
+			rows: few,
+			columns: cols(),
+			selectable: true,
+			selectAllLabel: 'Select all'
+		});
+		const all = screen.getByRole('checkbox', { name: 'Select all' }) as HTMLInputElement;
+		await userEvent.click(document.querySelector('th.select-col')!);
+		expect(all.checked).toBe(true);
+		expect(document.querySelectorAll('tbody tr.selected')).toHaveLength(5);
+		await userEvent.click(document.querySelector('th.select-col')!);
+		expect(all.checked).toBe(false);
+	});
+
 	test('selection follows the key through re-sorting', async () => {
 		render(Table<Dev>, {
 			...base,
@@ -264,6 +280,42 @@ describe('Table: states', () => {
 		await rerender({ error: null, rows: few });
 		expect(cell()).toBeFalsy();
 		expect(names()).toHaveLength(5);
+	});
+});
+
+describe('Table: scroll box', () => {
+	test('while the table is wider than its box, the box is a focusable region named by the caption', async () => {
+		// jsdom has no layout: report sizes and run the observer by hand
+		let notify: () => void = () => {};
+		vi.stubGlobal(
+			'ResizeObserver',
+			class {
+				constructor(cb: () => void) {
+					notify = cb;
+				}
+				observe() {}
+				disconnect() {}
+			}
+		);
+		let wide = false;
+		vi.spyOn(HTMLElement.prototype, 'scrollWidth', 'get').mockImplementation(() => (wide ? 900 : 300));
+		vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockImplementation(() => 300);
+		render(Table<Dev>, { ...base, rows: few, columns: cols() });
+		const box = document.querySelector('.table-scroll')!;
+		expect(box).not.toHaveAttribute('tabindex');
+		expect(box).not.toHaveAttribute('role');
+
+		wide = true;
+		notify();
+		await tick();
+		expect(box).toHaveAttribute('tabindex', '0');
+		expect(screen.getByRole('region', { name: 'Devices' })).toBe(box);
+
+		wide = false;
+		notify();
+		await tick();
+		expect(box).not.toHaveAttribute('tabindex');
+		vi.unstubAllGlobals();
 	});
 });
 
