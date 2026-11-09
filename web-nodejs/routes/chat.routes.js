@@ -67,11 +67,12 @@ router.post('/api/chat/upload', requireAuth, chatAccess, upload.single('file'), 
 
 // Download file
 router.get('/api/chat/files/:fileId', requireAuth, chatAccess, (req, res) => {
-    const fileId = req.params.fileId.replace(/[^a-f0-9]/gi, '');
-    if (!fileId) return res.status(400).json({ success: false, error: 'Invalid file ID' });
+    // Upload ids are 16 random bytes in hex; only a whole id finds its file
+    // (a prefix used to match, so a short id walked the uploads)
+    const fileId = String(req.params.fileId).toLowerCase();
+    if (!/^[a-f0-9]{32}$/.test(fileId)) return res.status(400).json({ success: false, error: 'Invalid file ID' });
 
-    // Find file by ID prefix
-    const files = fs.readdirSync(UPLOAD_DIR).filter(f => f.startsWith(fileId));
+    const files = fs.readdirSync(UPLOAD_DIR).filter(f => f === fileId || f.startsWith(fileId + '.'));
     if (files.length === 0) {
         return res.status(404).json({ success: false, error: 'File not found' });
     }
