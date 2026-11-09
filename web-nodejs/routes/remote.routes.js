@@ -249,6 +249,14 @@ router.get('/remote/:deviceId', rdClientPageLimiter, requireRemoteAccess, async 
     } catch {
         // Database lookup failure is non-blocking - viewer can still work
     }
+    // A remote target's protocol and settings come from its record: without
+    // one there is nothing to connect to
+    if (isRemoteTarget && !device) {
+        return res.status(404).render('errors/404', {
+            title: req.t('errors.not_found_title'),
+            message: req.t('errors.not_found_message')
+        });
+    }
 
     let isOsAgent = false;
     let isCdapConnected = false;
