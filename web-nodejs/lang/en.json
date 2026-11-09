@@ -5637,7 +5637,9 @@
         "rule_match_hint_tag": "One tag, as it is set on the devices.",
         "rule_match_hint_country": "The country the devices connect from.",
         "rule_match_hint_device_id": "One device ID.",
-        "saving": "Saving…"
+        "saving": "Saving…",
+        "rule_enabled": "Rule is on",
+        "rule_enabled_hint": "A rule that is off stays in the list and is skipped."
     },
     "cross_platform": {
         "title": "Cross-Platform Compatibility",

@@ -5435,7 +5435,9 @@
         "rule_match_hint_tag": "Un tag, così come è impostato sui dispositivi.",
         "rule_match_hint_country": "Il paese da cui si connettono i dispositivi.",
         "rule_match_hint_device_id": "Un ID dispositivo.",
-        "saving": "Salvataggio…"
+        "saving": "Salvataggio…",
+        "rule_enabled": "La regola è attiva",
+        "rule_enabled_hint": "Una regola disattivata resta nell'elenco e viene saltata."
     },
     "cross_platform": {
         "title": "Compatibilità multipiattaforma",

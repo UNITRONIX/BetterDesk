@@ -5435,7 +5435,9 @@
         "rule_match_hint_tag": "Jeden štítek, jak je nastaven na zařízeních.",
         "rule_match_hint_country": "Země, ze které se zařízení připojují.",
         "rule_match_hint_device_id": "Jedno ID zařízení.",
-        "saving": "Ukládání…"
+        "saving": "Ukládání…",
+        "rule_enabled": "Pravidlo je zapnuté",
+        "rule_enabled_hint": "Vypnuté pravidlo zůstane v seznamu a přeskakuje se."
     },
     "cross_platform": {
         "title": "Meziplatformní kompatibilita",

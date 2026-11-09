@@ -5435,7 +5435,9 @@
         "rule_match_hint_tag": "Eén tag, zoals die op de apparaten staat.",
         "rule_match_hint_country": "Het land van waaruit de apparaten verbinden.",
         "rule_match_hint_device_id": "Eén apparaat-ID.",
-        "saving": "Opslaan…"
+        "saving": "Opslaan…",
+        "rule_enabled": "Regel staat aan",
+        "rule_enabled_hint": "Een regel die uit staat blijft in de lijst en wordt overgeslagen."
     },
     "cross_platform": {
         "title": "Platformonafhankelijke compatibiliteit",

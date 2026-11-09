@@ -5435,7 +5435,9 @@
         "rule_match_hint_tag": "Uma etiqueta, tal como está definida nos dispositivos.",
         "rule_match_hint_country": "O país a partir do qual os dispositivos se ligam.",
         "rule_match_hint_device_id": "Um ID de dispositivo.",
-        "saving": "A guardar…"
+        "saving": "A guardar…",
+        "rule_enabled": "A regra está ativa",
+        "rule_enabled_hint": "Uma regra desativada fica na lista e é ignorada."
     },
     "cross_platform": {
         "title": "Compatibilidade multiplataforma",

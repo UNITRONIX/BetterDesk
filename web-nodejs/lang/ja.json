@@ -5435,7 +5435,9 @@
         "rule_match_hint_tag": "デバイスに設定されているとおりのタグ 1 つです。",
         "rule_match_hint_country": "デバイスの接続元の国です。",
         "rule_match_hint_device_id": "デバイス ID 1 つです。",
-        "saving": "保存しています…"
+        "saving": "保存しています…",
+        "rule_enabled": "ルールを有効にする",
+        "rule_enabled_hint": "無効にしたルールは一覧に残り、適用されません。"
     },
     "cross_platform": {
         "title": "クロスプラットフォーム互換性",

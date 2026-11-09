@@ -5564,7 +5564,9 @@
         "rule_match_hint_tag": "Jeden tag, tak jak ustawiono go na urządzeniach.",
         "rule_match_hint_country": "Kraj, z którego łączą się urządzenia.",
         "rule_match_hint_device_id": "Jeden identyfikator urządzenia.",
-        "saving": "Zapisywanie…"
+        "saving": "Zapisywanie…",
+        "rule_enabled": "Reguła jest włączona",
+        "rule_enabled_hint": "Wyłączona reguła zostaje na liście i jest pomijana."
     },
     "cross_platform": {
         "title": "Kompatybilność wieloplatformowa",

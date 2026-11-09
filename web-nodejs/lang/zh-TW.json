@@ -5568,7 +5568,9 @@
         "rule_match_hint_tag": "一個標籤，與裝置上設定的相同。",
         "rule_match_hint_country": "裝置連線所在的國家。",
         "rule_match_hint_device_id": "一個裝置 ID。",
-        "saving": "正在儲存…"
+        "saving": "正在儲存…",
+        "rule_enabled": "規則已啓用",
+        "rule_enabled_hint": "已停用的規則會留在清單中，但會被略過。"
     },
     "cross_platform": {
         "title": "跨平臺兼容性",

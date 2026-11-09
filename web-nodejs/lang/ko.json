@@ -5435,7 +5435,9 @@
         "rule_match_hint_tag": "장치에 설정된 그대로의 태그 하나입니다.",
         "rule_match_hint_country": "장치가 연결하는 국가입니다.",
         "rule_match_hint_device_id": "장치 ID 하나입니다.",
-        "saving": "저장 중…"
+        "saving": "저장 중…",
+        "rule_enabled": "규칙 사용",
+        "rule_enabled_hint": "사용하지 않는 규칙은 목록에 남고 건너뜁니다."
     },
     "cross_platform": {
         "title": "크로스 플랫폼 호환성",

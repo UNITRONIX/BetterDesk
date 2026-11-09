@@ -5435,7 +5435,9 @@
         "rule_match_hint_tag": "Ein Tag, so wie er an den Geräten gesetzt ist.",
         "rule_match_hint_country": "Das Land, aus dem sich die Geräte verbinden.",
         "rule_match_hint_device_id": "Eine Geräte-ID.",
-        "saving": "Wird gespeichert…"
+        "saving": "Wird gespeichert…",
+        "rule_enabled": "Regel ist aktiv",
+        "rule_enabled_hint": "Eine ausgeschaltete Regel bleibt in der Liste und wird übersprungen."
     },
     "cross_platform": {
         "title": "Dashboard",

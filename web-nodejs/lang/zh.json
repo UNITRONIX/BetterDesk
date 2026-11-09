@@ -5546,7 +5546,9 @@
         "rule_match_hint_tag": "一个标签，与设备上设置的一致。",
         "rule_match_hint_country": "设备连接所在的国家。",
         "rule_match_hint_device_id": "一个设备 ID。",
-        "saving": "正在保存…"
+        "saving": "正在保存…",
+        "rule_enabled": "规则已启用",
+        "rule_enabled_hint": "已停用的规则会保留在列表中，但会被跳过。"
     },
     "cross_platform": {
         "title": "跨平台兼容性",

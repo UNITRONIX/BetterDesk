@@ -5313,7 +5313,7 @@
         "relay_search": "Buscar servidores relay",
         "relay_add": "Añadir servidor relay",
         "relay_edit": "Editar servidor relay",
-        "col_name": "Name",
+        "col_name": "Nombre",
         "col_address": "Dirección",
         "col_location": "Ubicación",
         "col_devices": "Dispositivos",
@@ -5435,7 +5435,9 @@
         "rule_match_hint_tag": "Una etiqueta, tal como está en los dispositivos.",
         "rule_match_hint_country": "El país desde el que se conectan los dispositivos.",
         "rule_match_hint_device_id": "Un ID de dispositivo.",
-        "saving": "Guardando…"
+        "saving": "Guardando…",
+        "rule_enabled": "La regla está activada",
+        "rule_enabled_hint": "Una regla desactivada se queda en la lista y se omite."
     },
     "cross_platform": {
         "title": "Panel",
