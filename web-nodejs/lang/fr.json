@@ -1955,7 +1955,7 @@
         "user_direct_devices_placeholder": "Enter device IDs separated by commas",
         "effective_scope_count": "{count} devices visible",
         "loading_folders": "Loading folders...",
-        "no_folders": "No folders available",
+        "no_folders": "Aucun dossier disponible",
         "pro_strategy_label": "Stratégie RustDesk Pro",
         "pro_strategy_hint": "Facultatif. Applique des réglages du client RustDesk Pro à cet utilisateur. Le rôle ne change pas.",
         "pro_strategy_none": "Aucune",

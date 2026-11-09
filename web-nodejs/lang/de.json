@@ -1933,7 +1933,7 @@
         "user_direct_devices_placeholder": "Enter device IDs separated by commas",
         "effective_scope_count": "{count} devices visible",
         "loading_folders": "Loading folders...",
-        "no_folders": "No folders available",
+        "no_folders": "Keine Ordner vorhanden",
         "pro_strategy_label": "RustDesk-Pro-Strategie",
         "pro_strategy_hint": "Optional. Wendet RustDesk-Pro-Client-Einstellungen auf diese Person an. Die Rolle ändert sich dadurch nicht.",
         "pro_strategy_none": "Keine",
