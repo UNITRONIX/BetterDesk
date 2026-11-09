@@ -7375,7 +7375,8 @@
         "branding_title": "Nimi, logo ja värit",
         "side_label": "Lataukset ja brändäys",
         "portal_address": "lataussivun osoite",
-        "portal_open_hint": "Näyttää sivun niin kuin käyttäjäsi sen näkevät."
+        "portal_open_hint": "Näyttää sivun niin kuin käyttäjäsi sen näkevät.",
+        "request_failed": "Pyyntöä ei voitu suorittaa."
     },
 
     "pairing": {

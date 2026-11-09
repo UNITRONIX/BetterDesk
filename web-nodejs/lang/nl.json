@@ -7369,7 +7369,8 @@
         "branding_title": "Naam, logo en kleuren",
         "side_label": "Downloads en huisstijl",
         "portal_address": "adres van de downloadpagina",
-        "portal_open_hint": "Toont de pagina zoals uw gebruikers die zien."
+        "portal_open_hint": "Toont de pagina zoals uw gebruikers die zien.",
+        "request_failed": "Het verzoek kon niet worden voltooid."
     },
 
     "pairing": {

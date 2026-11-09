@@ -7375,7 +7375,8 @@
         "branding_title": "Nama, logo, dan warna",
         "side_label": "Unduhan dan branding",
         "portal_address": "alamat halaman unduhan",
-        "portal_open_hint": "Menampilkan halaman seperti yang dilihat pengguna Anda."
+        "portal_open_hint": "Menampilkan halaman seperti yang dilihat pengguna Anda.",
+        "request_failed": "Permintaan tidak dapat diselesaikan."
     },
 
     "pairing": {

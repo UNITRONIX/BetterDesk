@@ -7375,7 +7375,8 @@
         "branding_title": "Ad, logo ve renkler",
         "side_label": "İndirmeler ve marka",
         "portal_address": "indirme sayfasının adresi",
-        "portal_open_hint": "Sayfayı kullanıcılarınızın gördüğü gibi gösterir."
+        "portal_open_hint": "Sayfayı kullanıcılarınızın gördüğü gibi gösterir.",
+        "request_failed": "İstek tamamlanamadı."
     },
 
     "pairing": {

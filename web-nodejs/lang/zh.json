@@ -7369,7 +7369,8 @@
         "branding_title": "名称、徽标和颜色",
         "side_label": "下载和品牌",
         "portal_address": "下载页面网址",
-        "portal_open_hint": "以用户看到的样子显示此页面。"
+        "portal_open_hint": "以用户看到的样子显示此页面。",
+        "request_failed": "无法完成请求。"
     },
 
     "pairing": {

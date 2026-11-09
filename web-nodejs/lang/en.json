@@ -7369,7 +7369,8 @@
         "branding_title": "Name, logo and colors",
         "side_label": "Downloads and branding",
         "portal_address": "download page address",
-        "portal_open_hint": "Shows the page as your users see it."
+        "portal_open_hint": "Shows the page as your users see it.",
+        "request_failed": "The request could not be completed."
     },
 
     "pairing": {

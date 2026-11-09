@@ -7369,7 +7369,8 @@
         "branding_title": "Nombre, logo y colores",
         "side_label": "Descargas y marca",
         "portal_address": "dirección de la página de descarga",
-        "portal_open_hint": "Muestra la página tal como la ven sus usuarios."
+        "portal_open_hint": "Muestra la página tal como la ven sus usuarios.",
+        "request_failed": "No se pudo completar la solicitud."
     },
 
     "pairing": {

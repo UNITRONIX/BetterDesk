@@ -7375,7 +7375,8 @@
         "branding_title": "Nume, logo și culori",
         "side_label": "Descărcări și branding",
         "portal_address": "adresa paginii de descărcare",
-        "portal_open_hint": "Afișează pagina așa cum o văd utilizatorii."
+        "portal_open_hint": "Afișează pagina așa cum o văd utilizatorii.",
+        "request_failed": "Cererea nu a putut fi finalizată."
     },
 
     "pairing": {

@@ -7375,7 +7375,8 @@
         "branding_title": "Név, logó és színek",
         "side_label": "Letöltések és arculat",
         "portal_address": "a letöltési oldal címe",
-        "portal_open_hint": "Úgy mutatja az oldalt, ahogy a felhasználói látják."
+        "portal_open_hint": "Úgy mutatja az oldalt, ahogy a felhasználói látják.",
+        "request_failed": "A kérést nem sikerült teljesíteni."
     },
 
     "pairing": {

@@ -7373,7 +7373,8 @@
         "branding_title": "名稱、標誌和顏色",
         "side_label": "下載與品牌",
         "portal_address": "下載頁面網址",
-        "portal_open_hint": "以使用者看到的樣子顯示此頁面。"
+        "portal_open_hint": "以使用者看到的樣子顯示此頁面。",
+        "request_failed": "無法完成要求。"
     },
 
     "pairing": {

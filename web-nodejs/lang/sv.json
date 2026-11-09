@@ -7375,7 +7375,8 @@
         "branding_title": "Namn, logotyp och färger",
         "side_label": "Nedladdningar och varumärke",
         "portal_address": "nedladdningssidans adress",
-        "portal_open_hint": "Visar sidan så som dina användare ser den."
+        "portal_open_hint": "Visar sidan så som dina användare ser den.",
+        "request_failed": "Begäran kunde inte slutföras."
     },
 
     "pairing": {

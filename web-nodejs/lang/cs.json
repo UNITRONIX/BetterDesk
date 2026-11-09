@@ -7369,7 +7369,8 @@
         "branding_title": "Název, logo a barvy",
         "side_label": "Ke stažení a branding",
         "portal_address": "adresa stránky ke stažení",
-        "portal_open_hint": "Zobrazí stránku tak, jak ji vidí vaši uživatelé."
+        "portal_open_hint": "Zobrazí stránku tak, jak ji vidí vaši uživatelé.",
+        "request_failed": "Požadavek se nepodařilo dokončit."
     },
 
     "pairing": {

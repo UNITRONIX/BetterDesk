@@ -7375,7 +7375,8 @@
         "branding_title": "Navn, logo og farver",
         "side_label": "Downloads og branding",
         "portal_address": "downloadsidens adresse",
-        "portal_open_hint": "Viser siden, som dine brugere ser den."
+        "portal_open_hint": "Viser siden, som dine brugere ser den.",
+        "request_failed": "Anmodningen kunne ikke gennemføres."
     },
 
     "pairing": {

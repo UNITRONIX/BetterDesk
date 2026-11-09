@@ -7369,7 +7369,8 @@
         "branding_title": "Name, Logo und Farben",
         "side_label": "Downloads und Branding",
         "portal_address": "Adresse der Downloadseite",
-        "portal_open_hint": "Zeigt die Seite so, wie Ihre Benutzer sie sehen."
+        "portal_open_hint": "Zeigt die Seite so, wie Ihre Benutzer sie sehen.",
+        "request_failed": "Die Anfrage konnte nicht ausgeführt werden."
     },
 
     "pairing": {

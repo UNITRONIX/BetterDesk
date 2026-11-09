@@ -7373,7 +7373,8 @@
         "branding_title": "Nom, logo et couleurs",
         "side_label": "Téléchargements et personnalisation",
         "portal_address": "adresse de la page de téléchargement",
-        "portal_open_hint": "Affiche la page telle que vos utilisateurs la voient."
+        "portal_open_hint": "Affiche la page telle que vos utilisateurs la voient.",
+        "request_failed": "La requête n'a pas pu aboutir."
     },
 
     "pairing": {

@@ -7369,7 +7369,8 @@
         "branding_title": "Nome, logótipo e cores",
         "side_label": "Transferências e marca",
         "portal_address": "endereço da página de transferência",
-        "portal_open_hint": "Mostra a página tal como os seus utilizadores a veem."
+        "portal_open_hint": "Mostra a página tal como os seus utilizadores a veem.",
+        "request_failed": "Não foi possível concluir o pedido."
     },
 
     "pairing": {

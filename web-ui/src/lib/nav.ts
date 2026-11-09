@@ -48,7 +48,8 @@ export const PORTED: readonly string[] = [
 	'/registrations',
 	'/keys',
 	'/tokens',
-	'/pairing'
+	'/pairing',
+	'/agents'
 ];
 
 /** Whether a path (no query) is one of the entries */

@@ -7375,7 +7375,8 @@
         "branding_title": "Tên, logo và màu sắc",
         "side_label": "Tải xuống và thương hiệu",
         "portal_address": "địa chỉ trang tải xuống",
-        "portal_open_hint": "Hiển thị trang như người dùng của bạn thấy."
+        "portal_open_hint": "Hiển thị trang như người dùng của bạn thấy.",
+        "request_failed": "Không thể hoàn tất yêu cầu."
     },
 
     "pairing": {

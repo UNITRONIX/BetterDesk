@@ -7375,7 +7375,8 @@
         "branding_title": "Navn, logo og farger",
         "side_label": "Nedlastinger og merkevare",
         "portal_address": "adressen til nedlastingssiden",
-        "portal_open_hint": "Viser siden slik brukerne dine ser den."
+        "portal_open_hint": "Viser siden slik brukerne dine ser den.",
+        "request_failed": "Forespørselen kunne ikke fullføres."
     },
 
     "pairing": {

@@ -7369,7 +7369,8 @@
         "branding_title": "名前、ロゴ、色",
         "side_label": "ダウンロードとブランド設定",
         "portal_address": "ダウンロードページのアドレス",
-        "portal_open_hint": "ユーザーに見える状態でページを表示します。"
+        "portal_open_hint": "ユーザーに見える状態でページを表示します。",
+        "request_failed": "リクエストを完了できませんでした。"
     },
 
     "pairing": {

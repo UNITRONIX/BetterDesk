@@ -7369,7 +7369,8 @@
         "branding_title": "이름, 로고, 색상",
         "side_label": "다운로드 및 브랜딩",
         "portal_address": "다운로드 페이지 주소",
-        "portal_open_hint": "사용자가 보는 그대로 페이지를 표시합니다."
+        "portal_open_hint": "사용자가 보는 그대로 페이지를 표시합니다.",
+        "request_failed": "요청을 완료하지 못했습니다."
     },
 
     "pairing": {
