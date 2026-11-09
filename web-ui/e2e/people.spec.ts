@@ -30,20 +30,19 @@ async function who(page: Page): Promise<Who> {
 	});
 }
 
-/** A write the page hides must fail on the server too (sent without a usable body: refused before validation) */
-async function refused(page: Page, csrf: string, method: string, path: string): Promise<number> {
-	return page.evaluate(
-		async ({ method, path, csrf }) => {
-			const r = await fetch(path, {
-				method,
-				credentials: 'same-origin',
-				headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
-				body: method === 'DELETE' ? undefined : '{}'
-			});
-			return r.status;
-		},
-		{ method, path, csrf }
-	);
+/**
+ * A write the page hides must fail on the server too. Sent through the
+ * context's request client (same cookies, not the page), so the expected
+ * 403 is not one of the page's failed requests; the body is empty, so the
+ * request is refused before any validation and changes nothing.
+ */
+async function refused(page: Page, csrf: string, method: 'POST' | 'DELETE', path: string): Promise<number> {
+	const r = await page.request.fetch(path, {
+		method,
+		headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+		data: method === 'DELETE' ? undefined : '{}'
+	});
+	return r.status();
 }
 
 const noAccess = (page: Page) =>
@@ -68,12 +67,10 @@ for (const role of ROLES) {
 			const rows = page.locator('.users-table tbody tr[data-index]');
 			await expect(rows.first()).toBeVisible();
 			const assigns = me.isSuperAdmin || me.role === 'global_admin';
-			await expect(page.getByRole('button', { name: 'Add user' })).toHaveCount(
+			await expect(page.locator('.page-actions .add-user')).toHaveCount(
 				can('user.create') && assigns ? 1 : 0
 			);
-			await expect(page.getByRole('button', { name: 'Create user group' })).toHaveCount(
-				can('user.edit') ? 1 : 0
-			);
+			await expect(page.locator('#user-groups .add-group')).toHaveCount(can('user.edit') ? 1 : 0);
 			await expectNoAxeViolations(page);
 
 			// Search narrows the list and is kept in the address
@@ -181,27 +178,23 @@ for (const role of ROLES) {
 				expect(await refused(page, me.csrf, 'POST', '/api/panel/role-permissions')).toBe(403);
 				return;
 			}
-			await expect(page.getByLabel('Role')).toHaveValue('viewer');
+			await expect(page.getByRole('combobox', { name: 'Role' })).toHaveValue('viewer');
 			await expect(page.getByRole('switch').or(page.getByRole('checkbox')).first()).toBeVisible();
 			await expectNoAxeViolations(page);
-			await page.getByLabel('Role').selectOption('operator');
+			await page.getByRole('combobox', { name: 'Role' }).selectOption('operator');
 			await expect(page).toHaveURL(/[?&]role=operator/);
 		});
 
-		test('security and audit, app usage, reports: audit.view; tabs and filters in the URL', async ({
-			page
-		}) => {
+		// Three tests: with axe at every step one would run past the 30 s test timeout
+		test('security and audit: audit.view; ?tab=, ?q= and ?type= in the URL', async ({ page }) => {
 			await page.goto(`${UI}/security-audit?tab=audit&q=login&type=signins`);
 			const me = await who(page);
 			const can = (p: string) => me.isSuperAdmin || me.permissions.includes(p);
 			if (!can('audit.view')) {
 				await expect(noAccess(page)).toBeVisible();
-				await page.goto(`${UI}/activity`);
-				await expect(noAccess(page)).toBeVisible();
-				await page.goto(`${UI}/reports`);
-				await expect(noAccess(page)).toBeVisible();
 				return;
 			}
+			await expect(page.getByRole('heading', { level: 1, name: 'Security and audit' })).toBeVisible();
 			await expect(page.getByRole('searchbox')).toHaveValue('login');
 			await expectNoAxeViolations(page);
 			for (const [tab, name] of [
@@ -215,14 +208,32 @@ for (const role of ROLES) {
 				await expect(page).not.toHaveURL(/[?&]q=/);
 				await expectNoAxeViolations(page);
 			}
+			// The old name of the Hardening tab
 			await page.goto(`${UI}/security-audit?tab=vulnerabilities`);
+			await expect(page.getByRole('heading', { level: 1, name: 'Security and audit' })).toBeVisible();
 			await expect(page.getByRole('tab', { name: 'Hardening' })).toHaveAttribute('aria-selected', 'true');
+		});
 
+		test('app usage: audit.view', async ({ page }) => {
 			await page.goto(`${UI}/activity`);
+			const me = await who(page);
+			const can = (p: string) => me.isSuperAdmin || me.permissions.includes(p);
+			if (!can('audit.view')) {
+				await expect(noAccess(page)).toBeVisible();
+				return;
+			}
 			await expect(page.getByRole('heading', { level: 1, name: 'App usage' })).toBeVisible();
 			await expectNoAxeViolations(page);
+		});
 
+		test('reports: audit.view; save only for super_admin, admin and global_admin', async ({ page }) => {
 			await page.goto(`${UI}/reports`);
+			const me = await who(page);
+			const can = (p: string) => me.isSuperAdmin || me.permissions.includes(p);
+			if (!can('audit.view')) {
+				await expect(noAccess(page)).toBeVisible();
+				return;
+			}
 			await expect(page.getByRole('heading', { level: 1, name: 'Reports' })).toBeVisible();
 			await page.getByRole('button', { name: 'Generate' }).first().click();
 			const preview = page.locator('.preview');
