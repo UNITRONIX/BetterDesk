@@ -41,6 +41,8 @@ export interface FormStatus {
 export type FieldErrors<T> = { [K in keyof T & string]?: string | undefined };
 
 export interface FormOptions<T extends object> {
+	/** The form element's id when links or scripts already point at one ("ldap-form"); generated otherwise */
+	id?: string;
 	initial: T;
 	/** Messages for refused fields; return nothing or no messages to allow the save */
 	validate?: (values: T) => FieldErrors<T> | null | undefined;
@@ -103,7 +105,7 @@ function fieldOf(err: unknown): string | null {
 
 export class Form<T extends object> {
 	/** The form element's id: for a submit button outside the form (form={form.id}) */
-	readonly id = `form-${++seq}`;
+	readonly id: string;
 	/** The values the page binds to */
 	values = $state() as T;
 	status = $state<FormStatus>({ state: 'idle', message: '' });
@@ -130,6 +132,7 @@ export class Form<T extends object> {
 	});
 
 	constructor(opts: FormOptions<T>) {
+		this.id = opts.id ?? `form-${++seq}`;
 		this.#validate = opts.validate;
 		this.#submit = opts.submit;
 		this.#savedMessage = opts.savedMessage;

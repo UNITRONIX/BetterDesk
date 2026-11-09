@@ -8,7 +8,8 @@
   the last; a click toggles it. See Menu for the keys inside. The button
   has aria-haspopup="menu", aria-expanded, and aria-controls while open.
   `align`: start (default for labelled buttons) or end (default for the row
-  menu, so it opens towards the start of the row).
+  menu, so it opens towards the start of the row). `describedby`: the id
+  of text that describes the button (aria-describedby).
 -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
@@ -28,6 +29,7 @@
 		align?: 'start' | 'end';
 		disabled?: boolean;
 		open?: boolean;
+		describedby?: string;
 		class?: string;
 		menuClass?: string;
 		children: Snippet;
@@ -42,6 +44,7 @@
 		align,
 		disabled = false,
 		open = $bindable(false),
+		describedby,
 		class: cls = '',
 		menuClass = '',
 		children
@@ -88,7 +91,8 @@
 		id: buttonId,
 		'aria-haspopup': 'menu' as const,
 		'aria-expanded': open,
-		'aria-controls': open ? menuId : undefined
+		'aria-controls': open ? menuId : undefined,
+		'aria-describedby': describedby
 	});
 </script>
 

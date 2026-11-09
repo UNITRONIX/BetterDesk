@@ -13,7 +13,8 @@
   choosing closes the menu like a plain item. `lead` draws what goes
   before the label instead of an icon (a presence dot, a flag); `lang`
   marks a label in another language.
-  `href` makes it a link (type item only).
+  `href` makes it a link (type item only); `download` marks a link to a
+  file (true, or the file name), as on Button.
 -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
@@ -27,6 +28,7 @@
 		type?: 'item' | 'checkbox' | 'radio';
 		checked?: boolean;
 		href?: string;
+		download?: boolean | string;
 		lang?: string;
 		lead?: Snippet;
 		class?: string;
@@ -41,6 +43,7 @@
 		type = 'item',
 		checked = $bindable(false),
 		href,
+		download,
 		lang,
 		lead,
 		class: cls = '',
@@ -75,6 +78,7 @@
 		role="menuitem"
 		tabindex="-1"
 		href={disabled ? undefined : href}
+		download={download === true ? '' : download || undefined}
 		aria-disabled={disabled || undefined}
 		onclick={choose}
 	>

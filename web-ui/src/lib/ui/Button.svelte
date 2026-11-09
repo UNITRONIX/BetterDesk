@@ -3,8 +3,10 @@
   variant: secondary (default, outlined), primary, ghost, danger (a dialog's
   answer), danger-quiet (a destructive action on the page), link (an action
   inside running text). size: default or sm. With href it renders a link
-  that looks like a button. icon: a meaning from ICONS before the label
-  (Connect, Add, Download, Copy, Refresh, Approve...; not on Save).
+  that looks like a button; `download` marks a link to a file (true, or the
+  file name), which the app router then leaves to the browser. icon: a
+  meaning from ICONS before the label (Connect, Add, Download, Copy,
+  Refresh, Approve...; not on Save).
 -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
@@ -18,6 +20,8 @@
 		size?: 'default' | 'sm';
 		icon?: string;
 		href?: string;
+		/** With href: the link is a file download (true, or the file name to save as) */
+		download?: boolean | string;
 		block?: boolean;
 		/** Shows the button as busy and blocks clicks (double-submit guard) */
 		busy?: boolean;
@@ -31,6 +35,7 @@
 		size = 'default',
 		icon,
 		href,
+		download,
 		block = false,
 		busy = false,
 		type = 'button',
@@ -51,7 +56,13 @@
 </script>
 
 {#if href}
-	<a bind:this={element} {href} class={classes} aria-disabled={disabled || undefined}>
+	<a
+		bind:this={element}
+		{href}
+		download={download === true ? '' : download || undefined}
+		class={classes}
+		aria-disabled={disabled || undefined}
+	>
 		{#if icon}<Icon name={icon} />{/if}{@render children()}
 	</a>
 {:else}

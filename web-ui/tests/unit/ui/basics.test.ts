@@ -4,6 +4,8 @@ import { createRawSnippet } from 'svelte';
 import { describe, expect, test, vi } from 'vitest';
 import Button from '../../../src/lib/ui/Button.svelte';
 import IconButton from '../../../src/lib/ui/IconButton.svelte';
+import MenuButton from '../../../src/lib/ui/MenuButton.svelte';
+import MenuItem from '../../../src/lib/ui/MenuItem.svelte';
 import Status from '../../../src/lib/ui/Status.svelte';
 import { openPopup, closePopups } from '../../../src/lib/ui/popups.svelte.ts';
 
@@ -27,6 +29,28 @@ describe('Button', () => {
 	test('href renders a link', () => {
 		render(Button, { href: '/devices', children: text('Devices') });
 		expect(screen.getByRole('link')).toHaveAttribute('href', '/devices');
+	});
+	test('download marks a file link, so the app router leaves it to the browser', () => {
+		render(Button, { href: '/api/mesh/download.msh', download: true, children: text('Get') });
+		expect(screen.getByRole('link', { name: 'Get' })).toHaveAttribute('download', '');
+		render(Button, { href: '/api/key', download: 'key.pub', children: text('Key') });
+		expect(screen.getByRole('link', { name: 'Key' })).toHaveAttribute('download', 'key.pub');
+		render(Button, { href: '/devices', children: text('Devices') });
+		expect(screen.getByRole('link', { name: 'Devices' })).not.toHaveAttribute('download');
+	});
+});
+
+describe('MenuButton', () => {
+	test('describedby reaches the button (Connect described by the request it answers)', () => {
+		render(MenuButton, { label: 'Connect', describedby: 'hr-msg-4', children: text('x') });
+		expect(screen.getByRole('button', { name: 'Connect' })).toHaveAttribute('aria-describedby', 'hr-msg-4');
+	});
+});
+
+describe('MenuItem', () => {
+	test('a link item takes download the same way', () => {
+		render(MenuItem, { href: '/api/recordings/1/download', download: true, children: text('Recording') });
+		expect(screen.getByRole('menuitem', { name: 'Recording' })).toHaveAttribute('download', '');
 	});
 });
 

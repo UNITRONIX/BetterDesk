@@ -517,6 +517,11 @@ describe('Disclosure, Notice, States', () => {
 		expect(details.open).toBe(true);
 	});
 
+	test('a disclosure takes an id, so a link can jump to it', () => {
+		render(Disclosure, { id: 'ldap-attrs', title: 'Attributes', children: text('Inside') });
+		expect(document.querySelector('details')).toHaveAttribute('id', 'ldap-attrs');
+	});
+
 	test('a notice shows its tone as a class and its message as text', () => {
 		render(Notice, { tone: 'danger', message: '<b>x</b>' });
 		expect(screen.getByText('<b>x</b>').closest('.notice')).toHaveClass('is-danger');

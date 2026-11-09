@@ -337,6 +337,11 @@ describe('FormStatus, FormSection, DangerZone, CountLine', () => {
 describe('form helper', () => {
 	const initial = { name: 'a', port: 1, tags: ['x'] };
 
+	test('the form id is generated, or the one given (a form with an id links point at)', () => {
+		expect(createForm({ initial, submit: vi.fn() }).id).toMatch(/^form-\d+$/);
+		expect(createForm({ id: 'ldap-form', initial, submit: vi.fn() }).id).toBe('ldap-form');
+	});
+
 	test('dirty follows the values, also back to the start', () => {
 		const form = createForm({ initial, submit: vi.fn() });
 		expect(form.dirty).toBe(false);

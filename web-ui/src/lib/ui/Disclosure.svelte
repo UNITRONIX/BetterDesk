@@ -2,12 +2,14 @@
   A section that starts closed (components.css "Disclosure"): a native
   details/summary with the sidebar's chevron and a heading in the summary.
   `open` (bindable) opens it; `meta`: a short muted note at the end of the
-  summary ("3 rules"). `level`: the heading level (2 by default).
+  summary ("3 rules"). `level`: the heading level (2 by default). `id`
+  goes on the details element, for links that jump to the section.
 -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 
 	interface Props {
+		id?: string;
 		title: string;
 		meta?: string;
 		level?: 2 | 3 | 4;
@@ -18,6 +20,7 @@
 	}
 
 	let {
+		id,
 		title,
 		meta,
 		level = 2,
@@ -28,7 +31,7 @@
 	}: Props = $props();
 </script>
 
-<details class={['disclosure', cls]} bind:open ontoggle={() => ontoggle?.(open)}>
+<details {id} class={['disclosure', cls]} bind:open ontoggle={() => ontoggle?.(open)}>
 	<summary>
 		<svelte:element this={`h${level}`} class="disclosure-title">{title}</svelte:element>
 		{#if meta}<span class="summary-meta">{meta}</span>{/if}
