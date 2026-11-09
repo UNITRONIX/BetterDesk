@@ -44,7 +44,8 @@ for (const role of ROLES) {
 			await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 			const { can, nav } = await boot(page);
 			await expect(main(page).getByRole('heading', { name: /Client setup/ })).toBeVisible();
-			await expect(main(page).getByRole('search')).toHaveCount(can('device.view') ? 1 : 0);
+			// Devices are found with the top bar's search; the page has none of its own
+			await expect(main(page).getByRole('search')).toHaveCount(0);
 			await expect(page.locator('.devices-now')).toHaveCount(can('device.view') ? 1 : 0);
 			await expect(main(page).getByRole('button', { name: 'Activate support agent' })).toHaveCount(
 				can('enrollment.approve') ? 1 : 0
@@ -80,13 +81,6 @@ for (const role of ROLES) {
 			await expect(page.getByRole('dialog').getByRole('img')).toBeVisible();
 			await expectNoAxeViolations(page);
 			await page.keyboard.press('Escape');
-
-			// Find a device goes to the device list with the search
-			if (can('device.view')) {
-				await main(page).getByRole('searchbox').fill('demo');
-				await main(page).getByRole('button', { name: 'Search', exact: true }).click();
-				await expect(page).toHaveURL(/\/devices\?search=demo/);
-			}
 		});
 
 		test('overview: ?activateAgent=1 opens the activation only for enrollment.approve', async ({ page }) => {

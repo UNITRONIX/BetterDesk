@@ -58,7 +58,6 @@
 	import MenuItem from '#lib/ui/MenuItem.svelte';
 	import Notice from '#lib/ui/Notice.svelte';
 	import RowList from '#lib/ui/RowList.svelte';
-	import SearchField from '#lib/ui/SearchField.svelte';
 	import ShareBar from '#lib/ui/ShareBar.svelte';
 	import States from '#lib/ui/States.svelte';
 	import Status from '#lib/ui/Status.svelte';
@@ -233,26 +232,6 @@
 	<div class="page-head">
 		<h1>{t('nav.dashboard')}</h1>
 		<p class="page-description">{t('dashboard.page_intro')}</p>
-		{#if canDevices}
-			<!-- The most common job: someone reads out an ID or a name -->
-			<form
-				class="find page-actions"
-				role="search"
-				aria-label={t('dashboard.find_device')}
-				method="get"
-				action={link('/devices')}
-			>
-				<SearchField
-					class="find-field"
-					name="search"
-					label={t('dashboard.find_device')}
-					placeholder={t('dashboard.find_device_long')}
-					autocomplete="off"
-					spellcheck={false}
-				/>
-				<Button type="submit">{t('dashboard.find_device_button')}</Button>
-			</form>
-		{/if}
 	</div>
 
 	<div class="page-cols">
@@ -533,22 +512,6 @@
 {/if}
 
 <style>
-	/* Find a device: in the page head, on the title's line on wide screens */
-	.find {
-		flex: 0 1 34rem;
-		flex-wrap: nowrap;
-		min-width: 0;
-	}
-	.find > :global(.find-field) {
-		flex: 1;
-		min-width: 0;
-	}
-	@media (max-width: 640px) {
-		.find {
-			flex-basis: 100%;
-		}
-	}
-
 	/* The counts keep their place while they load */
 	.devices-body {
 		display: flex;

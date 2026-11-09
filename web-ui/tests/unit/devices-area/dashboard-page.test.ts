@@ -122,7 +122,8 @@ describe('overview per permission', () => {
 		as(['device.view']);
 		render(Page, early());
 		await settle();
-		expect(screen.getByRole('search')).toBeInTheDocument();
+		// Devices are found with the top bar's search; the page has none of its own
+		expect(screen.queryByRole('search')).toBeNull();
 		const banned = within(attention()).getByRole('link', { name: /dashboard\.banned/ });
 		expect(banned).toHaveAttribute('href', '/app/devices?status=banned');
 		expect(banned).toHaveTextContent('2');
