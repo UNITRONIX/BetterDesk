@@ -13,6 +13,9 @@ import { UI } from './roles.ts';
 const BUILD = process.env.BD_UI_BUILD ?? 'build';
 const results: Record<string, unknown> = {};
 
+// One measurement at a time: page loads running side by side slow each other down
+test.describe.configure({ mode: 'serial' });
+
 test.afterAll(() => {
 	fs.mkdirSync('test-results', { recursive: true });
 	const file = 'test-results/perf.json';
@@ -55,7 +58,13 @@ for (const page of ['/', '/devices']) {
 		});
 		const p = await ctx.newPage();
 		await p.addInitScript(observe);
-		await p.goto(UI + page, { waitUntil: 'networkidle' });
+		// SvelteKit preloads the page of a link under the pointer. A new page has the
+		// pointer at the top left, on the logo link (the overview), so the overview's
+		// code would count against this page. Move it to an empty spot of the top bar
+		// once the navigation has committed, before the shell draws.
+		await p.goto(UI + page, { waitUntil: 'commit' });
+		await p.mouse.move(700, 24);
+		await p.waitForLoadState('networkidle');
 		await p.waitForTimeout(500);
 		const m = await p.evaluate(() => {
 			const w = window as unknown as { __perf: { lcp: number; cls: number } };
