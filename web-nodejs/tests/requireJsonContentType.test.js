@@ -3,32 +3,8 @@
 const request = require('supertest');
 const { createTestApp } = require('./helpers');
 
-/**
- * Mirrors routes/index.js requireJsonContentType — keep in sync when exemptions change.
- */
-function requireJsonContentType(req, res, next) {
-    if (['GET', 'DELETE', 'OPTIONS', 'HEAD'].includes(req.method)) {
-        return next();
-    }
-    if (!req.path.startsWith('/api/')) {
-        return next();
-    }
-    if (req.path.includes('/upload') || req.path.includes('/import')) {
-        return next();
-    }
-    // Disaster-recovery restore uploads multipart/form-data (field "backup").
-    // Do not exempt /api/settings/updates/restore — that endpoint is JSON-only.
-    if (req.path === '/api/settings/restore') {
-        return next();
-    }
-    if (!req.is('application/json')) {
-        return res.status(415).json({
-            success: false,
-            error: 'Content-Type must be application/json',
-        });
-    }
-    next();
-}
+// The middleware routes/index.js uses
+const { requireJsonContentType } = require('../lib/requireJsonContentType');
 
 describe('requireJsonContentType (#473)', () => {
     let app;
@@ -42,6 +18,9 @@ describe('requireJsonContentType (#473)', () => {
         app.post('/api/settings/updates/restore', (req, res) => {
             res.json({ success: true, reached: 'updates-restore' });
         });
+        app.post('/api/generator/module/install-local', (req, res) => {
+            res.json({ success: true, reached: 'install-local' });
+        });
         app.post('/api/settings/email/smtp/test', (req, res) => {
             res.json({ success: true, reached: 'smtp' });
         });
@@ -53,6 +32,14 @@ describe('requireJsonContentType (#473)', () => {
             .attach('backup', Buffer.from('{"_format":"betterdesk-backup"}'), 'backup.json');
         expect(res.status).toBe(200);
         expect(res.body.reached).toBe('restore');
+    });
+
+    it('allows the multipart module archive upload (A3)', async () => {
+        const res = await request(app)
+            .post('/api/generator/module/install-local')
+            .attach('archive', Buffer.from('PK'), 'module.zip');
+        expect(res.status).toBe(200);
+        expect(res.body.reached).toBe('install-local');
     });
 
     it('still requires JSON for /api/settings/updates/restore', async () => {

@@ -64,37 +64,8 @@ const pairingRoutes = lazyRoute('./pairing.routes');
 const serverManagementRoutes = lazyRoute('./server-management.routes');
 const serverAttestationRoutes = lazyRoute('./server-attestation.routes');
 
-/**
- * Middleware to require JSON Content-Type for POST/PATCH/PUT requests to API routes.
- * This provides an additional layer of CSRF protection.
- */
-function requireJsonContentType(req, res, next) {
-    // Skip for GET, DELETE, OPTIONS, HEAD
-    if (['GET', 'DELETE', 'OPTIONS', 'HEAD'].includes(req.method)) {
-        return next();
-    }
-    // Skip for non-API routes (form submissions, file uploads)
-    if (!req.path.startsWith('/api/')) {
-        return next();
-    }
-    // Skip for specific routes that accept form data (file uploads)
-    if (req.path.includes('/upload') || req.path.includes('/import')) {
-        return next();
-    }
-    // Disaster-recovery restore uploads multipart/form-data (field "backup").
-    // Do not exempt /api/settings/updates/restore — that endpoint is JSON-only.
-    if (req.path === '/api/settings/restore') {
-        return next();
-    }
-    // Check Content-Type
-    if (!req.is('application/json')) {
-        return res.status(415).json({ 
-            success: false, 
-            error: 'Content-Type must be application/json' 
-        });
-    }
-    next();
-}
+// JSON-only writes to /api/* (lib/requireJsonContentType.js)
+const { requireJsonContentType } = require('../lib/requireJsonContentType');
 
 // Apply JSON content type check middleware
 router.use(requireJsonContentType);
