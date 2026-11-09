@@ -161,9 +161,9 @@ const BOOT_SCRIPT = `(function (boot) {
     if (sat !== 100) filters.push('saturate(' + sat + '%)');
     root.dataset.a11yFiltered = String(filters.length > 0);
     root.style.setProperty('--bd-a11y-visual-filter', filters.length ? filters.join(' ') : 'none');
-    // Sidebar width (same key as the old shell), so the layout does not jump on load
+    // Sidebar width (same key and 200-320 px range as the shell), so the layout does not jump on load
     var sw = parseInt(get('bd_ux35_sidebar_width') || '', 10);
-    if (sw >= 180 && sw <= 480) root.style.setProperty('--sidebar-w', sw + 'px');
+    if (sw > 0) root.style.setProperty('--sidebar-w', Math.min(320, Math.max(200, sw)) + 'px');
     window.__BD_BOOT__ = boot;
     // Start both requests now, before the app's modules load
     var opts = { credentials: 'same-origin', headers: { Accept: 'application/json' } };

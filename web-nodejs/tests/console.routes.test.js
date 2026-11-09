@@ -217,6 +217,15 @@ describe('GET /console-boot.js', () => {
         expect(out.props['--sidebar-w']).toBe('300px');
     });
 
+    test('keeps a saved sidebar width within the shell range of 200 to 320 px', async () => {
+        const res = await request(appWith(null)).get('/console-boot.js');
+        const width = (saved) => run(res.text, { bd_ux35_sidebar_width: saved }).props['--sidebar-w'];
+        expect(width('480')).toBe('320px');
+        expect(width('180')).toBe('200px');
+        expect(width('250')).toBe('250px');
+        expect(width('wide')).toBeUndefined();
+    });
+
     test('follows the system theme in system mode and survives blocked storage', async () => {
         const res = await request(appWith(null)).get('/console-boot.js');
         const src = res.text;
