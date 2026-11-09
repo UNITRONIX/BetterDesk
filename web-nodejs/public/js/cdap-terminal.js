@@ -10,7 +10,8 @@
     const XTERM_VERSION = '5.5.0';
     const XTERM_CSS_URL = `https://cdn.jsdelivr.net/npm/@xterm/xterm@${XTERM_VERSION}/css/xterm.min.css`;
     const XTERM_JS_URL = `https://cdn.jsdelivr.net/npm/@xterm/xterm@${XTERM_VERSION}/lib/xterm.min.js`;
-    const XTERM_FIT_URL = `https://cdn.jsdelivr.net/npm/@xterm/addon-fit@${XTERM_VERSION}/lib/addon-fit.min.js`;
+    // addon-fit has its own version line (0.10.0 goes with xterm 5.5.0)
+    const XTERM_FIT_URL = 'https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0.10.0/lib/addon-fit.min.js';
 
     let xtermLoaded = false;
     let xtermLoading = null;
