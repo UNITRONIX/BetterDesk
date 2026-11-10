@@ -2,7 +2,10 @@
   Console users (/users): the accounts that can sign in, their role, which
   devices and organizations each can reach, and the user groups that share
   device access. A click on a row edits the account (or, without
-  user.edit, shows its organizations).
+  user.edit, shows its organizations). Panel access (which console
+  sections an account or a group may read or change, and its client
+  features) opens from the row menus in a sheet: read-only with user.view,
+  editable with user.edit.
 
   Data: GET /api/users (one list), then per account its device count
   (/effective-scope) and organizations, four at a time; GET
@@ -32,7 +35,8 @@
 		type UserGroupRow,
 		type UserOrg
 	} from '#lib/api/users.ts';
-	import { plural, t } from '#lib/i18n/i18n.svelte.ts';
+	import type { AccessSubject } from '#lib/api/access.ts';
+	import { plural, t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import { link } from '#lib/nav.ts';
 	import NoAccess from '#lib/shell/NoAccess.svelte';
 	import {
@@ -49,7 +53,6 @@
 	import BooleanStatus from '#lib/ui/BooleanStatus.svelte';
 	import Button from '#lib/ui/Button.svelte';
 	import CountLine from '#lib/ui/CountLine.svelte';
-	import Disclosure from '#lib/ui/Disclosure.svelte';
 	import Empty from '#lib/ui/Empty.svelte';
 	import ListRow from '#lib/ui/ListRow.svelte';
 	import MenuButton from '#lib/ui/MenuButton.svelte';
@@ -67,6 +70,7 @@
 	import type { Column, SortState } from '#lib/ui/table.ts';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
 	import { ICONS } from '#lib/util/display.ts';
+	import AccessSheet from './AccessSheet.svelte';
 	import ResetPasswordDialog from './ResetPasswordDialog.svelte';
 	import UserGroupDialog from './UserGroupDialog.svelte';
 	import UserOrgsSheet from './UserOrgsSheet.svelte';
@@ -208,6 +212,7 @@
 	let resetFor = $state.raw<ConsoleUser | null>(null);
 	let orgsFor = $state.raw<ConsoleUser | null>(null);
 	let groupDialog = $state<{ group: UserGroupRow | null } | null>(null);
+	let accessFor = $state.raw<{ subject: AccessSubject; name: string; role?: string } | null>(null);
 
 	function openRow(u: ConsoleUser) {
 		if (canEdit) editing = { user: u };
@@ -371,33 +376,33 @@
 {#snippet actionsCell(u: ConsoleUser)}
 	{@const self = String(u.id) === meId}
 	{@const local = providerOf(u) === 'local'}
-	{#if !canEdit && !(canDelete && !self)}
-		<Button size="sm" onclick={() => (orgsFor = u)}
-			>{t('users.organizations')}<span class="sr-only"> {u.username}</span></Button
-		>
-	{:else}
-		<MenuButton kebab label={t('users.actions_for', { username: u.username })}>
-			{#if canEdit}
-				<MenuItem class="act-edit" icon={ICONS.edit} onselect={() => (editing = { user: u })}
-					>{t('users.edit')}</MenuItem
-				>
-				{#if local}
-					<MenuItem class="act-reset" icon={ICONS.password} onselect={() => (resetFor = u)}
-						>{t('users.reset_password_menu')}</MenuItem
-					>
-				{/if}
-			{/if}
-			<MenuItem class="act-orgs" icon={ICONS.organization} onselect={() => (orgsFor = u)}
-				>{t('users.organizations_menu')}</MenuItem
+	<MenuButton kebab label={t('users.actions_for', { username: u.username })}>
+		{#if canEdit}
+			<MenuItem class="act-edit" icon={ICONS.edit} onselect={() => (editing = { user: u })}
+				>{t('users.edit')}</MenuItem
 			>
-			{#if canDelete && !self}
-				<MenuDivider />
-				<MenuItem class="act-delete" icon={ICONS.delete} danger onselect={() => void removeUser(u)}
-					>{t('users.delete_menu')}</MenuItem
+			{#if local}
+				<MenuItem class="act-reset" icon={ICONS.password} onselect={() => (resetFor = u)}
+					>{t('users.reset_password_menu')}</MenuItem
 				>
 			{/if}
-		</MenuButton>
-	{/if}
+		{/if}
+		<MenuItem class="act-orgs" icon={ICONS.organization} onselect={() => (orgsFor = u)}
+			>{t('users.organizations_menu')}</MenuItem
+		>
+		<MenuItem
+			class="act-access"
+			icon={ICONS.access_policy}
+			onselect={() => (accessFor = { subject: { kind: 'user', id: u.id }, name: u.username, role: u.role })}
+			>{tf('users.access_menu', 'Panel access…')}</MenuItem
+		>
+		{#if canDelete && !self}
+			<MenuDivider />
+			<MenuItem class="act-delete" icon={ICONS.delete} danger onselect={() => void removeUser(u)}
+				>{t('users.delete_menu')}</MenuItem
+			>
+		{/if}
+	</MenuButton>
 {/snippet}
 
 {#if !allowed}
@@ -496,18 +501,32 @@
 											kebab
 											label={t('users.group_actions_for', { name: g.name || g.guid })}
 										>
-											<MenuItem icon={ICONS.edit} onselect={() => (groupDialog = { group: g })}
-												>{t('users.edit')}</MenuItem
+											<MenuItem
+												class="act-access"
+												icon={ICONS.access_policy}
+												onselect={() =>
+													(accessFor = { subject: { kind: 'group', guid: g.guid }, name: g.name || g.guid })}
+												>{tf('users.access_menu', 'Panel access…')}</MenuItem
 											>
-											<MenuDivider />
-											<MenuItem icon={ICONS.delete} danger onselect={() => void removeGroup(g)}
-												>{t('actions.delete')}</MenuItem
-											>
+											{#if canEdit}
+												<MenuItem
+													class="act-edit"
+													icon={ICONS.edit}
+													onselect={() => (groupDialog = { group: g })}>{t('users.edit')}</MenuItem
+												>
+												<MenuDivider />
+												<MenuItem
+													class="act-delete"
+													icon={ICONS.delete}
+													danger
+													onselect={() => void removeGroup(g)}>{t('actions.delete')}</MenuItem
+												>
+											{/if}
 										</MenuButton>{/snippet}
 									<ListRow
 										title={g.name || g.guid}
 										sub={g.note ? `${members}, ${g.note}` : members}
-										actions={canEdit ? groupMenu : undefined}
+										actions={groupMenu}
 									/>
 								{/each}
 							</RowList>
@@ -529,15 +548,6 @@
 							{#if session.isSuperAdmin}<a href={link('/permissions')}>{t('users.roles_change_link')}</a>{/if}
 						</p>
 					</section>
-
-					<Disclosure title={t('users.security_tips_title')}>
-						<ul class="tips">
-							<li>{t('users.tip_unique_accounts')}</li>
-							<li>{t('users.tip_strong_passwords')}</li>
-							<li>{t('users.tip_least_role')}</li>
-							<li>{t('users.tip_audit_logs')}</li>
-						</ul>
-					</Disclosure>
 				</aside>
 			{/if}
 		</div>
@@ -567,6 +577,16 @@
 			user={orgsFor}
 			onclose={() => (orgsFor = null)}
 			onchanged={(orgs) => orgsFor && userOrgs.set(String(orgsFor.id), orgs)}
+		/>
+	{/if}
+
+	{#if accessFor}
+		<AccessSheet
+			subject={accessFor.subject}
+			name={accessFor.name}
+			role={accessFor.role}
+			{roleLabel}
+			onclose={() => (accessFor = null)}
 		/>
 	{/if}
 
@@ -625,13 +645,6 @@
 		margin: 0;
 		color: var(--text-muted);
 		font-size: var(--text-sm);
-	}
-	.tips {
-		margin: 0;
-		padding-inline-start: var(--space-5);
-	}
-	.tips li + li {
-		margin-top: var(--space-1);
 	}
 	h2[tabindex='-1']:focus {
 		outline: none;

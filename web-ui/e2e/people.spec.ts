@@ -4,7 +4,9 @@
  * role that may not open a page gets the "no access" page and no failed
  * request, the URL keeps the page's state, and axe finds nothing in the
  * page or in the opened menus, sheets and dialogs. Every hidden write is
- * also refused by the server (403). Nothing here changes data.
+ * also refused by the server (403). Only the admin run changes data: it
+ * saves panel access for e2e_viewer (settings that change nothing for that
+ * role) and for a user group it creates, and puts both back afterwards.
  */
 import type { Page } from '@playwright/test';
 import { test, expect, expectNoAxeViolations } from './fixtures.ts';
@@ -36,13 +38,22 @@ async function who(page: Page): Promise<Who> {
  * 403 is not one of the page's failed requests; the body is empty, so the
  * request is refused before any validation and changes nothing.
  */
-async function refused(page: Page, csrf: string, method: 'POST' | 'DELETE', path: string): Promise<number> {
-	const r = await page.request.fetch(path, {
+async function refused(
+	page: Page,
+	csrf: string,
+	method: 'POST' | 'PUT' | 'DELETE',
+	path: string
+): Promise<number> {
+	return (await send(page, csrf, method, path, method === 'DELETE' ? undefined : {})).status();
+}
+
+/** A request with the page's session, outside the page (see refused) */
+function send(page: Page, csrf: string, method: string, path: string, body?: unknown) {
+	return page.request.fetch(path, {
 		method,
 		headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
-		data: method === 'DELETE' ? undefined : '{}'
+		data: body === undefined ? undefined : JSON.stringify(body)
 	});
-	return r.status();
 }
 
 const noAccess = (page: Page) =>
@@ -80,18 +91,15 @@ for (const role of ROLES) {
 
 			// The row's actions
 			const row = rows.first();
-			if (can('user.edit') || can('user.delete')) {
-				await row.getByRole('button', { name: /More actions for/ }).click();
-				const menu = page.getByRole('menu');
-				await expect(menu.locator('.act-edit')).toHaveCount(can('user.edit') ? 1 : 0);
-				await expect(menu.locator('.act-delete')).toHaveCount(can('user.delete') ? 1 : 0);
-				await expect(menu.locator('.act-orgs')).toHaveCount(1);
-				await expectNoAxeViolations(page);
-				await page.keyboard.press('Escape');
-				await expect(menu).toBeHidden();
-			} else {
-				await expect(row.getByRole('button', { name: /Organizations/ })).toBeVisible();
-			}
+			await row.getByRole('button', { name: 'More actions for e2e_viewer' }).click();
+			const menu = page.getByRole('menu');
+			await expect(menu.locator('.act-edit')).toHaveCount(can('user.edit') ? 1 : 0);
+			await expect(menu.locator('.act-delete')).toHaveCount(can('user.delete') ? 1 : 0);
+			await expect(menu.locator('.act-orgs')).toHaveCount(1);
+			await expect(menu.locator('.act-access')).toHaveCount(1);
+			await expectNoAxeViolations(page);
+			await page.keyboard.press('Escape');
+			await expect(menu).toBeHidden();
 
 			// A click on the row: the edit sheet, or the organizations sheet without user.edit
 			await row.locator('.row-open').click();
@@ -107,6 +115,136 @@ for (const role of ROLES) {
 
 			await page.goto(`${UI}/users#user-groups`);
 			await expect(page.locator('#user-groups')).toBeInViewport();
+		});
+
+		test('users: panel access is read-only with user.view, editable with user.edit, absent without', async ({
+			page
+		}) => {
+			await page.goto(`${UI}/users`);
+			const me = await who(page);
+			const can = (p: string) => me.isSuperAdmin || me.permissions.includes(p);
+			if (!can('user.view')) {
+				await expect(noAccess(page)).toBeVisible();
+				await expect(page.locator('.access-sheet')).toHaveCount(0);
+				expect((await page.request.get('/api/panel/access/catalog')).status()).toBe(403);
+				expect(await refused(page, me.csrf, 'PUT', '/api/panel/access/users/1')).toBe(403);
+				return;
+			}
+			// The good practice card is gone (upstream dropped it)
+			await expect(page.getByText('Good practice for accounts')).toHaveCount(0);
+
+			const rows = page.locator('.users-table tbody tr[data-index]');
+			const sheet = page.getByRole('dialog');
+			const section = (key: string) => sheet.locator(`[data-access="${key}"]`);
+			const feature = (key: string) => sheet.locator(`[data-feature="${key}"]`);
+			const openFor = async (menuLabel: string) => {
+				await page.getByRole('button', { name: menuLabel }).click();
+				await page.getByRole('menu').locator('.act-access').click();
+				await expect(section('devices')).toBeVisible();
+			};
+			const searchViewer = async () => {
+				await page.getByRole('searchbox', { name: 'Search users' }).fill('e2e_viewer');
+				await expect(rows).toHaveCount(1);
+			};
+			await searchViewer();
+
+			if (!can('user.edit')) {
+				await openFor('More actions for e2e_viewer');
+				await expect(sheet).toContainText('Panel access for e2e_viewer');
+				await expect(section('devices')).toContainText('Now:');
+				await expect(sheet.getByRole('combobox')).toHaveCount(0);
+				await expect(sheet.locator('[data-access^="group:"]')).toHaveCount(0);
+				await expect(sheet.locator('.sheet-footer button')).toHaveText(['Close']);
+				await expect(feature('client_actions')).toContainText('Always off');
+				await expectNoAxeViolations(page);
+				await page.keyboard.press('Escape');
+				await expect(sheet).toBeHidden();
+				expect(await refused(page, me.csrf, 'PUT', '/api/panel/access/users/1')).toBe(403);
+				return;
+			}
+
+			test.slow(me.role === 'admin', 'two save and reload round trips');
+			if (me.role !== 'admin') {
+				// Editable, but only the admin run saves, so parallel runs never write the same policy
+				await openFor('More actions for e2e_viewer');
+				await expect(section('group:core').getByRole('combobox')).toBeVisible();
+				await expect(section('devices').getByRole('combobox')).toBeVisible();
+				await expect(feature('tunnel').getByRole('combobox')).toBeVisible();
+				await expect(feature('client_actions').getByRole('combobox')).toHaveCount(0);
+				await expect(feature('client_actions')).toContainText('Always off');
+				await expectNoAxeViolations(page);
+				await page.keyboard.press('Escape');
+				await expect(sheet).toBeHidden();
+				return;
+			}
+
+			// A user: settings that change nothing for e2e_viewer, whose role already gives none there
+			const [loaded] = await Promise.all([
+				page.waitForResponse(
+					(r) => /\/api\/panel\/access\/users\/\d+$/.test(r.url()) && r.request().method() === 'GET'
+				),
+				openFor('More actions for e2e_viewer')
+			]);
+			const userPath = new URL(loaded.url()).pathname;
+			const before = (await loaded.json()).data as { sections: unknown[]; features: unknown[] };
+			try {
+				await section('users').getByRole('combobox').selectOption('none');
+				await section('group:system').getByRole('combobox').selectOption('none');
+				await feature('privacy_mode').getByRole('combobox').selectOption('off');
+				await expectNoAxeViolations(page);
+				await sheet.getByRole('button', { name: 'Save' }).click();
+				await expect(sheet).toContainText('Panel access saved.');
+				await expect(section('users')).toContainText('Now: None, set for this person');
+				await page.keyboard.press('Escape');
+				await expect(sheet).toBeHidden();
+
+				await page.reload();
+				await searchViewer();
+				await openFor('More actions for e2e_viewer');
+				await expect(section('users').getByRole('combobox')).toHaveValue('none');
+				await expect(section('group:system').getByRole('combobox')).toHaveValue('none');
+				await expect(feature('privacy_mode').getByRole('combobox')).toHaveValue('off');
+				await expect(section('devices').getByRole('combobox')).toHaveValue('inherit');
+				await page.keyboard.press('Escape');
+				await expect(sheet).toBeHidden();
+			} finally {
+				const r = await send(page, me.csrf, 'PUT', userPath, {
+					sections: before.sections,
+					features: before.features
+				});
+				expect(r.status()).toBe(200);
+			}
+
+			// A user group: a new one without members, removed afterwards
+			const name = `e2e access ${Date.now()}`;
+			const created = await send(page, me.csrf, 'POST', '/api/panel/user-groups', { name });
+			expect(created.status()).toBe(200);
+			const guid = ((await created.json()).data.group as { guid: string }).guid;
+			try {
+				await page.goto(`${UI}/users#user-groups`);
+				await openFor(`More actions for ${name}`);
+				await expect(sheet).toContainText(`Panel access for ${name}`);
+				await section('reports').getByRole('combobox').selectOption('read');
+				await section('group:security').getByRole('combobox').selectOption('none');
+				await feature('tunnel').getByRole('combobox').selectOption('off');
+				await sheet.getByRole('button', { name: 'Save' }).click();
+				await expect(sheet).toContainText('Panel access saved.');
+				await expect(section('reports')).toContainText('Now: Read, set for this group');
+				await page.keyboard.press('Escape');
+				await expect(sheet).toBeHidden();
+
+				await page.reload();
+				await openFor(`More actions for ${name}`);
+				await expect(section('reports').getByRole('combobox')).toHaveValue('read');
+				await expect(section('group:security').getByRole('combobox')).toHaveValue('none');
+				await expect(feature('tunnel').getByRole('combobox')).toHaveValue('off');
+				await expect(section('devices').getByRole('combobox')).toHaveValue('inherit');
+				await page.keyboard.press('Escape');
+				await expect(sheet).toBeHidden();
+			} finally {
+				// Deleting the group removes its policy too
+				expect((await send(page, me.csrf, 'DELETE', `/api/panel/user-groups/${guid}`)).status()).toBe(200);
+			}
 		});
 
 		test('organizations: create, edit and delete by org.*; the detail tabs follow the hash', async ({
