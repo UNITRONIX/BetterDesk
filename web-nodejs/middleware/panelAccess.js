@@ -89,6 +89,10 @@ function panelAccessGuard(req, res, next) {
     const rule = findRule(req.path);
     if (!rule || !req.session?.userId || !req.session.user) return next();
     req.panelAccessSection = rule.section;
+    // A page is the web app (web-ui): its HTML holds no data, and the app shows its own
+    // no-access view from the policy in the bootstrap, as it does when moving between
+    // pages. Every API call stays guarded.
+    if (!req.path.startsWith('/api/') && (req.method === 'GET' || req.method === 'HEAD')) return next();
     if (req.panelAccessPolicyLoadError) {
         if (req.path.startsWith('/api/')) {
             return res.status(503).json({
