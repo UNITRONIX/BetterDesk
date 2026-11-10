@@ -1,0 +1,192 @@
+<%
+    /*
+     * UX 3.6 top bar — structure and classes from the redesign by @rathlinus
+     * (issue #493 / PR #495), wired to the current console: same ids as UX 3.5
+     * so ux35-shell.js keeps owning theme, drawer and menus.
+     *
+     * Layout: the logo occupies the sidebar's width, so the brand column and
+     * the navigation column read as one block; the breadcrumb starts on the
+     * content's edge.
+     */
+    const _topNav = (typeof buildConsoleNav === 'function')
+        ? buildConsoleNav(
+            (typeof currentPage !== 'undefined' ? currentPage : ''),
+            (typeof consoleTab !== 'undefined' ? consoleTab : ''),
+            typeof activateAgentNav !== 'undefined' && activateAgentNav
+        )
+        : { sections: [] };
+
+    const _crumbs = [];
+    if (_topNav.activeSection) _crumbs.push({ label: _topNav.activeSection.label });
+    const _pageCrumbs = (typeof breadcrumb !== 'undefined' && breadcrumb && breadcrumb.length)
+        ? breadcrumb
+        : (_topNav.activePage ? [{ label: _topNav.activePage.label }]
+            : (typeof title !== 'undefined' && title ? [{ label: title }] : []));
+    _pageCrumbs.forEach(function (c) {
+        if (!_crumbs.length || _crumbs[_crumbs.length - 1].label !== c.label) _crumbs.push(c);
+    });
+
+    const _isBeta = typeof uiShellBeta !== 'undefined' && uiShellBeta;
+    const _themeMode = (branding && branding.themeMode) || 'dark';
+    const _themeIcon = _themeMode === 'custom' ? 'palette' : (_themeMode === 'light' ? 'light_mode' : 'dark_mode');
+    const _themeLabel = _themeMode === 'custom'
+        ? _('theme.custom')
+        : (_themeMode === 'light' ? _('theme.switch_to_dark') : _('theme.switch_to_light'));
+%>
+<% if (typeof emergencyMode !== 'undefined' && emergencyMode) { %>
+<div class="emergency-banner" role="alert">
+    <span><%= _('auth.emergency_mode_banner') %></span>
+</div>
+<% } %>
+<header class="ux35-topbar" id="ux35-topbar">
+    <button type="button" class="ux35-topbar-menu-btn" id="ux35-menu-btn"
+            aria-label="<%= _('ux35.open_menu') || 'Open menu' %>"
+            aria-controls="ux35-sidebar" aria-expanded="false">
+        <span class="material-icons" aria-hidden="true">menu</span>
+    </button>
+
+    <a href="/" class="ux35-topbar-logo" title="<%= appName %>">
+        <% if (branding.logoType === 'text' && branding.logoText) { %>
+        <span class="brand-text-logo"><%= branding.logoText %><% if (branding.logoTextAccent) { %><span class="brand-text-accent"><%= branding.logoTextAccent %></span><% } %></span>
+        <% } else if (branding.logoType === 'svg' && branding.logoSvg) { %>
+        <span class="sidebar-logo-svg"><%- branding.logoSvg %></span>
+        <span class="brand-name"><%= appName %></span>
+        <% } else if (branding.logoType === 'image' && branding.logoUrl) { %>
+        <img src="<%= branding.logoUrl %>" alt="">
+        <span class="brand-name"><%= appName %></span>
+        <% } else { %>
+        <span class="material-icons" aria-hidden="true"><%= branding.logoIcon || 'dns' %></span>
+        <span class="brand-name"><%= appName %></span>
+        <% } %>
+        <% if (_isBeta) { %>
+        <span class="ux36-beta-chip" aria-hidden="true"><%= _('ux36.beta_badge') %></span>
+        <% } %>
+    </a>
+
+    <nav class="ux35-topbar-breadcrumb" aria-label="<%= _('nav.label') || 'Breadcrumb' %>">
+        <% _crumbs.forEach(function (item, index) { %>
+            <% if (index > 0) { %><span class="separator" aria-hidden="true">/</span><% } %>
+            <% if (index === _crumbs.length - 1) { %>
+                <span class="current" aria-current="page"><%= item.label %></span>
+            <% } else if (item.href) { %>
+                <a href="<%= item.href %>"><%= item.label %></a>
+            <% } else { %>
+                <span><%= item.label %></span>
+            <% } %>
+        <% }); %>
+    </nav>
+
+    <div class="ux35-topbar-spacer"></div>
+
+    <div class="ux35-topbar-actions">
+        <button type="button" class="ux35-topbar-text-btn" id="ux35-help-btn" aria-haspopup="dialog"><%= _('nav.help') || 'Help' %></button>
+
+        <div class="ux35-topbar-action-list" id="ux35-topbar-action-list">
+            <div class="notif-wrapper">
+                <button type="button" class="ux35-topbar-btn notif-btn" id="notif-btn"
+                        title="<%= _('notifications.title') %>" aria-label="<%= _('notifications.title') %>"
+                        aria-haspopup="true" aria-expanded="false" aria-controls="notif-dropdown">
+                    <span class="material-icons" aria-hidden="true">notifications</span>
+                    <span class="notif-badge" id="notif-badge" hidden aria-hidden="true"></span>
+                </button>
+                <div class="notif-dropdown" id="notif-dropdown" role="menu" hidden>
+                    <div class="notif-header">
+                        <span class="notif-title"><%= _('notifications.title') %></span>
+                        <button type="button" class="notif-mark-all" id="notif-mark-all"><%= _('notifications.mark_all_read') %></button>
+                    </div>
+                    <div class="notif-list" id="notif-list" aria-live="polite">
+                        <p class="notif-state"><%= _('notifications.empty') %></p>
+                    </div>
+                    <div class="notif-footer">
+                        <a href="/help-requests" class="notif-see-all"><%= _('notifications.see_all') %></a>
+                        <a href="/registrations" class="notif-see-all"><%= _('nav.registrations') %></a>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" class="ux35-topbar-btn" id="refresh-btn"
+                    title="<%= _('actions.refresh') %>" aria-label="<%= _('actions.refresh') %>">
+                <span class="material-icons" aria-hidden="true">refresh</span>
+            </button>
+
+            <button type="button" class="ux35-topbar-btn" id="ux36-shell-toggle"
+                    data-target-shell="ux35"
+                    title="<%= _('ux36.switch_to_ux35') %>" aria-label="<%= _('ux36.switch_to_ux35') %>">
+                <span class="material-icons" aria-hidden="true">undo</span>
+            </button>
+
+            <button type="button" class="ux35-topbar-btn" id="ux35-theme-btn"
+                    title="<%= _themeLabel %>" aria-label="<%= _themeLabel %>">
+                <span class="material-icons" id="ux35-theme-icon" aria-hidden="true"><%= _themeIcon %></span>
+            </button>
+
+            <button type="button" class="ux35-topbar-btn accessibility-btn" id="accessibility-btn"
+                    title="<%= _('accessibility.title') %>" aria-label="<%= _('accessibility.title') %>" aria-haspopup="dialog">
+                <span class="material-icons" aria-hidden="true">accessibility_new</span>
+            </button>
+
+            <div class="lang-selector">
+                <button type="button" class="ux35-topbar-btn" id="lang-btn"
+                        title="<%= _('settings.language') %>" aria-label="<%= _('settings.language') %>"
+                        aria-haspopup="true" aria-expanded="false">
+                    <span class="material-icons" aria-hidden="true">language</span>
+                </button>
+                <div class="lang-dropdown menu" id="lang-dropdown">
+                    <% (availableLanguageList || Object.values(availableLanguages || {})).forEach(function (language) { %>
+                        <div class="lang-option menu-item <%= lang === language.code ? 'active' : '' %>"
+                             data-lang="<%= language.code %>" role="button" tabindex="0">
+                            <span class="lang-flag"><%= language.flag || '🌐' %></span>
+                            <span class="lang-label"><%= language.native || language.name || language.code %></span>
+                            <% if (lang === language.code) { %>
+                            <span class="material-icons lang-check" aria-hidden="true">check</span>
+                            <% } %>
+                        </div>
+                    <% }); %>
+                </div>
+            </div>
+
+            <div class="lang-selector">
+                <button type="button" class="ux35-topbar-btn ux36-user-btn" id="user-btn"
+                        title="<%= user ? user.username : 'User' %>"
+                        aria-label="<%= user ? user.username : 'User' %>"
+                        aria-haspopup="true" aria-expanded="false">
+                    <span class="material-icons" aria-hidden="true">account_circle</span>
+                </button>
+                <div class="lang-dropdown menu" id="user-dropdown">
+                    <div class="user-menu-person">
+                        <span class="avatar is-c1" aria-hidden="true"><%= user && user.username ? user.username.charAt(0).toUpperCase() : 'A' %></span>
+                        <span class="user-menu-btn-text">
+                            <span class="user-menu-name"><%= user ? user.username : 'Admin' %></span>
+                            <%
+                                var _roleKey = user && user.role ? ('users.role_' + user.role) : 'users.role_admin';
+                                var _roleLabel = _(_roleKey);
+                                if (!_roleLabel || _roleLabel === _roleKey) {
+                                    _roleLabel = user && user.role
+                                        ? user.role.replace(/_/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); })
+                                        : 'Administrator';
+                                }
+                            %>
+                            <span class="user-menu-role"><%= _roleLabel %></span>
+                        </span>
+                    </div>
+                    <div class="menu-item" id="change-password-btn" role="button" tabindex="0">
+                        <span class="material-icons" aria-hidden="true">key</span>
+                        <span><%= _('auth.change_password') %></span>
+                    </div>
+                    <div class="menu-divider" role="separator"></div>
+                    <div class="menu-item" id="logout-btn" role="button" tabindex="0">
+                        <span class="material-icons" aria-hidden="true">logout</span>
+                        <span><%= _('auth.logout') %></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button type="button" class="ux35-topbar-btn ux35-topbar-actions-menu-btn" id="ux35-actions-menu-btn"
+                aria-label="<%= _('mobile_nav.more') || 'More actions' %>"
+                title="<%= _('mobile_nav.more') || 'More actions' %>"
+                aria-controls="ux35-topbar-action-list" aria-expanded="false">
+            <span class="material-icons" aria-hidden="true">more_vert</span>
+        </button>
+    </div>
+</header>

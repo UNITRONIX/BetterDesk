@@ -32,26 +32,42 @@ missing or invalid.
 
 ## What UX 3.6 changes
 
+This is not a recolouring of UX 3.5 — the beta loads the contributor's own
+design system (`web-nodejs/public/css/ux36/`):
+
+| Sheet | What it provides |
+|---|---|
+| `palette.css` | his neutral dark scale and white-based light theme |
+| `tokens.css` | `--bg`, `--text`, `--rule`, `--control-h`, `--space-4…7`, layers |
+| `base.css` | IBM Plex Sans/Mono, heading scale, page column, focus ring |
+| `components.css` | buttons, fields, tables, menus, tags, notices, pagination |
+| `shell.css` | top bar, grouped navigation, content column, mobile bar |
+| `pages.css` | this console's page classes mapped onto his page rhythm |
+| `legacy-bridge.css` | his token names ⇄ the v2 names page sheets still use |
+
 - Sidebar grouped into **Devices**, **Support**, **People**, **Activity** and
-  **Settings** instead of a flat list. Every page keeps its old route and its
-  old panel-access section, so roles see the same entries as before.
+  **Settings**, each section a `<ul>` with an icon and optional group labels.
+  Every page keeps its old route and its old panel-access section, so roles see
+  the same entries as before.
 - Only the active group is expanded on first load; each group can be collapsed
   and the state is remembered for the session.
-- Devices uses a list-first layout: folders and device groups sit in a rail
-  beside the table, and device details open as a side sheet on desktop.
-- Settings keeps its per-topic tabs and search, with `?tab=<topic>` deep links
-  (older `#topic` links still work).
-- Layout is modelled on the community redesign by
-  [@rathlinus](https://github.com/rathlinus)
+- Devices uses a list-first layout: folders and device groups sit in a 210px
+  rail beside the table, and device details open as a side sheet on desktop.
+- Dashboard stats read as one ruled row; Settings uses a ruled topic row with
+  `?tab=<topic>` deep links (older `#topic` links still work).
+- Design and interaction model: [@rathlinus](https://github.com/rathlinus)
   ([issue #493](https://github.com/UNITRONIX/BetterDesk/issues/493),
-  [PR #495](https://github.com/UNITRONIX/BetterDesk/pull/495)) and rebuilt in the
+  [PR #495](https://github.com/UNITRONIX/BetterDesk/pull/495)), rebuilt in the
   current EJS/JavaScript/CSS stack — Svelte is **not** part of this change.
 
 ## What does not change
 
 Pages and permissions, the Remote and SDK Studio surfaces, Desktop Mode embeds
-(`?embed=1`), branding, wallpaper, fonts, themes (light/dark/custom), the Help
-panel, notifications and every API.
+(`?embed=1`), branding, wallpaper, custom theme colours, the Help panel,
+notifications and every API.
+
+The beta palette is skipped when the operator uses **custom** theme colours, so
+their own colours always win.
 
 ## Developers
 
@@ -60,14 +76,18 @@ panel, notifications and every API.
 | Shell resolution | `web-nodejs/lib/uiShell.js` |
 | Layout branching | `web-nodejs/views/layouts/main.ejs` |
 | Grouped navigation model | `web-nodejs/lib/consoleNav.js` |
-| Sidebar partial | `web-nodejs/views/partials/ux36-sidebar.ejs` |
-| Styles | `web-nodejs/public/css/ux36.css` (layered on `ux35.css`) |
+| Top bar / sidebar partials | `web-nodejs/views/partials/ux36-topbar.ejs`, `ux36-sidebar.ejs` |
+| Beta design system | `web-nodejs/public/css/ux36/` (palette, tokens, base, components, shell, pages, legacy-bridge) |
+| Shared switch chrome | `web-nodejs/public/css/ux36/shared-chrome.css` (both shells) |
+| Fonts | `web-nodejs/public/fonts/IBMPlex*` (SIL OFL 1.1), `IBMPlex-OFL.txt` |
 | Client behaviour | `web-nodejs/public/js/ui-shell.js` (switch, both shells), `web-nodejs/public/js/ux36-shell.js` (beta layout only) |
 | Preference API | `web-nodejs/routes/ui-shell.routes.js` (`GET`/`POST /api/ui-shell`) |
-| Tests | `web-nodejs/tests/ux36-shell.test.js`, `ux35-ui-contract.test.js` |
+| Tests | `web-nodejs/tests/ux36-shell.test.js`, `ux36-pages.render.test.js`, `ux36-ui-shell.routes.test.js`, `ux35-ui-contract.test.js` |
 
-UX 3.6 must never fork the UX 3.5 token contract (`--ux35-*`): themes, branding
-and wallpaper are generated for those names by `services/brandingService.js`.
+The beta keeps the UX 3.5 token contract intact: `brandingService.js` still
+generates `--ux35-*` and the wallpaper rules, and `legacy-bridge.css` translates
+the contributor's scale onto the v2 names the remaining page sheets use, so no
+page mixes two typographic or spacing systems.
 
 Acceptance checklists belong in PRs, not in this operator page.
 

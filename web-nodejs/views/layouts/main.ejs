@@ -14,6 +14,11 @@
     <title><%= typeof title !== 'undefined' ? title + ' - ' : '' %><%= appName %></title>
 
     <link rel="icon" type="image/svg+xml" href="/branding/favicon.svg">
+    <% if (isBetaShell) { %>
+    <%# IBM Plex is the beta's UI font: preload the subset every page needs so
+        text does not reflow after base.css loads. %>
+    <link rel="preload" href="/fonts/IBMPlexSans-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <% } %>
 
     <link rel="stylesheet" href="/css/main.css?v=<%= cacheVersion %>">
     <link rel="stylesheet" href="/css/theme.css?v=<%= cacheVersion %>">
@@ -25,9 +30,7 @@
     <%# UX 3.6 reuses the UX 3.5 token contract (branding, theming, wallpaper) and layers its own layout on top. %>
     <link rel="stylesheet" href="/css/ux35-tokens.css?v=<%= cacheVersion %>">
     <link rel="stylesheet" href="/css/ux35.css?v=<%= cacheVersion %>">
-    <% if (isBetaShell) { %>
-    <link rel="stylesheet" href="/css/ux36.css?v=<%= cacheVersion %>">
-    <% } %>
+    <link rel="stylesheet" href="/css/ux36/shared-chrome.css?v=<%= cacheVersion %>">
     <% if (!embed) { %>
     <link rel="stylesheet" href="/css/mobile-shell.css?v=<%= cacheVersion %>">
     <link rel="stylesheet" href="/css/help-panel.css?v=<%= cacheVersion %>">
@@ -37,12 +40,27 @@
     <link rel="stylesheet" href="/css/<%= style %>.css?v=<%= cacheVersion %>">
         <% }); %>
     <% } %>
+    <% if (isBetaShell) { %>
+    <%# The beta layout loads last, on purpose. These are the contributor's own
+        design system (issue #493 / PR #495) — palette, tokens, base typography,
+        components and shell — so they own the shared component classes
+        (.btn, .form-input, tables, page headers) instead of fighting the v2
+        page sheets above. legacy-bridge maps both token vocabularies onto one
+        scale so markup built by existing scripts keeps resolving. %>
+    <link rel="stylesheet" href="/css/ux36/palette.css?v=<%= cacheVersion %>">
+    <link rel="stylesheet" href="/css/ux36/tokens.css?v=<%= cacheVersion %>">
+    <link rel="stylesheet" href="/css/ux36/base.css?v=<%= cacheVersion %>">
+    <link rel="stylesheet" href="/css/ux36/components.css?v=<%= cacheVersion %>">
+    <link rel="stylesheet" href="/css/ux36/legacy-bridge.css?v=<%= cacheVersion %>">
+    <link rel="stylesheet" href="/css/ux36/shell.css?v=<%= cacheVersion %>">
+    <link rel="stylesheet" href="/css/ux36/pages.css?v=<%= cacheVersion %>">
+    <% } %>
 </head>
 <body class="app-page<%= shell === 'ux35' ? ' ux35-page' : '' %><%= isBetaShell ? ' ux35-page ux36-page' : '' %><%= embed ? ' embed-mode' : '' %>">
     <% if (shell === 'ux35' || isBetaShell) { %>
     <div class="ux35-shell<%= isBetaShell ? ' ux36-shell' : '' %><%= embed ? ' embed-mode' : '' %>" id="app">
         <% if (!embed) { %>
-        <%- include('../partials/ux35-topbar') %>
+        <%- include(isBetaShell ? '../partials/ux36-topbar' : '../partials/ux35-topbar') %>
         <% } %>
         <div class="ux35-body">
             <% if (!embed) { %>

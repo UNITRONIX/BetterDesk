@@ -195,6 +195,14 @@
             syncThemeIcon();
             return;
         }
+        // UX 3.6 ships its own palette (css/ux36/palette.css) for both themes.
+        // Inline overrides from the UX 3.5 palette would beat those rules, so
+        // the beta shell only switches data-theme and lets its sheet repaint.
+        if (document.documentElement.getAttribute('data-ui-shell') === 'ux36') {
+            clearThemeInlineOverrides();
+            syncThemeIcon();
+            return;
+        }
         var palette = THEME_PALETTES[next] || THEME_PALETTES.dark;
         var root = document.documentElement.style;
         var map = {

@@ -17,14 +17,22 @@ light/dark support across all 26 locale files. The redesign lives on
 `svelte-rewrite` and was **not** merged as a unit.
 
 BetterDesk's **UX 3.6 beta** is an independent implementation in the existing
-EJS/JavaScript/CSS stack, modelled on that design:
+EJS/JavaScript/CSS stack that reuses his design system directly:
 
-- `web-nodejs/lib/consoleNav.js` — grouped navigation model derived from the
-  contributor's `consoleNav.js` (sections, groups, active-page rules).
-- `web-nodejs/views/partials/ux36-sidebar.ejs`, `public/css/ux36.css`,
-  `public/js/ux36-shell.js` — shell layout and interaction patterns.
-- Settings and Devices layout ideas (topic search, list-first device rail,
-  detail side panel).
+- `web-nodejs/public/css/ux36/palette.css` — his dark (neutral grey) and light
+  (white-based) colour scales.
+- `web-nodejs/public/css/ux36/tokens.css`, `base.css`, `components.css`,
+  `shell.css` — his token set, IBM Plex typography, component styles and shell
+  layout, taken from `web-nodejs/public/css/ui/` at the reference commit.
+- `web-nodejs/public/fonts/IBMPlex*` — the fonts those sheets reference,
+  under SIL OFL 1.1 (licence shipped as `IBMPlex-OFL.txt`).
+- `web-nodejs/lib/consoleNav.js` — his grouped navigation model (sections,
+  groups, active-page rules), adapted to the current routes and panel access.
+- `web-nodejs/views/partials/ux36-topbar.ejs`, `ux36-sidebar.ejs` — his top bar
+  and sidebar structure, wired to the current element ids and permissions.
+- `web-nodejs/public/css/ux36/pages.css` — the console's own page classes mapped
+  onto his page rhythm; `legacy-bridge.css` keeps both token vocabularies on one
+  scale.
 
 The last pre-Svelte commit of the redesign is
 [`d710bdbbb8541f325f6ecf8a24f7027187d475ba`](https://github.com/UNITRONIX/BetterDesk/commit/d710bdbbb8541f325f6ecf8a24f7027187d475ba)

@@ -80,8 +80,7 @@ describe('UX 3.6 beta pages render in both shells', () => {
             assert.ok(html.length > 1000, 'page rendered empty');
             assert.match(html, /data-ui-shell="ux35"/);
             assert.match(html, /class="ux35-shell" id="app"/);
-            assert.doesNotMatch(html, /\/css\/ux36\.css/);
-            assert.doesNotMatch(html, /\/js\/ux36-shell\.js/);
+            assert.doesNotMatch(html, /\/css\/ux36\/(tokens|base|components|palette|shell|pages)\.css/);
             assert.doesNotMatch(html, /class="ux35-sidebar ux36-sidebar"/);
             assert.doesNotMatch(html, /class="ux35-shell ux36-shell/);
             // The flat UX 3.5 sidebar is still rendered.
@@ -93,14 +92,16 @@ describe('UX 3.6 beta pages render in both shells', () => {
             assert.match(html, /data-ui-shell="ux36"/);
             assert.match(html, /class="ux35-shell ux36-shell" id="app"/);
             assert.match(html, /class="ux35-sidebar ux36-sidebar"/);
-            assert.match(html, /\/css\/ux36\.css/);
-            assert.match(html, /\/js\/ux36-shell\.js/);
+            assert.match(html, /\/css\/ux36\/tokens\.css/);
+            assert.match(html, /\/css\/ux36\/components\.css/);
+            assert.match(html, /\/css\/ux36\/palette\.css/);
             // UX 3.5 chrome assets stay shared, never forked.
             assert.match(html, /\/css\/ux35\.css/);
             assert.match(html, /\/js\/ux35-shell\.js/);
             // Grouped navigation replaces the flat list.
             assert.match(html, /data-panel="devices"/);
             assert.match(html, /data-panel="settings"/);
+            assert.match(html, /nav-section-icon/);
         });
     });
 
@@ -112,10 +113,13 @@ describe('UX 3.6 beta pages render in both shells', () => {
         assert.match(html, /name="ui-shell" value="ux36" checked>/);
     });
 
-    it('marks the active navigation item for assistive tech', () => {
+    it('marks the active navigation item and the current crumb for assistive tech', () => {
         const beta = renderPage('devices.ejs', 'ux36', 'devices');
+        // One on the sidebar item, one on the breadcrumb's last crumb — the
+        // redesign marks both, and aria-current only applies inside each nav.
         const current = beta.match(/aria-current="page"/g) || [];
-        assert.strictEqual(current.length, 1, `ux36: ${current.length} aria-current markers`);
+        assert.strictEqual(current.length, 2, `ux36: ${current.length} aria-current markers`);
+        assert.match(beta, /class="ux35-sidebar-item active"[^>]*aria-current="page"/);
 
         // UX 3.5 markup is unchanged: it flags the active item with a class.
         const stable = renderPage('devices.ejs', 'ux35', 'devices');

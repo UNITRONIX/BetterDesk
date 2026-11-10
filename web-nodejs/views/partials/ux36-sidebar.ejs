@@ -1,16 +1,14 @@
 <%
     /*
-     * UX 3.6 sidebar — grouped navigation modelled on the community redesign by
-     * @rathlinus (issue #493 / PR #495), rebuilt on the current EJS stack.
+     * UX 3.6 sidebar — structure and classes from the redesign by @rathlinus
+     * (issue #493 / PR #495), rebuilt on the current console.
      *
      * The model comes from lib/consoleNav.js: five sections (Devices, Support,
-     * People, Activity, Settings) instead of a flat list. Every entry keeps the
-     * route and the panel-access section it had in UX 3.5, so visibility is
-     * unchanged — only the grouping is new.
+     * People, Activity, Settings). Each section keeps its pages in a <ul>, the
+     * footer is the account row. Every entry keeps the route and panel-access
+     * section it had in UX 3.5, so visibility is unchanged.
      */
     const _navPage = (typeof currentPage !== 'undefined' && currentPage) ? currentPage : '';
-    // Pages that split by tab pass `currentTab` into the layout; pages driven by
-    // ?tab= (settings) fall back to the value resolved in server.js.
     const _navTab = (typeof currentTab !== 'undefined' && currentTab)
         ? currentTab
         : ((typeof consoleTab !== 'undefined' && consoleTab) ? consoleTab : '');
@@ -18,89 +16,84 @@
     const _nav = (typeof buildConsoleNav === 'function')
         ? buildConsoleNav(_navPage, _navTab, _navActivate)
         : { sections: [] };
-    const _navSections = _nav.sections || [];
+    const _sections = _nav.sections || [];
+
+    var _roleKey = user && user.role ? ('users.role_' + user.role) : 'users.role_admin';
+    var _roleLabel = _(_roleKey);
+    if (!_roleLabel || _roleLabel === _roleKey) {
+        _roleLabel = user && user.role
+            ? user.role.replace(/_/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); })
+            : 'Administrator';
+    }
 %>
 <aside class="ux35-sidebar ux36-sidebar" id="ux35-sidebar" aria-label="<%= _('nav.label') || 'Main navigation' %>">
     <div class="ux35-sidebar-resize" id="ux35-sidebar-resize"
          role="separator" aria-orientation="vertical" tabindex="0"
          aria-label="<%= _('ux35.resize_sidebar') || 'Resize sidebar' %>"
-         aria-valuemin="200" aria-valuemax="320" aria-valuenow="220"
+         aria-valuemin="200" aria-valuemax="320" aria-valuenow="232"
          title="<%= _('ux35.resize_sidebar') || 'Resize sidebar' %>"></div>
-    <nav class="ux35-sidebar-nav ux36-sidebar-nav" id="ux35-sidebar-nav">
-        <div class="ux35-sidebar-filter ux36-sidebar-filter">
-            <label class="sr-only" for="ux35-sidebar-filter-input"><%= _('ux35.filter_menu') || 'Filter menu' %></label>
-            <input type="search" id="ux35-sidebar-filter-input" class="ux35-sidebar-filter-input form-input"
-                   placeholder="<%= _('ux35.filter_menu_placeholder') || 'Search menu…' %>"
-                   autocomplete="off">
-        </div>
 
-        <% _navSections.forEach(function (section) { %>
-        <div class="ux35-sidebar-section ux36-nav-section" data-panel="<%= section.id %>">
-            <button type="button" class="ux35-sidebar-heading ux35-sidebar-heading-toggle ux36-nav-heading"
-                    data-section-toggle="<%= section.id %>" aria-expanded="true">
-                <span class="ux36-nav-heading-text">
-                    <span class="material-icons ux36-nav-heading-icon" aria-hidden="true"><%= section.icon %></span>
-                    <span><%= section.label %></span>
-                </span>
-                <span class="material-icons ux35-section-chevron" aria-hidden="true">expand_less</span>
+    <nav class="ux35-sidebar-nav ux36-sidebar-nav" id="ux35-sidebar-nav">
+        <% _sections.forEach(function (section) { %>
+        <div class="ux35-sidebar-section ux36-nav-section<%= section.active ? ' is-current' : ' is-collapsed' %>"
+             data-panel="<%= section.id %>">
+            <button type="button" class="ux35-sidebar-heading ux35-sidebar-heading-toggle"
+                    data-section-toggle="<%= section.id %>"
+                    aria-expanded="<%= section.active ? 'true' : 'false' %>"
+                    aria-controls="nav-section-<%= section.id %>">
+                <span class="material-icons nav-section-icon" aria-hidden="true"><%= section.icon %></span>
+                <span class="nav-section-label"><%= section.label %></span>
+                <span class="material-icons ux35-section-chevron" aria-hidden="true"><%= section.active ? 'expand_less' : 'expand_more' %></span>
             </button>
-            <%
-                let lastGroup = null;
-                section.pages.forEach(function (page) {
-                    if (page.group && page.group !== lastGroup) {
-                        lastGroup = page.group;
-            %>
-            <div class="ux36-nav-group-label" aria-hidden="true"><%= page.group %></div>
-            <%      } %>
-            <a href="<%= page.href %>"
-               class="ux35-sidebar-item ux36-nav-item <%= page.active ? 'active' : '' %>"
-               <% if (page.id) { %>id="<%= page.id %>"<% } %>
-               <% if (page.external) { %>target="_blank" rel="noopener noreferrer"<% } %>
-               <% if (page.active) { %>aria-current="page"<% } %>
-               title="<%= page.label %>">
-                <span class="material-icons" aria-hidden="true"><%= page.icon %></span>
-                <span class="ux36-nav-item-label"><%= page.label %></span>
-                <% if (page.badgeId) { %>
-                <span class="ux35-sidebar-item-badge" id="<%= page.badgeId %>" style="display: none;">0</span>
-                <% } %>
-                <% if (page.beta) { %>
-                <span class="badge-sidebar" style="background:linear-gradient(135deg,#ff7b72,#d29922);color:#fff;"><%= _('ux36.beta_badge') || 'BETA' %></span>
-                <% } %>
-                <% if (page.external) { %>
-                <span class="material-icons sidebar-link-external" aria-hidden="true">open_in_new</span>
-                <% } %>
-            </a>
-            <% }); %>
+
+            <ul class="nav-list" id="nav-section-<%= section.id %>">
+                <%
+                    let lastGroup = '';
+                    section.pages.forEach(function (page) {
+                        if (page.group && page.group !== lastGroup) {
+                            lastGroup = page.group;
+                %>
+                <li class="nav-group"><span class="nav-group-label"><%= page.group %></span></li>
+                <%      } %>
+                <li>
+                    <a href="<%= page.href %>"
+                       class="ux35-sidebar-item<%= page.active ? ' active' : '' %>"
+                       <% if (page.id) { %>id="<%= page.id %>"<% } %>
+                       <% if (page.active) { %>aria-current="page"<% } %>
+                       <% if (page.external) { %>target="_blank" rel="noopener noreferrer" title="<%= _('nav.remote_open_tab') || page.label %>"<% } %>>
+                        <span class="material-icons" aria-hidden="true"><%= page.icon %></span>
+                        <span class="nav-label"><%= page.label %></span>
+                        <% if (page.badgeId) { %>
+                        <span class="nav-count" id="<%= page.badgeId %>" style="display: none;">0</span>
+                        <% } %>
+                        <% if (page.beta) { %><span class="nav-note"><%= _('ux36.beta_badge') %></span><% } %>
+                        <% if (page.external) { %><span class="nav-note" aria-hidden="true">↗</span><% } %>
+                    </a>
+                </li>
+                <% }); %>
+            </ul>
         </div>
         <% }); %>
 
         <div class="ux35-sidebar-section ux36-nav-section" data-panel="help">
-            <button type="button" class="ux35-sidebar-item ux36-nav-item" id="ux35-help-btn"
-                    title="<%= _('nav.help') || 'Help' %>">
-                <span class="material-icons" aria-hidden="true">help_outline</span>
-                <span class="ux36-nav-item-label"><%= _('nav.help') || 'Help' %></span>
-            </button>
+            <ul class="nav-list">
+                <li>
+                    <button type="button" class="ux35-sidebar-item" id="ux35-help-btn">
+                        <span class="material-icons" aria-hidden="true">help_outline</span>
+                        <span class="nav-label"><%= _('nav.help') || 'Help' %></span>
+                    </button>
+                </li>
+            </ul>
         </div>
     </nav>
 
-    <div class="ux35-sidebar-footer ux36-sidebar-footer">
+    <div class="ux35-sidebar-footer">
         <div class="ux35-sidebar-user" id="user-menu-trigger">
-            <div class="ux35-sidebar-user-avatar">
-                <%= user && user.username ? user.username.charAt(0).toUpperCase() : 'A' %>
-            </div>
-            <div class="ux35-sidebar-user-info">
-                <div class="ux35-sidebar-user-name"><%= user ? user.username : 'Admin' %></div>
-                <%
-                    var _roleKey = user && user.role ? ('users.role_' + user.role) : 'users.role_admin';
-                    var _roleLabel = _(_roleKey);
-                    if (!_roleLabel || _roleLabel === _roleKey) {
-                        _roleLabel = user && user.role
-                            ? user.role.replace(/_/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); })
-                            : 'Administrator';
-                    }
-                %>
-                <div class="ux35-sidebar-user-role"><%= _roleLabel %></div>
-            </div>
+            <span class="avatar is-c1 is-md" aria-hidden="true"><%= user && user.username ? user.username.charAt(0).toUpperCase() : 'A' %></span>
+            <span class="ux35-sidebar-user-info">
+                <span class="ux35-sidebar-user-name"><%= user ? user.username : 'Admin' %></span>
+                <span class="ux35-sidebar-user-role"><%= _roleLabel %></span>
+            </span>
         </div>
         <% if ((branding && branding.footerText) || (branding && branding.showPoweredBy !== 'false')) { %>
         <div class="ux35-sidebar-attribution">

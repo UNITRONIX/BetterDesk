@@ -111,12 +111,17 @@ describe('UX 3.6 beta shell contract', () => {
     });
 
     describe('layout and assets', () => {
-        it('renders the grouped sidebar for UX 3.6 only', () => {
+        it('renders the grouped sidebar and its own design system for UX 3.6 only', () => {
             const layout = read('views', 'layouts', 'main.ejs');
+            assert.match(layout, /include\(isBetaShell \? '\.\.\/partials\/ux36-topbar' : '\.\.\/partials\/ux35-topbar'\)/);
             assert.match(layout, /include\(isBetaShell \? '\.\.\/partials\/ux36-sidebar' : '\.\.\/partials\/ux35-sidebar'\)/);
-            assert.match(layout, /<link rel="stylesheet" href="\/css\/ux36\.css/);
-            assert.match(layout, /<script defer src="\/js\/ux36-shell\.js/);
-            // UX 3.5 assets are shared, never duplicated per shell.
+            // The contributor's design system, loaded for the beta only.
+            ['palette', 'tokens', 'base', 'components', 'legacy-bridge', 'shell', 'pages'].forEach((sheet) => {
+                assert.match(layout, new RegExp(`/css/ux36/${sheet}\\.css`), `missing ${sheet}.css`);
+            });
+            // Shared chrome (switch + badge) loads in both shells.
+            assert.match(layout, /\/css\/ux36\/shared-chrome\.css/);
+            // UX 3.5 assets stay shared, never forked.
             assert.match(layout, /\/css\/ux35-tokens\.css/);
             assert.match(layout, /\/js\/ux35-shell\.js/);
         });
@@ -124,9 +129,13 @@ describe('UX 3.6 beta shell contract', () => {
         it('keeps the sidebar partial accessible and permission-driven', () => {
             const sidebar = read('views', 'partials', 'ux36-sidebar.ejs');
             assert.match(sidebar, /buildConsoleNav\(_navPage, _navTab, _navActivate\)/);
-            assert.match(sidebar, /aria-expanded="true"/);
+            assert.match(sidebar, /aria-expanded=/);
             assert.match(sidebar, /aria-current="page"/);
             assert.match(sidebar, /role="separator"/);
+            // The contributor's structure: a <ul> per section.
+            assert.match(sidebar, /<ul class="nav-list"/);
+            assert.match(sidebar, /nav-section-icon/);
+            // Visibility is decided server-side in the nav model, not in the view.
             assert.doesNotMatch(sidebar, /hasSectionAccess\(/);
         });
 

@@ -15,30 +15,40 @@
 ## [3.5.222] — 2026-11-09
 
 ### Added
-- **UX 3.6 beta console shell (opt-in).** An alternative layout modelled on the
-  community redesign by [@rathlinus](https://github.com/rathlinus)
+- **UX 3.6 beta console shell (opt-in).** An alternative layout built on the
+  design system of the community redesign by
+  [@rathlinus](https://github.com/rathlinus)
   ([issue #493](https://github.com/UNITRONIX/BetterDesk/issues/493),
   [PR #495](https://github.com/UNITRONIX/BetterDesk/pull/495)) and rebuilt on the
   current EJS/JavaScript/CSS stack — no Svelte, no merged branch.
+  The beta loads his own sheets (`web-nodejs/public/css/ux36/`): `palette.css`
+  (his neutral dark scale and white-based light theme), `tokens.css`,
+  `base.css` (IBM Plex Sans/Mono typography, page column), `components.css`
+  (buttons, fields, tables, menus, tags, notices) and `shell.css` (top bar,
+  grouped navigation, content column, mobile bar). `legacy-bridge.css` maps his
+  token names onto the v2 names the remaining page sheets use, so one page never
+  mixes two type or spacing scales.
   The sidebar is grouped into **Devices / Support / People / Activity / Settings**
-  (`web-nodejs/lib/consoleNav.js`); every entry keeps its existing route and
-  panel-access section, so roles see exactly the pages they could open before.
-  Devices becomes list-first with folders and device groups in a rail beside the
-  table and details in a side sheet on desktop; Settings keeps its tabs, gains
-  `?tab=` deep links and its search. Only the active group starts expanded.
-  The switch is in the **top bar** on every page: in UX 3.5 the button carries a
-  small **BETA** badge and opens the beta; in UX 3.6 the same button returns to
-  UX 3.5 (also repeated at the bottom of the sidebar). **Settings → General →
-  Console interface** offers the same choice with a description and the design
-  credit.
+  (`web-nodejs/lib/consoleNav.js`) with a `<ul>` per section, section icons and
+  group labels; every entry keeps its existing route and panel-access section,
+  so roles see exactly the pages they could open before. Devices is list-first
+  with folders and device groups in a 210px rail beside the table and details in
+  a side sheet on desktop; Settings uses a ruled topic row plus `?tab=` deep
+  links; Dashboard stats read as one ruled row instead of floating cards.
+  The switch sits in the **top bar** on every page — a small **BETA** badge in
+  UX 3.5, and in UX 3.6 the same button returns to UX 3.5 (repeated at the
+  bottom of the sidebar). **Settings → General → Console interface** offers the
+  same choice with the design credit.
   UX 3.5 stays the default and the safe fallback: the shell is resolved once in
-  `web-nodejs/lib/uiShell.js`, stored per browser in the `bd_ui_shell` cookie, and
-  switched from **Settings → General → Console interface** or `?ui=ux36`.
+  `web-nodejs/lib/uiShell.js`, stored per browser in the `bd_ui_shell` cookie.
   Unknown or removed values (including `classic`) fall back to UX 3.5. No database
-  migration and no change to routes, permissions, branding, wallpapers or themes.
+  migration and no change to routes, permissions, branding, wallpapers or the
+  operator's custom colours (the beta palette is skipped for `custom` theme mode).
   New `ux36.*` and grouped `nav.*` keys in all 26 locales. Covered by
-  `web-nodejs/tests/ux36-shell.test.js` and the updated
-  `ux35-ui-contract.test.js`. Contributor credit is recorded in
+  `web-nodejs/tests/ux36-shell.test.js`, `ux36-pages.render.test.js` and
+  `ux36-ui-shell.routes.test.js`, plus the updated `ux35-ui-contract.test.js`.
+  IBM Plex fonts (SIL OFL 1.1) ship under `web-nodejs/public/fonts/` with their
+  licence file. Contributor credit is recorded in
   `docs/development/CONTRIBUTOR-ATTRIBUTIONS.md` and
   `.cursor/rules/ux36-attribution.mdc`.
 

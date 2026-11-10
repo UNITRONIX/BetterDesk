@@ -1,0 +1,54 @@
+/*
+ * BetterDesk Console — UX 3.6 (beta) legacy bridge.
+ *
+ * `components.css` from the redesign uses its own token names (--text, --rule,
+ * --control-h, --space-4 …). The rest of the console — page sheets, scripts
+ * that build markup, branding overrides — still speaks the v2 token names
+ * (--text-primary, --border-primary, --space-sm, --font-size-sm …).
+ *
+ * This file maps the redesign's scale onto the existing names while the beta
+ * shell is active, so both vocabularies resolve to the same values instead of
+ * each half of the page using a different system. Only definitions live here:
+ * no component is restyled, so page sheets keep their own decisions.
+ */
+
+html[data-ui-shell="ux36"] {
+    /* Typography scale: v2 names -> redesign sizes */
+    --font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Consolas, "Liberation Mono", monospace;
+    --font-size-xs: 12px;
+    --font-size-sm: 13px;
+    --font-size-md: 14px;
+    --font-size-lg: 16px;
+    --font-size-xl: 20px;
+    --font-size-2xl: 24px;
+    --font-size-3xl: 32px;
+    --line-height: 1.45;
+    --line-height-tight: 1.25;
+
+    /* Spacing: 4px steps, same numbers under both names */
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 32px;
+    --space-2xl: 48px;
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+
+    /* Shape: the redesign is squarer than the old console */
+    --radius-sm: 3px;
+    --radius-md: 4px;
+    --radius-lg: 4px;
+    --radius-full: 999px;
+
+    /* Motion */
+    --transition-fast: 120ms ease;
+    --transition-normal: 180ms ease;
+
+    /* Chrome */
+    --sidebar-width: 232px;
+    --navbar-height: 48px;
+    --content-max-width: 1600px;
+}
