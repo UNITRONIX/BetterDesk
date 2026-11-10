@@ -170,6 +170,11 @@ describe('UX 3.6 beta shell contract', () => {
             assert.doesNotMatch(beta, /ux36-beta-chip/);
         });
 
+        it('skips the beta palette when the operator uses custom colours', () => {
+            const layout = read('views', 'layouts', 'main.ejs');
+            assert.match(layout, /branding\.themeMode !== 'custom'/);
+        });
+
         it('exposes the shell switch through a CSRF-protected endpoint', () => {
             const routes = read('routes', 'ui-shell.routes.js');
             assert.match(routes, /router\.post\('\/api\/ui-shell', requireAuth/);
