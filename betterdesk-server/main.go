@@ -508,6 +508,7 @@ func main() {
 
 		apiSrv := api.New(cfg, database, sig.PeerMap(), relaySrv, Version)
 		defer attachPanelSync(apiSrv, billingSvc, database, cfg.DBPath, cfg.AuthDBPath)()
+		attachPanelTrust(apiSrv)
 		apiSrv.SetBlocklist(blocklist)
 		apiSrv.SetBandwidthLimiter(bwLimiter)
 		apiSrv.SetAuditLogger(auditLogger)
@@ -626,6 +627,7 @@ func main() {
 
 		apiSrv := api.New(cfg, database, sig.PeerMap(), nil, Version)
 		defer attachPanelSync(apiSrv, billingSvc, database, cfg.DBPath, cfg.AuthDBPath)()
+		attachPanelTrust(apiSrv)
 		apiSrv.SetBlocklist(blocklist)
 		apiSrv.SetBandwidthLimiter(bwLimiter)
 		apiSrv.SetAuditLogger(auditLogger)
@@ -995,6 +997,23 @@ func resolveAuthDBPath(explicit, dbPath string) string {
 		}
 	}
 	return explicit
+}
+
+// attachPanelTrust wires the panel trust bridge (see api/panel_trust.go).
+// The secret is optional: without it the bridge stays off and Go only accepts
+// its usual JWT / API-key credentials. It is read from the installer-managed
+// .env, which the panel updater appends to and never overwrites.
+func attachPanelTrust(apiSrv *api.Server) {
+	secret := strings.TrimSpace(os.Getenv(api.PanelTrustSecretEnv))
+	if secret == "" {
+		log.Printf("[panel-trust] disabled (no %s) — panel requests use API key auth only", api.PanelTrustSecretEnv)
+		return
+	}
+	if len(secret) < 32 {
+		log.Printf("[panel-trust] WARN: %s is shorter than 32 characters; use a generated value", api.PanelTrustSecretEnv)
+	}
+	apiSrv.SetPanelTrustSecret(secret)
+	log.Printf("[panel-trust] enabled for panel-originated requests")
 }
 
 // attachPanelSync wires RustDesk group/folder sync to PostgreSQL, the

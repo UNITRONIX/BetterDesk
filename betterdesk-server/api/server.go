@@ -89,6 +89,8 @@ type Server struct {
 	oidcProvider      *auth.OIDCProvider   // OIDC/OAuth2 auth provider (nil if not configured)
 	clientTFASessions *tfaSessionStore
 	panelStore        db.PanelSyncStore // device groups, folders, ACL (PostgreSQL or legacy auth.db)
+	panelTrustSecret  []byte            // HMAC key for panel-originated requests (nil = bridge off)
+	panelNonces       *panelNonceCache  // replay window for verified panel statements
 	timeSync          *timesync.Service
 	billing           *billing.Service
 	peerVault         *peervault.Vault // AES-GCM for org peer credentials (#367)
@@ -125,6 +127,7 @@ func New(cfg *config.Config, database db.Database, peerMap *peer.Map, relaySrv *
 		pairingLimiter: ratelimit.NewIPLimiter(10, 1*time.Minute, 5*time.Minute),
 		clientTFASessions: newTFASessionStore(),
 		secureClientKeys:  make(map[string][32]byte),
+		panelNonces:       newPanelNonceCache(),
 	}
 }
 
@@ -519,6 +522,16 @@ func (s *Server) Start(ctx context.Context) error {
 	mux.HandleFunc("GET /api/help/requests/{id}", s.requirePermission(auth.PermChatAccess, s.handleGetHelpRequest))
 	mux.HandleFunc("POST /api/help/requests/{id}/acknowledge", s.requirePermission(auth.PermChatAccess, s.handleAcknowledgeHelpRequest))
 	mux.HandleFunc("POST /api/help/requests/{id}/resolve", s.requirePermission(auth.PermChatAccess, s.handleResolveHelpRequest))
+
+	// Panel grouping — device groups, their members and ACL, folders, grants.
+	// Go owns these writes (strangler stage P2); the RustDesk client reads the
+	// same tables through /api/device-group/accessible and /api/peers/list.
+	s.registerPanelGroupRoutes(mux)
+
+	// Panel authorization catalog — the console's single source of section and
+	// role-default definitions (strangler stage P3). Every signed-in principal
+	// may read it: each role needs it to render its own navigation.
+	mux.HandleFunc("GET /api/panel/catalog", s.handlePanelCatalog)
 
 	// Time sync / billing (commercialization)
 	mux.HandleFunc("GET /api/timesync/status", s.requirePermission(auth.PermBillingView, s.handleTimeSyncStatus))

@@ -209,9 +209,15 @@ func TestMigrationBackwardCompatible(t *testing.T) {
 	db := newTestDB(t)
 
 	// Simulate an existing instance: drop the new tables, then re-run Migrate.
+	// Dependents go first — group members and ACL reference device_groups and
+	// user_groups, so SQLite refuses to drop a parent while they exist.
 	for _, tbl := range []string{
 		"audit_connections", "audit_files", "audit_alarms",
-		"user_groups", "device_groups", "strategies",
+		"device_group_user_access", "device_group_user_group_access",
+		"device_group_members", "user_group_members",
+		"device_folder_assignments", "user_peer_grants",
+		"folders",
+		"strategies", "device_groups", "user_groups",
 	} {
 		if _, err := db.db.Exec("DROP TABLE IF EXISTS " + tbl); err != nil {
 			t.Fatalf("drop %s: %v", tbl, err)
@@ -230,6 +236,33 @@ func TestMigrationBackwardCompatible(t *testing.T) {
 	// New tables must now be usable.
 	if err := db.InsertAuditConnection(&AuditConnection{HostID: "H", Action: "connect"}); err != nil {
 		t.Fatalf("InsertAuditConnection after re-migrate: %v", err)
+	}
+
+	// Panel grouping tables are part of the migration too (strangler stage P2):
+	// Go owns these writes, so an upgraded instance must get them.
+	if err := db.CreatePanelFolder(&Folder{Name: "Upgraded"}); err != nil {
+		t.Fatalf("CreatePanelFolder after re-migrate: %v", err)
+	}
+	folders, err := db.ListPanelFolders()
+	if err != nil {
+		t.Fatalf("ListPanelFolders: %v", err)
+	}
+	if len(folders) != 1 || folders[0].Name != "Upgraded" {
+		t.Errorf("folders = %+v, want the created one", folders)
+	}
+	group := &DeviceGroup{Name: "Upgraded group"}
+	if err := db.CreateDeviceGroup(group); err != nil {
+		t.Fatalf("CreateDeviceGroup: %v", err)
+	}
+	if err := db.SetDeviceGroupPeers(group.GUID, []string{"KEEP1", "PEER2"}); err != nil {
+		t.Fatalf("SetDeviceGroupPeers: %v", err)
+	}
+	peers, err := db.ListDeviceGroupPeerIDs(group.GUID)
+	if err != nil {
+		t.Fatalf("ListDeviceGroupPeerIDs: %v", err)
+	}
+	if len(peers) != 2 {
+		t.Errorf("group members = %v, want 2", peers)
 	}
 
 	// Pre-existing data must still be present.

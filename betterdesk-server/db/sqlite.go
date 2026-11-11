@@ -590,6 +590,64 @@ func (s *SQLiteDB) Migrate() error {
 			tag_filter TEXT DEFAULT '',
 			created_at TEXT DEFAULT (datetime('now'))
 		)`,
+		// Group membership and ACL. These tables used to be created only by the
+		// Node console (services/dbAdapter.js); Go now owns the writes for
+		// device groups, folders and ACL, so it creates them as well. Columns
+		// match the Node schema so an existing database keeps working.
+		`CREATE TABLE IF NOT EXISTS device_group_members (
+			device_group_id INTEGER NOT NULL,
+			peer_id TEXT NOT NULL,
+			created_at TEXT DEFAULT (datetime('now')),
+			PRIMARY KEY (device_group_id, peer_id),
+			FOREIGN KEY (device_group_id) REFERENCES device_groups(id) ON DELETE CASCADE
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_device_group_members_peer ON device_group_members (peer_id)`,
+		`CREATE TABLE IF NOT EXISTS user_group_members (
+			user_group_id INTEGER NOT NULL,
+			user_id INTEGER NOT NULL,
+			created_at TEXT DEFAULT (datetime('now')),
+			PRIMARY KEY (user_group_id, user_id),
+			FOREIGN KEY (user_group_id) REFERENCES user_groups(id) ON DELETE CASCADE,
+			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+		)`,
+		`CREATE TABLE IF NOT EXISTS device_group_user_access (
+			device_group_id INTEGER NOT NULL,
+			user_id INTEGER NOT NULL,
+			created_at TEXT DEFAULT (datetime('now')),
+			PRIMARY KEY (device_group_id, user_id),
+			FOREIGN KEY (device_group_id) REFERENCES device_groups(id) ON DELETE CASCADE,
+			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+		)`,
+		`CREATE TABLE IF NOT EXISTS device_group_user_group_access (
+			device_group_id INTEGER NOT NULL,
+			user_group_id INTEGER NOT NULL,
+			created_at TEXT DEFAULT (datetime('now')),
+			PRIMARY KEY (device_group_id, user_group_id),
+			FOREIGN KEY (device_group_id) REFERENCES device_groups(id) ON DELETE CASCADE,
+			FOREIGN KEY (user_group_id) REFERENCES user_groups(id) ON DELETE CASCADE
+		)`,
+		`CREATE TABLE IF NOT EXISTS folders (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			name TEXT NOT NULL,
+			color TEXT DEFAULT '#6366f1',
+			icon TEXT DEFAULT 'folder',
+			sort_order INTEGER DEFAULT 0,
+			created_at TEXT DEFAULT (datetime('now'))
+		)`,
+		`CREATE TABLE IF NOT EXISTS device_folder_assignments (
+			device_id TEXT PRIMARY KEY NOT NULL,
+			folder_id INTEGER NOT NULL,
+			assigned_at TEXT DEFAULT (datetime('now')),
+			FOREIGN KEY (folder_id) REFERENCES folders(id) ON DELETE CASCADE
+		)`,
+		`CREATE TABLE IF NOT EXISTS user_peer_grants (
+			user_id INTEGER NOT NULL,
+			peer_id TEXT NOT NULL,
+			granted_at TEXT DEFAULT (datetime('now')),
+			PRIMARY KEY (user_id, peer_id),
+			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_user_peer_grants_user ON user_peer_grants (user_id)`,
 		`CREATE TABLE IF NOT EXISTS strategies (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			guid TEXT UNIQUE NOT NULL,
