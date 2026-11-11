@@ -100,6 +100,15 @@ describe('pairing page hands out a code', () => {
         assert.match(script, /if \(rendered && !isLoopbackHost\(rendered\)\) return;/);
     });
 
+    it('resolves the address the panel knows, not a function that does not exist', () => {
+        // The route used to call getPublicEndpoints(), which the service does not
+        // export, so the field was always empty and Go's loopback answer leaked in.
+        const routes = read('routes', 'pairing.routes.js');
+        assert.match(routes, /clientConfigHost'?\)?\.resolveClientFacingHost\(req\)|resolveClientFacingHost\(req\)/);
+        assert.doesNotMatch(routes, /getPublicEndpoints/,
+            'getPublicEndpoints does not exist on that service');
+    });
+
     it('lists active codes so the operator can revoke one', () => {
         assert.match(html, /id="pairing-tbody"/);
         assert.match(script, /\/api\/panel\/pairing\/codes/);

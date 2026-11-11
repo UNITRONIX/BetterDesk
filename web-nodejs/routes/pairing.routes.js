@@ -20,18 +20,18 @@ const jsonBody = express.json({ limit: '4kb' });
 
 /**
  * GET /pairing — code pairing page (operator).
- * Shown next to Generator → Activate agent, which uses QR codes.
+ *
+ * Shows the address the user has to type in the client. Resolved through the same
+ * helper the dashboard uses for its client-config card, so the two never disagree;
+ * the previous call named a function that does not exist, which left the field
+ * empty and let the Go server's answer (often 127.0.0.1 behind a proxy) fill in.
  */
 router.get('/pairing', requireAuth, requirePermission('enrollment.approve'), (req, res) => {
     let publicHost = '';
     try {
-        const endpoints = require('../services/rustDeskPublicEndpointsService');
-        if (endpoints && typeof endpoints.getPublicEndpoints === 'function') {
-            const resolved = endpoints.getPublicEndpoints();
-            publicHost = (resolved && (resolved.serverId || resolved.apiUrl)) || '';
-        }
+        publicHost = require('../services/clientConfigHost').resolveClientFacingHost(req);
     } catch (_) {
-        // Display-only hint; the Go server reports the authoritative host on mint.
+        // Display-only hint: a missing host must not stop the page from minting codes.
     }
     res.render('pairing', {
         title: req.t('nav.pairing'),
