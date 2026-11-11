@@ -64,21 +64,12 @@
                 </div>
                 </div>
 
-                <!-- Access control strategies (RustDesk Pro) — outside sticky chip bars -->
-                <div class="devices-strategies-card" id="devices-strategies-card">
-                    <div class="devices-strategies-header">
-                        <div>
-                            <h3>${_('devices.strategies_title')}</h3>
-                            <p>${_('devices.strategies_hint')}</p>
-                        </div>
-                        <button type="button" class="btn btn-secondary btn-sm" id="add-strategy-btn">
-                            <span class="material-icons">policy</span>
-                            ${_('devices.create_strategy')}
-                        </button>
-                    </div>
-                    <div class="devices-strategies-list" id="devices-strategies-list">
-                        <div class="empty-state-inline">${_('devices.loading_strategies')}</div>
-                    </div>
+                <!-- Access control strategies live on their own page (/strategies):
+                     a card here was invisible to operators. Kept as a link so
+                     anyone looking for them on this page still finds them. -->
+                <div class="devices-strategies-link">
+                    <span class="material-icons" aria-hidden="true">policy</span>
+                    <a href="/strategies">${_('devices.strategies_title')}</a>
                 </div>
             </div>
 

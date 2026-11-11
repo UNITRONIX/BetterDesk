@@ -44,6 +44,7 @@ const ROUTE_RULES = [
     { prefix: '/api/device-groups', section: 'devices' },
     { prefix: '/api/tags', section: 'devices' },
     { prefix: '/api/panel/strategies', section: 'strategies' },
+    { prefix: '/strategies', section: 'strategies' },
     { prefix: '/folders', section: 'folders' },
     { prefix: '/remote', section: 'remote' },
     { prefix: '/api/remote', section: 'remote' },

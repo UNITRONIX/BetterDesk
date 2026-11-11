@@ -176,6 +176,14 @@
                 <span class="material-icons" aria-hidden="true">policy</span>
                 <span><%= _('nav.policies') || 'Policies' %></span>
             </a>
+            <% } %>
+            <% if (hasSectionAccess('strategies')) { %>
+            <a href="/strategies" class="ux35-sidebar-item <%= currentPage === 'strategies' ? 'active' : '' %>">
+                <span class="material-icons" aria-hidden="true">policy</span>
+                <span><%= _('devices.strategies_title') %></span>
+            </a>
+            <% } %>
+            <% if (hasSectionAccess('settings')) { %>
             <% if (hasSectionAccess('server-attestation')) { %>
             <a href="/attestation" class="ux35-sidebar-item <%= currentPage === 'attestation' ? 'active' : '' %>">
                 <span class="material-icons" aria-hidden="true">fingerprint</span>
