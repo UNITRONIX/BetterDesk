@@ -1,7 +1,107 @@
 ## [Unreleased]
 
+### Added
+- **UX 3.6 beta: global search, section "More" rows, and the beta rhythm on every page.**
+  Continues the EJS port of the redesign by
+  [@rathlinus](https://github.com/rathlinus)
+  ([issue #493](https://github.com/UNITRONIX/BetterDesk/issues/493),
+  [PR #495](https://github.com/UNITRONIX/BetterDesk/pull/495)).
+  **Ctrl+K** (or **/** when no field has focus) opens one dialog that searches
+  pages, devices and people (`web-nodejs/public/js/ui-search.js`). Pages come
+  from `buildSearchPages()` in `web-nodejs/lib/consoleNav.js`, built per request
+  and filtered by panel access and RBAC, so the index only lists pages the
+  role may open; entries carry extra search words so old names ("Keys",
+  "DataGuard", "Fleet") still find the page. Devices and people load on first
+  use from `/api/devices` and `/api/users`, and only when the new
+  `window.BetterDesk.searchCaps` flags allow those calls.
+  Long sidebar sections keep their daily pages visible and fold the rest into a
+  section-level **More** row (count badge, remembered per browser in
+  `bd_ux36_nav_more_open`); the menu filter now exists in the beta sidebar too,
+  matches inside "More" rows and opens them. Width, collapsed groups, "More"
+  rows and the scroll position are restored by an inline script before the
+  first paint, so the menu never jumps. Settings search reports when the typed
+  words name another topic (`settings.ui.search_topic`).
+  The remaining pages keep their markup and take the beta rhythm from
+  `web-nodejs/public/css/ux36/pages.css` — one content column, ruled sections
+  instead of floating cards, stat numbers in one ruled row, page tabs as a
+  ruled row, hairline tables; Chat and Remote stay full-bleed workspaces.
+  `tokens.css` gains `--radius-full`, the icon subset gains `more_horiz`, and
+  `nav.more` / `nav.fewer` / `search.*` / `settings.ui.search_topic` exist in
+  all 26 locales. UX 3.5 markup, routes, permissions and branding are
+  unchanged. Covered by the new `tests/ux36-all-pages.render.test.js` (every
+  main-layout view in both shells) plus the existing UX 3.6 suites.
+  Ships via panel update.
+
 ### Changed
-- _(none yet)_
+- **Console backend moves toward the Go server, stage by stage.**
+  Implements P1–P3 of [docs/important/console-backend-strangler.md](docs/important/console-backend-strangler.md)
+  (follow-up to the architecture question in
+  [discussion #496](https://github.com/UNITRONIX/BetterDesk/discussions/496)).
+  - **Panel trust bridge (P1).** `X-BetterDesk-Panel` carries a short-lived
+    HMAC-SHA256 statement (method, path, subject, role, org, issue/expiry,
+    nonce) signed by the console with `PANEL_TRUST_SECRET`. Go verifies the
+    signature, the window, the replay nonce and the endpoint, accepts it only
+    from loopback or `PANEL_TRUST_ALLOWED_HOSTS`, and takes the role from the
+    database when the account still exists. With no secret the bridge is off
+    and authentication is exactly as before. `api/panel_trust_test.go` covers
+    thirteen rejection paths including cross-endpoint and cross-method replay
+    and role escalation.
+  - **Panel grouping (P2).** Go now owns the writes for device groups, their
+    members and ACL, folders, device→folder assignment and per-user device
+    grants (`api/panel_groups_handlers.go`, `db/panel_groups*.go`), and creates
+    the tables on SQLite that it previously only read. The console keeps its
+    screens and response shapes through `services/panelGrouping.js`;
+    `BACKEND_PANEL_GROUPING=node` restores the old writer without a redeploy,
+    and a 404/501/503 falls back automatically while a 400/403 is final.
+  - **Panel catalog (P3, definition half).** `GET /api/panel/catalog` serves
+    the section list, groups, permission vocabulary and built-in role defaults;
+    the console loads it at startup and keeps its bundled copy only as the
+    fallback. `tests/panelCatalogParity.test.js` fails if the two definitions
+    drift apart. This also removed a duplicate `toolkit` catalog entry.
+  No behavioural change without the new `.env` keys; both are appended by the
+  updater when missing and never overwritten. Ships via panel update (Go
+  server restart).
+- **Access control strategies moved off the Devices page to their own page.**
+  The RustDesk Pro strategy list was a card halfway down the device list, below
+  the folder rail and above the table — nobody found it there.
+  It is now **`/strategies`**, listed in the sidebar with the other security
+  rules (group *Rules & policies*, next to Policies, Automation, DataGuard and
+  Attestation) in both shell layouts, and in the Ctrl+K search index.
+  The list, the edit and assign dialogs, the permission grid and every endpoint
+  (`/api/panel/strategies`, `/api/panel/user-groups`, `/api/device-groups`,
+  `/api/devices`) are unchanged — the code moved from `devices.js` to its own
+  `public/js/strategies.js` and `views/strategies.ejs`, and the row styles stay
+  in `devices.css` where the markup still uses them.
+  Access is gated by the existing `strategies` panel section (read
+  `device.view`, write `device.edit`), so a role that could manage strategies
+  before still can and nobody else gains access. The Devices page keeps one
+  quiet link to the new page, so the old location still leads somewhere.
+  Covered by `tests/strategies-page.test.js`, which also fails if the card is
+  ever rendered on the Devices page again.
+  Ships via panel update.
+
+### Fixed
+- **UX 3.6: the page column scrolls again; Devices no longer traps its list.**
+  The beta shell declared only `min-height` for the shell and set
+  `overflow: visible` on the content column while telling the document to
+  scroll — but `body.app-page` (main.css) clips overflow, so nothing scrolled at
+  all. A long table grew the shell past the viewport instead of scrolling, which
+  made the Devices list impossible to scroll vertically and left the floating
+  horizontal scrollbar at the bottom of the list instead of the bottom of the
+  screen.
+  The beta shell now mirrors the UX 3.5 chain: `.ux35-shell` fills `100dvh` and
+  clips, `.ux35-main` clips, and `.ux35-content.main-content` is the single
+  scrollport (`flex: 1; min-height: 0; overflow-y: auto`). Embedded windows keep
+  sizing to their content. The sidebar is no longer `position: sticky` (it would
+  be offset by the top bar inside a shell that does not scroll) and simply fills
+  its column; the drawer below 1100 px stays fixed with `height: auto`. The
+  device-rail sticky offset in `ux36/pages.css` is measured from the scrollport
+  instead of the document. The floating horizontal scrollbar now also sits above
+  the docked mobile bottom navigation instead of behind it.
+  Guarded by `tests/ux36-scroll-chain.test.js`, which pins the scroll chain, the
+  sidebar rule and the scrollbar anchoring, because all three are easy to break
+  by removing one `overflow` in isolation.
+  Ships via panel update.
 
 ---
 

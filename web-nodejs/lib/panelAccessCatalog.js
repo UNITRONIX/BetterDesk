@@ -44,7 +44,6 @@ const PANEL_ACCESS_CATALOG = Object.freeze([
     { key: 'commercialization', label: 'Commercialization', group: 'commercialization', readPermission: 'billing.view', writePermission: 'billing.manage' },
     { key: 'scaling', label: 'Scaling', group: 'commercialization', readPermission: 'server.config', writePermission: 'server.config' },
     { key: 'cross-platform', label: 'Cross-platform', group: 'commercialization', readPermission: 'server.config', writePermission: 'server.config' },
-    { key: 'toolkit', label: 'Toolkit', group: 'commercialization', readPermission: 'server.config', writePermission: 'server.config' },
     { key: 'security-audit', label: 'Security audit', group: 'security', readPermission: 'audit.view', writePermission: 'server.config' },
     { key: 'languages', label: 'Languages', group: 'system', readPermission: 'server.config', writePermission: 'server.config' },
     { key: 'resource-control', label: 'Resource control', group: 'system', readPermission: 'server.config', writePermission: 'server.config' },
@@ -95,7 +94,79 @@ function compareAccessLevels(left, right) {
 }
 
 function getCatalogEntry(key) {
-    return PANEL_ACCESS_CATALOG.find((entry) => entry.key === key) || null;
+    const entry = panelCatalog().sections.find((item) => item.key === key);
+    return entry || null;
+}
+
+/**
+ * Live catalog from the Go server (strangler stage P3).
+ *
+ * Go owns the section list, the permission vocabulary and the built-in role
+ * defaults; this module keeps the copy above only as the offline fallback used
+ * by unit tests and by a console talking to an older server binary. The loaded
+ * catalog is read through `panelCatalog()` so every caller (sidebar, policy
+ * editor, permission checks) sees the same list.
+ */
+let liveCatalog = null;
+let liveCatalogAt = 0;
+const LIVE_CATALOG_TTL_MS = 60 * 1000;
+
+function applyCatalog(payload) {
+    if (!payload || !Array.isArray(payload.sections)) return false;
+    const sections = payload.sections
+        .filter((s) => s && typeof s.key === 'string' && s.key)
+        .map((s) => ({
+            key: s.key,
+            label: String(s.label || s.key),
+            group: String(s.group || 'system'),
+            readPermission: s.read_permission || null,
+            writePermission: s.write_permission || null,
+        }));
+    if (!sections.length) return false;
+    liveCatalog = {
+        sections,
+        groups: Array.isArray(payload.groups) && payload.groups.length
+            ? payload.groups.map((g) => ({ key: g.key, label: g.label || g.key }))
+            : PANEL_ACCESS_GROUPS,
+        permissions: Array.isArray(payload.permissions) ? payload.permissions.slice() : [],
+        roleDefaults: payload.role_defaults && typeof payload.role_defaults === 'object'
+            ? payload.role_defaults
+            : {},
+    };
+    liveCatalogAt = Date.now();
+    return true;
+}
+
+/** Load (or refresh) the catalog from Go. Failures keep the last good copy. */
+async function refreshPanelCatalog({ force = false } = {}) {
+    if (!force && liveCatalog && Date.now() - liveCatalogAt < LIVE_CATALOG_TTL_MS) return liveCatalog;
+    try {
+        // Required lazily: betterdeskApi pulls in config and axios, which this
+        // module must not need just to be imported by a view or a test.
+        const betterdeskApi = require('../services/betterdeskApi');
+        if (typeof betterdeskApi.getPanelCatalog !== 'function') return liveCatalog;
+        const result = await betterdeskApi.getPanelCatalog();
+        if (result && result.success && applyCatalog(result.data)) return liveCatalog;
+    } catch (_) { /* keep the last good copy */ }
+    return liveCatalog;
+}
+
+/** The catalog in use: Go's copy when loaded, otherwise the bundled one. */
+function panelCatalog() {
+    if (liveCatalog) return liveCatalog;
+    return {
+        sections: PANEL_ACCESS_CATALOG.slice(),
+        groups: PANEL_ACCESS_GROUPS.slice(),
+        permissions: [...new Set(PANEL_ACCESS_CATALOG.flatMap((entry) =>
+            [entry.readPermission, entry.writePermission].filter(Boolean)))],
+        roleDefaults: {},
+    };
+}
+
+/** Reset the cached copy (tests and a manual refresh after a role change). */
+function resetPanelCatalog() {
+    liveCatalog = null;
+    liveCatalogAt = 0;
 }
 
 function getLegacySectionCeiling(key, hasPermission, isSuperAdmin = false) {
@@ -116,4 +187,8 @@ module.exports = {
     compareAccessLevels,
     getCatalogEntry,
     getLegacySectionCeiling,
+    // Live catalog from Go (stage P3), with the bundle above as the fallback.
+    panelCatalog,
+    refreshPanelCatalog,
+    resetPanelCatalog,
 };

@@ -30,7 +30,7 @@ const {
 } = require('./middleware/rateLimiter');
 const { csrfTokenProvider, doubleCsrfProtection, downgradeToHttp: csrfDowngradeToHttp } = require('./middleware/csrf');
 const { resolveShell, isBetaShell } = require('./lib/uiShell');
-const { buildNav } = require('./lib/consoleNav');
+const { buildNav, buildSearchPages } = require('./lib/consoleNav');
 const {
     requestHasPermission,
     isSuperAdminRole,
@@ -289,15 +289,16 @@ app.use((req, res, next) => {
     // Grouped navigation model (lib/consoleNav.js) shared by the sidebar,
     // breadcrumbs and the mobile drawer. Panel access is enforced per page, so
     // grouping never widens what a role can open.
+    const navTranslate = (key) => {
+        const value = req.t ? req.t(key) : key;
+        // i18nService already falls back to English; keep the key name
+        // as the last resort so a gap shows up instead of a blank row.
+        return value && value !== key ? value : key;
+    };
     res.locals.buildConsoleNav = (currentPage, currentTab, activateAgentNav) => {
         if (!role) return { sections: [], activeSection: null, activePage: null };
         return buildNav({
-            t: (key) => {
-                const value = req.t ? req.t(key) : key;
-                // i18nService already falls back to English; keep the key name
-                // as the last resort so a gap shows up instead of a blank row.
-                return value && value !== key ? value : key;
-            },
+            t: navTranslate,
             allows: (page) => accessAllows(req.panelAccessPolicy, page.section, 'read'),
             can: (perm) => requestHasPermission(req, perm),
             role,
@@ -306,6 +307,16 @@ app.use((req, res, next) => {
             activateAgentNav: !!activateAgentNav,
         });
     };
+    // Search index for the global search dialog (Ctrl+K). It lists only pages
+    // this session may open, so the client learns nothing extra.
+    res.locals.consoleSearchPages = role
+        ? buildSearchPages({
+            t: navTranslate,
+            allows: (page) => accessAllows(req.panelAccessPolicy, page.section, 'read'),
+            can: (perm) => requestHasPermission(req, perm),
+            role,
+        })
+        : [];
     res.locals.isSuperAdmin = role ? isSuperAdminRole(role) : false;
     res.locals.sessionPolicy = panelSessionService.getPolicy();
     // Prevent HTML page caching — only static assets should be cached
@@ -664,6 +675,19 @@ async function startServer() {
         // Initialize real-time device status push (Go event bus → browser)
         initDeviceStatusPush(server, sessionMiddleware, config.betterdeskApiUrl, config.betterdeskApiKey);
         initHelpRequestEmailService(config.betterdeskApiUrl, config.betterdeskApiKey);
+
+        // Panel section catalog: Go is the source of truth (strangler stage P3).
+        // The bundled copy in lib/panelAccessCatalog.js stays as the fallback
+        // for an older server binary; a failure here must never block startup.
+        require('./lib/panelAccessCatalog').refreshPanelCatalog({ force: true })
+            .then((catalog) => {
+                if (catalog) {
+                    console.log(`[panel] authorization catalog loaded from Go (${catalog.sections.length} sections)`);
+                }
+            })
+            .catch((err) => {
+                console.warn('[panel] catalog refresh failed, using the bundled copy:', err.message);
+            });
 
         // Start LAN Discovery UDP service
         startDiscoveryService();

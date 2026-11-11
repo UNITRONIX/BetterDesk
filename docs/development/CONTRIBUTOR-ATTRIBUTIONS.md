@@ -27,12 +27,18 @@ EJS/JavaScript/CSS stack that reuses his design system directly:
 - `web-nodejs/public/fonts/IBMPlex*` — the fonts those sheets reference,
   under SIL OFL 1.1 (licence shipped as `IBMPlex-OFL.txt`).
 - `web-nodejs/lib/consoleNav.js` — his grouped navigation model (sections,
-  groups, active-page rules), adapted to the current routes and panel access.
+  groups, active-page rules, the core/"More" split and the search keywords),
+  adapted to the current routes and panel access; `buildSearchPages()` turns it
+  into the global-search index.
 - `web-nodejs/views/partials/ux36-topbar.ejs`, `ux36-sidebar.ejs` — his top bar
-  and sidebar structure, wired to the current element ids and permissions.
+  and sidebar structure (search field, pre-paint restore, "More" rows), wired
+  to the current element ids and permissions.
+- `web-nodejs/public/js/ui-search.js` — his global search dialog (Ctrl+K,
+  grouped results, keyboard handling), rewritten against this console's
+  endpoints and permission flags.
 - `web-nodejs/public/css/ux36/pages.css` — the console's own page classes mapped
-  onto his page rhythm; `legacy-bridge.css` keeps both token vocabularies on one
-  scale.
+  onto his page rhythm (page column, ruled sections, stat row, tab row, tables,
+  workspaces); `legacy-bridge.css` keeps both token vocabularies on one scale.
 
 The last pre-Svelte commit of the redesign is
 [`d710bdbbb8541f325f6ecf8a24f7027187d475ba`](https://github.com/UNITRONIX/BetterDesk/commit/d710bdbbb8541f325f6ecf8a24f7027187d475ba)
