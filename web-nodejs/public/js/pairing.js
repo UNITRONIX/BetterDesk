@@ -91,12 +91,34 @@
         }, 1000);
     }
 
-    /** Store the host the client must type; the panel knows it, the operator does not. */
+    /**
+     * Show the address the user must type.
+     *
+     * The panel resolves this from its own public-endpoint settings and renders it
+     * into the page; the Go server's answer is only a fallback, because behind a
+     * reverse proxy it reports the address the panel used to reach it (often
+     * 127.0.0.1), which would send the user to their own machine.
+     */
     function renderHost(host) {
         const el = $('pairing-code-host');
         if (!el) return;
-        const value = String(host || '').trim();
-        el.textContent = value || t('pairing.host_unknown', 'Ask your administrator');
+        const rendered = String(el.textContent || '').trim();
+        if (rendered && !isLoopbackHost(rendered)) return;
+        const fromServer = String(host || '').trim();
+        if (fromServer && !isLoopbackHost(fromServer)) {
+            el.textContent = fromServer;
+            return;
+        }
+        if (!rendered) el.textContent = t('pairing.host_unknown', 'Ask your administrator');
+    }
+
+    function isLoopbackHost(value) {
+        const host = String(value || '').trim().toLowerCase();
+        return host === 'localhost'
+            || host.startsWith('127.')
+            || host === '::1'
+            || host === '[::1]'
+            || host === '0.0.0.0';
     }
 
     /**

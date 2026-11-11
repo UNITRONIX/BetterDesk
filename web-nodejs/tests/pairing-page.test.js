@@ -91,6 +91,15 @@ describe('pairing page hands out a code', () => {
         assert.match(script, /navigator\.clipboard\.writeText/);
     });
 
+    it('keeps the address the panel rendered, not the loopback one Go may report', () => {
+        // Behind a reverse proxy the Go server answers with the address the panel
+        // used to reach it (127.0.0.1), which would tell the user to connect to
+        // their own machine. The page already renders the resolved public address.
+        assert.match(script, /function isLoopbackHost/);
+        assert.match(script, /const rendered = String\(el\.textContent \|\| ''\)\.trim\(\)/);
+        assert.match(script, /if \(rendered && !isLoopbackHost\(rendered\)\) return;/);
+    });
+
     it('lists active codes so the operator can revoke one', () => {
         assert.match(html, /id="pairing-tbody"/);
         assert.match(script, /\/api\/panel\/pairing\/codes/);
