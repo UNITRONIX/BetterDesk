@@ -462,19 +462,28 @@
     font-weight: 600;
 }
 
+/* A search field, not a full-width rule: the previous rule-based row let the
+   focus ring of a borderless input paint a floating frame across the whole
+   content column, which read as a broken box and made the field look wider
+   than the panels under it. */
 .ux36-page .settings-search {
     display: flex;
     align-items: center;
     gap: var(--space-2);
-    margin: 16px 0;
-    padding: 0 0 var(--space-2);
-    border: 0;
-    border-bottom: 1px solid var(--rule);
-    border-radius: 0;
-    background: none;
+    max-width: 520px;
+    margin: var(--space-4) 0 var(--space-5);
+    padding: 0 var(--space-2) 0 var(--space-3);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--bg);
 }
 
-/* The field sits on the rule as plain text, like the page's other rows */
+/* The row owns the focus state, so the ring frames one box instead of an
+   invisible input inside it. */
+.ux36-page .settings-search:focus-within {
+    border-color: var(--accent);
+}
+
 .ux36-page .settings-search .form-input {
     border: 0;
     background: transparent;
@@ -483,8 +492,25 @@
     font-size: var(--text-base);
 }
 
+.ux36-page .settings-search .form-input:focus,
+.ux36-page .settings-search .form-input:focus-within {
+    outline: none;
+}
+
 .ux36-page .settings-search > .material-icons {
     color: var(--text-muted);
+}
+
+/* The icon and the clear button keep their size; only the text field shrinks */
+.ux36-page .settings-search > .material-icons,
+.ux36-page .settings-search > .btn {
+    flex-shrink: 0;
+}
+
+@media (max-width: 767px) {
+    .ux36-page .settings-search {
+        max-width: none;
+    }
 }
 
 .ux36-page .settings-search-status {

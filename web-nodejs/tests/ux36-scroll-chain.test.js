@@ -108,6 +108,22 @@ describe('UX 3.6 shell scroll chain', () => {
         assert.match(mainCss, /body\.app-page\s*\{[^}]*overflow:\s*hidden/);
     });
 
+    it('frames the settings search as one field, not a rule across the column', () => {
+        // The field used to be a borderless input on a full-width rule, so the
+        // focus ring painted a floating frame wider than the input and the field
+        // looked wider than the panels under it.
+        const pagesCss = read('public', 'css', 'ux36', 'pages.css');
+        const search = ruleBody(pagesCss, '.ux36-page .settings-search');
+        assert.ok(search, '.ux36-page .settings-search rule missing');
+        assert.match(search, /max-width:/, 'the search must not span the whole column');
+        assert.match(search, /border:\s*1px solid var\(--rule\)/, 'the row carries the field border');
+        assert.doesNotMatch(search, /border:\s*0;/, 'a borderless row cannot frame its focus state');
+
+        // The row owns the focus state; the input inside it draws nothing.
+        assert.match(pagesCss, /\.ux36-page \.settings-search:focus-within\s*\{[^}]*border-color:\s*var\(--accent\)/);
+        assert.match(pagesCss, /\.ux36-page \.settings-search \.form-input:focus[\s\S]{0,120}?outline:\s*none/);
+    });
+
     it('keeps the icon font rule out of page layout', () => {
         // base.css loads after the page sheets, so a plain .material-icons rule
         // there beats .tool-icon on a specificity tie and forces inline-block and
