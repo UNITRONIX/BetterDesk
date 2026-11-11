@@ -75,7 +75,7 @@
             Need help? Contact your administrator for enrollment instructions.
         </div>
     </div>
-    <script>
+    <script nonce="<%= cspNonce %>">
         (function () {
             fetch('/api/portal/installers', { credentials: 'omit' })
                 .then(r => r.json())
