@@ -37,8 +37,11 @@ const SECTIONS = [
                 keywords: 'enrollment approve new device registration pending',
             },
             {
-                page: 'activate-agent', section: 'registrations', href: '/?activateAgent=1', label: 'nav.pair_agent',
-                icon: 'pin', id: 'nav-activate-agent', keywords: 'qr agent activation pair code',
+                // One pairing entry, pointing at the page that mints the code. It
+                // used to open the dashboard with a dialog on top, which showed
+                // the overview instead of the pairing screen.
+                page: 'pairing', section: 'registrations', href: '/pairing', label: 'nav.pair_agent',
+                icon: 'pin', id: 'nav-activate-agent', keywords: 'pair agent pairing code activate enrollment',
             },
             { page: 'remote', section: 'remote', href: '/remote', label: 'nav.remote', icon: 'connected_tv', core: true, external: true, keywords: 'web client browser remote control desktop' },
             { page: 'inventory', section: 'devices', perm: 'device.view', href: '/inventory', label: 'nav.inventory', icon: 'inventory_2', keywords: 'hardware software assets' },
@@ -100,7 +103,6 @@ const SECTIONS = [
             { page: 'languages', section: 'languages', href: '/languages', label: 'nav.languages', icon: 'translate', group: 'nav.group_console', keywords: 'languages translations i18n locale' },
             { page: 'keys', section: 'settings', href: '/keys', label: 'nav.keys', icon: 'vpn_key', core: true, group: 'nav.group_clients', keywords: 'keys public key qr client setup rustdesk config' },
             { page: 'tokens', section: 'settings', href: '/tokens', label: 'nav.tokens', icon: 'token', group: 'nav.group_clients', keywords: 'tokens enrollment mode api access' },
-            { page: 'pairing', section: 'registrations', href: '/pairing', label: 'nav.pairing', icon: 'qr_code_2', group: 'nav.group_clients', keywords: 'pairing code enroll agent qr' },
             {
                 page: 'agents', section: 'agents', href: '/agents', label: 'nav.agents', icon: 'support_agent',
                 alsoActiveFor: ['generator'], group: 'nav.group_clients',
@@ -153,7 +155,6 @@ const SECTIONS = [
 
 /** Page key used for the active state (settings/server tab aware). */
 function pageKey(currentPage, currentTab, activateAgentNav) {
-    if (activateAgentNav) return 'activate-agent';
     if (currentPage === 'settings') return 'settings:' + (currentTab || 'general');
     if (currentPage === 'server-management') return 'server-management:' + (currentTab || 'overview');
     if (currentPage === 'commercialization') {

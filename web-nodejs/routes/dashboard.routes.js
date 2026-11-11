@@ -13,13 +13,21 @@ const { requireAuth } = require('../middleware/auth');
 
 /**
  * GET / - Dashboard page
+ *
+ * `?activateAgent=1` used to render the dashboard with the pairing dialog on
+ * top. That showed the whole overview behind a modal, so the operator saw a
+ * dashboard when they asked to pair an agent, and the dialog sat over a page it
+ * did not belong to. The deep link now goes to the pairing page, which is the
+ * place that generates the code.
  */
 router.get('/', requireAuth, (req, res) => {
-    const activateAgentNav = String(req.query.activateAgent || '') === '1';
+    if (String(req.query.activateAgent || '') === '1') {
+        return res.redirect('/pairing');
+    }
     res.render('dashboard', {
-        title: activateAgentNav ? req.t('nav.pair_agent') : req.t('nav.dashboard'),
+        title: req.t('nav.dashboard'),
         activePage: 'dashboard',
-        activateAgentNav
+        activateAgentNav: false
     });
 });
 

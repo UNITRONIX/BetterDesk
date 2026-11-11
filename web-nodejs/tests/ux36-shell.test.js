@@ -75,8 +75,14 @@ describe('UX 3.6 beta shell contract', () => {
             assert.strictEqual(pageKey('settings', 'branding', false), 'settings:branding');
         });
 
-        it('treats activation and generator pages as active aliases', () => {
-            assert.strictEqual(pageKey('devices', '', true), 'activate-agent');
+        it('treats the pairing page and the generator page as active entries', () => {
+            // Pairing has one entry, pointing at its own page. It used to be a
+            // dashboard deep link with a dialog on top, so it needed an alias.
+            assert.strictEqual(pageKey('pairing', '', false), 'pairing');
+            const pairingNav = buildNav({ ...full(), currentPage: 'pairing' });
+            assert.strictEqual(pairingNav.activePage.page, 'pairing');
+            assert.strictEqual(pairingNav.activePage.href, '/pairing');
+
             const nav = buildNav({ ...full(), currentPage: 'generator' });
             assert.strictEqual(nav.activePage.page, 'agents');
         });

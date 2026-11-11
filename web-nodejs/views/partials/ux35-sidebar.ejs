@@ -19,7 +19,7 @@
                 <span><%= _('nav.main') %></span>
                 <span class="material-icons ux35-section-chevron" aria-hidden="true">expand_less</span>
             </button>
-            <a href="/" class="ux35-sidebar-item <%= currentPage === 'dashboard' && !(typeof activateAgentNav !== 'undefined' && activateAgentNav) ? 'active' : '' %>">
+            <a href="/" class="ux35-sidebar-item <%= currentPage === 'dashboard' ? 'active' : '' %>">
                 <span class="material-icons" aria-hidden="true">dashboard</span>
                 <span><%= _('nav.dashboard') %></span>
             </a>
@@ -30,7 +30,7 @@
             </a>
             <% } %>
             <% if (hasSectionAccess('registrations')) { %>
-            <a href="/?activateAgent=1" class="ux35-sidebar-item <%= typeof activateAgentNav !== 'undefined' && activateAgentNav ? 'active' : '' %>" id="nav-activate-agent">
+            <a href="/pairing" class="ux35-sidebar-item <%= currentPage === 'pairing' ? 'active' : '' %>" id="nav-activate-agent">
                 <span class="material-icons" aria-hidden="true">pin</span>
                 <span><%= _('nav.pair_agent') %></span>
             </a>

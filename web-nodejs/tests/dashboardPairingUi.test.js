@@ -47,6 +47,13 @@ function renderDashboard() {
         breadcrumb: [],
         pageStyles: [],
         pageScripts: [],
+        // The layout renders the shell sidebar, which asks for these.
+        hasSectionAccess: () => true,
+        activateAgentNav: false,
+        consoleTab: '',
+        isBetaShell: false,
+        uiShell: 'ux35',
+        buildConsoleNav: () => ({ sections: [], activeSection: null, activePage: null }),
     }, { filename: file, root: path.join(CONSOLE_ROOT, 'views') });
 }
 
@@ -77,11 +84,49 @@ describe('dashboard pairing script wiring', () => {
         path.join(CONSOLE_ROOT, 'public', 'js', 'dashboard.js'), 'utf8');
 
     test('the deep link opens the code dialog, not the QR scanner', () => {
-        const block = script.slice(
-            script.indexOf("params.get('activateAgent')"),
-            script.indexOf("params.get('activateAgent')") + 400);
-        expect(block).toContain('openPairCodeModal()');
-        expect(block).not.toContain('openAgentActivation()');
+        // Główne → Pair agent now routes to /pairing instead of opening a dialog
+        // over the dashboard; the route performs that redirect.
+        const routes = fs.readFileSync(
+            path.join(CONSOLE_ROOT, 'routes', 'dashboard.routes.js'), 'utf8');
+        expect(routes).toContain("String(req.query.activateAgent || '') === '1'");
+        expect(routes).toContain("res.redirect('/pairing')");
+    });
+
+    test('no surface links to the old dashboard deep link any more', () => {
+        // /?activateAgent=1 rendered the dashboard behind a dialog. Every entry
+        // now points at the pairing page, which is where a code is generated.
+        const surfaces = [
+            path.join(CONSOLE_ROOT, 'views', 'partials', 'ux35-sidebar.ejs'),
+            path.join(CONSOLE_ROOT, 'views', 'agents.ejs'),
+            path.join(CONSOLE_ROOT, 'lib', 'consoleNav.js'),
+        ];
+        surfaces.forEach((file) => {
+            const text = fs.readFileSync(file, 'utf8');
+            expect(text).not.toContain('href="/?activateAgent=1"');
+        });
+
+        const nav = fs.readFileSync(path.join(CONSOLE_ROOT, 'lib', 'consoleNav.js'), 'utf8');
+        const entry = nav.slice(nav.indexOf("page: 'pairing'"), nav.indexOf("page: 'pairing'") + 220);
+        expect(entry).toContain("href: '/pairing'");
+        expect(entry).toContain('nav.pair_agent');
+    });
+
+    test('the pairing dialog is toggled with a class, never inline display', () => {
+        // An inline display: flex left the overlay covering the panel while the
+        // sheet kept it transparent (opacity: 0), so every click was swallowed.
+        const script = fs.readFileSync(
+            path.join(CONSOLE_ROOT, 'public', 'js', 'dashboard.js'), 'utf8');
+        const openBlock = script.slice(
+            script.indexOf('function openPairCodeModal'),
+            script.indexOf('function openPairCodeModal') + 400);
+        expect(openBlock).toContain("classList.add('open')");
+        expect(openBlock).not.toContain('style.display');
+
+        const closeBlock = script.slice(
+            script.indexOf('function closePairCodeModal'),
+            script.indexOf('function closePairCodeModal') + 400);
+        expect(closeBlock).toContain("classList.remove('open')");
+        expect(closeBlock).not.toContain('style.display');
     });
 
     test('code generation goes through the operator-only panel endpoint', () => {

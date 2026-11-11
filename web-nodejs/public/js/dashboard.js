@@ -817,23 +817,14 @@ Start-Process -FilePath $RustDesk -ArgumentList @('--config', $CfgString) -Wait 
                 generatePairCode();
             }
         });
-
-        // Deep-link Główne → Pair agent (/?activateAgent=1): operators get the one-time
-        // pairing code, not the legacy QR scanner. Shown button implies enrollment.approve.
-        try {
-            const params = new URLSearchParams(window.location.search || '');
-            if (params.get('activateAgent') === '1' && pairCodeButton) {
-                const navItem = document.getElementById('nav-activate-agent');
-                if (navItem) navItem.classList.add('active');
-                openPairCodeModal();
-            }
-        } catch (_) { /* ignore */ }
     }
 
     function openPairCodeModal() {
         if (!pairCodeModal) return;
+        // The class is the only switch: an inline display would fight the sheet
+        // and leave the overlay transparent but still covering the panel.
         pairCodeModal.hidden = false;
-        pairCodeModal.style.display = 'flex';
+        pairCodeModal.classList.add('open');
         resetPairCodeResult();
         fillPairCodeHost();
         const labelInput = findById('dashboard-pair-code-label');
@@ -860,8 +851,8 @@ Start-Process -FilePath $RustDesk -ArgumentList @('--config', $CfgString) -Wait 
         if (pairCodeCountdown) clearInterval(pairCodeCountdown);
         pairCodeCountdown = null;
         if (pairCodeModal) {
+            pairCodeModal.classList.remove('open');
             pairCodeModal.hidden = true;
-            pairCodeModal.style.display = 'none';
         }
     }
 
@@ -980,7 +971,7 @@ Start-Process -FilePath $RustDesk -ArgumentList @('--config', $CfgString) -Wait 
     async function openAgentActivation() {
         if (!activationModal) return;
         activationModal.hidden = false;
-        activationModal.style.display = 'flex';
+        activationModal.classList.add('open');
         activationForm.hidden = true;
         activationDeviceId = '';
         setActivationStatus(_('dashboard.activate_agent_scanning'));
@@ -990,8 +981,8 @@ Start-Process -FilePath $RustDesk -ArgumentList @('--config', $CfgString) -Wait 
     function closeAgentActivation() {
         stopAgentActivation();
         if (activationModal) {
+            activationModal.classList.remove('open');
             activationModal.hidden = true;
-            activationModal.style.display = 'none';
         }
     }
 
