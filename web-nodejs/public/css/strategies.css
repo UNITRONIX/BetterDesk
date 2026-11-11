@@ -71,23 +71,9 @@
     background: none;
 }
 
-/* The link left on the Devices page: one quiet row, not a card */
-.devices-strategies-link {
-    display: flex;
-    align-items: center;
-    gap: var(--space-xs, 4px);
-    margin: 0 0 var(--space-sm, 8px);
-    color: var(--text-secondary);
-    font-size: var(--font-size-sm);
-}
-
-.devices-strategies-link a {
-    color: var(--text-link, var(--accent-blue));
-}
-
-.devices-strategies-link .material-icons {
-    font-size: 18px;
-}
+/* The link that used to sit on the Devices page is gone: strategies have their
+   own entry in the sidebar, and a second pointer on the device list only
+   pushed the page header down. */
 
 @media (max-width: 767px) {
     .ux36-page .strategies-list .strategy-manager-item {

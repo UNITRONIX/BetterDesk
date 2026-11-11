@@ -85,7 +85,7 @@ describe('Access control strategies page', () => {
         });
     });
 
-    it('does not render the old card on the Devices page', () => {
+    it('does not render the old card or a duplicate link on the Devices page', () => {
         ['ux35', 'ux36'].forEach((shell) => {
             const html = render('devices.ejs', shell, 'devices');
             assert.doesNotMatch(html, /id="devices-strategies-card"/,
@@ -94,9 +94,28 @@ describe('Access control strategies page', () => {
                 `${shell}: the strategies list is rendered on the Devices page`);
             assert.doesNotMatch(html, /id="add-strategy-btn"/,
                 `${shell}: the add-strategy button is rendered on the Devices page`);
-            // A quiet link remains, so the page is still discoverable there.
-            assert.match(html, /href="\/strategies"/, `${shell}: no link to /strategies`);
+            // The duplicate link went too: it pushed the page header down and
+            // strategies already have a sidebar entry.
+            assert.doesNotMatch(html, /devices-strategies-link/,
+                `${shell}: the strategies link is back on the Devices page`);
         });
+    });
+
+    it('puts the devices header first in its own container', () => {
+        // The header must be the page's first block: a stray row above it makes
+        // the title look anchored to the bottom of the list.
+        const view = read('views', 'devices.ejs');
+        const bodyStart = view.indexOf('<div class="devices-page devices-layout">');
+        assert.ok(bodyStart > -1, 'devices page container missing');
+        const afterContainer = view.slice(bodyStart);
+        const headerIndex = afterContainer.indexOf('class="devices-header"');
+        const tileIndex = afterContainer.indexOf('class="devices-tile-bars"');
+        assert.ok(headerIndex > -1 && tileIndex > -1);
+        assert.ok(headerIndex < tileIndex, 'the header must come before the folder rail');
+        // Nothing may sit between the container opening and the header.
+        const between = afterContainer.slice(0, headerIndex);
+        assert.doesNotMatch(between, /class="[^"]*strateg/i,
+            'the strategies block is rendered above the header again');
     });
 
     it('is reachable from the sidebar in both shells', () => {

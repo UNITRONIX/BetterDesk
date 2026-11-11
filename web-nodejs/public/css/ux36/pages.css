@@ -337,12 +337,6 @@
     font-variant-numeric: tabular-nums;
 }
 
-.ux36-page .devices-page .devices-strategies-link {
-    grid-column: 2;
-    grid-row: 3;
-    margin: 16px 0 0;
-}
-
 /* Toolbar sits above the table in the content column */
 .ux36-page .devices-page .devices-toolbar {
     grid-column: 2;
@@ -405,8 +399,7 @@
 
     .ux36-page .devices-chip-bars,
     .ux36-page .devices-toolbar,
-    .ux36-page .devices-table-container,
-    .ux36-page .devices-page .devices-strategies-link {
+    .ux36-page .devices-table-container {
         grid-column: 1;
         grid-row: auto;
         position: static;
