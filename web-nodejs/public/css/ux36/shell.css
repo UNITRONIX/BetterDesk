@@ -810,12 +810,22 @@
     inset: 0;
     z-index: 55;
     background: rgba(0, 0, 0, 0.35);
+    /* Same technique as UX 3.5: hidden through visibility + pointer-events so
+       the fade still runs and a closed overlay never blocks the page. */
     opacity: 0;
-    transition: opacity var(--motion);
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity var(--motion), visibility var(--motion);
+}
+
+.ux35-sidebar-overlay[hidden] {
+    display: none !important;
 }
 
 .ux35-sidebar-overlay.visible {
     opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
 }
 
 .ux35-main {

@@ -611,7 +611,10 @@ th.sortable.sort-desc {
     position: fixed;
     inset: 0;
     z-index: var(--layer-dialog);
-    display: flex;
+    /* A closed overlay must not exist for the pointer: opacity alone keeps a
+       full-viewport layer over the page, which swallows every click and leaves
+       the panel unusable (the assign-package modal did exactly that). */
+    display: none;
     align-items: center;
     justify-content: center;
     padding: var(--space-4);
@@ -623,6 +626,7 @@ th.sortable.sort-desc {
 .modal-overlay.open,
 .modal-overlay.active,
 .modal-overlay.show {
+    display: flex;
     opacity: 1;
 }
 
@@ -2194,11 +2198,14 @@ time.time {
     position: fixed;
     inset: 0;
     z-index: var(--layer-dialog);
-    display: block;
     padding: 0;
     background: rgba(0, 0, 0, 0.3);
     opacity: 0;
-    transition: opacity var(--motion);
+    /* A closed layer must leave the pointer alone. visibility (not display) so
+       the fade in .open still animates. */
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity var(--motion), visibility var(--motion);
 }
 
 :root[data-theme="dark"] .sheet-layer {
@@ -2207,6 +2214,8 @@ time.time {
 
 .sheet-layer.open {
     opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
 }
 
 /* A dialog made by Modal opens on top of a sheet that is already open
