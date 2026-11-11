@@ -215,6 +215,10 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
+    /* Title, count and the two page actions read as one left-aligned group.
+       The v2 sheet justifies them to the two edges, which is what pushed the
+       actions to the far right. */
+    justify-content: flex-start;
     gap: 8px 16px;
     margin-bottom: 16px;
     padding: 0;
@@ -222,11 +226,20 @@
     background: none;
 }
 
+/* Title and its actions read as one left-aligned group: the actions are the
+   page's own controls, so they sit next to the count instead of being pushed
+   to the far edge where they read as unrelated chrome. */
 .ux36-page .devices-title {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-inline-end: auto;
+}
+
+.ux36-page .devices-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
 }
 
 .ux36-page .devices-count {

@@ -81,6 +81,27 @@ describe('UX 3.6 shell scroll chain', () => {
         assert.match(drawerBlock, /\.ux35-sidebar\s*\{[^}]*height:\s*auto/);
     });
 
+    it('keeps the Devices header actions on the left, next to the title', () => {
+        // The title used to carry margin-inline-end: auto, which pushed the
+        // page's own controls (Add RDP/VNC target, Sync status) to the far right
+        // edge where they read as unrelated chrome.
+        const pagesCss = read('public', 'css', 'ux36', 'pages.css');
+        const header = ruleBody(pagesCss, '.ux36-page .devices-header');
+        assert.ok(header, '.ux36-page .devices-header rule missing');
+        assert.match(header, /justify-content:\s*flex-start/,
+            'the v2 sheet space-betweens the header, pushing the actions right');
+
+        const title = ruleBody(pagesCss, '.ux36-page .devices-title');
+        assert.ok(title, '.ux36-page .devices-title rule missing');
+        assert.doesNotMatch(title, /margin-inline-end:\s*auto/,
+            'margin-inline-end: auto pushes the header actions to the right');
+
+        // The actions keep their own row gap so both buttons stay together.
+        const actions = ruleBody(pagesCss, '.ux36-page .devices-actions');
+        assert.ok(actions, '.ux36-page .devices-actions rule missing');
+        assert.match(actions, /gap:/);
+    });
+
     it('matches the reason the body clips overflow in the first place', () => {
         // If main.css ever stops clipping the body, this test should be revisited
         // rather than silently passing on a stale assumption.
@@ -121,8 +142,7 @@ describe('Devices horizontal scrollbar anchoring', () => {
         assert.match(pagesCss, /\.ux36-page \.chat-page\s*\{[^}]*height:\s*100%/);
     });
 
-    it('flattens the Dashboard cards that still carry v2 gradients and glow', () => {
-        // dashboard.css (v2) puts a radial glow on the hero, a linear gradient and
+    it('flattens the Dashboard cards that still carry v2 gradients and glow', () => {        // dashboard.css (v2) puts a radial glow on the hero, a linear gradient and
         // a blue border on the client-config card, and glass on the activity
         // panel. Next to the beta layout those read as a different design
         // language, so the beta sheet must override all of them.
