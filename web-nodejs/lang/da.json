@@ -38,7 +38,8 @@
         "edit": "Rediger",
         "yes": "Ja",
         "no": "Nej",
-        "not_available": "Not available"
+        "not_available": "Not available",
+        "refresh": "Opdater"
     },
     "nav": {
         "main": "Hoved",
@@ -4790,7 +4791,7 @@
         "title": "Parringskode",
         "subtitle": "Forbind en BetterDesk-klient ved at indtaste serveradressen og en kort engangskode i stedet for en lang konfigurationsstreng.",
         "generate_title": "Opret en kode",
-        "generate_hint": "Koden er gyldig i 10 minutter og kan bruges én gang. Del serveradressen og koden med den, der opsætter klienten.",
+        "generate_hint": "Del denne kode og serveradressen. Gyldig i 10 minutter og én gang.",
         "label_field": "Etiket (valgfrit)",
         "label_placeholder": "f.eks. Annas bærbare",
         "host_field": "Serveradresse",
@@ -4816,7 +4817,11 @@
         "revoked": "Parringskode tilbagekaldt",
         "revoke_failed": "Kunne ikke tilbagekalde koden",
         "created": "Parringskode oprettet",
-        "create_failed": "Kunne ikke oprette en parringskode"
+        "create_failed": "Kunne ikke oprette en parringskode",
+        "new_code": "Ny kode",
+        "client_address": "Serveradresse til klienten",
+        "host_unknown": "Spørg din administrator",
+        "unavailable": "Ingen kode tilgængelig"
     },
     "ux36": {
         "beta_badge": "BETA",

@@ -32,7 +32,8 @@
         "edit": "Upravit",
         "yes": "Ano",
         "no": "Ne",
-        "not_available": "Not available"
+        "not_available": "Not available",
+        "refresh": "Obnovit"
     },
     "nav": {
         "main": "Hlavní",
@@ -4784,7 +4785,7 @@
         "title": "Párovací kód",
         "subtitle": "Připojte klienta BetterDesk zadáním adresy serveru a krátkého jednorázového kódu místo dlouhého konfiguračního řetězce.",
         "generate_title": "Vytvořit kód",
-        "generate_hint": "Kód platí 10 minut a lze jej použít jednou. Předejte adresu serveru a kód osobě, která nastavuje klienta.",
+        "generate_hint": "Sdílejte tento kód a adresu serveru. Platí 10 minut a jednou.",
         "label_field": "Štítek (volitelné)",
         "label_placeholder": "např. Annin notebook",
         "host_field": "Adresa serveru",
@@ -4810,7 +4811,11 @@
         "revoked": "Párovací kód zrušen",
         "revoke_failed": "Kód se nepodařilo zrušit",
         "created": "Párovací kód vytvořen",
-        "create_failed": "Párovací kód se nepodařilo vytvořit"
+        "create_failed": "Párovací kód se nepodařilo vytvořit",
+        "new_code": "Nový kód",
+        "client_address": "Adresa serveru pro klienta",
+        "host_unknown": "Zeptejte se správce",
+        "unavailable": "Kód není k dispozici"
     },
     "ux36": {
         "beta_badge": "BETA",

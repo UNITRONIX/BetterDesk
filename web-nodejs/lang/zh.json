@@ -32,7 +32,8 @@
         "edit": "编辑",
         "yes": "是",
         "no": "否",
-        "not_available": "Not available"
+        "not_available": "Not available",
+        "refresh": "刷新"
     },
     "nav": {
         "main": "主要",
@@ -4784,7 +4785,7 @@
         "title": "配对码",
         "subtitle": "输入服务器地址和短的一次性代码即可连接 BetterDesk 客户端，无需长配置字符串。",
         "generate_title": "创建代码",
-        "generate_hint": "代码有效期为 10 分钟，仅可使用一次。请将服务器地址和代码告知配置客户端的人。",
+        "generate_hint": "将此代码和服务器地址告知用户。有效期10分钟，仅可使用一次。",
         "label_field": "标签（可选）",
         "label_placeholder": "例如：Anna 的笔记本电脑",
         "host_field": "服务器地址",
@@ -4810,7 +4811,11 @@
         "revoked": "配对码已撤销",
         "revoke_failed": "无法撤销代码",
         "created": "配对码已创建",
-        "create_failed": "无法创建配对码"
+        "create_failed": "无法创建配对码",
+        "new_code": "新代码",
+        "client_address": "在客户端输入的服务器地址",
+        "host_unknown": "请询问管理员",
+        "unavailable": "没有可用代码"
     },
     "ux36": {
         "beta_badge": "BETA",

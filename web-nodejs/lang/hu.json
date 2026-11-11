@@ -38,7 +38,8 @@
         "edit": "Szerkesztés",
         "yes": "Igen",
         "no": "Nem",
-        "not_available": "Not available"
+        "not_available": "Not available",
+        "refresh": "Frissítés"
     },
     "nav": {
         "main": "Fő",
@@ -4790,7 +4791,7 @@
         "title": "Párosítási kód",
         "subtitle": "Csatlakoztasson BetterDesk klienst a kiszolgáló címe és egy rövid egyszerhasználatos kód megadásával a hosszú konfigurációs szöveg helyett.",
         "generate_title": "Kód létrehozása",
-        "generate_hint": "A kód 10 percig érvényes és egyszer használható. Adja át a kiszolgáló címét és a kódot a klienst beállító személynek.",
+        "generate_hint": "Ossza meg ezt a kódot és a szervercímet. 10 percig érvényes, egyszeri.",
         "label_field": "Címke (nem kötelező)",
         "label_placeholder": "pl. Anna laptopja",
         "host_field": "Kiszolgáló címe",
@@ -4816,7 +4817,11 @@
         "revoked": "Párosítási kód visszavonva",
         "revoke_failed": "Nem sikerült visszavonni a kódot",
         "created": "Párosítási kód létrehozva",
-        "create_failed": "Nem sikerült párosítási kódot létrehozni"
+        "create_failed": "Nem sikerült párosítási kódot létrehozni",
+        "new_code": "Új kód",
+        "client_address": "Szervercím az ügyfélhez",
+        "host_unknown": "Kérdezze a rendszergazdát",
+        "unavailable": "Nincs elérhető kód"
     },
     "ux36": {
         "beta_badge": "BETA",

@@ -42,17 +42,37 @@
     }
 
     let countdown = null;
+    let currentCode = '';
 
-    function showCode(payload) {
-        const result = $('pairing-result');
-        if (!result) return;
-        result.hidden = false;
-        $('pairing-code').textContent = payload.code || '';
-        // Show the host the operator must type, so both halves of the pairing are visible
-        // in one place.
-        $('pairing-code-host').textContent = $('pairing-host').value.trim() || payload.host || '';
+    /** Show one code, grouped for reading aloud: ABC-DEF. */
+    function renderCode(code) {
+        const el = $('pairing-code');
+        if (!el) return;
+        currentCode = code || '';
+        el.classList.toggle('is-expired', false);
+        if (!currentCode) {
+            el.innerHTML = `<span class="pairing-code-loading">${t('pairing.unavailable', 'No code available')}</span>`;
+            return;
+        }
+        const groups = currentCode.match(/.{1,3}/g) || [currentCode];
+        el.textContent = '';
+        groups.forEach((group, index) => {
+            if (index) {
+                const sep = document.createElement('span');
+                sep.className = 'pairing-code-sep';
+                sep.textContent = '–';
+                sep.setAttribute('aria-hidden', 'true');
+                el.appendChild(sep);
+            }
+            const span = document.createElement('span');
+            span.className = 'pairing-code-group';
+            span.textContent = group;
+            el.appendChild(span);
+        });
+    }
 
-        let remaining = Number(payload.expires_in) || 600;
+    function startCountdown(expiresIn) {
+        let remaining = Number(expiresIn) || 600;
         const ttl = $('pairing-code-ttl');
         if (ttl) ttl.textContent = formatRemaining(remaining);
         if (countdown) clearInterval(countdown);
@@ -62,21 +82,38 @@
                 clearInterval(countdown);
                 countdown = null;
                 if (ttl) ttl.textContent = t('pairing.expired', 'Expired');
-                const code = $('pairing-code');
-                if (code) code.classList.add('is-expired');
+                const el = $('pairing-code');
+                if (el) el.classList.add('is-expired');
+                currentCode = '';
                 return;
             }
             if (ttl) ttl.textContent = formatRemaining(remaining);
         }, 1000);
     }
 
+    /** Store the host the client must type; the panel knows it, the operator does not. */
+    function renderHost(host) {
+        const el = $('pairing-code-host');
+        if (!el) return;
+        const value = String(host || '').trim();
+        el.textContent = value || t('pairing.host_unknown', 'Ask your administrator');
+    }
+
+    /**
+     * Mint a code. The operator only chooses a label — the server address is the
+     * panel's own, because this page belongs to the operator, not to the device
+     * being paired.
+     */
     async function generate() {
         const button = $('pairing-generate');
         if (button) button.disabled = true;
         try {
-            const label = ($('pairing-label') && $('pairing-label').value.trim()) || '';
-            const payload = await api('POST', '/api/panel/pairing/codes', { label });
-            showCode(payload);
+            const payload = await api('POST', '/api/panel/pairing/codes', { label: '' });
+            renderCode(payload.code);
+            renderHost(payload.host);
+            startCountdown(payload.expires_in);
+            const labelOut = $('pairing-code-label-out');
+            if (labelOut) labelOut.textContent = '';
             notify.success(t('pairing.created', 'Pairing code created'));
             await loadCodes();
         } catch (err) {
@@ -137,10 +174,14 @@
     }
 
     async function copyCode() {
-        const text = $('pairing-code') && $('pairing-code').textContent;
-        if (!text) return;
+        const text = currentCode || ($('pairing-code') && $('pairing-code').textContent) || '';
+        const clean = text.trim();
+        if (!clean) {
+            notify.warning(t('pairing.copy_failed', 'Select the code and copy it manually'));
+            return;
+        }
         try {
-            await navigator.clipboard.writeText(text.trim());
+            await navigator.clipboard.writeText(clean);
             notify.success(t('pairing.copied', 'Code copied'));
         } catch (_) {
             notify.warning(t('pairing.copy_failed', 'Select the code and copy it manually'));
@@ -155,5 +196,8 @@
         const copyBtn = $('pairing-copy');
         if (copyBtn) copyBtn.addEventListener('click', copyCode);
         if ($('pairing-tbody')) loadCodes();
+        // The page exists to hand out a code: one is ready on arrival instead of
+        // asking the operator to press a button first.
+        if ($('pairing-code')) generate();
     });
 })();

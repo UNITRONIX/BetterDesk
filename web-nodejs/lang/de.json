@@ -32,7 +32,8 @@
         "edit": "Bearbeiten",
         "yes": "Ja",
         "no": "Nein",
-        "not_available": "Not available"
+        "not_available": "Not available",
+        "refresh": "Aktualisieren"
     },
     "nav": {
         "main": "Hauptmenü",
@@ -4784,7 +4785,7 @@
         "title": "Kopplungscode",
         "subtitle": "Verbinden Sie einen BetterDesk-Client mit Serveradresse und einem kurzen Einmalcode statt einer langen Konfigurationszeichenfolge.",
         "generate_title": "Code erstellen",
-        "generate_hint": "Der Code ist 10 Minuten gültig und einmal verwendbar. Geben Sie Serveradresse und Code an die Person weiter, die den Client einrichtet.",
+        "generate_hint": "Geben Sie diesen Code und die Serveradresse weiter. Er gilt 10 Minuten und nur einmal.",
         "label_field": "Bezeichnung (optional)",
         "label_placeholder": "z. B. Annas Laptop",
         "host_field": "Serveradresse",
@@ -4810,7 +4811,11 @@
         "revoked": "Kopplungscode widerrufen",
         "revoke_failed": "Code konnte nicht widerrufen werden",
         "created": "Kopplungscode erstellt",
-        "create_failed": "Kopplungscode konnte nicht erstellt werden"
+        "create_failed": "Kopplungscode konnte nicht erstellt werden",
+        "new_code": "Neuer Code",
+        "client_address": "Serveradresse für den Client",
+        "host_unknown": "Fragen Sie Ihren Administrator",
+        "unavailable": "Kein Code verfügbar"
     },
     "ux36": {
         "beta_badge": "BETA",

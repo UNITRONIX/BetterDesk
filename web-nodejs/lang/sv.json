@@ -38,7 +38,8 @@
         "edit": "Redigera",
         "yes": "Ja",
         "no": "Nej",
-        "not_available": "Not available"
+        "not_available": "Not available",
+        "refresh": "Uppdatera"
     },
     "nav": {
         "main": "Huvud",
@@ -4790,7 +4791,7 @@
         "title": "Parkopplingskod",
         "subtitle": "Anslut en BetterDesk-klient genom att ange serveradressen och en kort engångskod i stället för en lång konfigurationssträng.",
         "generate_title": "Skapa en kod",
-        "generate_hint": "Koden är giltig i 10 minuter och fungerar en gång. Dela serveradressen och koden med den som installerar klienten.",
+        "generate_hint": "Dela denna kod och serveradressen. Giltig i 10 minuter och en gång.",
         "label_field": "Etikett (valfritt)",
         "label_placeholder": "t.ex. Annas bärbara",
         "host_field": "Serveradress",
@@ -4816,7 +4817,11 @@
         "revoked": "Parkopplingskod återkallad",
         "revoke_failed": "Kunde inte återkalla koden",
         "created": "Parkopplingskod skapad",
-        "create_failed": "Kunde inte skapa en parkopplingskod"
+        "create_failed": "Kunde inte skapa en parkopplingskod",
+        "new_code": "Ny kod",
+        "client_address": "Serveradress för klienten",
+        "host_unknown": "Fråga din administratör",
+        "unavailable": "Ingen kod tillgänglig"
     },
     "ux36": {
         "beta_badge": "BETA",

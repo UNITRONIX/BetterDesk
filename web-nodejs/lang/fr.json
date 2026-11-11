@@ -36,7 +36,8 @@
         "edit": "Modifier",
         "yes": "Ja",
         "no": "Nein",
-        "not_available": "Not available"
+        "not_available": "Not available",
+        "refresh": "Actualiser"
     },
     "nav": {
         "main": "Principal",
@@ -4788,7 +4789,7 @@
         "title": "Code d'appairage",
         "subtitle": "Connectez un client BetterDesk en saisissant l'adresse du serveur et un code court à usage unique au lieu d'une longue chaîne de configuration.",
         "generate_title": "Créer un code",
-        "generate_hint": "Le code est valable 10 minutes et à usage unique. Transmettez l'adresse du serveur et le code à la personne qui configure le client.",
+        "generate_hint": "Communiquez ce code et l’adresse du serveur. Valable 10 minutes, à usage unique.",
         "label_field": "Libellé (facultatif)",
         "label_placeholder": "ex. portable d'Anna",
         "host_field": "Adresse du serveur",
@@ -4814,7 +4815,11 @@
         "revoked": "Code d'appairage révoqué",
         "revoke_failed": "Impossible de révoquer le code",
         "created": "Code d'appairage créé",
-        "create_failed": "Impossible de créer un code d'appairage"
+        "create_failed": "Impossible de créer un code d'appairage",
+        "new_code": "Nouveau code",
+        "client_address": "Adresse serveur à saisir dans le client",
+        "host_unknown": "Demandez à votre administrateur",
+        "unavailable": "Aucun code disponible"
     },
     "ux36": {
         "beta_badge": "BETA",

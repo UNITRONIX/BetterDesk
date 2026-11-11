@@ -32,7 +32,8 @@
         "edit": "편집",
         "yes": "예",
         "no": "아니요",
-        "not_available": "Not available"
+        "not_available": "Not available",
+        "refresh": "새로고침"
     },
     "nav": {
         "main": "메인",
@@ -4784,7 +4785,7 @@
         "title": "페어링 코드",
         "subtitle": "긴 구성 문자열 대신 서버 주소와 짧은 일회용 코드를 입력하여 BetterDesk 클라이언트를 연결합니다.",
         "generate_title": "코드 만들기",
-        "generate_hint": "코드는 10분 동안 유효하며 한 번만 사용할 수 있습니다. 서버 주소와 코드를 클라이언트를 설정하는 사람에게 전달하십시오.",
+        "generate_hint": "이 코드와 서버 주소를 전달하세요. 10분간 유효하며 한 번만 사용됩니다.",
         "label_field": "레이블(선택 사항)",
         "label_placeholder": "예: Anna의 노트북",
         "host_field": "서버 주소",
@@ -4810,7 +4811,11 @@
         "revoked": "페어링 코드가 취소되었습니다",
         "revoke_failed": "코드를 취소할 수 없습니다",
         "created": "페어링 코드가 생성되었습니다",
-        "create_failed": "페어링 코드를 만들 수 없습니다"
+        "create_failed": "페어링 코드를 만들 수 없습니다",
+        "new_code": "새 코드",
+        "client_address": "클라이언트에 입력할 서버 주소",
+        "host_unknown": "관리자에게 문의하세요",
+        "unavailable": "사용 가능한 코드 없음"
     },
     "ux36": {
         "beta_badge": "BETA",

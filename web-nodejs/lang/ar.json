@@ -39,7 +39,8 @@
         "edit": "يحرر",
         "yes": "نعم",
         "no": "لا",
-        "not_available": "Not available"
+        "not_available": "Not available",
+        "refresh": "تحديث"
     },
     "nav": {
         "main": "Main",
@@ -4791,7 +4792,7 @@
         "title": "رمز الاقتران",
         "subtitle": "اربط عميل BetterDesk بإدخال عنوان الخادم ورمز قصير لمرة واحدة بدلاً من سلسلة تهيئة طويلة.",
         "generate_title": "إنشاء رمز",
-        "generate_hint": "الرمز صالح لمدة 10 دقائق ويُستخدم مرة واحدة. شارك عنوان الخادم والرمز مع من يقوم بإعداد العميل.",
+        "generate_hint": "شارك هذا الرمز وعنوان الخادم. صالح 10 دقائق ولمرة واحدة.",
         "label_field": "التسمية (اختياري)",
         "label_placeholder": "مثال: حاسوب آنا المحمول",
         "host_field": "عنوان الخادم",
@@ -4817,7 +4818,11 @@
         "revoked": "تم إلغاء رمز الاقتران",
         "revoke_failed": "تعذر إلغاء الرمز",
         "created": "تم إنشاء رمز الاقتران",
-        "create_failed": "تعذر إنشاء رمز اقتران"
+        "create_failed": "تعذر إنشاء رمز اقتران",
+        "new_code": "رمز جديد",
+        "client_address": "عنوان الخادم للعميل",
+        "host_unknown": "اسأل المسؤول",
+        "unavailable": "لا يوجد رمز متاح"
     },
     "ux36": {
         "beta_badge": "BETA",

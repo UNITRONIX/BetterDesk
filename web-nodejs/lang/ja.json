@@ -32,7 +32,8 @@
         "edit": "編集",
         "yes": "はい",
         "no": "いいえ",
-        "not_available": "Not available"
+        "not_available": "Not available",
+        "refresh": "更新"
     },
     "nav": {
         "main": "メイン",
@@ -4784,7 +4785,7 @@
         "title": "ペアリングコード",
         "subtitle": "長い設定文字列の代わりに、サーバーアドレスと短いワンタイムコードを入力して BetterDesk クライアントを接続します。",
         "generate_title": "コードを作成",
-        "generate_hint": "コードは 10 分間有効で、一度だけ使用できます。サーバーアドレスとコードをクライアントを設定する人に伝えてください。",
+        "generate_hint": "このコードとサーバーアドレスを伝えてください。10分間有効、1回限りです。",
         "label_field": "ラベル（任意）",
         "label_placeholder": "例: Anna のノート PC",
         "host_field": "サーバーアドレス",
@@ -4810,7 +4811,11 @@
         "revoked": "ペアリングコードを取り消しました",
         "revoke_failed": "コードを取り消せませんでした",
         "created": "ペアリングコードを作成しました",
-        "create_failed": "ペアリングコードを作成できませんでした"
+        "create_failed": "ペアリングコードを作成できませんでした",
+        "new_code": "新しいコード",
+        "client_address": "クライアントに入力するサーバーアドレス",
+        "host_unknown": "管理者に確認してください",
+        "unavailable": "利用できるコードがありません"
     },
     "ux36": {
         "beta_badge": "BETA",

@@ -32,7 +32,8 @@
         "edit": "Editar",
         "yes": "Sí",
         "no": "No",
-        "not_available": "Not available"
+        "not_available": "Not available",
+        "refresh": "Actualizar"
     },
     "nav": {
         "main": "Principal",
@@ -4784,7 +4785,7 @@
         "title": "Código de emparejamiento",
         "subtitle": "Conecta un cliente BetterDesk escribiendo la dirección del servidor y un código corto de un solo uso en lugar de una cadena larga.",
         "generate_title": "Crear un código",
-        "generate_hint": "El código es válido durante 10 minutos y se usa una sola vez. Comparte la dirección del servidor y el código con quien configure el cliente.",
+        "generate_hint": "Comparta este código y la dirección del servidor. Vale 10 minutos y un solo uso.",
         "label_field": "Etiqueta (opcional)",
         "label_placeholder": "p. ej. portátil de Anna",
         "host_field": "Dirección del servidor",
@@ -4810,7 +4811,11 @@
         "revoked": "Código de emparejamiento revocado",
         "revoke_failed": "No se pudo revocar el código",
         "created": "Código de emparejamiento creado",
-        "create_failed": "No se pudo crear un código de emparejamiento"
+        "create_failed": "No se pudo crear un código de emparejamiento",
+        "new_code": "Nuevo código",
+        "client_address": "Dirección del servidor para el cliente",
+        "host_unknown": "Consulte a su administrador",
+        "unavailable": "No hay código disponible"
     },
     "ux36": {
         "beta_badge": "BETA",

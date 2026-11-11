@@ -36,7 +36,8 @@
         "edit": "編輯",
         "yes": "是",
         "no": "否",
-        "not_available": "Not available"
+        "not_available": "Not available",
+        "refresh": "重新整理"
     },
     "nav": {
         "main": "主要",
@@ -4788,7 +4789,7 @@
         "title": "配對碼",
         "subtitle": "輸入伺服器位址和短的一次性代碼即可連接 BetterDesk 用戶端，無需長設定字串。",
         "generate_title": "建立代碼",
-        "generate_hint": "代碼有效期為 10 分鐘，僅可使用一次。請將伺服器位址和代碼告知設定用戶端的人。",
+        "generate_hint": "將此代碼和伺服器位址告知使用者。有效期10分鐘，僅可使用一次。",
         "label_field": "標籤（選填）",
         "label_placeholder": "例如：Anna 的筆記型電腦",
         "host_field": "伺服器位址",
@@ -4814,7 +4815,11 @@
         "revoked": "配對碼已撤銷",
         "revoke_failed": "無法撤銷代碼",
         "created": "配對碼已建立",
-        "create_failed": "無法建立配對碼"
+        "create_failed": "無法建立配對碼",
+        "new_code": "新代碼",
+        "client_address": "在用戶端輸入的伺服器位址",
+        "host_unknown": "請詢問管理員",
+        "unavailable": "沒有可用代碼"
     },
     "ux36": {
         "beta_badge": "BETA",

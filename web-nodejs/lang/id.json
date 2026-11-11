@@ -38,7 +38,8 @@
         "edit": "Sunting",
         "yes": "Ya",
         "no": "Tidak",
-        "not_available": "Not available"
+        "not_available": "Not available",
+        "refresh": "Muat ulang"
     },
     "nav": {
         "main": "Main",
@@ -4790,7 +4791,7 @@
         "title": "Kode pemasangan",
         "subtitle": "Hubungkan klien BetterDesk dengan mengetik alamat server dan kode sekali pakai yang singkat, bukan string konfigurasi yang panjang.",
         "generate_title": "Buat kode",
-        "generate_hint": "Kode berlaku 10 menit dan hanya sekali pakai. Bagikan alamat server dan kode kepada orang yang menyiapkan klien.",
+        "generate_hint": "Bagikan kode ini dan alamat server. Berlaku 10 menit, sekali pakai.",
         "label_field": "Label (opsional)",
         "label_placeholder": "mis. laptop Anna",
         "host_field": "Alamat server",
@@ -4816,7 +4817,11 @@
         "revoked": "Kode pemasangan dicabut",
         "revoke_failed": "Tidak dapat mencabut kode",
         "created": "Kode pemasangan dibuat",
-        "create_failed": "Tidak dapat membuat kode pemasangan"
+        "create_failed": "Tidak dapat membuat kode pemasangan",
+        "new_code": "Kode baru",
+        "client_address": "Alamat server untuk klien",
+        "host_unknown": "Tanyakan administrator",
+        "unavailable": "Tidak ada kode tersedia"
     },
     "ux36": {
         "beta_badge": "BETA",

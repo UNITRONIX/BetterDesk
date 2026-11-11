@@ -38,7 +38,8 @@
         "edit": "Muokkaa",
         "yes": "Kyllä",
         "no": "Ei",
-        "not_available": "Not available"
+        "not_available": "Not available",
+        "refresh": "Päivitä"
     },
     "nav": {
         "main": "Pää",
@@ -4790,7 +4791,7 @@
         "title": "Pariliitoskoodi",
         "subtitle": "Yhdistä BetterDesk-asiakas kirjoittamalla palvelimen osoite ja lyhyt kertakäyttöinen koodi pitkän asetustekstin sijaan.",
         "generate_title": "Luo koodi",
-        "generate_hint": "Koodi on voimassa 10 minuuttia ja toimii kerran. Anna palvelimen osoite ja koodi asiakkaan asentajalle.",
+        "generate_hint": "Jaa tämä koodi ja palvelimen osoite. Voimassa 10 minuuttia ja kerran.",
         "label_field": "Tunniste (valinnainen)",
         "label_placeholder": "esim. Annan kannettava",
         "host_field": "Palvelimen osoite",
@@ -4816,7 +4817,11 @@
         "revoked": "Pariliitoskoodi peruttu",
         "revoke_failed": "Koodin peruuttaminen epäonnistui",
         "created": "Pariliitoskoodi luotu",
-        "create_failed": "Pariliitoskoodin luominen epäonnistui"
+        "create_failed": "Pariliitoskoodin luominen epäonnistui",
+        "new_code": "Uusi koodi",
+        "client_address": "Palvelimen osoite asiakkaalle",
+        "host_unknown": "Kysy järjestelmänvalvojalta",
+        "unavailable": "Koodia ei saatavilla"
     },
     "ux36": {
         "beta_badge": "BETA",

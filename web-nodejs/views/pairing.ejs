@@ -1,6 +1,6 @@
 <%- include('layouts/main', {
     title: _('pairing.title'),
-    pageStyles: ['pages'],
+    pageStyles: ['pages', 'pairing'],
     pageScripts: ['pairing'],
     currentPage: 'pairing',
     breadcrumb: [{ label: _('pairing.title') }],
@@ -13,49 +13,31 @@
             <p class="page-subtitle">${_('pairing.subtitle')}</p>
         </div>
 
-        <section class="card">
-            <div class="card-header">
-                <h2 class="card-title">
-                    <span class="material-icons">add_link</span>
-                    ${_('pairing.generate_title')}
-                </h2>
-            </div>
+        <section class="card pairing-hero">
             <div class="card-body">
-                <p class="settings-row-hint">${_('pairing.generate_hint')}</p>
-                <div class="form-grid" style="max-width: 520px;">
-                    <label class="form-field">
-                        <span>${_('pairing.label_field')}</span>
-                        <input id="pairing-label" class="form-input" maxlength="64"
-                               placeholder="${_('pairing.label_placeholder')}" autocomplete="off">
-                    </label>
-                    <label class="form-field">
-                        <span>${_('pairing.host_field')}</span>
-                        <input id="pairing-host" class="form-input" value="${suggested_host || ''}"
-                               placeholder="desk.example.com" autocomplete="off">
-                        <small class="settings-row-hint">${_('pairing.host_hint')}</small>
-                    </label>
+                <p class="settings-row-hint">${_('pairing.code_hint')}</p>
+                <div class="pairing-code" id="pairing-code" aria-live="polite">
+                    <span class="pairing-code-loading">${_('pairing.generating')}</span>
                 </div>
-                <div style="margin-top: 12px;">
+                <div class="pairing-meta">
+                    <span>${_('pairing.expires_in')}: <strong id="pairing-code-ttl">—</strong></span>
+                    <span id="pairing-code-label-out"></span>
+                </div>
+                <div class="pairing-actions">
                     <button type="button" id="pairing-generate" class="btn btn-primary">
-                        <span class="material-icons">vpn_key</span>
-                        ${_('pairing.generate_button')}
+                        <span class="material-icons">autorenew</span>
+                        ${_('pairing.new_code')}
+                    </button>
+                    <button type="button" id="pairing-copy" class="btn btn-secondary">
+                        <span class="material-icons">content_copy</span>
+                        ${_('pairing.copy')}
                     </button>
                 </div>
-
-                <div id="pairing-result" class="pairing-result" hidden>
-                    <p class="settings-row-hint">${_('pairing.code_hint')}</p>
-                    <div class="pairing-code" id="pairing-code" aria-live="polite"></div>
-                    <div class="pairing-meta">
-                        <span>${_('pairing.host_field')}: <strong id="pairing-code-host"></strong></span>
-                        <span>${_('pairing.expires_in')}: <strong id="pairing-code-ttl"></strong></span>
-                    </div>
-                    <div style="margin-top: 8px;">
-                        <button type="button" id="pairing-copy" class="btn btn-secondary btn-sm">
-                            <span class="material-icons">content_copy</span>
-                            ${_('pairing.copy')}
-                        </button>
-                    </div>
-                </div>
+                <p class="pairing-address">
+                    <span class="material-icons" aria-hidden="true">dns</span>
+                    <span>${_('pairing.client_address')}</span>
+                    <strong id="pairing-code-host">${suggested_host || ''}</strong>
+                </p>
             </div>
         </section>
 

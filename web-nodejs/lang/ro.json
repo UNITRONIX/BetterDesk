@@ -38,7 +38,8 @@
         "edit": "Editați",
         "yes": "Da",
         "no": "Nu",
-        "not_available": "Not available"
+        "not_available": "Not available",
+        "refresh": "Reîmprospătează"
     },
     "nav": {
         "main": "Principal",
@@ -4790,7 +4791,7 @@
         "title": "Cod de asociere",
         "subtitle": "Conectați un client BetterDesk introducând adresa serverului și un cod scurt de unică folosință în locul unui șir lung de configurare.",
         "generate_title": "Creați un cod",
-        "generate_hint": "Codul este valabil 10 minute și funcționează o singură dată. Transmiteți adresa serverului și codul persoanei care configurează clientul.",
+        "generate_hint": "Partajați acest cod și adresa serverului. Valabil 10 minute, o singură dată.",
         "label_field": "Etichetă (opțional)",
         "label_placeholder": "de ex. laptopul Annei",
         "host_field": "Adresa serverului",
@@ -4816,7 +4817,11 @@
         "revoked": "Cod de asociere revocat",
         "revoke_failed": "Codul nu a putut fi revocat",
         "created": "Cod de asociere creat",
-        "create_failed": "Codul de asociere nu a putut fi creat"
+        "create_failed": "Codul de asociere nu a putut fi creat",
+        "new_code": "Cod nou",
+        "client_address": "Adresa serverului pentru client",
+        "host_unknown": "Întrebați administratorul",
+        "unavailable": "Niciun cod disponibil"
     },
     "ux36": {
         "beta_badge": "BETA",

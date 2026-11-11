@@ -38,7 +38,8 @@
         "edit": "Chỉnh sửa",
         "yes": "Có",
         "no": "Không",
-        "not_available": "Not available"
+        "not_available": "Not available",
+        "refresh": "Làm mới"
     },
     "nav": {
         "main": "Main",
@@ -4790,7 +4791,7 @@
         "title": "Mã ghép nối",
         "subtitle": "Kết nối ứng dụng khách BetterDesk bằng cách nhập địa chỉ máy chủ và mã dùng một lần ngắn thay vì chuỗi cấu hình dài.",
         "generate_title": "Tạo mã",
-        "generate_hint": "Mã có hiệu lực 10 phút và chỉ dùng một lần. Hãy gửi địa chỉ máy chủ và mã cho người cấu hình ứng dụng khách.",
+        "generate_hint": "Chia sẻ mã này và địa chỉ máy chủ. Hiệu lực 10 phút, dùng một lần.",
         "label_field": "Nhãn (tùy chọn)",
         "label_placeholder": "ví dụ: laptop của Anna",
         "host_field": "Địa chỉ máy chủ",
@@ -4816,7 +4817,11 @@
         "revoked": "Đã thu hồi mã ghép nối",
         "revoke_failed": "Không thể thu hồi mã",
         "created": "Đã tạo mã ghép nối",
-        "create_failed": "Không thể tạo mã ghép nối"
+        "create_failed": "Không thể tạo mã ghép nối",
+        "new_code": "Mã mới",
+        "client_address": "Địa chỉ máy chủ cho ứng dụng",
+        "host_unknown": "Hỏi quản trị viên",
+        "unavailable": "Không có mã khả dụng"
     },
     "ux36": {
         "beta_badge": "BETA",

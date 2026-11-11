@@ -32,7 +32,8 @@
         "edit": "Edit",
         "yes": "Yes",
         "no": "No",
-        "not_available": "Not available"
+        "not_available": "Not available",
+        "refresh": "Refresh"
     },
     "nav": {
         "main": "Main",
@@ -4842,7 +4843,7 @@
         "title": "Pairing code",
         "subtitle": "Connect a BetterDesk client by typing the server address and a short one-time code instead of a long configuration string.",
         "generate_title": "Create a code",
-        "generate_hint": "The code is valid for 10 minutes and works once. Share the server address and the code with the person setting up the client.",
+        "generate_hint": "Share this code and the server address. It is valid for 10 minutes and works once.",
         "label_field": "Label (optional)",
         "label_placeholder": "e.g. Anna's laptop",
         "host_field": "Server address",
@@ -4868,7 +4869,11 @@
         "revoked": "Pairing code revoked",
         "revoke_failed": "Could not revoke the code",
         "created": "Pairing code created",
-        "create_failed": "Could not create a pairing code"
+        "create_failed": "Could not create a pairing code",
+        "new_code": "New code",
+        "client_address": "Server address to enter in the client",
+        "host_unknown": "Ask your administrator",
+        "unavailable": "No code available"
     },
     "ux36": {
         "beta_badge": "BETA",

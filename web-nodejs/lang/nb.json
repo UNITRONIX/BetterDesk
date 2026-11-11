@@ -38,7 +38,8 @@
         "edit": "Rediger",
         "yes": "Ja",
         "no": "Nei",
-        "not_available": "Not available"
+        "not_available": "Not available",
+        "refresh": "Oppdater"
     },
     "nav": {
         "main": "Hoved",
@@ -4790,7 +4791,7 @@
         "title": "Sammenkoblingskode",
         "subtitle": "Koble til en BetterDesk-klient ved å skrive inn serveradressen og en kort engangskode i stedet for en lang konfigurasjonsstreng.",
         "generate_title": "Opprett en kode",
-        "generate_hint": "Koden er gyldig i 10 minutter og virker én gang. Del serveradressen og koden med den som setter opp klienten.",
+        "generate_hint": "Del denne koden og serveradressen. Gyldig i 10 minutter og én gang.",
         "label_field": "Etikett (valgfritt)",
         "label_placeholder": "f.eks. Annas bærbare",
         "host_field": "Serveradresse",
@@ -4816,7 +4817,11 @@
         "revoked": "Sammenkoblingskode tilbakekalt",
         "revoke_failed": "Kunne ikke tilbakekalle koden",
         "created": "Sammenkoblingskode opprettet",
-        "create_failed": "Kunne ikke opprette en sammenkoblingskode"
+        "create_failed": "Kunne ikke opprette en sammenkoblingskode",
+        "new_code": "Ny kode",
+        "client_address": "Serveradresse for klienten",
+        "host_unknown": "Spør administratoren din",
+        "unavailable": "Ingen kode tilgjengelig"
     },
     "ux36": {
         "beta_badge": "BETA",

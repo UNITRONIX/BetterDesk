@@ -32,7 +32,8 @@
         "edit": "Modifica",
         "yes": "Sì",
         "no": "No",
-        "not_available": "Not available"
+        "not_available": "Not available",
+        "refresh": "Aggiorna"
     },
     "nav": {
         "main": "Principale",
@@ -4784,7 +4785,7 @@
         "title": "Codice di abbinamento",
         "subtitle": "Connetti un client BetterDesk inserendo l'indirizzo del server e un codice breve monouso invece di una lunga stringa di configurazione.",
         "generate_title": "Crea un codice",
-        "generate_hint": "Il codice è valido per 10 minuti e utilizzabile una sola volta. Condividi indirizzo del server e codice con chi configura il client.",
+        "generate_hint": "Condividi questo codice e l’indirizzo del server. Vale 10 minuti e un solo uso.",
         "label_field": "Etichetta (facoltativa)",
         "label_placeholder": "es. portatile di Anna",
         "host_field": "Indirizzo del server",
@@ -4810,7 +4811,11 @@
         "revoked": "Codice di abbinamento revocato",
         "revoke_failed": "Impossibile revocare il codice",
         "created": "Codice di abbinamento creato",
-        "create_failed": "Impossibile creare un codice di abbinamento"
+        "create_failed": "Impossibile creare un codice di abbinamento",
+        "new_code": "Nuovo codice",
+        "client_address": "Indirizzo server da inserire nel client",
+        "host_unknown": "Chiedi al tuo amministratore",
+        "unavailable": "Nessun codice disponibile"
     },
     "ux36": {
         "beta_badge": "BETA",

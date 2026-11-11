@@ -38,7 +38,8 @@
         "edit": "Düzenle",
         "yes": "Evet",
         "no": "Hayır",
-        "not_available": "Not available"
+        "not_available": "Not available",
+        "refresh": "Yenile"
     },
     "nav": {
         "main": "Main",
@@ -4790,7 +4791,7 @@
         "title": "Eşleştirme kodu",
         "subtitle": "Uzun yapılandırma dizesi yerine sunucu adresini ve kısa, tek kullanımlık bir kodu yazarak BetterDesk istemcisini bağlayın.",
         "generate_title": "Kod oluştur",
-        "generate_hint": "Kod 10 dakika geçerlidir ve bir kez çalışır. Sunucu adresini ve kodu istemciyi kuran kişiyle paylaşın.",
+        "generate_hint": "Bu kodu ve sunucu adresini paylaşın. 10 dakika geçerli, tek kullanımlık.",
         "label_field": "Etiket (isteğe bağlı)",
         "label_placeholder": "ör. Anna'nın dizüstü bilgisayarı",
         "host_field": "Sunucu adresi",
@@ -4816,7 +4817,11 @@
         "revoked": "Eşleştirme kodu iptal edildi",
         "revoke_failed": "Kod iptal edilemedi",
         "created": "Eşleştirme kodu oluşturuldu",
-        "create_failed": "Eşleştirme kodu oluşturulamadı"
+        "create_failed": "Eşleştirme kodu oluşturulamadı",
+        "new_code": "Yeni kod",
+        "client_address": "İstemciye girilecek sunucu adresi",
+        "host_unknown": "Yöneticinize sorun",
+        "unavailable": "Kullanılabilir kod yok"
     },
     "ux36": {
         "beta_badge": "BETA",

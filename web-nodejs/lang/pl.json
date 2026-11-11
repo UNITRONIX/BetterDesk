@@ -32,7 +32,8 @@
         "edit": "Edytuj",
         "yes": "Tak",
         "no": "Nie",
-        "not_available": "Niedostępne"
+        "not_available": "Niedostępne",
+        "refresh": "Odśwież"
     },
     "nav": {
         "main": "Główne",
@@ -4842,7 +4843,7 @@
         "title": "Kod parowania",
         "subtitle": "Połącz klienta BetterDesk, wpisując adres serwera i krótki jednorazowy kod zamiast długiego ciągu konfiguracji.",
         "generate_title": "Utwórz kod",
-        "generate_hint": "Kod jest ważny 10 minut i działa jednorazowo. Przekaż osobie konfigurującej klienta adres serwera i kod.",
+        "generate_hint": "Przekaż ten kod i adres serwera. Kod jest ważny 10 minut i działa jednorazowo.",
         "label_field": "Etykieta (opcjonalnie)",
         "label_placeholder": "np. laptop Anny",
         "host_field": "Adres serwera",
@@ -4868,7 +4869,11 @@
         "revoked": "Kod parowania unieważniony",
         "revoke_failed": "Nie udało się unieważnić kodu",
         "created": "Kod parowania utworzony",
-        "create_failed": "Nie udało się utworzyć kodu parowania"
+        "create_failed": "Nie udało się utworzyć kodu parowania",
+        "new_code": "Nowy kod",
+        "client_address": "Adres serwera do wpisania w kliencie",
+        "host_unknown": "Zapytaj administratora",
+        "unavailable": "Brak dostępnego kodu"
     },
     "ux36": {
         "beta_badge": "BETA",

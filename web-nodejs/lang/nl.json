@@ -32,7 +32,8 @@
         "edit": "Bewerken",
         "yes": "Ja",
         "no": "Nee",
-        "not_available": "Not available"
+        "not_available": "Not available",
+        "refresh": "Vernieuwen"
     },
     "nav": {
         "main": "Hoofdmenu",
@@ -4784,7 +4785,7 @@
         "title": "Koppelcode",
         "subtitle": "Verbind een BetterDesk-client met het serveradres en een korte eenmalige code in plaats van een lange configuratiereeks.",
         "generate_title": "Code aanmaken",
-        "generate_hint": "De code is 10 minuten geldig en werkt één keer. Deel het serveradres en de code met degene die de client instelt.",
+        "generate_hint": "Deel deze code en het serveradres. Geldig voor 10 minuten en één keer.",
         "label_field": "Label (optioneel)",
         "label_placeholder": "bijv. laptop van Anna",
         "host_field": "Serveradres",
@@ -4810,7 +4811,11 @@
         "revoked": "Koppelcode ingetrokken",
         "revoke_failed": "Code kon niet worden ingetrokken",
         "created": "Koppelcode aangemaakt",
-        "create_failed": "Koppelcode kon niet worden aangemaakt"
+        "create_failed": "Koppelcode kon niet worden aangemaakt",
+        "new_code": "Nieuwe code",
+        "client_address": "Serveradres voor de client",
+        "host_unknown": "Vraag uw beheerder",
+        "unavailable": "Geen code beschikbaar"
     },
     "ux36": {
         "beta_badge": "BETA",
