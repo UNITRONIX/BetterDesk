@@ -101,7 +101,9 @@
         "group_rules": "Regler og retningslinjer",
         "group_server": "Server",
         "group_billing": "Fakturering",
-        "group_developer": "Utvikler"
+        "group_developer": "Utvikler",
+        "more": "Mer",
+        "fewer": "Færre"
     },
     "auth": {
         "login": "Login",
@@ -772,7 +774,8 @@
             "branding_rdclient": "RdClient",
             "connection_p2p_hint": "Try direct peer connection first; fall back to relay when P2P fails.",
             "connection_relay_hint": "Route all client traffic through the relay server.",
-            "auth_sub_client_sessions": "RustDesk-klienter"
+            "auth_sub_client_sessions": "RustDesk-klienter",
+            "search_topic": "{topic} er et eget emne"
         },
         "confirm": {
             "connection_mode_title": "Save connection strategy?",
@@ -4828,5 +4831,17 @@
         "switched_to_ux36": "UX 3.6 beta er aktivert for denne nettleseren.",
         "switched_to_ux35": "UX 3.5 er gjenopprettet for denne nettleseren.",
         "default_hint": "Standardlayout. Stabilt og fullt funksjonssett."
+    },
+    "search": {
+        "title": "Søk",
+        "placeholder": "Søk i sider, enheter og personer",
+        "results": "Resultater",
+        "group_pages": "Sider",
+        "group_devices": "Enheter",
+        "group_people": "Personer",
+        "hint": "Skriv en side, en enhets-ID eller -navn, eller en person.",
+        "no_results": "Ingen treff. Prøv færre eller andre ord.",
+        "count": "{count} treff",
+        "keys": "Piltaster flytter, Enter åpner, Esc lukker."
     }
 }

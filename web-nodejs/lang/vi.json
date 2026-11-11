@@ -101,7 +101,9 @@
         "group_rules": "Quy tắc và chính sách",
         "group_server": "Máy chủ",
         "group_billing": "Thanh toán",
-        "group_developer": "Nhà phát triển"
+        "group_developer": "Nhà phát triển",
+        "more": "Thêm",
+        "fewer": "Bớt"
     },
     "auth": {
         "login": "Login",
@@ -772,7 +774,8 @@
             "branding_rdclient": "RdClient",
             "connection_p2p_hint": "Try direct peer connection first; fall back to relay when P2P fails.",
             "connection_relay_hint": "Route all client traffic through the relay server.",
-            "auth_sub_client_sessions": "Client RustDesk"
+            "auth_sub_client_sessions": "Client RustDesk",
+            "search_topic": "{topic} là một mục riêng"
         },
         "confirm": {
             "connection_mode_title": "Save connection strategy?",
@@ -4828,5 +4831,17 @@
         "switched_to_ux36": "Đã bật UX 3.6 beta cho trình duyệt này.",
         "switched_to_ux35": "Đã khôi phục UX 3.5 cho trình duyệt này.",
         "default_hint": "Bố cục mặc định. Ổn định và đầy đủ tính năng."
+    },
+    "search": {
+        "title": "Tìm kiếm",
+        "placeholder": "Tìm trang, thiết bị và người",
+        "results": "Kết quả",
+        "group_pages": "Trang",
+        "group_devices": "Thiết bị",
+        "group_people": "Người",
+        "hint": "Nhập trang, ID hoặc tên thiết bị, hoặc một người.",
+        "no_results": "Không tìm thấy. Hãy thử ít từ hơn hoặc từ khác.",
+        "count": "{count} kết quả",
+        "keys": "Phím mũi tên để di chuyển, Enter để mở, Esc để đóng."
     }
 }

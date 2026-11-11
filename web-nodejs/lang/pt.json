@@ -95,7 +95,9 @@
         "group_rules": "Regras e políticas",
         "group_server": "Servidor",
         "group_billing": "Faturação",
-        "group_developer": "Programador"
+        "group_developer": "Programador",
+        "more": "Mais",
+        "fewer": "Menos"
     },
     "auth": {
         "login": "Entrar",
@@ -766,7 +768,8 @@
             "branding_rdclient": "RdClient",
             "connection_p2p_hint": "Try direct peer connection first; fall back to relay when P2P fails.",
             "connection_relay_hint": "Route all client traffic through the relay server.",
-            "auth_sub_client_sessions": "Clientes RustDesk"
+            "auth_sub_client_sessions": "Clientes RustDesk",
+            "search_topic": "{topic} é um tópico separado"
         },
         "confirm": {
             "connection_mode_title": "Save connection strategy?",
@@ -4822,5 +4825,17 @@
         "switched_to_ux36": "UX 3.6 beta ativado para este navegador.",
         "switched_to_ux35": "UX 3.5 restaurado para este navegador.",
         "default_hint": "Layout predefinido. Estável e completo."
+    },
+    "search": {
+        "title": "Pesquisar",
+        "placeholder": "Pesquisar páginas, dispositivos e pessoas",
+        "results": "Resultados",
+        "group_pages": "Páginas",
+        "group_devices": "Dispositivos",
+        "group_people": "Pessoas",
+        "hint": "Escreva uma página, um ID ou nome de dispositivo, ou uma pessoa.",
+        "no_results": "Nada encontrado. Tente menos palavras ou outras palavras.",
+        "count": "{count} resultados",
+        "keys": "Setas para mover, Enter para abrir, Esc para fechar."
     }
 }

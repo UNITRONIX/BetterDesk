@@ -646,6 +646,14 @@
         const activeTab = document.querySelector('.settings-tab-content.active');
         if (!activeTab) return;
 
+        // Topics are settings pages in their own right: when the typed words
+        // match a topic name and nothing on this one, say which topic has it.
+        const tabs = Array.from(document.querySelectorAll('.settings-shell-tab, .settings-tab'));
+        const otherTopic = query ? tabs.find(tab => {
+            if (tab.classList.contains('active')) return false;
+            return (tab.textContent || '').toLowerCase().includes(query);
+        }) : null;
+
         const panels = activeTab.querySelectorAll('.settings-panel, .settings-auth-panel.active .settings-panel');
         let visible = 0;
         panels.forEach(panel => {
@@ -661,7 +669,11 @@
         });
 
         if (status) {
-            if (query) {
+            if (query && !visible && otherTopic) {
+                status.textContent = tSettings('ui.search_topic', '{topic} is a separate topic')
+                    .replace('{topic}', (otherTopic.textContent || '').trim());
+                status.hidden = false;
+            } else if (query) {
                 const tpl = tSettings('ui.search_results', '{count} matching sections');
                 status.textContent = tpl.replace('{count}', String(visible));
                 status.hidden = false;

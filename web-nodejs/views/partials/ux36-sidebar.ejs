@@ -4,9 +4,16 @@
      * (issue #493 / PR #495), rebuilt on the current console.
      *
      * The model comes from lib/consoleNav.js: five sections (Devices, Support,
-     * People, Activity, Settings). Each section keeps its pages in a <ul>, the
-     * footer is the account row. Every entry keeps the route and panel-access
+     * People, Activity, Settings). Every entry keeps the route and panel-access
      * section it had in UX 3.5, so visibility is unchanged.
+     *
+     * Inside a section the pages marked `core` stay visible and the rest move
+     * under its own "More" row (the redesign's card sort put the daily pages
+     * first). A section with a single extra page, or with no core page, prints
+     * everything — a "More" row hiding one link only adds a click.
+     *
+     * The inline script restores width, collapsed sections, opened "More" rows
+     * and the scroll position before the first paint, so the menu never jumps.
      */
     const _navPage = (typeof currentPage !== 'undefined' && currentPage) ? currentPage : '';
     const _navTab = (typeof currentTab !== 'undefined' && currentTab)
@@ -25,6 +32,14 @@
             ? user.role.replace(/_/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); })
             : 'Administrator';
     }
+
+    /* Split a section into the always-visible pages and the "More" list. */
+    function _splitPages(pages) {
+        const core = pages.filter(function (p) { return p.core; });
+        const more = pages.filter(function (p) { return !p.core; });
+        if (!core.length || more.length <= 1) return { core: pages, more: [] };
+        return { core: core, more: more };
+    }
 %>
 <aside class="ux35-sidebar ux36-sidebar" id="ux35-sidebar" aria-label="<%= _('nav.label') || 'Main navigation' %>">
     <div class="ux35-sidebar-resize" id="ux35-sidebar-resize"
@@ -33,8 +48,19 @@
          aria-valuemin="200" aria-valuemax="320" aria-valuenow="232"
          title="<%= _('ux35.resize_sidebar') || 'Resize sidebar' %>"></div>
 
-    <nav class="ux35-sidebar-nav ux36-sidebar-nav" id="ux35-sidebar-nav">
+    <nav class="ux35-sidebar-nav ux36-sidebar-nav" id="ux35-sidebar-nav"
+         data-more-label="<%= _('nav.more') %>"
+         data-fewer-label="<%= _('nav.fewer') %>">
+        <div class="ux35-sidebar-filter ux36-sidebar-filter">
+            <label class="sr-only" for="ux35-sidebar-filter-input"><%= _('ux35.filter_menu') || 'Filter menu' %></label>
+            <input type="search" id="ux35-sidebar-filter-input" class="ux35-sidebar-filter-input form-input"
+                   placeholder="<%= _('ux35.filter_menu_placeholder') || 'Search menu…' %>"
+                   autocomplete="off">
+        </div>
+
         <% _sections.forEach(function (section) { %>
+        <% const split = _splitPages(section.pages); %>
+        <% const moreOpen = split.more.some(function (p) { return p.active; }); %>
         <div class="ux35-sidebar-section ux36-nav-section<%= section.active ? ' is-current' : ' is-collapsed' %>"
              data-panel="<%= section.id %>">
             <button type="button" class="ux35-sidebar-heading ux35-sidebar-heading-toggle"
@@ -49,7 +75,7 @@
             <ul class="nav-list" id="nav-section-<%= section.id %>">
                 <%
                     let lastGroup = '';
-                    section.pages.forEach(function (page) {
+                    split.core.forEach(function (page) {
                         if (page.group && page.group !== lastGroup) {
                             lastGroup = page.group;
                 %>
@@ -71,6 +97,42 @@
                     </a>
                 </li>
                 <% }); %>
+
+                <% if (split.more.length) { %>
+                <li class="nav-more<%= moreOpen ? ' is-current' : '' %>" data-more="<%= section.id %>">
+                    <button type="button" class="ux35-sidebar-item nav-more-toggle"
+                            aria-expanded="<%= moreOpen ? 'true' : 'false' %>"
+                            aria-controls="nav-more-<%= section.id %>">
+                        <span class="material-icons" aria-hidden="true">more_horiz</span>
+                        <span class="nav-label"><%= moreOpen ? _('nav.fewer') : _('nav.more') %></span>
+                        <span class="nav-note"><%= split.more.length %></span>
+                        <span class="material-icons nav-more-chevron" aria-hidden="true"><%= moreOpen ? 'expand_less' : 'expand_more' %></span>
+                    </button>
+                    <ul class="nav-list nav-more-list" id="nav-more-<%= section.id %>"<%= moreOpen ? '' : ' hidden' %>>
+                        <% lastGroup = ''; split.more.forEach(function (page) {
+                            if (page.group && page.group !== lastGroup) {
+                                lastGroup = page.group; %>
+                        <li class="nav-group"><span class="nav-group-label"><%= page.group %></span></li>
+                        <% } %>
+                        <li>
+                            <a href="<%= page.href %>"
+                               class="ux35-sidebar-item is-sub<%= page.active ? ' active' : '' %>"
+                               <% if (page.id) { %>id="<%= page.id %>"<% } %>
+                               <% if (page.active) { %>aria-current="page"<% } %>
+                               <% if (page.external) { %>target="_blank" rel="noopener noreferrer" title="<%= _('nav.remote_open_tab') || page.label %>"<% } %>>
+                                <span class="material-icons" aria-hidden="true"><%= page.icon %></span>
+                                <span class="nav-label"><%= page.label %></span>
+                                <% if (page.badgeId) { %>
+                                <span class="nav-count" id="<%= page.badgeId %>" style="display: none;">0</span>
+                                <% } %>
+                                <% if (page.beta) { %><span class="nav-note"><%= _('ux36.beta_badge') %></span><% } %>
+                                <% if (page.external) { %><span class="nav-note" aria-hidden="true">↗</span><% } %>
+                            </a>
+                        </li>
+                        <% }); %>
+                    </ul>
+                </li>
+                <% } %>
             </ul>
         </div>
         <% }); %>
@@ -86,6 +148,57 @@
             </ul>
         </div>
     </nav>
+
+    <script nonce="<%= typeof cspNonce !== 'undefined' ? cspNonce : '' %>">
+    /* Restore the sidebar before the first paint: width, sections this tab
+       closed, "More" rows this browser opened, and the scroll position. Keys
+       are shared with public/js/ux35-shell.js and public/js/ux36-shell.js. */
+    (function () {
+        try {
+            var nav = document.getElementById('ux35-sidebar-nav');
+            if (!nav) return;
+            if (!window.matchMedia('(max-width: 1099px)').matches) {
+                var w = parseInt(localStorage.getItem('bd_ux35_sidebar_width'), 10);
+                if (w >= 200 && w <= 320) {
+                    document.documentElement.style.setProperty('--ux35-sidebar-width', w + 'px');
+                }
+            }
+            var collapsed = JSON.parse(sessionStorage.getItem('bd_ux35_sidebar_collapsed') || '{}') || {};
+            Array.prototype.forEach.call(nav.querySelectorAll('.ux36-nav-section'), function (section) {
+                var panel = section.getAttribute('data-panel');
+                if (!panel || !Object.prototype.hasOwnProperty.call(collapsed, panel)) return;
+                var open = !collapsed[panel];
+                section.classList.toggle('is-collapsed', !open);
+                var toggle = section.querySelector('.ux35-sidebar-heading-toggle');
+                if (toggle) toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+                var chevron = section.querySelector('.ux35-section-chevron');
+                if (chevron) chevron.textContent = open ? 'expand_less' : 'expand_more';
+            });
+            var moreState = JSON.parse(localStorage.getItem('bd_ux36_nav_more_open') || '{}') || {};
+            Array.prototype.forEach.call(nav.querySelectorAll('.nav-more'), function (row) {
+                var id = row.getAttribute('data-more');
+                if (!id || !moreState[id]) return;
+                var list = row.querySelector('.nav-more-list');
+                var button = row.querySelector('.nav-more-toggle');
+                if (list) list.hidden = false;
+                if (button) {
+                    button.setAttribute('aria-expanded', 'true');
+                    var label = button.querySelector('.nav-label');
+                    if (label) label.textContent = <%- JSON.stringify(_('nav.fewer')) %>;
+                    var chevron = button.querySelector('.nav-more-chevron');
+                    if (chevron) chevron.textContent = 'expand_less';
+                }
+            });
+            var top = parseInt(sessionStorage.getItem('bd_ux35_sidebar_scroll'), 10);
+            if (top > 0) nav.scrollTop = top;
+            var active = nav.querySelector('.ux35-sidebar-item.active');
+            if (active && (active.offsetTop < nav.scrollTop
+                || active.offsetTop + active.offsetHeight > nav.scrollTop + nav.clientHeight)) {
+                nav.scrollTop = Math.max(0, active.offsetTop - nav.clientHeight / 2);
+            }
+        } catch (e) { /* storage blocked: defaults are fine */ }
+    })();
+    </script>
 
     <div class="ux35-sidebar-footer">
         <div class="ux35-sidebar-user" id="user-menu-trigger">

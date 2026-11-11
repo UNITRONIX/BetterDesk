@@ -121,7 +121,14 @@
             branding: <%- JSON.stringify(branding || {}) %>,
             themePalettes: <%- JSON.stringify(typeof themePalettes !== 'undefined' ? themePalettes : {}) %>,
             embed: <%= embed ? 'true' : 'false' %>,
-            uiShell: '<%= shell %>'
+            uiShell: '<%= shell %>',
+            /* Pages this session may open, for the global search dialog. */
+            searchPages: <%- JSON.stringify(typeof consoleSearchPages !== 'undefined' ? consoleSearchPages : []) %>,
+            /* Which data searches may run, so the dialog calls no forbidden API. */
+            searchCaps: {
+                devices: <%= typeof hasPermission === 'function' && hasPermission('device.view') ? 'true' : 'false' %>,
+                users: <%= typeof hasPermission === 'function' && hasPermission('user.view') ? 'true' : 'false' %>
+            }
         };
     </script>
     <script defer src="/js/utils.js?v=<%= cacheVersion %>"></script>
@@ -145,6 +152,7 @@
     <% } %>
     <% if (isBetaShell) { %>
     <script defer src="/js/ux36-shell.js?v=<%= cacheVersion %>"></script>
+    <script defer src="/js/ui-search.js?v=<%= cacheVersion %>"></script>
     <% } %>
     <script defer src="/js/mobile-nav.js?v=<%= cacheVersion %>"></script>
     <script defer src="/js/help-panel.js?v=<%= cacheVersion %>"></script>

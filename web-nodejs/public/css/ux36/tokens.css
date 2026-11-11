@@ -72,6 +72,7 @@
     /* Shape */
     --radius: 4px;
     --radius-sm: 3px;
+    --radius-full: 999px;
 
     /* Only floating things cast a shadow */
     --shadow-float: 0 6px 24px rgba(0, 0, 0, 0.14), 0 1px 3px rgba(0, 0, 0, 0.1);

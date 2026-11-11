@@ -623,10 +623,27 @@
                 var items = section.querySelectorAll('.ux35-sidebar-item');
                 var visible = 0;
                 items.forEach(function (item) {
+                    // The "More" toggle is not a destination: it counts only when
+                    // one of the links it reveals matched (handled below).
+                    var isMoreToggle = item.classList.contains('nav-more-toggle');
                     var label = (item.textContent || '').toLowerCase();
                     var match = !q || label.indexOf(q) !== -1;
-                    item.classList.toggle('is-filter-hidden', !match);
-                    if (match) visible++;
+                    item.classList.toggle('is-filter-hidden', match ? false : true);
+                    if (match && !isMoreToggle) visible++;
+                });
+                // A "More" row stays only while it still holds a match, and it
+                // opens so nothing found can hide behind it.
+                section.querySelectorAll('.nav-more').forEach(function (row) {
+                    var matches = row.querySelectorAll('.ux35-sidebar-item:not(.nav-more-toggle):not(.is-filter-hidden)').length;
+                    var keep = !q || matches > 0;
+                    row.classList.toggle('is-filter-hidden', !keep);
+                    if (q && keep) {
+                        var list = row.querySelector('.nav-more-list');
+                        var button = row.querySelector('.nav-more-toggle');
+                        if (list) list.hidden = false;
+                        if (button) button.setAttribute('aria-expanded', 'true');
+                        visible += matches;
+                    }
                 });
                 section.classList.toggle('is-filter-empty', q !== '' && visible === 0);
                 if (q) section.classList.remove('is-collapsed');

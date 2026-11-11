@@ -101,7 +101,9 @@
         "group_rules": "Aturan & kebijakan",
         "group_server": "Server",
         "group_billing": "Penagihan",
-        "group_developer": "Pengembang"
+        "group_developer": "Pengembang",
+        "more": "Lainnya",
+        "fewer": "Lebih sedikit"
     },
     "auth": {
         "login": "Login",
@@ -772,7 +774,8 @@
             "branding_rdclient": "RdClient",
             "connection_p2p_hint": "Try direct peer connection first; fall back to relay when P2P fails.",
             "connection_relay_hint": "Route all client traffic through the relay server.",
-            "auth_sub_client_sessions": "Klien RustDesk"
+            "auth_sub_client_sessions": "Klien RustDesk",
+            "search_topic": "{topic} adalah topik terpisah"
         },
         "confirm": {
             "connection_mode_title": "Save connection strategy?",
@@ -4828,5 +4831,17 @@
         "switched_to_ux36": "UX 3.6 beta diaktifkan untuk peramban ini.",
         "switched_to_ux35": "UX 3.5 dipulihkan untuk peramban ini.",
         "default_hint": "Tata letak default. Stabil dan lengkap."
+    },
+    "search": {
+        "title": "Cari",
+        "placeholder": "Cari halaman, perangkat, dan orang",
+        "results": "Hasil",
+        "group_pages": "Halaman",
+        "group_devices": "Perangkat",
+        "group_people": "Orang",
+        "hint": "Ketik halaman, ID atau nama perangkat, atau orang.",
+        "no_results": "Tidak ada hasil. Coba kata yang lebih sedikit atau berbeda.",
+        "count": "{count} hasil",
+        "keys": "Tombol panah untuk bergerak, Enter untuk membuka, Esc untuk menutup."
     }
 }

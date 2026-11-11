@@ -100,6 +100,43 @@ describe('UX 3.6 beta shell contract', () => {
             assert.deepStrictEqual([...missing], []);
         });
 
+        it('exposes a search index limited to what the role may open', () => {
+            const { buildSearchPages } = require('../lib/consoleNav');
+            const ctx = {
+                t: translate,
+                allows: () => true,
+                can: () => true,
+                role: 'admin',
+            };
+            const all = buildSearchPages(ctx);
+            assert.ok(all.length > 30, 'index should cover every visible page');
+            assert.ok(all.every((p) => typeof p.href === 'string' && p.href.length > 0));
+            // Keywords make old page names findable after the regrouping.
+            const keys = all.find((p) => p.href === '/keys');
+            assert.match(keys.keywords, /rustdesk|keys/i);
+
+            const restricted = buildSearchPages({ ...ctx, can: () => false, allows: () => true });
+            const hrefs = restricted.map((p) => p.href);
+            assert.ok(!hrefs.includes('/settings?tab=backup'));
+            // Panel access still gates the index: nothing passes when it denies.
+            assert.strictEqual(buildSearchPages({ ...ctx, allows: () => false }).length, 0);
+        });
+
+        it('keeps the search index and the sidebar on the same page list', () => {
+            const { buildSearchPages } = require('../lib/consoleNav');
+            const ctx = {
+                t: translate,
+                allows: () => true,
+                can: () => true,
+                role: 'admin',
+                currentPage: 'devices',
+            };
+            const navHrefs = buildNav(ctx).sections
+                .flatMap((s) => s.pages.map((p) => p.href)).sort();
+            const searchHrefs = buildSearchPages(ctx).map((p) => p.href).sort();
+            assert.deepStrictEqual(searchHrefs, navHrefs);
+        });
+
         it('only points at panel access sections that exist in the catalog', () => {
             const known = new Set(PANEL_ACCESS_CATALOG.map((entry) => entry.key));
             SECTIONS.forEach((section) => {
@@ -137,6 +174,41 @@ describe('UX 3.6 beta shell contract', () => {
             assert.match(sidebar, /nav-section-icon/);
             // Visibility is decided server-side in the nav model, not in the view.
             assert.doesNotMatch(sidebar, /hasSectionAccess\(/);
+        });
+
+        it('renders the menu filter, the More row and the pre-paint restore', () => {
+            const sidebar = read('views', 'partials', 'ux36-sidebar.ejs');
+            // The filter input ux35-shell.js already binds to lives in the beta sidebar too.
+            assert.match(sidebar, /id="ux35-sidebar-filter-input"/);
+            // Sections split into core links plus their own "More" row.
+            assert.match(sidebar, /nav-more-toggle/);
+            assert.match(sidebar, /nav-more-list/);
+            assert.match(sidebar, /_splitPages\(section\.pages\)/);
+            // Restored before the first paint, with the keys ux35-shell.js writes.
+            assert.match(sidebar, /<script nonce=/);
+            assert.match(sidebar, /bd_ux35_sidebar_collapsed/);
+            assert.match(sidebar, /bd_ux36_nav_more_open/);
+            assert.match(sidebar, /bd_ux35_sidebar_width/);
+            assert.match(sidebar, /bd_ux35_sidebar_scroll/);
+        });
+
+        it('renders the global search trigger and loads its controller', () => {
+            const topbar = read('views', 'partials', 'ux36-topbar.ejs');
+            assert.match(topbar, /data-global-search/);
+            assert.match(topbar, /id="ux36-search-trigger"/);
+            assert.match(topbar, /aria-keyshortcuts="Control\+K/);
+
+            const layout = read('views', 'layouts', 'main.ejs');
+            assert.match(layout, /\/js\/ui-search\.js/);
+            // The index and the capability flags are rendered per session.
+            assert.match(layout, /searchPages:/);
+            assert.match(layout, /searchCaps:/);
+
+            const client = read('public', 'js', 'ui-search.js');
+            assert.ok(client.includes('window.BetterDesk.searchPages'));
+            // Pages are searched from the server index, never through an API.
+            assert.ok(client.includes('window.BetterDesk.searchPages) || []'));
+            assert.ok(client.includes('e.ctrlKey || e.metaKey'));
         });
 
         it('offers the shell switch in the topbar of both shells, with a beta badge', () => {
@@ -207,23 +279,27 @@ describe('UX 3.6 beta shell contract', () => {
     });
 
     describe('sidebar partial renders', () => {
-        it('renders grouped sections from the navigation model', () => {
-            const viewPath = path.join(root, 'views', 'partials', 'ux36-sidebar.ejs');
+        const renderSidebar = (currentPage = 'devices') => {
             const nav = buildNav({
                 t: (key) => key,
                 allows: () => true,
                 can: () => true,
                 role: 'admin',
-                currentPage: 'devices',
+                currentPage,
             });
-            const html = ejs.render(read('views', 'partials', 'ux36-sidebar.ejs'), {
+            return ejs.render(read('views', 'partials', 'ux36-sidebar.ejs'), {
                 _: (key) => key,
-                currentPage: 'devices',
+                currentPage,
                 consoleTab: '',
                 buildConsoleNav: () => nav,
                 user: { username: 'admin', role: 'admin' },
                 branding: {},
-            }, { filename: viewPath });
+                cspNonce: 'nonce',
+            }, { filename: path.join(root, 'views', 'partials', 'ux36-sidebar.ejs') });
+        };
+
+        it('renders grouped sections from the navigation model', () => {
+            const html = renderSidebar();
 
             assert.match(html, /data-panel="devices"/);
             assert.match(html, /data-panel="settings"/);
@@ -232,6 +308,19 @@ describe('UX 3.6 beta shell contract', () => {
             // The active item is the only one flagged for assistive tech.
             const current = html.match(/aria-current="page"/g) || [];
             assert.strictEqual(current.length, 1);
+        });
+
+        it('hides long sections behind their own More row', () => {
+            const html = renderSidebar('devices');
+            // Devices has ten entries: dashboard, devices and registrations stay
+            // visible, the rest sit in the More list.
+            assert.match(html, /data-more="devices"/);
+            assert.match(html, /id="nav-more-devices"/);
+            // The Devices page itself is a core link, not a hidden one.
+            assert.match(html, /class="ux35-sidebar-item active"[\s\S]{0,200}href="\/devices"|href="\/devices"[\s\S]{0,200}class="ux35-sidebar-item active"/);
+            // A section with a single extra page prints it directly.
+            const support = html.slice(html.indexOf('data-panel="support"'), html.indexOf('data-panel="people"'));
+            assert.doesNotMatch(support, /nav-more-toggle/);
         });
     });
 });

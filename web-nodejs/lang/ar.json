@@ -102,7 +102,9 @@
         "group_rules": "القواعد والسياسات",
         "group_server": "الخادم",
         "group_billing": "الفوترة",
-        "group_developer": "المطور"
+        "group_developer": "المطور",
+        "more": "المزيد",
+        "fewer": "أقل"
     },
     "auth": {
         "login": "Login",
@@ -773,7 +775,8 @@
             "branding_rdclient": "عميل RdClient",
             "connection_p2p_hint": "محاولة P2P أولاً؛ التحويل إلى relay عند الفشل.",
             "connection_relay_hint": "توجيه كل حركة العملاء عبر خادم relay.",
-            "auth_sub_client_sessions": "عملاء RustDesk"
+            "auth_sub_client_sessions": "عملاء RustDesk",
+            "search_topic": "{topic} موضوع منفصل"
         },
         "confirm": {
             "connection_mode_title": "حفظ استراتيجية الاتصال؟",
@@ -4829,5 +4832,17 @@
         "switched_to_ux36": "تم تفعيل UX 3.6 التجريبية لهذا المتصفح.",
         "switched_to_ux35": "تمت استعادة UX 3.5 لهذا المتصفح.",
         "default_hint": "التخطيط الافتراضي. مستقر وبكامل الميزات."
+    },
+    "search": {
+        "title": "بحث",
+        "placeholder": "ابحث في الصفحات والأجهزة والأشخاص",
+        "results": "النتائج",
+        "group_pages": "الصفحات",
+        "group_devices": "الأجهزة",
+        "group_people": "الأشخاص",
+        "hint": "اكتب صفحة أو معرّف جهاز أو اسمًا أو شخصًا.",
+        "no_results": "لا يوجد شيء. جرّب كلمات أقل أو مختلفة.",
+        "count": "{count} نتيجة",
+        "keys": "الأسهم للتنقل، Enter للفتح، Esc للإغلاق."
     }
 }

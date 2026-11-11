@@ -95,7 +95,9 @@
         "group_rules": "Regels en beleid",
         "group_server": "Server",
         "group_billing": "Facturering",
-        "group_developer": "Ontwikkelaar"
+        "group_developer": "Ontwikkelaar",
+        "more": "Meer",
+        "fewer": "Minder"
     },
     "auth": {
         "login": "Inloggen",
@@ -766,7 +768,8 @@
             "branding_rdclient": "RdClient",
             "connection_p2p_hint": "Try direct peer connection first; fall back to relay when P2P fails.",
             "connection_relay_hint": "Route all client traffic through the relay server.",
-            "auth_sub_client_sessions": "RustDesk-clients"
+            "auth_sub_client_sessions": "RustDesk-clients",
+            "search_topic": "{topic} is een apart onderwerp"
         },
         "confirm": {
             "connection_mode_title": "Save connection strategy?",
@@ -4822,5 +4825,17 @@
         "switched_to_ux36": "UX 3.6 bèta is ingeschakeld voor deze browser.",
         "switched_to_ux35": "UX 3.5 is hersteld voor deze browser.",
         "default_hint": "Standaardlay-out. Stabiel en volledig."
+    },
+    "search": {
+        "title": "Zoeken",
+        "placeholder": "Zoek pagina’s, apparaten en personen",
+        "results": "Resultaten",
+        "group_pages": "Pagina’s",
+        "group_devices": "Apparaten",
+        "group_people": "Personen",
+        "hint": "Typ een pagina, een apparaat-ID of -naam, of een persoon.",
+        "no_results": "Niets gevonden. Probeer minder of andere woorden.",
+        "count": "{count} resultaten",
+        "keys": "Pijltjestoetsen om te bewegen, Enter om te openen, Esc om te sluiten."
     }
 }

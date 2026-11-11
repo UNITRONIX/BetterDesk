@@ -95,7 +95,9 @@
         "group_rules": "Pravidla a zásady",
         "group_server": "Server",
         "group_billing": "Fakturace",
-        "group_developer": "Vývojář"
+        "group_developer": "Vývojář",
+        "more": "Další",
+        "fewer": "Méně"
     },
     "auth": {
         "login": "Přihlášení",
@@ -766,7 +768,8 @@
             "branding_rdclient": "Klient RdClient",
             "connection_p2p_hint": "Nejprve P2P; při selhání přepnutí na relay.",
             "connection_relay_hint": "Veškerý provoz klientů přes relay server.",
-            "auth_sub_client_sessions": "Klienti RustDesk"
+            "auth_sub_client_sessions": "Klienti RustDesk",
+            "search_topic": "{topic} je samostatné téma"
         },
         "confirm": {
             "connection_mode_title": "Uložit strategii připojení?",
@@ -4822,5 +4825,17 @@
         "switched_to_ux36": "UX 3.6 beta je pro tento prohlížeč zapnuto.",
         "switched_to_ux35": "UX 3.5 bylo pro tento prohlížeč obnoveno.",
         "default_hint": "Výchozí rozvržení. Stabilní a plně vybavené."
+    },
+    "search": {
+        "title": "Hledat",
+        "placeholder": "Hledat stránky, zařízení a osoby",
+        "results": "Výsledky",
+        "group_pages": "Stránky",
+        "group_devices": "Zařízení",
+        "group_people": "Osoby",
+        "hint": "Napište stránku, ID nebo název zařízení, případně osobu.",
+        "no_results": "Nic nenalezeno. Zkuste méně nebo jiná slova.",
+        "count": "{count} výsledků",
+        "keys": "Šipky pro pohyb, Enter otevře, Esc zavře."
     }
 }

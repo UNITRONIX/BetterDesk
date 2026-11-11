@@ -95,7 +95,9 @@
         "group_rules": "규칙 및 정책",
         "group_server": "서버",
         "group_billing": "청구",
-        "group_developer": "개발자"
+        "group_developer": "개발자",
+        "more": "더보기",
+        "fewer": "접기"
     },
     "auth": {
         "login": "Login",
@@ -766,7 +768,8 @@
             "branding_rdclient": "RdClient",
             "connection_p2p_hint": "Try direct peer connection first; fall back to relay when P2P fails.",
             "connection_relay_hint": "Route all client traffic through the relay server.",
-            "auth_sub_client_sessions": "RustDesk 클라이언트"
+            "auth_sub_client_sessions": "RustDesk 클라이언트",
+            "search_topic": "{topic}은(는) 별도 항목입니다"
         },
         "confirm": {
             "connection_mode_title": "Save connection strategy?",
@@ -4822,5 +4825,17 @@
         "switched_to_ux36": "이 브라우저에서 UX 3.6 베타를 사용 설정했습니다.",
         "switched_to_ux35": "이 브라우저에서 UX 3.5를 복원했습니다.",
         "default_hint": "기본 레이아웃입니다. 안정적이며 모든 기능을 제공합니다."
+    },
+    "search": {
+        "title": "검색",
+        "placeholder": "페이지, 장치, 사용자 검색",
+        "results": "결과",
+        "group_pages": "페이지",
+        "group_devices": "장치",
+        "group_people": "사용자",
+        "hint": "페이지, 장치 ID 또는 이름, 사용자를 입력하세요.",
+        "no_results": "결과가 없습니다. 단어를 줄이거나 다르게 입력해 보세요.",
+        "count": "{count}개 결과",
+        "keys": "화살표 키로 이동, Enter로 열기, Esc로 닫기."
     }
 }

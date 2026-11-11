@@ -113,6 +113,34 @@ describe('UX 3.6 beta pages render in both shells', () => {
         assert.match(html, /name="ui-shell" value="ux36" checked>/);
     });
 
+    it('searches settings inside the beta shell as well', () => {
+        const html = renderPage('settings.ejs', 'ux36', 'settings');
+        // The field the search script binds to is rendered in both shells…
+        assert.match(html, /id="settings-search-input"/);
+        assert.match(html, /id="settings-search-status"/);
+        // …and the beta sheet restyles it as plain text in the page column.
+        const css = fs.readFileSync(path.join(root, 'public', 'css', 'ux36', 'pages.css'), 'utf8');
+        assert.match(css, /\.ux36-page \.settings-search/);
+    });
+
+    it('gives every other console page the beta rhythm', () => {
+        const css = fs.readFileSync(path.join(root, 'public', 'css', 'ux36', 'pages.css'), 'utf8');
+        // One content column per page root, whatever the page is called.
+        ['tickets-page', 'users-page', 'chat-sidebar', 'fleet-tabs', 'tokens-stats'].forEach((name) => {
+            assert.ok(css.includes(`.${name}`), `pages.css should mention .${name}`);
+        });
+        // Cards become ruled sections; nothing in the beta keeps a float shadow.
+        const shadows = css.match(/box-shadow:\s*([^;]+);/g) || [];
+        const odd = shadows.filter((line) => !/box-shadow:\s*none\s*;/.test(line));
+        assert.deepStrictEqual(odd, [], `beta sheets should not cast shadows: ${odd.join(' | ')}`);
+        // Every custom property the beta uses must exist in its own token sheet.
+        const tokens = fs.readFileSync(path.join(root, 'public', 'css', 'ux36', 'tokens.css'), 'utf8');
+        const used = new Set((css.match(/var\(--[a-z0-9-]+/g) || []).map((m) => m.slice(4)));
+        const defined = new Set([...tokens.matchAll(/(--[a-z0-9-]+)\s*:/g)].map((m) => m[1]));
+        const missing = [...used].filter((name) => !defined.has(name));
+        assert.deepStrictEqual(missing, [], `undefined tokens: ${missing.join(', ')}`);
+    });
+
     it('marks the active navigation item and the current crumb for assistive tech', () => {
         const beta = renderPage('devices.ejs', 'ux36', 'devices');
         // One on the sidebar item, one on the breadcrumb's last crumb — the

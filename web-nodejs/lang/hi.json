@@ -101,7 +101,9 @@
         "group_rules": "नियम और नीतियाँ",
         "group_server": "सर्वर",
         "group_billing": "बिलिंग",
-        "group_developer": "डेवलपर"
+        "group_developer": "डेवलपर",
+        "more": "अधिक",
+        "fewer": "कम"
     },
     "auth": {
         "login": "Login",
@@ -772,7 +774,8 @@
             "branding_rdclient": "RdClient",
             "connection_p2p_hint": "Try direct peer connection first; fall back to relay when P2P fails.",
             "connection_relay_hint": "Route all client traffic through the relay server.",
-            "auth_sub_client_sessions": "RustDesk क्लाइंट"
+            "auth_sub_client_sessions": "RustDesk क्लाइंट",
+            "search_topic": "{topic} एक अलग विषय है"
         },
         "confirm": {
             "connection_mode_title": "Save connection strategy?",
@@ -4828,5 +4831,17 @@
         "switched_to_ux36": "इस ब्राउज़र के लिए UX 3.6 बीटा सक्षम किया गया।",
         "switched_to_ux35": "इस ब्राउज़र के लिए UX 3.5 बहाल किया गया।",
         "default_hint": "डिफ़ॉल्ट लेआउट। स्थिर और सभी सुविधाओं सहित।"
+    },
+    "search": {
+        "title": "खोजें",
+        "placeholder": "पेज, डिवाइस और लोग खोजें",
+        "results": "परिणाम",
+        "group_pages": "पेज",
+        "group_devices": "डिवाइस",
+        "group_people": "लोग",
+        "hint": "कोई पेज, डिवाइस आईडी या नाम, या कोई व्यक्ति लिखें।",
+        "no_results": "कुछ नहीं मिला। कम या दूसरे शब्द आज़माएँ।",
+        "count": "{count} परिणाम",
+        "keys": "एरो कुंजियाँ चलने के लिए, Enter खोलने के लिए, Esc बंद करने के लिए।"
     }
 }

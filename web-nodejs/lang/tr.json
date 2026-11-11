@@ -101,7 +101,9 @@
         "group_rules": "Kurallar ve ilkeler",
         "group_server": "Sunucu",
         "group_billing": "Faturalama",
-        "group_developer": "Geliştirici"
+        "group_developer": "Geliştirici",
+        "more": "Daha fazla",
+        "fewer": "Daha az"
     },
     "auth": {
         "login": "Login",
@@ -772,7 +774,8 @@
             "branding_rdclient": "RdClient",
             "connection_p2p_hint": "Try direct peer connection first; fall back to relay when P2P fails.",
             "connection_relay_hint": "Route all client traffic through the relay server.",
-            "auth_sub_client_sessions": "RustDesk istemcileri"
+            "auth_sub_client_sessions": "RustDesk istemcileri",
+            "search_topic": "{topic} ayrı bir bölüm"
         },
         "confirm": {
             "connection_mode_title": "Save connection strategy?",
@@ -4828,5 +4831,17 @@
         "switched_to_ux36": "Bu tarayıcı için UX 3.6 beta etkinleştirildi.",
         "switched_to_ux35": "Bu tarayıcı için UX 3.5 geri yüklendi.",
         "default_hint": "Varsayılan düzen. Kararlı ve tüm özelliklerle."
+    },
+    "search": {
+        "title": "Ara",
+        "placeholder": "Sayfa, cihaz ve kişi ara",
+        "results": "Sonuçlar",
+        "group_pages": "Sayfalar",
+        "group_devices": "Cihazlar",
+        "group_people": "Kişiler",
+        "hint": "Bir sayfa, cihaz kimliği veya adı, ya da bir kişi yazın.",
+        "no_results": "Hiçbir şey bulunamadı. Daha az veya başka sözcükler deneyin.",
+        "count": "{count} sonuç",
+        "keys": "Ok tuşları gezinir, Enter açar, Esc kapatır."
     }
 }

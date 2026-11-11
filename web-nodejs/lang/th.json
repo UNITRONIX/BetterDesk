@@ -101,7 +101,9 @@
         "group_rules": "กฎและนโยบาย",
         "group_server": "เซิร์ฟเวอร์",
         "group_billing": "การเรียกเก็บเงิน",
-        "group_developer": "นักพัฒนา"
+        "group_developer": "นักพัฒนา",
+        "more": "เพิ่มเติม",
+        "fewer": "ย่อ"
     },
     "auth": {
         "login": "Login",
@@ -772,7 +774,8 @@
             "branding_rdclient": "RdClient",
             "connection_p2p_hint": "Try direct peer connection first; fall back to relay when P2P fails.",
             "connection_relay_hint": "Route all client traffic through the relay server.",
-            "auth_sub_client_sessions": "ไคลเอนต์ RustDesk"
+            "auth_sub_client_sessions": "ไคลเอนต์ RustDesk",
+            "search_topic": "{topic} เป็นหัวข้อแยก"
         },
         "confirm": {
             "connection_mode_title": "Save connection strategy?",
@@ -4828,5 +4831,17 @@
         "switched_to_ux36": "เปิดใช้งาน UX 3.6 เบต้าสำหรับเบราว์เซอร์นี้แล้ว",
         "switched_to_ux35": "คืนค่า UX 3.5 สำหรับเบราว์เซอร์นี้แล้ว",
         "default_hint": "เลย์เอาต์เริ่มต้น เสถียรและครบทุกฟีเจอร์"
+    },
+    "search": {
+        "title": "ค้นหา",
+        "placeholder": "ค้นหาหน้า อุปกรณ์ และบุคคล",
+        "results": "ผลลัพธ์",
+        "group_pages": "หน้า",
+        "group_devices": "อุปกรณ์",
+        "group_people": "บุคคล",
+        "hint": "พิมพ์หน้า รหัสหรือชื่ออุปกรณ์ หรือบุคคล",
+        "no_results": "ไม่พบผลลัพธ์ ลองใช้คำน้อยลงหรือคำอื่น",
+        "count": "{count} รายการ",
+        "keys": "ลูกศรเพื่อเลื่อน Enter เพื่อเปิด Esc เพื่อปิด"
     }
 }

@@ -95,7 +95,9 @@
         "group_rules": "Rules & policies",
         "group_server": "Server",
         "group_billing": "Billing",
-        "group_developer": "Developer"
+        "group_developer": "Developer",
+        "more": "More",
+        "fewer": "Fewer"
     },
     "mobile_nav": {
         "label": "Main navigation",
@@ -815,7 +817,8 @@
             "auth_sub_oidc": "OIDC / SSO",
             "branding_rdclient": "RdClient",
             "connection_p2p_hint": "Try direct peer connection first; fall back to relay when P2P fails.",
-            "connection_relay_hint": "Route all client traffic through the relay server."
+            "connection_relay_hint": "Route all client traffic through the relay server.",
+            "search_topic": "{topic} is a separate topic"
         },
         "confirm": {
             "connection_mode_title": "Save connection strategy?",
@@ -4880,5 +4883,17 @@
         "switched_to_ux36": "UX 3.6 beta enabled for this browser.",
         "switched_to_ux35": "UX 3.5 restored for this browser.",
         "default_hint": "Default layout. Stable, fully featured."
+    },
+    "search": {
+        "title": "Search",
+        "placeholder": "Search pages, devices and people",
+        "results": "Results",
+        "group_pages": "Pages",
+        "group_devices": "Devices",
+        "group_people": "People",
+        "hint": "Type a page, a device ID or name, or a person.",
+        "no_results": "Nothing found. Try fewer or other words.",
+        "count": "{count} results",
+        "keys": "Arrow keys to move, Enter to open, Esc to close."
     }
 }

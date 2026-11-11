@@ -101,7 +101,9 @@
         "group_rules": "Szabályok és irányelvek",
         "group_server": "Szerver",
         "group_billing": "Számlázás",
-        "group_developer": "Fejlesztő"
+        "group_developer": "Fejlesztő",
+        "more": "Több",
+        "fewer": "Kevesebb"
     },
     "auth": {
         "login": "Login",
@@ -772,7 +774,8 @@
             "branding_rdclient": "RdClient",
             "connection_p2p_hint": "Try direct peer connection first; fall back to relay when P2P fails.",
             "connection_relay_hint": "Route all client traffic through the relay server.",
-            "auth_sub_client_sessions": "RustDesk kliensek"
+            "auth_sub_client_sessions": "RustDesk kliensek",
+            "search_topic": "{topic} külön témakör"
         },
         "confirm": {
             "connection_mode_title": "Save connection strategy?",
@@ -4828,5 +4831,17 @@
         "switched_to_ux36": "Az UX 3.6 béta engedélyezve ehhez a böngészőhöz.",
         "switched_to_ux35": "Az UX 3.5 visszaállítva ehhez a böngészőhöz.",
         "default_hint": "Alapértelmezett elrendezés. Stabil, teljes funkciókészlet."
+    },
+    "search": {
+        "title": "Keresés",
+        "placeholder": "Oldalak, eszközök és személyek keresése",
+        "results": "Találatok",
+        "group_pages": "Oldalak",
+        "group_devices": "Eszközök",
+        "group_people": "Személyek",
+        "hint": "Írjon be egy oldalt, eszköz-azonosítót vagy nevet, vagy egy személyt.",
+        "no_results": "Nincs találat. Próbáljon kevesebb vagy más szót.",
+        "count": "{count} találat",
+        "keys": "Nyilak a mozgáshoz, Enter a megnyitáshoz, Esc a bezáráshoz."
     }
 }

@@ -7,13 +7,25 @@
 .ux35-shell {
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
-    min-height: 100dvh;
+    height: 100vh;
+    height: 100dvh;
+    /* The content column is the scroll box (below). The shell itself must not
+       scroll: body.app-page already clips overflow, so a min-height-only shell
+       would grow past the viewport with nothing left to scroll — a long list
+       such as Devices then cannot be scrolled at all. */
+    overflow: hidden;
     background: var(--bg);
     color: var(--text);
     font-family: var(--font);
     font-size: var(--text-base);
     line-height: var(--leading);
+}
+
+/* Embedded windows size to their content instead of the viewport. */
+.ux35-shell.embed-mode {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
 }
 
 .emergency-banner {
@@ -452,14 +464,15 @@
 }
 
 .ux35-sidebar {
-    position: sticky;
-    top: var(--topbar-h);
+    /* Not sticky: the shell does not scroll, so the sidebar simply fills its
+       column. (Sticky here would offset it by the top bar's height, because the
+       stick constraint starts at the body's top edge.) */
+    position: relative;
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
     width: var(--ux35-sidebar-width, var(--sidebar-w));
-    height: calc(100vh - var(--topbar-h));
-    height: calc(100dvh - var(--topbar-h));
+    height: 100%;
     border-inline-end: 1px solid var(--rule);
     background: var(--bg-subtle);
 }
@@ -609,6 +622,53 @@
 
 .nav-list > .nav-group:first-child {
     padding-top: var(--space-1);
+}
+
+/* ── Menu filter and the section's "More" row ── */
+
+.ux36-sidebar-filter {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    padding: 0 var(--space-2) var(--space-2);
+    background: var(--bg-subtle);
+}
+
+.ux36-sidebar-filter .form-input {
+    width: 100%;
+    min-height: var(--control-h-sm);
+    padding-inline: var(--control-pad-x-sm);
+    font-size: var(--text-sm);
+}
+
+.ux35-sidebar-item.nav-more-toggle {
+    width: 100%;
+    border: 0;
+    border-inline-start: 2px solid transparent;
+    background: transparent;
+    color: var(--text-muted);
+    font: inherit;
+    cursor: pointer;
+}
+
+.ux35-sidebar-item.nav-more-toggle:hover {
+    background: var(--hover);
+    color: var(--text);
+}
+
+.nav-more-toggle .nav-more-chevron {
+    font-size: 18px;
+    color: var(--text-muted);
+}
+
+.nav-more-list[hidden] {
+    display: none;
+}
+
+/* Filtered-out rows disappear instead of leaving gaps */
+.ux36-sidebar-nav .ux35-sidebar-item.is-filter-hidden,
+.ux36-sidebar-nav .ux36-nav-section.is-filter-empty {
+    display: none;
 }
 
 .ux35-sidebar-footer {
@@ -761,9 +821,21 @@
 .ux35-main {
     flex: 1;
     min-width: 0;
+    display: flex;
+    flex-direction: column;
+    /* The page column scrolls inside the shell, never the document: the top bar
+       and the sidebar stay put, and a long table keeps its own scroll box. */
+    overflow: hidden;
 }
 
 .ux35-content {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    -webkit-overflow-scrolling: touch;
     padding: var(--page-pad);
     padding-bottom: var(--space-7);
 }
@@ -925,15 +997,17 @@
     padding: var(--space-4);
 }
 
-/* Pages still on the old stylesheets: main.css makes .main-content a
-   fixed-height scroll box under a fixed navbar. The shell scrolls the
-   document instead. */
+/* The content column is the shell's scroll box, as in UX 3.5. main.css makes
+   .main-content a fixed-height scroll box under a fixed navbar; the shell
+   replaces that, but the scrolling itself must stay here — body.app-page clips
+   overflow, so a document-level scroll would never happen. */
 .ux35-content.main-content {
-    flex: none;
+    flex: 1;
+    min-height: 0;
     width: auto;
     height: auto;
     margin-top: 0;
-    overflow: visible;
+    overflow-y: auto;
 }
 
 @media (pointer: coarse) {

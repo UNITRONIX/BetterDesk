@@ -95,7 +95,9 @@
         "group_rules": "规则与策略",
         "group_server": "服务器",
         "group_billing": "计费",
-        "group_developer": "开发者"
+        "group_developer": "开发者",
+        "more": "更多",
+        "fewer": "收起"
     },
     "auth": {
         "login": "登录",
@@ -766,7 +768,8 @@
             "branding_rdclient": "RdClient",
             "connection_p2p_hint": "Try direct peer connection first; fall back to relay when P2P fails.",
             "connection_relay_hint": "Route all client traffic through the relay server.",
-            "auth_sub_client_sessions": "RustDesk 客户端"
+            "auth_sub_client_sessions": "RustDesk 客户端",
+            "search_topic": "{topic} 是单独的选项卡"
         },
         "confirm": {
             "connection_mode_title": "Save connection strategy?",
@@ -4822,5 +4825,17 @@
         "switched_to_ux36": "已为此浏览器启用 UX 3.6 测试版。",
         "switched_to_ux35": "已为此浏览器恢复 UX 3.5。",
         "default_hint": "默认布局。稳定且功能完整。"
+    },
+    "search": {
+        "title": "搜索",
+        "placeholder": "搜索页面、设备和用户",
+        "results": "结果",
+        "group_pages": "页面",
+        "group_devices": "设备",
+        "group_people": "用户",
+        "hint": "输入页面、设备 ID 或名称，或用户。",
+        "no_results": "未找到结果。请减少或更换关键词。",
+        "count": "共 {count} 个结果",
+        "keys": "方向键移动，Enter 打开，Esc 关闭。"
     }
 }

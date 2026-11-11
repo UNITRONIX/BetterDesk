@@ -78,6 +78,15 @@
 
     <div class="ux35-topbar-spacer"></div>
 
+    <%# Global search (Ctrl+K). Same control and ids as the redesign: the
+        dialog itself is built by public/js/ui-search.js on first open. %>
+    <button type="button" class="ux35-search-trigger" id="ux36-search-trigger" data-global-search
+            aria-haspopup="dialog" aria-keyshortcuts="Control+K /">
+        <span class="material-icons" aria-hidden="true">search</span>
+        <span class="ux35-search-label"><%= _('search.placeholder') || 'Search pages, devices and people' %></span>
+        <kbd class="ux35-search-kbd" aria-hidden="true">Ctrl K</kbd>
+    </button>
+
     <div class="ux35-topbar-actions">
         <button type="button" class="ux35-topbar-text-btn" id="ux35-help-btn" aria-haspopup="dialog"><%= _('nav.help') || 'Help' %></button>
 

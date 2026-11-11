@@ -101,7 +101,9 @@
         "group_rules": "Säännöt ja käytännöt",
         "group_server": "Palvelin",
         "group_billing": "Laskutus",
-        "group_developer": "Kehittäjä"
+        "group_developer": "Kehittäjä",
+        "more": "Lisää",
+        "fewer": "Vähemmän"
     },
     "auth": {
         "login": "Login",
@@ -772,7 +774,8 @@
             "branding_rdclient": "RdClient",
             "connection_p2p_hint": "Try direct peer connection first; fall back to relay when P2P fails.",
             "connection_relay_hint": "Route all client traffic through the relay server.",
-            "auth_sub_client_sessions": "RustDesk-asiakkaat"
+            "auth_sub_client_sessions": "RustDesk-asiakkaat",
+            "search_topic": "{topic} on oma osio"
         },
         "confirm": {
             "connection_mode_title": "Save connection strategy?",
@@ -4828,5 +4831,17 @@
         "switched_to_ux36": "UX 3.6 beta on otettu käyttöön tässä selaimessa.",
         "switched_to_ux35": "UX 3.5 on palautettu tähän selaimeen.",
         "default_hint": "Oletusasettelu. vakaa ja täysin varustettu."
+    },
+    "search": {
+        "title": "Haku",
+        "placeholder": "Hae sivuja, laitteita ja henkilöitä",
+        "results": "Tulokset",
+        "group_pages": "Sivut",
+        "group_devices": "Laitteet",
+        "group_people": "Henkilöt",
+        "hint": "Kirjoita sivu, laitteen tunnus tai nimi, tai henkilö.",
+        "no_results": "Ei tuloksia. Kokeile vähempiä tai muita sanoja.",
+        "count": "{count} tulosta",
+        "keys": "Nuolinäppäimet liikkuvat, Enter avaa, Esc sulkee."
     }
 }

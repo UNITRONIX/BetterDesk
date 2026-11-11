@@ -95,7 +95,9 @@
         "group_rules": "ルールとポリシー",
         "group_server": "サーバー",
         "group_billing": "請求",
-        "group_developer": "開発者"
+        "group_developer": "開発者",
+        "more": "その他",
+        "fewer": "折りたたむ"
     },
     "auth": {
         "login": "Login",
@@ -766,7 +768,8 @@
             "branding_rdclient": "RdClient",
             "connection_p2p_hint": "Try direct peer connection first; fall back to relay when P2P fails.",
             "connection_relay_hint": "Route all client traffic through the relay server.",
-            "auth_sub_client_sessions": "RustDesk クライアント"
+            "auth_sub_client_sessions": "RustDesk クライアント",
+            "search_topic": "{topic} は別の項目です"
         },
         "confirm": {
             "connection_mode_title": "Save connection strategy?",
@@ -4822,5 +4825,17 @@
         "switched_to_ux36": "このブラウザーで UX 3.6 ベータを有効にしました。",
         "switched_to_ux35": "このブラウザーで UX 3.5 に戻しました。",
         "default_hint": "既定のレイアウト。安定しており全機能を利用できます。"
+    },
+    "search": {
+        "title": "検索",
+        "placeholder": "ページ、デバイス、ユーザーを検索",
+        "results": "結果",
+        "group_pages": "ページ",
+        "group_devices": "デバイス",
+        "group_people": "ユーザー",
+        "hint": "ページ名、デバイス ID または名前、ユーザーを入力してください。",
+        "no_results": "見つかりませんでした。語を減らすか別の語をお試しください。",
+        "count": "{count} 件",
+        "keys": "矢印キーで移動、Enter で開く、Esc で閉じる。"
     }
 }

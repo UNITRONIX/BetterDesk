@@ -101,7 +101,9 @@
         "group_rules": "Reguli și politici",
         "group_server": "Server",
         "group_billing": "Facturare",
-        "group_developer": "Dezvoltator"
+        "group_developer": "Dezvoltator",
+        "more": "Mai multe",
+        "fewer": "Mai puține"
     },
     "auth": {
         "login": "Login",
@@ -772,7 +774,8 @@
             "branding_rdclient": "RdClient",
             "connection_p2p_hint": "Try direct peer connection first; fall back to relay when P2P fails.",
             "connection_relay_hint": "Route all client traffic through the relay server.",
-            "auth_sub_client_sessions": "Clienți RustDesk"
+            "auth_sub_client_sessions": "Clienți RustDesk",
+            "search_topic": "{topic} este o secțiune separată"
         },
         "confirm": {
             "connection_mode_title": "Save connection strategy?",
@@ -4828,5 +4831,17 @@
         "switched_to_ux36": "UX 3.6 beta a fost activat pentru acest browser.",
         "switched_to_ux35": "UX 3.5 a fost restaurat pentru acest browser.",
         "default_hint": "Aspect implicit. Stabil și complet funcțional."
+    },
+    "search": {
+        "title": "Căutare",
+        "placeholder": "Caută pagini, dispozitive și persoane",
+        "results": "Rezultate",
+        "group_pages": "Pagini",
+        "group_devices": "Dispozitive",
+        "group_people": "Persoane",
+        "hint": "Scrie o pagină, un ID sau nume de dispozitiv, sau o persoană.",
+        "no_results": "Nimic găsit. Încearcă mai puține sau alte cuvinte.",
+        "count": "{count} rezultate",
+        "keys": "Săgeți pentru deplasare, Enter pentru deschidere, Esc pentru închidere."
     }
 }

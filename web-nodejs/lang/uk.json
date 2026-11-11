@@ -101,7 +101,9 @@
         "group_rules": "Правила та політики",
         "group_server": "Сервер",
         "group_billing": "Білінг",
-        "group_developer": "Розробник"
+        "group_developer": "Розробник",
+        "more": "Більше",
+        "fewer": "Менше"
     },
     "auth": {
         "login": "Login",
@@ -772,7 +774,8 @@
             "branding_rdclient": "RdClient",
             "connection_p2p_hint": "Try direct peer connection first; fall back to relay when P2P fails.",
             "connection_relay_hint": "Route all client traffic through the relay server.",
-            "auth_sub_client_sessions": "Клієнти RustDesk"
+            "auth_sub_client_sessions": "Клієнти RustDesk",
+            "search_topic": "{topic} — окрема вкладка"
         },
         "confirm": {
             "connection_mode_title": "Save connection strategy?",
@@ -4828,5 +4831,17 @@
         "switched_to_ux36": "UX 3.6 beta увімкнено для цього браузера.",
         "switched_to_ux35": "UX 3.5 відновлено для цього браузера.",
         "default_hint": "Типовий макет. Стабільний, з повним набором функцій."
+    },
+    "search": {
+        "title": "Пошук",
+        "placeholder": "Пошук сторінок, пристроїв і людей",
+        "results": "Результати",
+        "group_pages": "Сторінки",
+        "group_devices": "Пристрої",
+        "group_people": "Люди",
+        "hint": "Введіть сторінку, ідентифікатор чи назву пристрою або людину.",
+        "no_results": "Нічого не знайдено. Спробуйте менше або інші слова.",
+        "count": "Результатів: {count}",
+        "keys": "Стрілки — рух, Enter — відкрити, Esc — закрити."
     }
 }

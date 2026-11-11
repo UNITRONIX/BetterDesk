@@ -95,7 +95,9 @@
         "group_rules": "Regeln & Richtlinien",
         "group_server": "Server",
         "group_billing": "Abrechnung",
-        "group_developer": "Entwickler"
+        "group_developer": "Entwickler",
+        "more": "Mehr",
+        "fewer": "Weniger"
     },
     "auth": {
         "login": "Anmelden",
@@ -766,7 +768,8 @@
             "branding_rdclient": "RdClient",
             "connection_p2p_hint": "Zuerst direkte P2P-Verbindung; Relay bei P2P-Fehler.",
             "connection_relay_hint": "Gesamten Client-Traffic über den Relay-Server leiten.",
-            "auth_sub_client_sessions": "RustDesk-Clients"
+            "auth_sub_client_sessions": "RustDesk-Clients",
+            "search_topic": "{topic} ist ein eigenes Thema"
         },
         "confirm": {
             "connection_mode_title": "Verbindungsstrategie speichern?",
@@ -4822,5 +4825,17 @@
         "switched_to_ux36": "UX 3.6 Beta ist für diesen Browser aktiviert.",
         "switched_to_ux35": "UX 3.5 wurde für diesen Browser wiederhergestellt.",
         "default_hint": "Standardlayout. Stabil, voller Funktionsumfang."
+    },
+    "search": {
+        "title": "Suchen",
+        "placeholder": "Seiten, Geräte und Personen durchsuchen",
+        "results": "Ergebnisse",
+        "group_pages": "Seiten",
+        "group_devices": "Geräte",
+        "group_people": "Personen",
+        "hint": "Seite, Geräte-ID oder -Name oder eine Person eingeben.",
+        "no_results": "Nichts gefunden. Weniger oder andere Wörter versuchen.",
+        "count": "{count} Ergebnisse",
+        "keys": "Pfeiltasten bewegen, Enter öffnet, Esc schließt."
     }
 }
