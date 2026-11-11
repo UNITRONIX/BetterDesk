@@ -144,6 +144,62 @@
     align-items: start;
 }
 
+/* The Dashboard cards come from the v2 sheet: several of them carry a
+   gradient, a blue glow or a glass surface, which reads as a different design
+   language next to the ruled beta layout. Here they become plain surfaces on
+   the same hairlines as every other beta page. The operator's own colours
+   still flow through --bg / --rule, so branding keeps working. */
+.ux36-page .dashboard-shell :is(
+    .client-config-card, .activity-feed-section, .attention-section,
+    .server-status-card, .quick-action-card, .dashboard-tip,
+    .client-config-host-row, .client-config-field, .attention-item
+) {
+    background: var(--bg);
+    background-image: none;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    box-shadow: none;
+}
+
+/* The hero is a title row in the redesign, not a panel with a glow */
+.ux36-page .dashboard-hero {
+    background: none;
+    background-image: none;
+    border: 0;
+    box-shadow: none;
+}
+
+/* Status pills keep their colour meaning, without a glow */
+.ux36-page .system-pill {
+    background: var(--bg-subtle);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-full);
+    font-weight: 500;
+}
+
+.ux36-page .system-pill.running {
+    border-color: color-mix(in srgb, var(--success) 45%, transparent);
+    color: var(--success);
+    background: var(--bg-subtle);
+}
+
+.ux36-page .system-pill.stopped {
+    border-color: color-mix(in srgb, var(--danger) 45%, transparent);
+    color: var(--danger);
+    background: var(--bg-subtle);
+}
+
+/* Inner blocks of the client config card: hairlines, not nested glass panes */
+.ux36-page .client-config-host-row,
+.ux36-page .client-config-field {
+    background: var(--bg-subtle);
+}
+
+.ux36-page .dashboard-tip {
+    background: var(--bg-subtle);
+    border-color: var(--rule);
+}
+
 @media (max-width: 1199px) {
     .ux36-page .dashboard-layout {
         grid-template-columns: minmax(0, 1fr);

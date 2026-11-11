@@ -120,6 +120,29 @@ describe('Devices horizontal scrollbar anchoring', () => {
         assert.match(pagesCss, /\.ux36-page \.ux35-content:has\(\.chat-page\)\s*\{[^}]*overflow:\s*hidden/);
         assert.match(pagesCss, /\.ux36-page \.chat-page\s*\{[^}]*height:\s*100%/);
     });
+
+    it('flattens the Dashboard cards that still carry v2 gradients and glow', () => {
+        // dashboard.css (v2) puts a radial glow on the hero, a linear gradient and
+        // a blue border on the client-config card, and glass on the activity
+        // panel. Next to the beta layout those read as a different design
+        // language, so the beta sheet must override all of them.
+        const pagesCss = read('public', 'css', 'ux36', 'pages.css');
+        const dashboardCss = read('public', 'css', 'dashboard.css');
+
+        // The v2 gradients really are there — this test would be pointless if not.
+        assert.match(dashboardCss, /radial-gradient\(circle at top left/);
+        assert.match(dashboardCss, /linear-gradient\(135deg, rgba\(88, 166, 255, 0\.12\)/);
+
+        // And the beta overrides them with plain surfaces on hairlines.
+        assert.match(pagesCss, /\.ux36-page \.dashboard-shell :is\([\s\S]*?\.client-config-card[\s\S]*?\)\s*\{[^}]*background:\s*var\(--bg\)/);
+        assert.match(pagesCss, /\.ux36-page \.dashboard-shell :is\([\s\S]*?\)\s*\{[^}]*background-image:\s*none/);
+        assert.match(pagesCss, /\.ux36-page \.dashboard-shell :is\([\s\S]*?\)\s*\{[^}]*border:\s*1px solid var\(--rule\)/);
+        assert.match(pagesCss, /\.ux36-page \.dashboard-shell :is\([\s\S]*?\)\s*\{[^}]*box-shadow:\s*none/);
+
+        // The hero and the status pills lose their glow too.
+        assert.match(pagesCss, /\.ux36-page \.dashboard-hero\s*\{[^}]*background:\s*none/);
+        assert.match(pagesCss, /\.ux36-page \.system-pill\s*\{[^}]*border:\s*1px solid var\(--rule\)/);
+    });
 });
 
 describe('Devices table horizontal scrollport', () => {
