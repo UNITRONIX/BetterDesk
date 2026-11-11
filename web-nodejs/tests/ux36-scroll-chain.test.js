@@ -107,6 +107,31 @@ describe('UX 3.6 shell scroll chain', () => {
         // rather than silently passing on a stale assumption.
         assert.match(mainCss, /body\.app-page\s*\{[^}]*overflow:\s*hidden/);
     });
+
+    it('keeps the icon font rule out of page layout', () => {
+        // base.css loads after the page sheets, so a plain .material-icons rule
+        // there beats .tool-icon on a specificity tie and forces inline-block and
+        // 18px — which is what pushed the toolkit icons into the corner of their
+        // squares. :where() keeps the font setup at zero specificity.
+        const baseCss = read('public', 'css', 'ux36', 'base.css');
+        const rule = baseCss.match(/:where\(\.material-icons[\s\S]{0,120}?\)\s*\{([^}]*)\}/);
+        assert.ok(rule, 'the icon font rule must be wrapped in :where()');
+        assert.match(rule[1], /font-family:\s*"Material Symbols Outlined"/,
+            'the rule still has to define the icon font');
+
+        // No plain .material-icons selector may sit beside it and compete again.
+        assert.doesNotMatch(baseCss, /^\s*\.material-icons\s*[,{]/m,
+            'a plain .material-icons rule in base.css would override component layout');
+
+        // The component that centres icons in a square keeps its own rules.
+        const toolkitCss = read('public', 'css', 'toolkit.css');
+        const icon = toolkitCss.match(/\.tool-icon\s*\{([^}]*)\}/);
+        assert.ok(icon, '.tool-icon rule missing');
+        assert.match(icon[1], /display:\s*flex/);
+        assert.match(icon[1], /align-items:\s*center/);
+        assert.match(icon[1], /justify-content:\s*center/);
+        assert.match(icon[1], /font-size:\s*24px/);
+    });
 });
 
 describe('Devices horizontal scrollbar anchoring', () => {

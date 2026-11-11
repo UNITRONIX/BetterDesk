@@ -109,10 +109,13 @@
     src: url("/fonts/MaterialSymbolsOutlined.woff2?v=249c49bac408") format("woff2");
 }
 
-.material-icons,
-.material-icons-outlined,
-.material-icons-round,
-.material-symbols-outlined {
+/* Wrapped in :where() so the rule carries no specificity. Page sheets load
+   before this file, so a plain selector here would win the tie and force
+   display: inline-block and 18px on every icon box the console centres with
+   flex — which is exactly what pushed the toolkit icons into the corner of
+   their squares. Font setup belongs to the base layer; size and layout stay
+   the component's decision. */
+:where(.material-icons, .material-icons-outlined, .material-icons-round, .material-symbols-outlined) {
     font-family: "Material Symbols Outlined";
     font-weight: normal;
     font-style: normal;
