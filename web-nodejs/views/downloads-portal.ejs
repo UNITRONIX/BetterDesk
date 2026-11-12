@@ -75,31 +75,6 @@
             Need help? Contact your administrator for enrollment instructions.
         </div>
     </div>
-    <script>
-        (function () {
-            fetch('/api/portal/installers', { credentials: 'omit' })
-                .then(r => r.json())
-                .then(function (data) {
-                    var grid = document.getElementById('installer-grid');
-                    if (!data || !data.success || !Array.isArray(data.installers) || data.installers.length === 0) {
-                        grid.innerHTML = '<div class="portal-empty">No installers available yet.</div>';
-                        return;
-                    }
-                    var labels = { windows: 'Windows', linux: 'Linux', macos: 'macOS' };
-                    grid.innerHTML = data.installers.map(function (i) {
-                        var label = labels[i.platform] || i.platform;
-                        return '<div class="portal-card">'
-                            + '<h3>' + label + '</h3>'
-                            + '<div class="arch">' + (i.arch || '') + ' · ' + (i.format || '') + '</div>'
-                            + '<a class="portal-btn" href="' + i.url + '">Download</a>'
-                            + '</div>';
-                    }).join('');
-                })
-                .catch(function () {
-                    document.getElementById('installer-grid').innerHTML =
-                        '<div class="portal-empty">Failed to load installers.</div>';
-                });
-        })();
-    </script>
+    <script src="/js/portal.js" defer></script>
 </body>
 </html>
