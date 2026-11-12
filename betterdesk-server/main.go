@@ -14,6 +14,7 @@ import (
 	"os"
 	osSignal "os/signal"
 	"path/filepath"
+	"runtime/debug"
 	"strings"
 	"syscall"
 	"time"
@@ -130,6 +131,28 @@ func init() {
 			Version = v
 		}
 	}
+	if BuildDate == "" || BuildDate == "unknown" {
+		if t := buildTimeFromVCS(); t != "" {
+			BuildDate = t
+		}
+	}
+}
+
+// buildTimeFromVCS returns the VCS timestamp Go stamps into the binary when it
+// is built from a Git checkout (buildvcs, on by default). It keeps the
+// "built ..." output meaningful for builds that do not pass
+// -X main.BuildDate, such as the installer and local builds.
+func buildTimeFromVCS() string {
+	info, ok := debug.ReadBuildInfo()
+	if !ok {
+		return ""
+	}
+	for _, s := range info.Settings {
+		if s.Key == "vcs.time" {
+			return s.Value
+		}
+	}
+	return ""
 }
 
 func main() {
