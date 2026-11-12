@@ -705,6 +705,208 @@ async function syncOnlineStatus(/* db */) {
     return { synced: 0, skipped: true, reason: 'betterdesk_manages_state' };
 }
 
+// ===================== Panel grouping and catalog (strangler P2/P3) ==========
+//
+// Go owns the writes for device groups, their members and ACL, folders and
+// per-user device grants, and it owns the panel catalog definition
+// (docs/important/console-backend-strangler.md). The console keeps its screens
+// and its response shapes; these helpers are the only place it talks to those
+// endpoints.
+//
+// Every call carries the panel trust statement (services/panelTrust.js) when the
+// bridge is configured. Without it Go would authorize these requests as the
+// API key's role, which is an administrator — a viewer's session could then
+// write a group. With it, Go enforces the operator's own role and permissions.
+
+const panelTrust = require('./panelTrust');
+
+/**
+ * Request options for a panel-originated call: the trust statement for this
+ * exact method and path, plus the JSON content type the API key client sets.
+ * Returns undefined headers when the bridge is off, so axios keeps its own.
+ */
+function panelCallConfig(method, path, req) {
+    const identity = req ? panelTrust.identityFromRequest(req) : null;
+    if (!identity) return undefined;
+    const headers = panelTrust.panelTrustHeaders(identity, method, path);
+    return Object.keys(headers).length ? { headers } : undefined;
+}
+
+/** Panel section catalog, permission vocabulary and role defaults (stage P3). */
+async function getPanelCatalog(config) {
+    try {
+        const { data } = await apiClient.get('/panel/catalog', config);
+        return wrap(data);
+    } catch (e) {
+        return { success: false, error: e.message };
+    }
+}
+
+/** List device groups with ACL and member counts. */
+async function listPanelDeviceGroups(config) {
+    try {
+        const { data } = await apiClient.get('/panel/device-groups', config);
+        return wrap(data);
+    } catch (e) {
+        return { success: false, error: e.message };
+    }
+}
+
+/** Create or update a device group (and its ACL) in one call. */
+async function savePanelDeviceGroup(payload, config) {
+    try {
+        const { data } = await apiClient.post('/panel/device-groups', payload, config);
+        return wrap(data);
+    } catch (e) {
+        return { success: false, error: e.message, status: e.response?.status };
+    }
+}
+
+/** Delete a device group. */
+async function deletePanelDeviceGroup(guid, config) {
+    try {
+        const safeGuid = assertSafeApiId(guid, 'guid');
+        const { data } = await apiClient.delete(`/panel/device-groups/${encodeURIComponent(safeGuid)}`, config);
+        return wrap(data);
+    } catch (e) {
+        return { success: false, error: e.message, status: e.response?.status };
+    }
+}
+
+/** Read a group's membership. */
+async function getPanelDeviceGroupPeers(guid, config) {
+    try {
+        const safeGuid = assertSafeApiId(guid, 'guid');
+        const { data } = await apiClient.get(
+            `/panel/device-groups/${encodeURIComponent(safeGuid)}/peers`, config,
+        );
+        return wrap(data);
+    } catch (e) {
+        return { success: false, error: e.message };
+    }
+}
+
+/** Replace a group's membership. */
+async function setPanelDeviceGroupPeers(guid, peers, config) {
+    try {
+        const safeGuid = assertSafeApiId(guid, 'guid');
+        const { data } = await apiClient.put(
+            `/panel/device-groups/${encodeURIComponent(safeGuid)}/peers`,
+            { peers: Array.isArray(peers) ? peers : [] },
+            config,
+        );
+        return wrap(data);
+    } catch (e) {
+        return { success: false, error: e.message, status: e.response?.status };
+    }
+}
+
+/** Read a group's ACL. */
+async function getPanelDeviceGroupAcl(guid, config) {
+    try {
+        const safeGuid = assertSafeApiId(guid, 'guid');
+        const { data } = await apiClient.get(
+            `/panel/device-groups/${encodeURIComponent(safeGuid)}/acl`, config,
+        );
+        return wrap(data);
+    } catch (e) {
+        return { success: false, error: e.message };
+    }
+}
+
+/** Replace a group's ACL. */
+async function setPanelDeviceGroupAcl(guid, acl, config) {
+    try {
+        const safeGuid = assertSafeApiId(guid, 'guid');
+        const { data } = await apiClient.put(
+            `/panel/device-groups/${encodeURIComponent(safeGuid)}/acl`,
+            {
+                allowed_users: Array.isArray(acl?.allowed_users) ? acl.allowed_users : [],
+                allowed_user_groups: Array.isArray(acl?.allowed_user_groups) ? acl.allowed_user_groups : [],
+            },
+            config,
+        );
+        return wrap(data);
+    } catch (e) {
+        return { success: false, error: e.message, status: e.response?.status };
+    }
+}
+
+/** List folders plus the device → folder assignments. */
+async function listPanelFolders(config) {
+    try {
+        const { data } = await apiClient.get('/panel/folders', config);
+        return wrap(data);
+    } catch (e) {
+        return { success: false, error: e.message };
+    }
+}
+
+async function createPanelFolder(folder, config) {
+    try {
+        const { data } = await apiClient.post('/panel/folders', folder, config);
+        return wrap(data);
+    } catch (e) {
+        return { success: false, error: e.message, status: e.response?.status };
+    }
+}
+
+async function updatePanelFolder(id, folder, config) {
+    try {
+        const { data } = await apiClient.put(`/panel/folders/${Number(id)}`, folder, config);
+        return wrap(data);
+    } catch (e) {
+        return { success: false, error: e.message, status: e.response?.status };
+    }
+}
+
+async function deletePanelFolder(id, config) {
+    try {
+        const { data } = await apiClient.delete(`/panel/folders/${Number(id)}`, config);
+        return wrap(data);
+    } catch (e) {
+        return { success: false, error: e.message, status: e.response?.status };
+    }
+}
+
+/** Assign a device to a folder (folderId 0 clears the assignment). */
+async function setPanelDeviceFolder(deviceId, folderId, config) {
+    try {
+        const safeId = assertSafeApiId(deviceId, 'device id');
+        const { data } = await apiClient.put(
+            `/panel/devices/${encodeURIComponent(safeId)}/folder`,
+            { folder_id: Number(folderId) || 0 },
+            config,
+        );
+        return wrap(data);
+    } catch (e) {
+        return { success: false, error: e.message, status: e.response?.status };
+    }
+}
+
+/** Direct device grants for one user. */
+async function listPanelUserGrants(userId, config) {
+    try {
+        const { data } = await apiClient.get(`/panel/users/${Number(userId)}/grants`, config);
+        return wrap(data);
+    } catch (e) {
+        return { success: false, error: e.message };
+    }
+}
+
+async function setPanelUserGrants(userId, peers, config) {
+    try {
+        const { data } = await apiClient.put(
+            `/panel/users/${Number(userId)}/grants`,
+            { peers: Array.isArray(peers) ? peers : [] },
+            config,
+        );
+        return wrap(data);
+    } catch (e) {
+        return { success: false, error: e.message, status: e.response?.status };
+    }
+}
+
 // ========================== Helpers ==========================================
 
 /**
@@ -1089,6 +1291,43 @@ async function clearEnrollmentRejection(deviceId) {
 }
 
 /**
+ * Mint a one-time pairing code (operator). The plaintext code is returned once and never
+ * stored; the server keeps only its sha256.
+ */
+async function createPairingCode(label) {
+    try {
+        const { data } = await apiClient.post('/pairing/codes', { label: label || '' });
+        return { success: true, data };
+    } catch (e) {
+        return { success: false, error: e.message, status: e.response && e.response.status };
+    }
+}
+
+/**
+ * List active pairing codes (no plaintext).
+ */
+async function listPairingCodes() {
+    try {
+        const { data } = await apiClient.get('/pairing/codes');
+        return { success: true, data };
+    } catch (e) {
+        return { success: false, error: e.message, status: e.response && e.response.status };
+    }
+}
+
+/**
+ * Revoke a pairing code before it is redeemed.
+ */
+async function revokePairingCode(id) {
+    try {
+        const { data } = await apiClient.delete(`/pairing/codes/${encodeURIComponent(id)}`);
+        return { success: true, data };
+    } catch (e) {
+        return { success: false, error: e.message, status: e.response && e.response.status };
+    }
+}
+
+/**
  * Get branding configuration from Go server (public endpoint).
  */
 async function getBranding() {
@@ -1191,8 +1430,7 @@ async function getRolePermissions(role) {
 /**
  * List all custom permission overrides from the DB.
  */
-async function listRolePermissionOverrides(role) {
-    try {
+async function listRolePermissionOverrides(role) {    try {
         const url = role ? `/role-permissions?role=${encodeURIComponent(role)}` : '/role-permissions';
         const { data } = await apiClient.get(url);
         return wrap(data);
@@ -1634,6 +1872,9 @@ module.exports = {
     // Branding (Go server)
     getBranding: getBranding,
     saveBranding: saveBranding,
+    createPairingCode,
+    listPairingCodes,
+    revokePairingCode,
     // Access Policies (Unattended Access)
     getAccessPolicy,
     saveAccessPolicy,
@@ -1665,6 +1906,22 @@ module.exports = {
     listHelpRequests,
     acknowledgeHelpRequest,
     resolveHelpRequest,
+    // Panel catalog and grouping (strangler P2/P3)
+    getPanelCatalog,
+    listPanelDeviceGroups,
+    savePanelDeviceGroup,
+    deletePanelDeviceGroup,
+    getPanelDeviceGroupPeers,
+    setPanelDeviceGroupPeers,
+    getPanelDeviceGroupAcl,
+    setPanelDeviceGroupAcl,
+    listPanelFolders,
+    createPanelFolder,
+    updatePanelFolder,
+    deletePanelFolder,
+    setPanelDeviceFolder,
+    listPanelUserGrants,
+    setPanelUserGrants,
     // Helpers
     normalisePeer,
     // Raw axios client (for services that need direct API access)

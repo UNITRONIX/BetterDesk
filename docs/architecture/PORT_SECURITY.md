@@ -1,5 +1,18 @@
 # 🔒 Secure Port Configuration - BetterDesk Console
 
+> ## ⚠️ HISTORICAL — DO NOT USE FOR DEPLOYMENT
+>
+> This document describes an early design (API on `127.0.0.1:21120`) that was never shipped.
+> **Port 21120 does not exist in the codebase.**
+>
+> The authoritative reference is **[docs/CONNECTION_PORTS.md](../CONNECTION_PORTS.md)**:
+> port table, four ready-to-use firewall profiles, and the client-field map. It also covers
+> the short-code pairing flow, which needs TLS on the Client API.
+>
+> Kept only so old links resolve; nothing below should be copied into a live server.
+
+---
+
 ## 📊 Analiza Portów RustDesk (Oficjalna Dokumentacja)
 
 ### 🌍 **PORTY PUBLICZNE** (muszą być wystawione do internetu)

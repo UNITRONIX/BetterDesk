@@ -76,9 +76,11 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Validate manual publish tag
-        if: github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && github.ref != 'refs/heads/main'
+        # Tags are checked out as `refs/tags/vX.Y.Z`; a stable release dispatch
+        # from version-bump-main.yml must be allowed to publish `latest`.
+        if: github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && github.ref != 'refs/heads/main' && !startsWith(github.ref, 'refs/tags/')
         run: |
-          echo "::error::The latest tag may only be published from main. Use tag=dev or a custom test tag such as dev-arm."
+          echo "::error::The latest tag may only be published from main or a release tag. Use tag=dev or a custom test tag such as dev-arm."
           exit 1
       - id: ver
         run: |
@@ -129,7 +131,7 @@ jobs:
           labels: |
             org.opencontainers.image.version=${{ needs.read-version.outputs.version }}
           tags: |
-            type=raw,value=latest,enable=${{ (github.ref == 'refs/heads/main' && github.event_name == 'push') || (github.event_name == 'release' && github.event.release.prerelease == false) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && github.ref == 'refs/heads/main') }}
+            type=raw,value=latest,enable=${{ (github.ref == 'refs/heads/main' && github.event_name == 'push') || (github.event_name == 'release' && github.event.release.prerelease == false) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))) }}
             type=raw,value=dev,enable=${{ (github.ref == 'refs/heads/dev' && github.event_name == 'push') || (github.event_name == 'workflow_dispatch' && github.event.inputs.tag == 'dev') }}
             type=ref,event=tag
             type=semver,pattern={{version}}
@@ -206,7 +208,7 @@ jobs:
           labels: |
             org.opencontainers.image.version=${{ needs.read-version.outputs.version }}
           tags: |
-            type=raw,value=latest,enable=${{ (github.ref == 'refs/heads/main' && github.event_name == 'push') || (github.event_name == 'release' && github.event.release.prerelease == false) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && github.ref == 'refs/heads/main') }}
+            type=raw,value=latest,enable=${{ (github.ref == 'refs/heads/main' && github.event_name == 'push') || (github.event_name == 'release' && github.event.release.prerelease == false) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))) }}
             type=raw,value=dev,enable=${{ (github.ref == 'refs/heads/dev' && github.event_name == 'push') || (github.event_name == 'workflow_dispatch' && github.event.inputs.tag == 'dev') }}
             type=ref,event=tag
             type=semver,pattern={{version}}
@@ -289,7 +291,7 @@ jobs:
           labels: |
             org.opencontainers.image.version=${{ needs.read-version.outputs.version }}
           tags: |
-            type=raw,value=latest,enable=${{ (github.ref == 'refs/heads/main' && github.event_name == 'push') || (github.event_name == 'release' && github.event.release.prerelease == false) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && github.ref == 'refs/heads/main') }}
+            type=raw,value=latest,enable=${{ (github.ref == 'refs/heads/main' && github.event_name == 'push') || (github.event_name == 'release' && github.event.release.prerelease == false) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))) }}
             type=raw,value=dev,enable=${{ (github.ref == 'refs/heads/dev' && github.event_name == 'push') || (github.event_name == 'workflow_dispatch' && github.event.inputs.tag == 'dev') }}
             type=ref,event=tag
             type=semver,pattern={{version}}
@@ -524,7 +526,7 @@ jobs:
           labels: |
             org.opencontainers.image.version=${{ needs.read-version.outputs.version }}
           tags: |
-            type=raw,value=latest,enable=${{ (github.ref == 'refs/heads/main' && github.event_name == 'push') || (github.event_name == 'release' && github.event.release.prerelease == false) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && github.ref == 'refs/heads/main') }}
+            type=raw,value=latest,enable=${{ (github.ref == 'refs/heads/main' && github.event_name == 'push') || (github.event_name == 'release' && github.event.release.prerelease == false) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))) }}
             type=raw,value=dev,enable=${{ (github.ref == 'refs/heads/dev' && github.event_name == 'push') || (github.event_name == 'workflow_dispatch' && github.event.inputs.tag == 'dev') }}
             type=ref,event=tag
             type=semver,pattern={{version}}

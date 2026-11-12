@@ -4,6 +4,58 @@ This register documents external reports, designs, tests, and code that
 informed BetterDesk changes. It is intended to preserve contributor credit and
 make provenance reviewable. It is not a copyright assignment or legal opinion.
 
+## `@rathlinus` — console UX redesign
+
+Contributor profile: <https://github.com/rathlinus>
+Design discussion: [issue #493](https://github.com/UNITRONIX/BetterDesk/issues/493)
+Redesign pull request: [PR #495](https://github.com/UNITRONIX/BetterDesk/pull/495)
+
+Linus Rath (UI/UX designer) reworked the whole web console: every page, the
+grouped sidebar (Devices / Support / People / Activity / Settings), the
+device-list-first layout with side panels, per-topic Settings with search, and
+light/dark support across all 26 locale files. The redesign lives on
+`svelte-rewrite` and was **not** merged as a unit.
+
+BetterDesk's **UX 3.6 beta** is an independent implementation in the existing
+EJS/JavaScript/CSS stack that reuses his design system directly:
+
+- `web-nodejs/public/css/ux36/palette.css` — his dark (neutral grey) and light
+  (white-based) colour scales.
+- `web-nodejs/public/css/ux36/tokens.css`, `base.css`, `components.css`,
+  `shell.css` — his token set, IBM Plex typography, component styles and shell
+  layout, taken from `web-nodejs/public/css/ui/` at the reference commit.
+- `web-nodejs/public/fonts/IBMPlex*` — the fonts those sheets reference,
+  under SIL OFL 1.1 (licence shipped as `IBMPlex-OFL.txt`).
+- `web-nodejs/lib/consoleNav.js` — his grouped navigation model (sections,
+  groups, active-page rules, the core/"More" split and the search keywords),
+  adapted to the current routes and panel access; `buildSearchPages()` turns it
+  into the global-search index.
+- `web-nodejs/views/partials/ux36-topbar.ejs`, `ux36-sidebar.ejs` — his top bar
+  and sidebar structure (search field, pre-paint restore, "More" rows), wired
+  to the current element ids and permissions.
+- `web-nodejs/public/js/ui-search.js` — his global search dialog (Ctrl+K,
+  grouped results, keyboard handling), rewritten against this console's
+  endpoints and permission flags.
+- `web-nodejs/public/css/ux36/pages.css` — the console's own page classes mapped
+  onto his page rhythm (page column, ruled sections, stat row, tab row, tables,
+  workspaces); `legacy-bridge.css` keeps both token vocabularies on one scale.
+
+The last pre-Svelte commit of the redesign is
+[`d710bdbbb8541f325f6ecf8a24f7027187d475ba`](https://github.com/UNITRONIX/BetterDesk/commit/d710bdbbb8541f325f6ecf8a24f7027187d475ba)
+and is the reference used for this port.
+
+### Attribution rule for UX 3.6 commits
+
+Every commit that ports, adapts, or refines elements of this redesign must keep
+the credit in its body:
+
+```text
+Based-on: @rathlinus UX redesign (Refs #493, #495)
+```
+
+Unrelated commits must not carry that line. Do not describe the redesign as
+merged — it is a design reference, not a merged branch.
+
 ## `@remoover`
 
 Contributor profile: <https://github.com/remoover>

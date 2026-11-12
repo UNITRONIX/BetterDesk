@@ -29,6 +29,8 @@ const {
     getPanelReadMountPaths
 } = require('./middleware/rateLimiter');
 const { csrfTokenProvider, doubleCsrfProtection, downgradeToHttp: csrfDowngradeToHttp } = require('./middleware/csrf');
+const { resolveShell, isBetaShell } = require('./lib/uiShell');
+const { buildNav, buildSearchPages } = require('./lib/consoleNav');
 const {
     requestHasPermission,
     isSuperAdminRole,
@@ -50,6 +52,8 @@ const { initServerTerminalProxy } = require('./services/serverTerminalProxy');
 const { initCdapMediaProxies } = require('./services/cdapMediaProxy');
 const { initMeshAshxProxy } = require('./services/meshAshxProxy');
 const { initRemoteTargetGateway } = require('./services/remoteTargetGateway');
+const { loadEffectivePolicy, accessAllows } = require('./services/panelAccessPolicyService');
+const { panelAccessGuard } = require('./middleware/panelAccess');
 const { startDiscoveryService } = require('./services/lanDiscovery');
 const { initDeviceStatusPush } = require('./services/deviceStatusPush');
 const { initHelpRequestEmailService } = require('./services/helpRequestEmailService');
@@ -230,6 +234,8 @@ app.use('/wallpapers', express.static(path.join(__dirname, 'wallpapers'), {
 // intentionally served first so authenticated pages do not add a Go lookup
 // for every CSS, image, and JavaScript request.
 app.use(loadEffectivePermissions);
+app.use(loadEffectivePolicy);
+app.use(panelAccessGuard);
 
 // Rate limiting for API.
 // SECURITY (audit fix M-03, 2026-04-10): high-frequency widget refresh paths
@@ -262,15 +268,55 @@ app.use(initI18n());
 // Used by Desktop Mode to load pages inside floating windows (iframes)
 app.use((req, res, next) => {
     res.locals.embed = req.query.embed === '1';
-    // UX 3.5 is the only supported console shell. Legacy `ui` query
-    // parameters and `bd_ui_shell=classic` cookies are intentionally ignored.
-    res.locals.uiShell = 'ux35';
+    // Shell choice is resolved once (lib/uiShell.js) so SSR markup, CSS/JS
+    // includes and window.BetterDesk.uiShell cannot disagree. UX 3.5 is the
+    // default; UX 3.6 is an opt-in beta. Unknown values (including the removed
+    // `classic` shell) fall back to the default instead of erroring.
+    res.locals.uiShell = resolveShell(req);
+    res.locals.uiShellBeta = isBetaShell(res.locals.uiShell);
+    // Tab name for pages that split by tab (settings deep links, server mgmt,
+    // commercialization) so the grouped navigation can mark the right item.
+    res.locals.consoleTab = typeof req.query.tab === 'string' ? req.query.tab : '';
     res.locals.supporters = loadSupporters();
     // Inject permission helper for EJS templates (sidebar/button visibility)
     const role = req.session?.user?.role;
     res.locals.hasPermission = (perm) => role
         ? requestHasPermission(req, perm)
         : false;
+    res.locals.hasSectionAccess = (section, level = 'read') => role
+        ? accessAllows(req.panelAccessPolicy, section, level)
+        : false;
+    // Grouped navigation model (lib/consoleNav.js) shared by the sidebar,
+    // breadcrumbs and the mobile drawer. Panel access is enforced per page, so
+    // grouping never widens what a role can open.
+    const navTranslate = (key) => {
+        const value = req.t ? req.t(key) : key;
+        // i18nService already falls back to English; keep the key name
+        // as the last resort so a gap shows up instead of a blank row.
+        return value && value !== key ? value : key;
+    };
+    res.locals.buildConsoleNav = (currentPage, currentTab, activateAgentNav) => {
+        if (!role) return { sections: [], activeSection: null, activePage: null };
+        return buildNav({
+            t: navTranslate,
+            allows: (page) => accessAllows(req.panelAccessPolicy, page.section, 'read'),
+            can: (perm) => requestHasPermission(req, perm),
+            role,
+            currentPage,
+            currentTab,
+            activateAgentNav: !!activateAgentNav,
+        });
+    };
+    // Search index for the global search dialog (Ctrl+K). It lists only pages
+    // this session may open, so the client learns nothing extra.
+    res.locals.consoleSearchPages = role
+        ? buildSearchPages({
+            t: navTranslate,
+            allows: (page) => accessAllows(req.panelAccessPolicy, page.section, 'read'),
+            can: (perm) => requestHasPermission(req, perm),
+            role,
+        })
+        : [];
     res.locals.isSuperAdmin = role ? isSuperAdminRole(role) : false;
     res.locals.sessionPolicy = panelSessionService.getPolicy();
     // Prevent HTML page caching — only static assets should be cached
@@ -629,6 +675,19 @@ async function startServer() {
         // Initialize real-time device status push (Go event bus → browser)
         initDeviceStatusPush(server, sessionMiddleware, config.betterdeskApiUrl, config.betterdeskApiKey);
         initHelpRequestEmailService(config.betterdeskApiUrl, config.betterdeskApiKey);
+
+        // Panel section catalog: Go is the source of truth (strangler stage P3).
+        // The bundled copy in lib/panelAccessCatalog.js stays as the fallback
+        // for an older server binary; a failure here must never block startup.
+        require('./lib/panelAccessCatalog').refreshPanelCatalog({ force: true })
+            .then((catalog) => {
+                if (catalog) {
+                    console.log(`[panel] authorization catalog loaded from Go (${catalog.sections.length} sections)`);
+                }
+            })
+            .catch((err) => {
+                console.warn('[panel] catalog refresh failed, using the bundled copy:', err.message);
+            });
 
         // Start LAN Discovery UDP service
         startDiscoveryService();

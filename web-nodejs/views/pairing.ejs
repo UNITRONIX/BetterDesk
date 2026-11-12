@@ -1,0 +1,74 @@
+<%- include('layouts/main', {
+    title: _('pairing.title'),
+    pageStyles: ['pages', 'pairing'],
+    pageScripts: ['pairing'],
+    currentPage: 'pairing',
+    breadcrumb: [{ label: _('pairing.title') }],
+    body: `
+        <div class="page-header">
+            <h1 class="page-title">
+                <span class="material-icons">pin</span>
+                ${_('pairing.title')}
+            </h1>
+            <p class="page-subtitle">${_('pairing.subtitle')}</p>
+        </div>
+
+        <section class="card pairing-hero">
+            <div class="card-body">
+                <p class="settings-row-hint">${_('pairing.code_hint')}</p>
+                <div class="pairing-code" id="pairing-code" aria-live="polite">
+                    <span class="pairing-code-loading">${_('pairing.generating')}</span>
+                </div>
+                <div class="pairing-meta">
+                    <span>${_('pairing.expires_in')}: <strong id="pairing-code-ttl">—</strong></span>
+                    <span id="pairing-code-label-out"></span>
+                </div>
+                <div class="pairing-actions">
+                    <button type="button" id="pairing-generate" class="btn btn-primary">
+                        <span class="material-icons">autorenew</span>
+                        ${_('pairing.new_code')}
+                    </button>
+                    <button type="button" id="pairing-copy" class="btn btn-secondary">
+                        <span class="material-icons">content_copy</span>
+                        ${_('pairing.copy')}
+                    </button>
+                </div>
+                <p class="pairing-address">
+                    <span class="material-icons" aria-hidden="true">dns</span>
+                    <span>${_('pairing.client_address')}</span>
+                    <strong id="pairing-code-host">${suggested_host || ''}</strong>
+                </p>
+            </div>
+        </section>
+
+        <section class="card" style="margin-top: 16px;">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <span class="material-icons">list</span>
+                    ${_('pairing.active_title')}
+                </h2>
+                <button type="button" id="pairing-refresh" class="btn btn-secondary btn-sm">
+                    <span class="material-icons">refresh</span>
+                    ${_('common.refresh')}
+                </button>
+            </div>
+            <div class="card-body">
+                <p class="settings-row-hint">${_('pairing.active_hint')}</p>
+                <table class="data-table" id="pairing-table">
+                    <thead>
+                        <tr>
+                            <th>${_('pairing.col_label')}</th>
+                            <th>${_('pairing.col_created')}</th>
+                            <th>${_('pairing.col_expires')}</th>
+                            <th>${_('pairing.col_created_by')}</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="pairing-tbody">
+                        <tr><td colspan="5" class="text-muted">${_('pairing.loading')}</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    `
+}) %>

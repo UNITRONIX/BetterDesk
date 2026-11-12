@@ -49,6 +49,18 @@
 
     <div class="ux35-topbar-actions">
         <div class="ux35-topbar-action-list" id="ux35-topbar-action-list">
+        <%
+            // Shell switch lives in the topbar so the beta is one click away from
+            // every page. The label states the destination, not the current shell.
+            const _isBetaTopbar = typeof uiShellBeta !== 'undefined' && uiShellBeta;
+        %>
+        <button type="button" class="ux35-topbar-btn ux36-shell-toggle" id="ui-shell-toggle"
+                data-target-shell="<%= _isBetaTopbar ? 'ux35' : 'ux36' %>"
+                title="<%= _isBetaTopbar ? _('ux36.switch_to_ux35') : _('ux36.switch_to_ux36') %>"
+                aria-label="<%= _isBetaTopbar ? _('ux36.switch_to_ux35') : _('ux36.switch_to_ux36') %>">
+            <span class="material-icons" aria-hidden="true"><%= _isBetaTopbar ? 'undo' : 'science' %></span>
+            <% if (!_isBetaTopbar) { %><span class="ux36-beta-chip" aria-hidden="true"><%= _('ux36.beta_badge') %></span><% } %>
+        </button>
         <button type="button" class="ux35-topbar-btn" id="refresh-btn" title="<%= _('actions.refresh') %>"
                 aria-label="<%= _('actions.refresh') %>">
             <span class="material-icons" aria-hidden="true">refresh</span>

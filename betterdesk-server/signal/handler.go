@@ -1018,6 +1018,25 @@ func (s *Server) handlePunchHoleRequest(msg *pb.PunchHoleRequest, raddr *net.UDP
 		return
 	}
 
+	// Native peers on the same LAN must exchange their actual listener
+	// endpoint before the initiator receives a PunchHoleResponse. A public
+	// registration endpoint marked is_local is not a valid LAN candidate.
+	if sameNetwork && target.ConnType != peer.ConnWS {
+		pending, started := s.beginLANExchange(
+			targetID, target, initiatorID, raddr, peer.ConnUDP,
+			relayServer, msg.SocketAddrV6,
+		)
+		if started {
+			return
+		}
+		if pending != nil {
+			s.sendUDP(pending.fallback, raddr)
+		} else {
+			s.sendUDP(s.lanFallbackResponse(targetID, target, relayServer, nil), raddr)
+		}
+		return
+	}
+
 	// Send PunchHole to the TARGET peer (tell it the initiator's address)
 	punchHole := &pb.RendezvousMessage{
 		Union: &pb.RendezvousMessage_PunchHole{
@@ -1102,10 +1121,9 @@ func (s *Server) handlePunchHoleRequest(msg *pb.PunchHoleRequest, raddr *net.UDP
 
 // handlePunchHoleRequestTCP handles punch hole over TCP/WS.
 //
-// Matching the UDP handler behavior: always send an immediate PunchHoleResponse
-// to the TCP initiator with the target's signed PK, socket address, relay server,
-// and NAT type.  This ensures the initiator can proceed with the connection
-// (direct P2P or relay fallback) without waiting for the target to respond.
+// Matching the UDP handler behavior for WAN peers: send a PunchHoleResponse
+// with the target's signed PK, socket address, relay server, and NAT type.
+// Genuine native LAN peers use the asynchronous FetchLocalAddr exchange below.
 //
 // Previous behavior (returning nil and waiting for the target's PunchHoleSent)
 // caused "Failed to secure tcp: deadline has elapsed" timeouts when:
@@ -1233,6 +1251,20 @@ func (s *Server) handlePunchHoleRequestTCPWithHint(msg *pb.PunchHoleRequest, rad
 				PunchHoleResponse: phr,
 			},
 		}
+	}
+
+	if sameNetwork && initiatorHint != peer.ConnWS && target.ConnType != peer.ConnWS {
+		pending, started := s.beginLANExchange(
+			targetID, target, initiatorID, raddr, peer.ConnTCP,
+			relayServer, msg.SocketAddrV6,
+		)
+		if started {
+			return nil
+		}
+		if pending != nil {
+			return pending.fallback
+		}
+		return s.lanFallbackResponse(targetID, target, relayServer, nil)
 	}
 
 	// Forward PunchHole to the TARGET peer (supports UDP, TCP, and WebSocket targets).
@@ -2033,47 +2065,35 @@ func (s *Server) relayResponseSourceMatchesTarget(targetID string, senderAddr *n
 // We decode the socket_addr to identify the requester's origin, then forward.
 func (s *Server) handleFetchLocalAddr(msg *pb.FetchLocalAddr, raddr *net.UDPAddr) {
 	// FetchLocalAddr contains the target's socket_addr from a previous PunchHole.
-	// We forward the request to the peer at that address, including the requester's addr.
+	// Resolve the registered target first so TCP-only native peers are not
+	// forced through a decoded UDP endpoint.
 	targetAddr, err := crypto.DecodeAddr(msg.SocketAddr)
 	if err != nil || targetAddr == nil {
 		return
 	}
 
-	// Forward to target with requester's address
+	// Forward to target with requester's address.
 	fetch := &pb.RendezvousMessage{
 		Union: &pb.RendezvousMessage_FetchLocalAddr{
 			FetchLocalAddr: &pb.FetchLocalAddr{
-				SocketAddr: crypto.EncodeAddr(raddr),
+				SocketAddr:   crypto.EncodeAddr(raddr),
+				RelayServer:  msg.RelayServer,
+				SocketAddrV6: copyBytes(msg.SocketAddrV6),
 			},
 		},
+	}
+	if target := s.peers.FindByAddr(targetAddr); target != nil &&
+		target.ConnType != peer.ConnWS &&
+		s.sendToPeer(target.ID, fetch) {
+		return
 	}
 	s.sendUDP(fetch, targetAddr)
 }
 
-// handleLocalAddr forwards a LocalAddr response from the target peer back to the
-// requester. This completes the FetchLocalAddr→LocalAddr exchange needed for LAN
-// direct connections.
+// handleLocalAddr completes the FetchLocalAddr→LocalAddr exchange and returns
+// the target's actual LAN listener inside a PunchHoleResponse.
 func (s *Server) handleLocalAddr(msg *pb.LocalAddr, raddr *net.UDPAddr) {
-	// socket_addr identifies the original requester that initiated FetchLocalAddr.
-	requesterAddr, err := crypto.DecodeAddr(msg.SocketAddr)
-	if err != nil || requesterAddr == nil {
-		return
-	}
-
-	// Forward the LocalAddr (with the responder's local address) to the requester.
-	resp := &pb.RendezvousMessage{
-		Union: &pb.RendezvousMessage_LocalAddr{
-			LocalAddr: &pb.LocalAddr{
-				SocketAddr:   crypto.EncodeAddr(raddr),
-				LocalAddr:    msg.LocalAddr,
-				RelayServer:  msg.RelayServer,
-				Id:           msg.Id,
-				Version:      msg.Version,
-				SocketAddrV6: msg.SocketAddrV6,
-			},
-		},
-	}
-	s.sendUDP(resp, requesterAddr)
+	s.completeLANAddr(msg, raddr)
 }
 
 // handleTestNat handles NAT type detection (TCP port 21115).

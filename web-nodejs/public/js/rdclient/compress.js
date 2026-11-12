@@ -5,6 +5,8 @@
 
 // eslint-disable-next-line no-unused-vars
 class RDCompress {
+    static _zstdWarningShown = false;
+
     /**
      * @param {Uint8Array|ArrayBuffer|Array} data
      * @returns {Uint8Array}
@@ -54,7 +56,8 @@ class RDCompress {
                 const out = await new Response(stream).arrayBuffer();
                 return new Uint8Array(out);
             } catch (err) {
-                console.warn('[RDCompress] DecompressionStream zstd failed:', err.message || err);
+                // Chromium versions may expose DecompressionStream but not
+                // implement zstd. Try the optional decoder before failing.
             }
         }
 
@@ -65,11 +68,24 @@ class RDCompress {
                 const max = Math.min(Math.max(bytes.length * 30, 1024 * 1024), 64 * 1024 * 1024);
                 return decoder.decode(bytes, max);
             } catch (err) {
-                console.warn('[RDCompress] zstddec fallback failed:', err.message || err);
+                // Fall through to one controlled error below. Returning the
+                // compressed bytes would silently corrupt clipboard/file data.
             }
         }
 
-        return bytes;
+        throw new Error('Zstandard decompression is unavailable in this browser');
+    }
+
+    /**
+     * Log an unsupported-runtime warning once per page, rather than once per
+     * clipboard entry or file block.
+     * @param {Error} [err]
+     */
+    static reportZstdUnavailable(err) {
+        if (RDCompress._zstdWarningShown) return;
+        RDCompress._zstdWarningShown = true;
+        console.warn('[RDCompress] Zstandard decompression unavailable:',
+            err && err.message ? err.message : err || 'no decoder');
     }
 
     /**

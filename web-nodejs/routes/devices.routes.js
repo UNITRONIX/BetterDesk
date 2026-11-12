@@ -9,6 +9,7 @@ const serverBackend = require('../services/serverBackend');
 const betterdeskApi = require('../services/betterdeskApi');
 const addressBookSync = require('../services/rustdeskAddressBookSync');
 const deviceGroupService = require('../services/deviceGroupService');
+const panelGrouping = require('../services/panelGrouping');
 const tagManagementService = require('../services/tagManagementService');
 const { requireAuth, requirePermission, requestHasPermission } = require('../middleware/auth');
 const { bodyInt, bodyString, bodyBool, plainBodyObject } = require('../lib/bodyScalars');
@@ -449,6 +450,30 @@ router.post('/api/device-groups', requireAuth, requirePermission('device.edit'),
             if (deviceGroupService.folderIdFromGroupGuid(payload.guid) !== null) {
                 return res.status(400).json({ success: false, error: req.t('devices.folder_group_readonly') });
             }
+        }
+
+        // Stage P2: Go owns these writes. The console keeps its own writer as the
+        // documented rollback (BACKEND_PANEL_GROUPING=node) and as the fallback
+        // while an older server binary is still deployed.
+        if (panelGrouping.writesGoToGo()) {
+            const saved = await panelGrouping.saveGroupToGo({
+                guid: payload.guid,
+                name: payload.name,
+                note: payload.note,
+                team_id: payload.team_id,
+                source_type: payload.source_type,
+                tag_filter: payload.tag_filter,
+                allowed_users: payload.allowed_users,
+                allowed_groups: payload.allowed_groups,
+            }, req);
+            if (saved) {
+                await db.logAction(req.session.userId, 'device_group_saved',
+                    `Device group ${saved.name} saved`, req.ip);
+                return res.json({ success: true, data: saved });
+            }
+        }
+
+        if (payload.guid) {
             group = await db.updateDeviceGroup(
                 payload.guid,
                 deviceGroupService.buildDeviceGroupUpdateFields(payload)
@@ -470,6 +495,9 @@ router.post('/api/device-groups', requireAuth, requirePermission('device.edit'),
         await db.logAction(req.session.userId, 'device_group_saved', `Device group ${group.name} saved`, req.ip);
         res.json({ success: true, data: group });
     } catch (err) {
+        if (err && err.fromGo) {
+            return res.status(err.status || 502).json({ success: false, error: err.message });
+        }
         console.error('Save device group error:', err);
         res.status(500).json({ success: false, error: req.t('errors.server_error') });
     }
@@ -491,10 +519,25 @@ router.delete('/api/device-groups/:guid', requireAuth, requirePermission('device
         if (deviceGroupService.folderIdFromGroupGuid(guid) !== null) {
             return res.status(400).json({ success: false, error: req.t('devices.folder_group_readonly') });
         }
+
+        // Stage P2: Go owns the delete. Fall through to the panel's own writer
+        // when the switch says so or the endpoint is not deployed yet.
+        if (panelGrouping.writesGoToGo()) {
+            const deleted = await panelGrouping.deleteGroupFromGo(guid, req);
+            if (deleted) {
+                await db.logAction(req.session.userId, 'device_group_deleted',
+                    `Device group ${group.name} deleted`, req.ip);
+                return res.json({ success: true });
+            }
+        }
+
         await db.deleteDeviceGroup(guid);
         await db.logAction(req.session.userId, 'device_group_deleted', `Device group ${group.name} deleted`, req.ip);
         res.json({ success: true });
     } catch (err) {
+        if (err && err.fromGo) {
+            return res.status(err.status || 502).json({ success: false, error: err.message });
+        }
         console.error('Delete device group error:', err);
         res.status(500).json({ success: false, error: req.t('errors.server_error') });
     }
@@ -559,14 +602,49 @@ router.put('/api/devices/:id/groups', requireAuth, requirePermission('device.edi
         }
         const selected = selectedAll.slice(0, 1);
 
-        for (const group of manualGroups) {
-            if (selected.includes(group.guid)) await db.addDeviceToGroup(group.guid, deviceId);
-            else await db.removeDeviceFromGroup(group.guid, deviceId);
+        // Stage P2: Go owns membership. Read each group's current peers from Go,
+        // apply the same "at most one manual group" rule, and write the result
+        // back; fall through to the panel's own writer when Go is unavailable.
+        let membershipSaved = false;
+        if (panelGrouping.writesGoToGo()) {
+            const updates = [];
+            let goAvailable = true;
+            for (const group of manualGroups) {
+                const peers = await panelGrouping.getGroupPeersFromGo(group.guid, req);
+                if (!peers) {
+                    goAvailable = false;
+                    break;
+                }
+                const next = new Set(peers);
+                if (selected.includes(group.guid)) next.add(deviceId);
+                else next.delete(deviceId);
+                updates.push({ guid: group.guid, peers: Array.from(next) });
+            }
+            if (goAvailable) {
+                for (const update of updates) {
+                    const saved = await panelGrouping.setGroupPeersInGo(update.guid, update.peers, req);
+                    if (!saved) {
+                        goAvailable = false;
+                        break;
+                    }
+                }
+            }
+            membershipSaved = goAvailable;
+        }
+
+        if (!membershipSaved) {
+            for (const group of manualGroups) {
+                if (selected.includes(group.guid)) await db.addDeviceToGroup(group.guid, deviceId);
+                else await db.removeDeviceFromGroup(group.guid, deviceId);
+            }
         }
 
         await db.logAction(req.session.userId, 'device_group_membership_updated', `Device ${deviceId} groups set to [${selected.join(', ')}]`, req.ip);
         res.json({ success: true, data: { groupGuids: selected } });
     } catch (err) {
+        if (err && err.fromGo) {
+            return res.status(err.status || 502).json({ success: false, error: err.message });
+        }
         console.error('Update device memberships error:', err);
         res.status(500).json({ success: false, error: req.t('errors.server_error') });
     }

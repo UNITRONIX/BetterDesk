@@ -1,0 +1,94 @@
+/*
+ * BetterDesk Console — access control strategies page.
+ *
+ * The list is the page's only content, so it gets the console's section rhythm
+ * instead of the card that used to sit inside the Devices page. The row classes
+ * (.strategy-manager-item and friends) are shared with the old card markup and
+ * stay where they are, in devices.css; this sheet only adds the page frame.
+ */
+
+.strategies-page {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md, 16px);
+}
+
+.strategies-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-sm, 8px);
+}
+
+.strategies-list {
+    display: grid;
+    gap: var(--space-sm, 8px);
+}
+
+/* The row list keeps its own sheet (devices.css), but the page needs the empty
+   state to read as content, not as a floating card. */
+.strategies-page .empty-state {
+    padding: var(--space-6, 32px) var(--space-4, 16px);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-lg, 12px);
+    background: var(--bg-secondary);
+    text-align: center;
+}
+
+.strategies-page .empty-state .material-icons {
+    color: var(--text-secondary);
+}
+
+/* Beta shell: the list is a ruled set of rows, like the rest of UX 3.6 */
+.ux36-page .strategies-page {
+    max-width: var(--content-max);
+}
+
+.ux36-page .strategies-page .page-header {
+    margin-bottom: 0;
+}
+
+.ux36-page .strategies-list {
+    border-top: 1px solid var(--rule);
+}
+
+.ux36-page .strategies-list .strategy-manager-item {
+    margin: 0;
+    border: 0;
+    border-bottom: 1px solid var(--rule);
+    border-radius: 0;
+    background: none;
+}
+
+.ux36-page .strategies-list .strategy-manager-item:hover {
+    background: var(--hover);
+}
+
+.ux36-page .strategies-page .empty-state {
+    border: 1px solid var(--rule);
+    border-top: 0;
+    border-radius: 0;
+    background: none;
+}
+
+/* The link that used to sit on the Devices page is gone: strategies have their
+   own entry in the sidebar, and a second pointer on the device list only
+   pushed the page header down. */
+
+@media (max-width: 767px) {
+    .ux36-page .strategies-list .strategy-manager-item {
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: var(--space-sm);
+    }
+
+    .ux36-page .strategies-list .strategy-status-badge {
+        grid-column: 2;
+        grid-row: 1;
+        align-self: start;
+    }
+
+    .ux36-page .strategies-list .strategy-manager-actions {
+        grid-column: 1 / -1;
+        justify-content: flex-end;
+    }
+}

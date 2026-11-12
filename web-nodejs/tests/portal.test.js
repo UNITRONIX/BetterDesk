@@ -9,7 +9,11 @@ const { createTestApp } = require('./helpers');
 
 jest.mock('../services/database', () => ({}));
 jest.mock('../services/betterdeskApi', () => ({}));
-jest.mock('../services/genericAgentReleaseService', () => ({ listCached: jest.fn(), resolveAsset: jest.fn() }));
+jest.mock('../services/genericAgentReleaseService', () => ({
+    listCached: jest.fn(),
+    resolveAsset: jest.fn(),
+    root: jest.fn(() => require('path').join(__dirname, '..', 'data', 'modules', 'betterdesk-support-releases')),
+}));
 
 const releases = require('../services/genericAgentReleaseService');
 const security = require('../middleware/security');
@@ -46,7 +50,7 @@ async function render(data, response = {}) {
     vm.runInNewContext(script, {
         document: { getElementById: () => grid, createElement: element },
         window: { location: { origin: 'https://console.example' } },
-        URL, fetch,
+        URL, fetch, Object,
     });
     await new Promise(setImmediate);
     expect(fetch).toHaveBeenCalledWith('/api/portal/installers', { credentials: 'omit' });
@@ -54,13 +58,16 @@ async function render(data, response = {}) {
 }
 
 describe('Public installer portal', () => {
-    beforeEach(() => releases.listCached.mockResolvedValue([]));
+    beforeEach(() => {
+        releases.listCached.mockResolvedValue([]);
+        releases.root.mockReturnValue(path.join(__dirname, '..', 'data', 'modules', 'betterdesk-support-releases'));
+    });
 
     test('serves an anonymous page and same-origin script under restrictive CSP', async () => {
         const app = buildApp();
         const page = await request(app).get('/portal');
         expect(page.status).toBe(200);
-        expect(page.text.match(/<script\b[^>]*>/g)).toEqual(['<script src="/js/portal.js" defer>']);
+        expect(page.text.match(/<script\b[^>]*>/gi)).toEqual(['<script src="/js/portal.js" defer>']);
         expect(page.text).not.toMatch(/\son\w+\s*=/i);
         const csp = page.headers['content-security-policy'];
         expect(csp).toMatch(/script-src 'self' 'nonce-[^']+'/);
@@ -81,16 +88,24 @@ describe('Public installer portal', () => {
         } }]);
         const res = await request(buildApp()).get('/api/portal/installers').set('Host', 'console.example');
         expect(res.status).toBe(200);
-        expect(res.body).toEqual({ success: true, release: 'support-v0.0.4', installers: [{
-            ...installer, release: 'support-v0.0.4',
-            url: 'http://console.example/downloads/generic-agent/support-v0.0.4/agent%20setup.exe',
-        }] });
+        expect(res.body).toEqual({
+            success: true,
+            release: 'support-v0.0.4',
+            reason: null,
+            installers: [{
+                ...installer, release: 'support-v0.0.4',
+                url: 'http://console.example/downloads/generic-agent/support-v0.0.4/agent%20setup.exe',
+            }],
+        });
     });
 
     test('returns an empty list when no release is cached', async () => {
         const res = await request(buildApp()).get('/api/portal/installers');
         expect(res.status).toBe(200);
-        expect(res.body).toEqual({ success: true, release: null, installers: [] });
+        expect(res.body.success).toBe(true);
+        expect(res.body.release).toBeNull();
+        expect(res.body.installers).toEqual([]);
+        expect(['no_release_imported', 'release_cache_incomplete']).toContain(res.body.reason);
     });
 
     test('keeps verified download assets publicly accessible', async () => {
@@ -117,6 +132,13 @@ describe('Public installer portal', () => {
     test('renders the empty state', async () => {
         const grid = await render({ success: true, installers: [] });
         expect(grid.children[0].textContent).toBe('No installers available yet.');
+    });
+
+    test('renders diagnostic empty states from reason codes', async () => {
+        const missing = await render({ success: true, reason: 'no_release_imported', installers: [] });
+        expect(missing.children[0].textContent).toContain('published by your administrator');
+        const incomplete = await render({ success: true, reason: 'release_cache_incomplete', installers: [] });
+        expect(incomplete.children[0].textContent).toContain('files are incomplete');
     });
 
     test.each([

@@ -146,3 +146,12 @@ decrypts the request before invoking the normal handler and encrypts the
 response. Bootstrap endpoints such as login, enrollment, branding, health,
 and `/api/telemetry/key` remain compatible so a device can establish identity.
 Production deployments should still use HTTPS/WSS.
+
+Replay state is scoped to the device ID and is persisted by the server. It is
+cleared only after permanent device removal or an authorized fresh enrollment
+when the previous peer row is gone. Soft-deleted peers and failed public-key
+registration attempts must not clear this state or rotate the device identity.
+For installations upgraded from 3.5.201, an orphaned
+`telemetry_seq_<DEVICE_ID>` row may remain after a permanent delete. Back up
+the database, remove only that exact row, restart the Go API, and update the
+server before enrolling the replacement device.

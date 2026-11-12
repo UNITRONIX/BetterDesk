@@ -1,4 +1,9 @@
-<% const shell = 'ux35'; %>
+<%
+    // Shell contract: resolved once in server.js (lib/uiShell.js). UX 3.5 is the
+    // default; UX 3.6 is the opt-in beta. Anything unknown falls back to UX 3.5.
+    const shell = (typeof uiShell !== 'undefined' && uiShell === 'ux36') ? 'ux36' : 'ux35';
+    const isBetaShell = shell === 'ux36';
+%>
 <!DOCTYPE html>
 <html lang="<%= lang || 'en' %>" data-theme="<%= (branding && branding.themeMode === 'light') ? 'light' : 'dark' %>" data-theme-mode="<%= (branding && branding.themeMode) || 'dark' %>" data-ui-shell="<%= shell %>">
 <head>
@@ -9,6 +14,11 @@
     <title><%= typeof title !== 'undefined' ? title + ' - ' : '' %><%= appName %></title>
 
     <link rel="icon" type="image/svg+xml" href="/branding/favicon.svg">
+    <% if (isBetaShell) { %>
+    <%# IBM Plex is the beta's UI font: preload the subset every page needs so
+        text does not reflow after base.css loads. %>
+    <link rel="preload" href="/fonts/IBMPlexSans-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <% } %>
 
     <link rel="stylesheet" href="/css/main.css?v=<%= cacheVersion %>">
     <link rel="stylesheet" href="/css/theme.css?v=<%= cacheVersion %>">
@@ -17,10 +27,10 @@
     <link rel="stylesheet" href="/css/transitions.css?v=<%= cacheVersion %>">
     <link rel="stylesheet" href="/css/notif-center.css?v=<%= cacheVersion %>">
     <link rel="stylesheet" href="/css/accessibility.css?v=<%= cacheVersion %>">
-    <% if (shell === 'ux35') { %>
+    <%# UX 3.6 reuses the UX 3.5 token contract (branding, theming, wallpaper) and layers its own layout on top. %>
     <link rel="stylesheet" href="/css/ux35-tokens.css?v=<%= cacheVersion %>">
     <link rel="stylesheet" href="/css/ux35.css?v=<%= cacheVersion %>">
-    <% } %>
+    <link rel="stylesheet" href="/css/ux36/shared-chrome.css?v=<%= cacheVersion %>">
     <% if (!embed) { %>
     <link rel="stylesheet" href="/css/mobile-shell.css?v=<%= cacheVersion %>">
     <link rel="stylesheet" href="/css/help-panel.css?v=<%= cacheVersion %>">
@@ -30,16 +40,35 @@
     <link rel="stylesheet" href="/css/<%= style %>.css?v=<%= cacheVersion %>">
         <% }); %>
     <% } %>
+    <% if (isBetaShell) { %>
+    <%# The beta layout loads last, on purpose. These are the contributor's own
+        design system (issue #493 / PR #495) — palette, tokens, base typography,
+        components and shell — so they own the shared component classes
+        (.btn, .form-input, tables, page headers) instead of fighting the v2
+        page sheets above. legacy-bridge maps both token vocabularies onto one
+        scale so markup built by existing scripts keeps resolving.
+        The palette is skipped for `themeMode: custom`: the operator's own
+        colours come from branding.css and must win. %>
+    <% if (!branding || branding.themeMode !== 'custom') { %>
+    <link rel="stylesheet" href="/css/ux36/palette.css?v=<%= cacheVersion %>">
+    <% } %>
+    <link rel="stylesheet" href="/css/ux36/tokens.css?v=<%= cacheVersion %>">
+    <link rel="stylesheet" href="/css/ux36/base.css?v=<%= cacheVersion %>">
+    <link rel="stylesheet" href="/css/ux36/components.css?v=<%= cacheVersion %>">
+    <link rel="stylesheet" href="/css/ux36/legacy-bridge.css?v=<%= cacheVersion %>">
+    <link rel="stylesheet" href="/css/ux36/shell.css?v=<%= cacheVersion %>">
+    <link rel="stylesheet" href="/css/ux36/pages.css?v=<%= cacheVersion %>">
+    <% } %>
 </head>
-<body class="app-page<%= shell === 'ux35' ? ' ux35-page' : '' %><%= embed ? ' embed-mode' : '' %>">
-    <% if (shell === 'ux35') { %>
-    <div class="ux35-shell<%= embed ? ' embed-mode' : '' %>" id="app">
+<body class="app-page<%= shell === 'ux35' ? ' ux35-page' : '' %><%= isBetaShell ? ' ux35-page ux36-page' : '' %><%= embed ? ' embed-mode' : '' %>">
+    <% if (shell === 'ux35' || isBetaShell) { %>
+    <div class="ux35-shell<%= isBetaShell ? ' ux36-shell' : '' %><%= embed ? ' embed-mode' : '' %>" id="app">
         <% if (!embed) { %>
-        <%- include('../partials/ux35-topbar') %>
+        <%- include(isBetaShell ? '../partials/ux36-topbar' : '../partials/ux35-topbar') %>
         <% } %>
         <div class="ux35-body">
             <% if (!embed) { %>
-            <%- include('../partials/ux35-sidebar') %>
+            <%- include(isBetaShell ? '../partials/ux36-sidebar' : '../partials/ux35-sidebar') %>
             <% } %>
             <div class="ux35-main">
                 <main class="ux35-content main-content" id="ux35-content">
@@ -92,7 +121,14 @@
             branding: <%- JSON.stringify(branding || {}) %>,
             themePalettes: <%- JSON.stringify(typeof themePalettes !== 'undefined' ? themePalettes : {}) %>,
             embed: <%= embed ? 'true' : 'false' %>,
-            uiShell: '<%= shell %>'
+            uiShell: '<%= shell %>',
+            /* Pages this session may open, for the global search dialog. */
+            searchPages: <%- JSON.stringify(typeof consoleSearchPages !== 'undefined' ? consoleSearchPages : []) %>,
+            /* Which data searches may run, so the dialog calls no forbidden API. */
+            searchCaps: {
+                devices: <%= typeof hasPermission === 'function' && hasPermission('device.view') ? 'true' : 'false' %>,
+                users: <%= typeof hasPermission === 'function' && hasPermission('user.view') ? 'true' : 'false' %>
+            }
         };
     </script>
     <script defer src="/js/utils.js?v=<%= cacheVersion %>"></script>
@@ -111,8 +147,12 @@
     <script defer src="/js/app.js?v=<%= cacheVersion %>"></script>
     <script defer src="/js/ui-shell.js?v=<%= cacheVersion %>"></script>
     <% if (!embed) { %>
-    <% if (shell === 'ux35') { %>
+    <% if (shell === 'ux35' || isBetaShell) { %>
     <script defer src="/js/ux35-shell.js?v=<%= cacheVersion %>"></script>
+    <% } %>
+    <% if (isBetaShell) { %>
+    <script defer src="/js/ux36-shell.js?v=<%= cacheVersion %>"></script>
+    <script defer src="/js/ui-search.js?v=<%= cacheVersion %>"></script>
     <% } %>
     <script defer src="/js/mobile-nav.js?v=<%= cacheVersion %>"></script>
     <script defer src="/js/help-panel.js?v=<%= cacheVersion %>"></script>

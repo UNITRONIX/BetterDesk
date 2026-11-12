@@ -127,6 +127,69 @@ esac
 # 1b) BetterDesk-Client Flutter SDK and vcpkg
 # ---------------------------------------------------------------------------
 
+# Resolve the SHA-256 for a Flutter release archive from Flutter's own release
+# manifest (releases_linux.json). Flutter does not publish per-archive .sha256
+# files, so this is the authoritative checksum source (#466).
+#
+# Order:
+#   1. FLUTTER_ARCHIVE_SHA256 override (explicit operator trust decision)
+#   2. releases_linux.json base_url + current_release hash
+#   3. releases_linux.json entry whose archive path matches ${archive}
+#
+# Prints the hash on success and nothing on failure; callers must treat an
+# empty result as fatal rather than proceeding unverified.
+release_manifest_sha256() {
+    local archive="$1"
+    if [ -n "${FLUTTER_ARCHIVE_SHA256:-}" ]; then
+        printf '%s\n' "$FLUTTER_ARCHIVE_SHA256"
+        return 0
+    fi
+    python3 - "$FLUTTER_VERSION" "$archive" <<'PY'
+import json
+import sys
+import urllib.request
+
+version, archive = sys.argv[1], sys.argv[2]
+manifest_url = (
+    "https://storage.googleapis.com/flutter_infra_release/releases/releases_linux.json"
+)
+try:
+    with urllib.request.urlopen(manifest_url, timeout=30) as response:
+        manifest = json.load(response)
+except Exception as exc:  # network/parse problems must not look like success
+    sys.stderr.write(f"releases_linux.json unavailable: {exc}\n")
+    sys.exit(0)
+
+hash_by_ref = manifest.get("current_release") or {}
+for release in manifest.get("releases") or []:
+    if not isinstance(release, dict):
+        continue
+    path = str(release.get("archive") or "")
+    if not path.endswith(archive):
+        continue
+    sha = str(release.get("sha256") or "").strip()
+    if not sha:
+        continue
+    # Only accept the entry for our exact version, or the channel's current
+    # release, so a stale archive cannot supply a mismatched hash.
+    if str(release.get("version")) == version or release.get("hash") == hash_by_ref.get(
+        release.get("channel")
+    ):
+        print(sha)
+        sys.exit(0)
+
+# Fall back to the manifest's per-channel hash lookup.
+for channel, ref in hash_by_ref.items():
+    for release in manifest.get("releases") or []:
+        if release.get("hash") == ref and str(release.get("version")) == version:
+            sha = str(release.get("sha256") or "").strip()
+            if sha:
+                print(sha)
+                sys.exit(0)
+sys.exit(0)
+PY
+}
+
 install_flutter() {
     local archive="flutter_linux_${FLUTTER_VERSION}-stable.tar.xz"
     local url="https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/${archive}"
@@ -142,8 +205,23 @@ install_flutter() {
     fi
     tmp="$(mktemp -d)"
     curl --proto '=https' --tlsv1.2 -fsSL "$url" -o "$tmp/$archive"
-    curl --proto '=https' --tlsv1.2 -fsSL "${url}.sha256" -o "$tmp/${archive}.sha256"
-    (cd "$tmp" && sha256sum -c "${archive}.sha256")
+
+    # Flutter does not publish a per-archive ${url}.sha256 file (that path
+    # 404s, see #466). The checksum lives in the release manifest, so resolve
+    # it there and keep verification instead of skipping it.
+    local expected
+    expected="$(release_manifest_sha256 "$archive")"
+    if [ -n "$expected" ]; then
+        log "Verifying $archive against the Flutter release manifest"
+        echo "${expected}  ${archive}" > "$tmp/${archive}.sha256"
+        (cd "$tmp" && sha256sum -c "${archive}.sha256")
+    else
+        err "Could not resolve a checksum for $archive from the Flutter release manifest."
+        err "Refusing to install an unverified Flutter SDK. Check FIXTURE/network access,"
+        err "or set FLUTTER_ARCHIVE_SHA256 explicitly if the release is trusted."
+        rm -rf "$tmp"
+        exit 5
+    fi
     mkdir -p "$(dirname "$FLUTTER_ROOT")"
     tar -xJf "$tmp/$archive" -C "$(dirname "$FLUTTER_ROOT")"
     if [ "$FLUTTER_ROOT" != "$(dirname "$FLUTTER_ROOT")/flutter" ]; then

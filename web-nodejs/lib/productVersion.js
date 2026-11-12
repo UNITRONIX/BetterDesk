@@ -50,9 +50,35 @@ function readProductVersion({ rootDir, consoleDir, fallback = '0.0.0' } = {}) {
     return fallback;
 }
 
+/**
+ * Read the version that `betterdesk-server` embeds through
+ * `betterdesk-server/internal/productversion/VERSION` (`//go:embed`).
+ *
+ * This file is part of the server source tree, so it is already refreshed by
+ * `ensureServerSource()` before the Go build runs. `applyUpdate()` writes the
+ * root `VERSION` only *after* the build, so `readProductVersion()` can still
+ * return the previous release at build time — that mismatch made a freshly
+ * compiled server report the old version on `/api/health` while the panel
+ * showed the new one.
+ *
+ * @returns {string|null} semver from the embedded file, or null when absent
+ */
+function readEmbeddedServerVersion(serverDir) {
+    if (!serverDir) return null;
+    try {
+        const embedded = path.join(serverDir, 'internal', 'productversion', 'VERSION');
+        if (!fs.existsSync(embedded)) return null;
+        const v = fs.readFileSync(embedded, 'utf8').trim();
+        return SEMVER_RE.test(v) ? v : null;
+    } catch (_e) {
+        return null;
+    }
+}
+
 module.exports = {
     SEMVER_RE,
     getProjectRoot,
     readProductVersion,
     readPackageJsonVersion,
+    readEmbeddedServerVersion,
 };

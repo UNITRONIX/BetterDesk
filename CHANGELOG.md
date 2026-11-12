@@ -5,6 +5,488 @@
 
 ---
 
+## [3.5.233] — 2026-11-11
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.232] — 2026-11-11
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.231] — 2026-11-11
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.230] — 2026-11-11
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.229] — 2026-11-11
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.228] — 2026-11-11
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.227] — 2026-11-11
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.226] — 2026-11-11
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.225] — 2026-11-11
+
+### Added
+- **UX 3.6 beta: global search, section "More" rows, and the beta rhythm on every page.**
+  Continues the EJS port of the redesign by
+  [@rathlinus](https://github.com/rathlinus)
+  ([issue #493](https://github.com/UNITRONIX/BetterDesk/issues/493),
+  [PR #495](https://github.com/UNITRONIX/BetterDesk/pull/495)).
+  **Ctrl+K** (or **/** when no field has focus) opens one dialog that searches
+  pages, devices and people (`web-nodejs/public/js/ui-search.js`). Pages come
+  from `buildSearchPages()` in `web-nodejs/lib/consoleNav.js`, built per request
+  and filtered by panel access and RBAC, so the index only lists pages the
+  role may open; entries carry extra search words so old names ("Keys",
+  "DataGuard", "Fleet") still find the page. Devices and people load on first
+  use from `/api/devices` and `/api/users`, and only when the new
+  `window.BetterDesk.searchCaps` flags allow those calls.
+  Long sidebar sections keep their daily pages visible and fold the rest into a
+  section-level **More** row (count badge, remembered per browser in
+  `bd_ux36_nav_more_open`); the menu filter now exists in the beta sidebar too,
+  matches inside "More" rows and opens them. Width, collapsed groups, "More"
+  rows and the scroll position are restored by an inline script before the
+  first paint, so the menu never jumps. Settings search reports when the typed
+  words name another topic (`settings.ui.search_topic`).
+  The remaining pages keep their markup and take the beta rhythm from
+  `web-nodejs/public/css/ux36/pages.css` — one content column, ruled sections
+  instead of floating cards, stat numbers in one ruled row, page tabs as a
+  ruled row, hairline tables; Chat and Remote stay full-bleed workspaces.
+  `tokens.css` gains `--radius-full`, the icon subset gains `more_horiz`, and
+  `nav.more` / `nav.fewer` / `search.*` / `settings.ui.search_topic` exist in
+  all 26 locales. UX 3.5 markup, routes, permissions and branding are
+  unchanged. Covered by the new `tests/ux36-all-pages.render.test.js` (every
+  main-layout view in both shells) plus the existing UX 3.6 suites.
+  Ships via panel update.
+
+### Changed
+- **Console backend moves toward the Go server, stage by stage.**
+  Implements P1–P3 of [docs/important/console-backend-strangler.md](docs/important/console-backend-strangler.md)
+  (follow-up to the architecture question in
+  [discussion #496](https://github.com/UNITRONIX/BetterDesk/discussions/496)).
+  - **Panel trust bridge (P1).** `X-BetterDesk-Panel` carries a short-lived
+    HMAC-SHA256 statement (method, path, subject, role, org, issue/expiry,
+    nonce) signed by the console with `PANEL_TRUST_SECRET`. Go verifies the
+    signature, the window, the replay nonce and the endpoint, accepts it only
+    from loopback or `PANEL_TRUST_ALLOWED_HOSTS`, and takes the role from the
+    database when the account still exists. With no secret the bridge is off
+    and authentication is exactly as before. `api/panel_trust_test.go` covers
+    thirteen rejection paths including cross-endpoint and cross-method replay
+    and role escalation.
+  - **Panel grouping (P2).** Go now owns the writes for device groups, their
+    members and ACL, folders, device→folder assignment and per-user device
+    grants (`api/panel_groups_handlers.go`, `db/panel_groups*.go`), and creates
+    the tables on SQLite that it previously only read. The console keeps its
+    screens and response shapes through `services/panelGrouping.js`;
+    `BACKEND_PANEL_GROUPING=node` restores the old writer without a redeploy,
+    and a 404/501/503 falls back automatically while a 400/403 is final.
+  - **Panel catalog (P3, definition half).** `GET /api/panel/catalog` serves
+    the section list, groups, permission vocabulary and built-in role defaults;
+    the console loads it at startup and keeps its bundled copy only as the
+    fallback. `tests/panelCatalogParity.test.js` fails if the two definitions
+    drift apart. This also removed a duplicate `toolkit` catalog entry.
+  No behavioural change without the new `.env` keys; both are appended by the
+  updater when missing and never overwritten. Ships via panel update (Go
+  server restart).
+- **Access control strategies moved off the Devices page to their own page.**
+  The RustDesk Pro strategy list was a card halfway down the device list, below
+  the folder rail and above the table — nobody found it there.
+  It is now **`/strategies`**, listed in the sidebar with the other security
+  rules (group *Rules & policies*, next to Policies, Automation, DataGuard and
+  Attestation) in both shell layouts, and in the Ctrl+K search index.
+  The list, the edit and assign dialogs, the permission grid and every endpoint
+  (`/api/panel/strategies`, `/api/panel/user-groups`, `/api/device-groups`,
+  `/api/devices`) are unchanged — the code moved from `devices.js` to its own
+  `public/js/strategies.js` and `views/strategies.ejs`, and the row styles stay
+  in `devices.css` where the markup still uses them.
+  Access is gated by the existing `strategies` panel section (read
+  `device.view`, write `device.edit`), so a role that could manage strategies
+  before still can and nobody else gains access. The Devices page keeps one
+  quiet link to the new page, so the old location still leads somewhere.
+  Covered by `tests/strategies-page.test.js`, which also fails if the card is
+  ever rendered on the Devices page again.
+  Ships via panel update.
+
+### Fixed
+- **UX 3.6: the page column scrolls again; Devices no longer traps its list.**
+  The beta shell declared only `min-height` for the shell and set
+  `overflow: visible` on the content column while telling the document to
+  scroll — but `body.app-page` (main.css) clips overflow, so nothing scrolled at
+  all. A long table grew the shell past the viewport instead of scrolling, which
+  made the Devices list impossible to scroll vertically and left the floating
+  horizontal scrollbar at the bottom of the list instead of the bottom of the
+  screen.
+  The beta shell now mirrors the UX 3.5 chain: `.ux35-shell` fills `100dvh` and
+  clips, `.ux35-main` clips, and `.ux35-content.main-content` is the single
+  scrollport (`flex: 1; min-height: 0; overflow-y: auto`). Embedded windows keep
+  sizing to their content. The sidebar is no longer `position: sticky` (it would
+  be offset by the top bar inside a shell that does not scroll) and simply fills
+  its column; the drawer below 1100 px stays fixed with `height: auto`. The
+  device-rail sticky offset in `ux36/pages.css` is measured from the scrollport
+  instead of the document. The floating horizontal scrollbar now also sits above
+  the docked mobile bottom navigation instead of behind it.
+  Guarded by `tests/ux36-scroll-chain.test.js`, which pins the scroll chain, the
+  sidebar rule and the scrollbar anchoring, because all three are easy to break
+  by removing one `overflow` in isolation.
+  Ships via panel update.
+
+---
+
+## [3.5.224] — 2026-11-10
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.223] — 2026-11-09
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.222] — 2026-11-09
+
+### Added
+- **UX 3.6 beta console shell (opt-in).** An alternative layout built on the
+  design system of the community redesign by
+  [@rathlinus](https://github.com/rathlinus)
+  ([issue #493](https://github.com/UNITRONIX/BetterDesk/issues/493),
+  [PR #495](https://github.com/UNITRONIX/BetterDesk/pull/495)) and rebuilt on the
+  current EJS/JavaScript/CSS stack — no Svelte, no merged branch.
+  The beta loads his own sheets (`web-nodejs/public/css/ux36/`): `palette.css`
+  (his neutral dark scale and white-based light theme), `tokens.css`,
+  `base.css` (IBM Plex Sans/Mono typography, page column), `components.css`
+  (buttons, fields, tables, menus, tags, notices) and `shell.css` (top bar,
+  grouped navigation, content column, mobile bar). `legacy-bridge.css` maps his
+  token names onto the v2 names the remaining page sheets use, so one page never
+  mixes two type or spacing scales.
+  The sidebar is grouped into **Devices / Support / People / Activity / Settings**
+  (`web-nodejs/lib/consoleNav.js`) with a `<ul>` per section, section icons and
+  group labels; every entry keeps its existing route and panel-access section,
+  so roles see exactly the pages they could open before. Devices is list-first
+  with folders and device groups in a 210px rail beside the table and details in
+  a side sheet on desktop; Settings uses a ruled topic row plus `?tab=` deep
+  links; Dashboard stats read as one ruled row instead of floating cards.
+  The switch sits in the **top bar** on every page — a small **BETA** badge in
+  UX 3.5, and in UX 3.6 the same button returns to UX 3.5 (repeated at the
+  bottom of the sidebar). **Settings → General → Console interface** offers the
+  same choice with the design credit.
+  UX 3.5 stays the default and the safe fallback: the shell is resolved once in
+  `web-nodejs/lib/uiShell.js`, stored per browser in the `bd_ui_shell` cookie.
+  Unknown or removed values (including `classic`) fall back to UX 3.5. No database
+  migration and no change to routes, permissions, branding, wallpapers or the
+  operator's custom colours (the beta palette is skipped for `custom` theme mode).
+  New `ux36.*` and grouped `nav.*` keys in all 26 locales. Covered by
+  `web-nodejs/tests/ux36-shell.test.js`, `ux36-pages.render.test.js` and
+  `ux36-ui-shell.routes.test.js`, plus the updated `ux35-ui-contract.test.js`.
+  IBM Plex fonts (SIL OFL 1.1) ship under `web-nodejs/public/fonts/` with their
+  licence file. Contributor credit is recorded in
+  `docs/development/CONTRIBUTOR-ATTRIBUTIONS.md` and
+  `.cursor/rules/ux36-attribution.mdc`.
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.221] — 2026-11-08
+
+### Fixed
+- **Console icons chosen in JavaScript no longer render as giant raw labels.**
+  The self-hosted Material Symbols subset was built by scanning view markup only, so
+  icons picked from a lookup table — the Pro role avatar (`roleIcons.pro = 'star'` in
+  `users.js` and `permissions.js`) most visibly — were never baked into the woff2. A
+  missing ligature makes the browser paint the icon name as ordinary text, which is the
+  oversized “STAR” overlapping the username in the users table. `shield_person` and
+  `engineering` had the same problem.
+  `scripts/update-material-symbols.mjs` now also collects names from icon lookup tables,
+  `icon = …` assignments and inline ternaries; the subset grew 341 → 357 icons
+  (`star`, `shield_person`, `engineering`, `audiotrack`, `picture_as_pdf`, `folder_zip`,
+  `drive_folder_upload`, `check_box`, `check_box_outline_blank`, `delete_outline`,
+  `remove_circle_outline`, `format_align_left`, `drag_handle`, `gps_fixed`, `factory`,
+  `pending`). `users.css` also clips the avatar so a stray ligature can never spill again,
+  and `tests/material-symbols-subset.test.js` now guards JS icon tables too.
+
+### Changed
+- **Users page is now a two-column layout.** The security best-practices card is gone.
+  User groups (with create) sit in a sticky left rail at 25% width; the users table
+  fills the remaining 75%. Below 1200px the columns stack. Covered by
+  `tests/usersLayout.test.js`.
+- **Users table actions moved to a right-click context menu.** The Actions column
+  (organizations / reset password / edit / delete icon row) is removed; right-click
+  a user row to open the same actions. Local-auth users still see Reset password;
+  LDAP/OIDC users do not. Clicking the Organizations cell still opens that modal.
+
+---
+
+## [3.5.220] — 2026-11-08
+
+### Changed
+- **Główne → agent pairing now issues a one-time code instead of opening the QR scanner.**
+  The button in the client-config card (previously **Activate agent**, QR scanner) and the
+  sidebar entry (**Activate agent**, now **Pair agent**) open a pairing-code dialog: server
+  address (prefilled from the resolved client address), optional label, code generation,
+  10-minute countdown and copy. Codes are minted through the existing
+  `POST /api/panel/pairing/codes` behind `enrollment.approve`; the plaintext is shown once
+  and never logged.
+  The QR scanner is still available — inside the dialog as **Scan agent QR** and on the full
+  `/pairing` page (active codes, revoke). `/?activateAgent=1` now opens the code dialog, so
+  existing bookmarks and shortcuts no longer land in the QR scanner.
+  New keys `nav.pair_agent`, `dashboard.pair_with_code`, `pairing.scan_qr_agent`,
+  `pairing.generating` in all 26 locales; `agents.*` copy (step 3, button, description) no
+  longer presents QR as the primary path.
+
+---
+
+## [3.5.219] — 2026-11-08
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.218] — 2026-11-08
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.217] — 2026-11-08
+
+### Fixed
+- **Console update rolled back on every instance (3.5.215/3.5.216):** `routes/pairing.routes.js`
+  shipped `require('../db')`, a module that has never existed in the repository. The update
+  itself applied cleanly, but the post-update integrity scan resolved that broken require to
+  `db.js`, requested `web-nodejs/db.js` from GitHub, received a **404** and classified it as a
+  **critical** failure — so the whole console update was rolled back to the previous SHA and
+  every panel stayed stranded below the new release. The import is now
+  `require('../services/database')`, matching every other route module.
+
+  No manual repair is needed: panels stuck on 3.5.214–3.5.216 pick the fix up with the next
+  panel update (Settings → Updates).
+
+### Added
+- **CI guard for console module integrity:** `web-nodejs/tests/consoleRequireIntegrity.test.js`
+  statically resolves every relative `require()` in the deployable console tree and fails when a
+  target file does not exist, plus smoke-requires every lazily loaded `routes/*.js`. `node --check`
+  only parses, and lazy route modules are not loaded during boot, so this was invisible to every
+  existing gate before it reached production.
+
+---
+
+## [3.5.216] — 2026-11-08
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.215] — 2026-11-08
+
+### Added
+- **Short-code pairing (`host` + 6 characters):** operator mints a one-time code on the new
+  `/pairing` page (Generator → pairing section); the user types only the server address and
+  the code. The client discovers the Client API itself (HTTPS first, then `:21114`, `:5443`),
+  applies signal/relay/API/key atomically, and continues with normal branding and
+  enrollment. Codes are 6 Crockford Base32 characters, valid 10 minutes, single use, stored
+  as sha256 only, and refused with an identical response whether unknown, expired or spent.
+  Endpoints: `POST /api/pairing/redeem`, `POST /api/pairing/config` (public, rate-limited
+  10/min/IP), `POST|GET /api/pairing/codes`, `DELETE /api/pairing/codes/{id}` (operator).
+- **`docs/CONNECTION_PORTS.md`:** single source of truth for ports — table, four firewall
+  profiles (minimal / reverse-proxy+TLS recommended / WSS-only / Docker), client-field map,
+  what pairing actually requires, and a common-mistakes table. Replaces the contradictory
+  guidance previously spread across the wiki, installers and `PORT_SECURITY.md`.
+- **Firewall verification:** `scripts/check-connection-ports.sh` (`a|b|c|d`) and the
+  PowerShell equivalent check real listeners against the chosen profile — a panel bound to
+  `0.0.0.0` or a WAN-exposed `21114` in profile B fails with a non-zero exit.
+- **CI gates:** `scripts/check-port-docs.js` fails when the cheat sheet and the port
+  constants in `constants.go` / `config.js` disagree (and when `21120` reappears as a live
+  port); `scripts/check-pairing-i18n.js` enforces the `pairing` namespace across all 26
+  locales. Both run in the secret-scan workflow.
+
+### Changed
+- **Installer firewall output:** `betterdesk.sh` `firewall-notes.txt` now lists **21114**
+  (previously missing) and separates WAN from localhost ports. `betterdesk.ps1` no longer
+  opens `5000`, `5443`, `21115`, `21118` or `21119` by default; it opens the documented
+  minimum (21116 TCP+UDP, 21117, Go API).
+- **Client branding docs:** `docs/README.md` marks `architecture/PORT_SECURITY.md` as
+  historical and points to `CONNECTION_PORTS.md`; `docs/wiki/Installation.md` no longer tells
+  operators to expose the panel to WAN.
+- **Docs — Docker quick start now leads with the all-in-one image:** `README.md`,
+  `docs/wiki/Home.md` and `docs/wiki/Installation.md` showed the legacy split layout
+  (`docker-compose.quick.yml`) as the only Docker path, even though `install.sh` and
+  `docs/docker/GHCR_PACKAGE_README.md` have defaulted to the all-in-one
+  `ghcr.io/unitronix/betterdesk` image since 3.3.114. New installs follow the single-container
+  layout now; the split layout moved into a collapsible "Legacy" block. No code change —
+  existing split deployments keep working unchanged (API port `21114` vs `21121` noted in
+  both places).
+
+### Fixed
+- **Stale port advice:** `docs/architecture/PORT_SECURITY.md` documented an API on
+  `127.0.0.1:21120` that never existed, and `docs/wiki/Installation.md` recommended
+  `API_PORT=21120` — a value the installer never used.
+
+### Notes for operators
+- No database migration. Pairing codes live in `server_config` under `pairing_code_<sha256>`
+  and are pruned automatically.
+- `/api/pairing/*` must be reachable for pairing: in profile B the proxy sends `/api` to
+  `21114`; without a proxy, open `21114` **over TLS**.
+- `21116/tcp+udp` and `21117/tcp` remain required — pairing configures the client but does
+  not carry the session.
+
+---
+
+## [3.5.214] — 2026-11-08
+
+### Fixed
+- **i18n key parity:** `en.json` was missing `commercialization.packages.select_org` and `commercialization.packages.select_org_placeholder`, which `pl.json` already had. EN now carries both, so parity is clean.
+- **CI i18n gate:** `npm run i18n:check` no longer fails on untranslated strings still falling back to English. Parity breaks, parse errors, missing keys and empty values stay blocking; the remaining translation backlog (~8.1k strings across 26 locales) is reported as a warning instead of turning the gate permanently red and hiding real regressions.
+
+---
+
+## [3.5.213] — 2026-11-08
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.212] — 2026-11-08
+
+### Changed
+- Restrict WAN `/api/currentUser` to GET and POST while preserving OPTIONS handling.
+
+---
+
+## [3.5.211] — 2026-11-08
+
+### Fixed
+- **Empty agent download portal (#439 / #475):** `/api/portal/installers` now returns a `reason` when it has nothing to list (`no_release_imported`, `release_cache_incomplete`, `cache_unreadable`). The public `/portal` page explains which one applies instead of showing a bare "No installers available yet."
+- **Flutter checksum during toolchain install (#466):** `scripts/install-build-toolchain.sh` no longer fetches `${url}.sha256`, which Flutter does not publish. The hash is resolved from Flutter's `releases_linux.json` manifest, and an unresolved hash now fails the install instead of skipping verification. Override with `FLUTTER_ARCHIVE_SHA256` when needed.
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.210] — 2026-11-08
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.209] — 2026-11-08
+
+### Fixed
+- **Stable releases without binaries or images (#488):** `version-bump-main.yml` created the tag and GitHub Release with `GITHUB_TOKEN`, and `GITHUB_TOKEN`-produced events never trigger other workflows — so `release-server.yml` and `docker-publish.yml` never ran. 3.5.171 and 3.5.200 shipped a Release with zero assets, and GHCR never received the `3.5.200`/`latest` tags. The release job now dispatches both publishers explicitly on the tag ref, and a verification step fails the release when the Release still has no downloadable assets. `docker-publish` also accepts `latest` from a release tag, which it previously refused.
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.208] — 2026-11-03
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.207] — 2026-11-01
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.206] — 2026-11-01
+
+### Fixed
+- **`follow-redirects` security update (#126):** the console now resolves the patched `1.16.2` release for Axios redirects. Verify with `npm ls follow-redirects` under `web-nodejs`.
+- **Production `minimatch` dependency chain (#127):** upgraded `bcrypt` to `6.0.0` and `ejs` to `7.0.2`, removing the vulnerable runtime `node-pre-gyp`/`glob` and `jake`/`filelist` paths. `npm audit --omit=dev` now reports zero vulnerabilities.
+- **Signed BetterDesk Client requests after re-enrollment (#484):** authorized fresh enrollment after permanent removal clears orphaned per-device telemetry replay state, while active and soft-deleted device IDs retain their existing replay protection. Existing 3.5.201 installations with a stale `telemetry_seq_<DEVICE_ID>` row require a database backup, removal of that exact row, an API restart, and an update to `dev`.
+- **Wrapped secure client requests (#484):** `X-BetterDesk-Envelope: 1` requests containing the `betterdesk_envelope` wrapper are accepted by the Go API. Ships via the panel/server update path.
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.205] — 2026-10-31
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.204] — 2026-10-31
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.203] — 2026-10-31
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.202] — 2026-10-31
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.201] — 2026-10-30
+
+### Changed
+- _(none yet)_
+
+---
+
 ## [3.5.200] — 2026-10-30
 
 ### Changed
@@ -4408,3 +4890,36 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.198]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.197...v3.5.198
 [3.5.199]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.198...v3.5.199
 [3.5.200]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.199...v3.5.200
+[3.5.201]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.200...v3.5.201
+[3.5.202]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.201...v3.5.202
+[3.5.203]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.202...v3.5.203
+[3.5.204]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.203...v3.5.204
+[3.5.205]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.204...v3.5.205
+[3.5.206]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.205...v3.5.206
+[3.5.207]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.206...v3.5.207
+[3.5.208]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.207...v3.5.208
+[3.5.209]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.208...v3.5.209
+[3.5.210]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.209...v3.5.210
+[3.5.211]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.210...v3.5.211
+[3.5.212]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.211...v3.5.212
+[3.5.213]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.212...v3.5.213
+[3.5.214]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.213...v3.5.214
+[3.5.215]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.214...v3.5.215
+[3.5.216]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.215...v3.5.216
+[3.5.217]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.216...v3.5.217
+[3.5.218]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.217...v3.5.218
+[3.5.219]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.218...v3.5.219
+[3.5.220]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.219...v3.5.220
+[3.5.221]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.220...v3.5.221
+[3.5.222]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.221...v3.5.222
+[3.5.223]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.222...v3.5.223
+[3.5.224]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.223...v3.5.224
+[3.5.225]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.224...v3.5.225
+[3.5.226]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.225...v3.5.226
+[3.5.227]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.226...v3.5.227
+[3.5.228]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.227...v3.5.228
+[3.5.229]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.228...v3.5.229
+[3.5.230]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.229...v3.5.230
+[3.5.231]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.230...v3.5.231
+[3.5.232]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.231...v3.5.232
+[3.5.233]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.232...v3.5.233

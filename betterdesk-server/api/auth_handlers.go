@@ -1094,6 +1094,24 @@ func hashAPIKey(key string) string {
 // Returns (username, role, ok). If ok is false, an error response has been written.
 // Auth order: Bearer JWT → X-API-Key (scoped DB lookup).
 func (s *Server) authenticateRequest(r *http.Request) (username, role string, ok bool) {
+	// 0. Panel trust bridge — a statement signed by the Node console for a
+	//    signed-in operator. Only accepted on the loopback hop (unless the
+	//    operator explicitly allows remote panel hosts) and only when the
+	//    bridge has a secret; the role still comes from the database when the
+	//    account exists, so a stale or forged claim cannot raise privileges.
+	if r.Header.Get(PanelTrustHeader) != "" && s.panelTrustEnabled() && s.panelTrustPeerAllowed(r) {
+		claim, err := s.verifyPanelTrust(r)
+		if err != nil {
+			log.Printf("[panel-trust] rejected %s %s: %v", r.Method, redactPathSegment(r.URL.Path), err)
+			return "", "", false
+		}
+		role := s.resolvePanelRole(claim)
+		if role == "" {
+			return "", "", false
+		}
+		return claim.Subject, role, true
+	}
+
 	// 1. Bearer token — opaque client session (RustDesk desktop) or JWT (panel/API)
 	if bearer := r.Header.Get("Authorization"); len(bearer) > 7 && strings.EqualFold(bearer[:7], "Bearer ") {
 		token := strings.TrimSpace(bearer[7:])

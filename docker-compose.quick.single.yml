@@ -5,7 +5,7 @@
 # Go server + Node.js console in one container (recommended for all deployments).
 #
 # Image tag (aligned with CHANGELOG / git tag):
-#   Default: 3.5.200  |  Rolling: BETTERDESK_IMAGE_TAG=latest
+#   Default: 3.5.233  |  Rolling: BETTERDESK_IMAGE_TAG=latest
 #
 # Usage (automated — recommended):
 #   curl -fsSL https://raw.githubusercontent.com/UNITRONIX/BetterDesk/main/install.sh | sudo bash
@@ -15,7 +15,7 @@
 #   docker compose pull && docker compose up -d
 #
 # Pin a specific release:
-#   BETTERDESK_IMAGE_TAG=3.5.200 docker compose up -d
+#   BETTERDESK_IMAGE_TAG=3.5.233 docker compose up -d
 #
 # Web Console: http://localhost:5000
 # RustDesk client API: http://localhost:21121 (Go server — all-in-one default port)
@@ -35,7 +35,7 @@
 
 services:
   betterdesk:
-    image: ghcr.io/unitronix/betterdesk:${BETTERDESK_IMAGE_TAG:-3.5.200}
+    image: ghcr.io/unitronix/betterdesk:${BETTERDESK_IMAGE_TAG:-3.5.233}
     container_name: betterdesk
     hostname: betterdesk
     ports:
@@ -82,13 +82,18 @@ services:
       - PUB_KEY_PATH=/opt/rustdesk/id_ed25519.pub
       - API_KEY_PATH=/opt/rustdesk/.api_key
       - SESSION_SECRET=${SESSION_SECRET:-}
+      # Panel session policy (empty = built-in defaults; see web-nodejs/.env.example)
+      - SESSION_IDLE_TIMEOUT=${SESSION_IDLE_TIMEOUT:-}
+      - SESSION_MAX_AGE=${SESSION_MAX_AGE:-}
+      - SESSION_IDLE_WARN_MS=${SESSION_IDLE_WARN_MS:-}
+      - SESSION_MAX_PER_USER=${SESSION_MAX_PER_USER:-}
       - DOCKER=true
       # Optional: map betterdesk to host bind-mount owner (Synology etc.). Default 10001.
       - PUID=${PUID:-10001}
       - PGID=${PGID:-10001}
       - BETTERDESK_UPDATE_MODE=image
       - BETTERDESK_DOCKER_LAYOUT=single
-      - BETTERDESK_IMAGE_TAG=${BETTERDESK_IMAGE_TAG:-3.5.200}
+      - BETTERDESK_IMAGE_TAG=${BETTERDESK_IMAGE_TAG:-3.5.233}
       - DB_TYPE=${DB_TYPE:-sqlite}
       - DATABASE_URL=${DATABASE_URL:-}
       - DB_URL=${DATABASE_URL:-}

@@ -914,6 +914,61 @@
     min-width: 220px;
 }
 
+.toolbar-type-text-menu {
+    min-width: 300px;
+    max-width: min(340px, calc(100vw - 24px));
+    padding: 8px;
+}
+
+.type-text-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.type-text-input {
+    width: 100%;
+    min-height: 72px;
+    resize: vertical;
+    box-sizing: border-box;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border-primary, #30363d);
+    background: var(--bg-primary, #0d1117);
+    color: var(--text-primary, #e6edf3);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.type-text-input:focus {
+    outline: none;
+    border-color: var(--accent-blue, #58a6ff);
+}
+
+.type-text-send {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    align-self: flex-end;
+    padding: 7px 12px;
+    border: none;
+    border-radius: 6px;
+    background: var(--accent-blue, #238636);
+    color: #fff;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.type-text-send .material-icons {
+    font-size: 16px;
+}
+
+.type-text-send:hover {
+    filter: brightness(1.08);
+}
+
 /* ---- Display settings grid dropdown ---- */
 #display-menu.toolbar-dropdown-wide {
     min-width: 420px;

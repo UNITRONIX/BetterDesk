@@ -43,6 +43,9 @@ const ALLOWED_PATHS = new Set([
     '/api/branding',
     '/api/devices/register',
     '/api/devices/register/status',
+    // Short-code pairing (client has no credentials yet; a valid code is required)
+    '/api/pairing/redeem',
+    '/api/pairing/config',
     '/api/peers',
     // Phase 2: Audit
     '/api/audit',
@@ -93,7 +96,7 @@ const ALLOWED_PATH_PATTERNS = [
 const ALLOWED_METHODS = {
     '/api/login': 'POST',
     '/api/logout': 'POST',
-    '/api/currentUser': '*',
+    '/api/currentUser': ['GET', 'POST'],
     '/api/login-options': 'GET',
     '/api/oidc/auth': 'POST',
     '/api/oidc/auth-query': 'GET',
@@ -106,6 +109,8 @@ const ALLOWED_METHODS = {
     '/api/branding': 'GET',
     '/api/devices/register': 'POST',
     '/api/devices/register/status': 'GET',
+    '/api/pairing/redeem': 'POST',
+    '/api/pairing/config': 'POST',
     '/api/peers': 'GET',
     '/api/audit': 'GET',
     '/api/audit/conn': '*',
@@ -145,6 +150,8 @@ const PATH_BODY_LIMITS = {
     '/api/oidc/auth': 4096,       // 4KB — OIDC start with deviceInfo
     '/api/sysinfo': 8192,         // 8KB — sysinfo with displays/encoding data
     '/api/sysinfo_ver': 512,      // 512B — version check (id + hash only)
+    '/api/pairing/redeem': 4096,  // 4KB — code + device identity
+    '/api/pairing/config': 512,   // 512B — code only
     '/api/ab': 524288,             // 512KB — match Go address book limit
     '/api/ab/personal': 524288,    // 512KB — personal address book
     '/api/audit/conn': 2048,      // 2KB — connection event
@@ -183,7 +190,12 @@ function pathWhitelist(req, res, next) {
 
     // Enforce correct HTTP method (* allows any method)
     const expectedMethod = ALLOWED_METHODS[req.path];
-    if (expectedMethod && expectedMethod !== '*' && req.method !== expectedMethod && req.method !== 'OPTIONS') {
+    const methodAllowed = expectedMethod === '*' || (
+        Array.isArray(expectedMethod)
+            ? expectedMethod.includes(req.method)
+            : req.method === expectedMethod
+    );
+    if (expectedMethod && !methodAllowed && req.method !== 'OPTIONS') {
         return res.status(405).end();
     }
 

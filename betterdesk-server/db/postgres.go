@@ -971,6 +971,10 @@ func (pg *PostgresDB) HardDeletePeer(id string) error {
 		`DELETE FROM id_change_history WHERE old_id = $1 OR new_id = $1`, id); err != nil {
 		return err
 	}
+	if _, err := tx.Exec(pg.ctx,
+		`DELETE FROM server_config WHERE key = $1`, "telemetry_seq_"+id); err != nil {
+		return err
+	}
 	return tx.Commit(pg.ctx)
 }
 

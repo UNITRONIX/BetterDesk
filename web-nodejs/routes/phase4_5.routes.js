@@ -353,11 +353,26 @@ router.get('/portal', (req, res) => {
  * GET /api/portal/installers — list available installers (JSON).
  * The actual binaries are served from /downloads/ (static). This endpoint
  * just enumerates metadata.
+ *
+ * `reason` explains an empty list so the page never shows a bare "nothing
+ * here": a fresh install has imported no release yet, while a missing cache
+ * directory means the import never completed (#439 / #475).
  */
 router.get('/api/portal/installers', async (req, res) => {
     const base = req.protocol + '://' + req.get('host');
-    const cached = await genericAgentReleases.listCached();
+    let cached = [];
+    let reason = null;
+    let cacheMissing = false;
+    try {
+        cached = await genericAgentReleases.listCached();
+        cacheMissing = !require('fs').existsSync(genericAgentReleases.root());
+    } catch (e) {
+        reason = 'cache_unreadable';
+    }
     const latest = cached[0];
+    if (!latest && !reason) {
+        reason = cacheMissing ? 'no_release_imported' : 'release_cache_incomplete';
+    }
     const installers = latest
         ? latest.manifest.assets.map((asset) => ({
             platform: asset.platform,
@@ -370,6 +385,7 @@ router.get('/api/portal/installers', async (req, res) => {
     res.json({
         success: true,
         release: latest?.tag || null,
+        reason,
         installers,
     });
 });

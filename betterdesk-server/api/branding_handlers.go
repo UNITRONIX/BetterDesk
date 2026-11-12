@@ -620,7 +620,10 @@ func (s *Server) handleDeviceRegister(w http.ResponseWriter, r *http.Request) {
 	switch mode {
 	case "open":
 		// Auto-approve: create peer immediately
-		s.createPeerFromEnrollment(&req, clientIP)
+		if err := s.createPeerFromEnrollment(&req, clientIP, true); err != nil {
+			http.Error(w, "Failed to enroll device", http.StatusInternalServerError)
+			return
+		}
 		resp := s.buildEnrollmentResponse("approved", req.DeviceID, "standard", "")
 		// Open mode admits a new device, but it does not make an unauthenticated
 		// request eligible to receive a reusable device credential. The first
@@ -701,7 +704,10 @@ func (s *Server) handleDeviceRegister(w http.ResponseWriter, r *http.Request) {
 					_ = s.db.BindTokenToPeer(tok.TokenHash, req.DeviceID)
 				}
 				_ = s.db.IncrementTokenUse(tok.TokenHash)
-				s.createPeerFromEnrollment(&req, clientIP)
+				if err := s.createPeerFromEnrollment(&req, clientIP, true); err != nil {
+					http.Error(w, "Failed to enroll device", http.StatusInternalServerError)
+					return
+				}
 				resp := s.buildEnrollmentResponse("approved", req.DeviceID, "standard", "")
 				if deviceToken, err := s.issueEnrollmentDeviceToken(req.DeviceID); err == nil {
 					resp.DeviceToken = deviceToken
@@ -943,6 +949,7 @@ func (s *Server) removeEnrollmentRejectAuditPeer(deviceID string) error {
 		log.Printf("[API] removeEnrollmentRejectAuditPeer: HardDeletePeer %s: %v", deviceID, err)
 		return err
 	}
+	s.forgetSecureDeviceState(deviceID)
 	return nil
 }
 
@@ -1147,7 +1154,10 @@ func (s *Server) handleApproveDevice(w http.ResponseWriter, r *http.Request) {
 		Tags:       pending.Tags,
 		PublicKey:  pending.PublicKey,
 	}
-	s.createPeerFromEnrollment(enrollment, pending.IP)
+	if err := s.createPeerFromEnrollment(enrollment, pending.IP, true); err != nil {
+		http.Error(w, "Failed to approve device", http.StatusInternalServerError)
+		return
+	}
 
 	// Store sync mode and display name
 	s.db.SetConfig("device_sync_mode_"+deviceID, syncMode)
@@ -1266,7 +1276,7 @@ func (s *Server) handleRejectDevice(w http.ResponseWriter, r *http.Request) {
 			log.Printf("[API] handleRejectDevice: GetPeer %s: %v", deviceID, err)
 		}
 		if existing == nil {
-			s.createPeerFromEnrollment(&EnrollmentRequest{
+			if err := s.createPeerFromEnrollment(&EnrollmentRequest{
 				DeviceID:   pending.DeviceID,
 				UUID:       pending.UUID,
 				Hostname:   pending.Hostname,
@@ -1276,7 +1286,9 @@ func (s *Server) handleRejectDevice(w http.ResponseWriter, r *http.Request) {
 				BundleID:   pending.BundleID,
 				Tags:       pending.Tags,
 				PublicKey:  pending.PublicKey,
-			}, pending.IP)
+			}, pending.IP, false); err != nil {
+				log.Printf("[API] handleRejectDevice: failed to create audit peer %s: %v", deviceID, err)
+			}
 		}
 		if err := s.db.BanPeer(deviceID, enrollmentRejectBanReason); err != nil {
 			log.Printf("[API] handleRejectDevice: failed to ban %s: %v", deviceID, err)
@@ -1441,14 +1453,34 @@ func (s *Server) issueEnrollmentDeviceToken(deviceID string) (string, error) {
 	return plainToken, nil
 }
 
-func (s *Server) createPeerFromEnrollment(req *EnrollmentRequest, clientIP string) {
+func (s *Server) createPeerFromEnrollment(req *EnrollmentRequest, clientIP string, resetSecureState bool) error {
+	if req == nil || req.DeviceID == "" {
+		return fmt.Errorf("device enrollment requires a device ID")
+	}
+	if resetSecureState {
+		state, err := s.db.GetPeerIDState(req.DeviceID)
+		if err != nil {
+			return fmt.Errorf("check device ID state: %w", err)
+		}
+		switch state {
+		case db.PeerIDMissing:
+			// Only an authorized fresh enrollment may clear an orphaned
+			// sequence. Never infer key rotation from a PK mismatch.
+			if err := s.resetSecureDeviceState(req.DeviceID); err != nil {
+				return err
+			}
+		case db.PeerIDSoftDeleted:
+			return db.ErrPeerIDSoftDeleted
+		}
+	}
+
 	devType := strings.TrimSpace(req.DeviceType)
 	if devType == "" {
 		devType = "betterdesk"
 	}
 	tags := normalizeEnrollmentTags(req.Tags)
 
-	s.db.UpsertPeer(&db.Peer{
+	if err := s.db.UpsertPeer(&db.Peer{
 		ID:         req.DeviceID,
 		UUID:       req.UUID,
 		IP:         clientIP,
@@ -1458,7 +1490,9 @@ func (s *Server) createPeerFromEnrollment(req *EnrollmentRequest, clientIP strin
 		DeviceType: devType,
 		Tags:       tags,
 		Status:     "ONLINE",
-	})
+	}); err != nil {
+		return fmt.Errorf("create enrolled peer: %w", err)
+	}
 
 	// Update sysinfo fields separately (handles non-empty check)
 	if req.Hostname != "" || req.Platform != "" || req.Version != "" {
@@ -1484,6 +1518,7 @@ func (s *Server) createPeerFromEnrollment(req *EnrollmentRequest, clientIP strin
 			log.Printf("[API] Failed to persist enrollment public key for %s: %v", req.DeviceID, err)
 		}
 	}
+	return nil
 }
 
 // pendingDeviceInfo is also returned to the approval UI. It intentionally

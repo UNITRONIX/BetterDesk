@@ -237,6 +237,14 @@ const facade = {
     deleteUserGroup:    (guid) => adapter.deleteUserGroup(guid),
     getUserGroupsForUser: (userId) => adapter.getUserGroupsForUser(userId),
     setUserGroupMemberships: (userId, groupGuids) => adapter.setUserGroupMemberships(userId, groupGuids),
+    getPanelAccessPolicies: (subjectType, subjectId) =>
+        adapter.getPanelAccessPolicies(subjectType, subjectId),
+    setPanelAccessPolicies: (subjectType, subjectId, policies) =>
+        adapter.setPanelAccessPolicies(subjectType, subjectId, policies),
+    getClientFeaturePolicies: (subjectType, subjectId) =>
+        adapter.getClientFeaturePolicies(subjectType, subjectId),
+    setClientFeaturePolicies: (subjectType, subjectId, policies) =>
+        adapter.setClientFeaturePolicies(subjectType, subjectId, policies),
 
     // ---- Device Groups ----
     getAllDeviceGroups:    () => adapter.getAllDeviceGroups(),

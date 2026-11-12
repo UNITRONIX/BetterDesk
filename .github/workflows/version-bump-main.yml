@@ -23,6 +23,13 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  # Publishing verification reads GHCR package tags.
+  packages: read
+  # Required to dispatch release-server / docker-publish: tag and Release
+  # creation use GITHUB_TOKEN, and GITHUB_TOKEN-produced events never trigger
+  # other workflows. Explicit dispatch is the documented exception, so without
+  # this scope a stable release ships with zero artifacts and no image (#488).
+  actions: write
 
 concurrency:
   group: stable-release-main
@@ -90,6 +97,7 @@ jobs:
           echo "has_bump=true" >> "$GITHUB_OUTPUT"
 
       - name: Create tag and GitHub Release
+        id: tag
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NEW_VERSION: ${{ steps.bump.outputs.version }}
@@ -124,6 +132,11 @@ jobs:
             echo "No bump commit - using VERSION on main (${NEW_VERSION})"
           fi
 
+          # Record the resolved version/tag for the dispatch step below
+          # ("no bump commit" can override TAG from the VERSION file).
+          echo "version=${NEW_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+
           if ! git rev-parse "$TAG" >/dev/null 2>&1; then
             git tag "$TAG"
             git push origin "$TAG"
@@ -133,6 +146,7 @@ jobs:
 
           if gh release view "$TAG" >/dev/null 2>&1; then
             echo "GitHub Release ${TAG} already exists"
+            echo "release_created=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
@@ -140,6 +154,78 @@ jobs:
             --title "BetterDesk ${NEW_VERSION}" \
             --notes-file "$NOTES_FILE" \
             --verify-tag
+          echo "release_created=true" >> "$GITHUB_OUTPUT"
+
+      # A tag/Release created with GITHUB_TOKEN does not trigger `push:
+      # tags` or `release: published`, so both publishers are dispatched
+      # explicitly here. Without this the Release has no binaries and GHCR
+      # never gets the version tag or `latest` (#488).
+      - name: Publish Release artifacts and container images
+        if: steps.tag.outputs.tag != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEW_VERSION: ${{ steps.tag.outputs.version }}
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+          echo "Dispatching server artifact release for ${TAG}"
+          gh workflow run "Build & Release Go Server" --ref "$TAG"
+          echo "Dispatching container image publish for ${TAG}"
+          gh workflow run "Build & Publish Docker Images" --ref "$TAG" -f tag=latest
+          echo "Dispatched both publishers for ${TAG}"
+          echo "${TAG}" > "${RUNNER_TEMP}/released_tag"
+
+      # Guards against silent regression of #488: a stable release must end up
+      # with downloadable binaries on the Release. Image publication is
+      # reported, not enforced - docker-publish can legitimately take 1-3h and
+      # exceeding the job timeout would fail a release that is actually fine.
+      - name: Verify Release assets published
+        if: steps.tag.outputs.tag != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEW_VERSION: ${{ steps.tag.outputs.version }}
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          set -uo pipefail
+
+          assets_ok=false
+          for attempt in $(seq 1 60); do
+            count=$(gh release view "$TAG" --json assets --jq '.assets | length' 2>/dev/null || echo 0)
+            if [ "${count:-0}" -gt 0 ]; then
+              echo "Release ${TAG} has ${count} asset(s)"
+              assets_ok=true
+              break
+            fi
+            echo "Waiting for Release assets on ${TAG} (attempt ${attempt}/60)..."
+            sleep 20
+          done
+
+          images_ok=false
+          for attempt in $(seq 1 45); do
+            if gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG}" >/dev/null 2>&1 \
+               && curl -fsS -o /dev/null \
+                    -H "Authorization: Bearer ${GH_TOKEN}" \
+                    -H "Accept: application/vnd.oci.image.index.v1+json,application/vnd.docker.distribution.manifest.list.v2+json" \
+                    "https://ghcr.io/v2/unitronix/betterdesk-server/manifests/${NEW_VERSION}" 2>/dev/null; then
+              echo "GHCR betterdesk-server:${NEW_VERSION} published"
+              images_ok=true
+              break
+            fi
+            echo "Waiting for GHCR tag ${NEW_VERSION} (attempt ${attempt}/45)..."
+            sleep 20
+          done
+
+          if [ "$images_ok" != true ]; then
+            echo "::warning::GHCR tag ${NEW_VERSION} was not visible within 15 minutes. Images may still be building - check the 'Build & Publish Docker Images' run before assuming a failure."
+          else
+            echo "Container images present for ${NEW_VERSION}."
+          fi
+
+          if [ "$assets_ok" != true ]; then
+            echo "::error::Stable release ${TAG} has no downloadable assets. Inspect the dispatched 'Build & Release Go Server' run, then upload the binaries manually."
+            exit 1
+          fi
+          echo "Stable release ${TAG} verified."
 
       - name: Open version-bump PR into main
         if: steps.commit.outputs.has_bump == 'true'

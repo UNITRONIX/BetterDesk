@@ -45,10 +45,17 @@ class RDInput {
         this._onWheel = this._handleWheel.bind(this);
         this._onKeyDown = this._handleKeyDown.bind(this);
         this._onKeyUp = this._handleKeyUp.bind(this);
+        this._onCompositionStart = this._handleCompositionStart.bind(this);
+        this._onCompositionEnd = this._handleCompositionEnd.bind(this);
         this._onContextMenu = (e) => e.preventDefault();
         this._onPointerLockChange = this._handlePointerLockChange.bind(this);
         this._onWindowBlur = this._handleWindowBlur.bind(this);
         this._onVisibilityChange = this._handleVisibilityChange.bind(this);
+
+        /** @type {boolean} IME / dead-key composition in progress */
+        this._composing = false;
+        /** @type {Set<string>} Physical codes suppressed while awaiting compositionend */
+        this._deadCodes = new Set();
     }
 
     /**
@@ -85,6 +92,8 @@ class RDInput {
 
         document.addEventListener('keydown', this._onKeyDown);
         document.addEventListener('keyup', this._onKeyUp);
+        document.addEventListener('compositionstart', this._onCompositionStart);
+        document.addEventListener('compositionend', this._onCompositionEnd);
         document.addEventListener('pointerlockchange', this._onPointerLockChange);
         window.addEventListener('blur', this._onWindowBlur);
         document.addEventListener('visibilitychange', this._onVisibilityChange);
@@ -109,6 +118,8 @@ class RDInput {
 
         document.removeEventListener('keydown', this._onKeyDown);
         document.removeEventListener('keyup', this._onKeyUp);
+        document.removeEventListener('compositionstart', this._onCompositionStart);
+        document.removeEventListener('compositionend', this._onCompositionEnd);
         document.removeEventListener('pointerlockchange', this._onPointerLockChange);
         window.removeEventListener('blur', this._onWindowBlur);
         document.removeEventListener('visibilitychange', this._onVisibilityChange);
@@ -118,6 +129,8 @@ class RDInput {
         }
 
         this.pressedKeys.clear();
+        this._deadCodes.clear();
+        this._composing = false;
         this.enabled = false;
     }
 
@@ -251,10 +264,23 @@ class RDInput {
         if (!this.enabled) return;
         if (this._isInputFocused()) return;
 
-        e.preventDefault();
+        // Dead keys need browser composition; preventDefault would drop ^ etc.
+        const isDead = e.key === 'Dead';
+        if (!isDead) {
+            e.preventDefault();
+        }
         e.stopPropagation();
 
         const keyCode = e.code;
+        if (isDead) {
+            this._deadCodes.add(keyCode);
+            this._composing = true;
+            // Keep Shift / modifiers tracked; do not emit Digit Map for Dead.
+            if (e.shiftKey) this._ensureShiftTracked(e);
+            this.pressedKeys.set(keyCode, { key: e.key });
+            return;
+        }
+
         const isRepeat = e.repeat || this.pressedKeys.has(keyCode);
         this.pressedKeys.set(keyCode, { key: e.key });
 
@@ -269,11 +295,57 @@ class RDInput {
         if (!this.enabled) return;
         if (this._isInputFocused()) return;
 
-        e.preventDefault();
+        const wasDead = this._deadCodes.has(e.code) || e.key === 'Dead';
+        if (!wasDead) {
+            e.preventDefault();
+        }
         e.stopPropagation();
 
         this.pressedKeys.delete(e.code);
+        if (wasDead) {
+            this._deadCodes.delete(e.code);
+            return;
+        }
         this._sendKey(e, false, false);
+    }
+
+    _handleCompositionStart() {
+        if (!this.enabled || this._isInputFocused()) return;
+        this._composing = true;
+    }
+
+    _handleCompositionEnd(e) {
+        if (!this.enabled || this._isInputFocused()) return;
+        this._composing = false;
+        this._deadCodes.clear();
+        const data = e && typeof e.data === 'string' ? e.data : '';
+        if (!data) return;
+        const enc = this._encoder();
+        if (!enc) return;
+        for (const ch of data) {
+            const keyEvent = enc.encodeCharPress(ch);
+            if (keyEvent) this.sendMessage({ keyEvent });
+        }
+    }
+
+    /**
+     * If the browser reports shiftKey but Shift was never keydown'd into
+     * pressedKeys, re-assert ShiftLeft on the wire so Map Digit/symbol
+     * scancodes are not applied unshifted (bare "6" instead of "^").
+     * @param {KeyboardEvent|null} e
+     */
+    _ensureShiftTracked(e) {
+        if (!e || !e.shiftKey) return;
+        if (this.pressedKeys.has('ShiftLeft') || this.pressedKeys.has('ShiftRight')) {
+            return;
+        }
+        const enc = this._encoder();
+        if (!enc) return;
+        const evt = enc.buildShiftReassertDown(this._getScancodeLib(), this.peerPlatform);
+        if (evt) {
+            this.sendMessage({ keyEvent: evt });
+        }
+        this.pressedKeys.set('ShiftLeft', { key: 'Shift' });
     }
 
     _handleWindowBlur() {
@@ -339,6 +411,10 @@ class RDInput {
         if (!scLib) {
             console.error('[RDInput] RDKeyboardScancode not loaded — key event dropped:', code);
             return;
+        }
+
+        if (down && e && code !== 'ShiftLeft' && code !== 'ShiftRight') {
+            this._ensureShiftTracked(e);
         }
 
         const keyEvent = enc.encodeKeyEvent({

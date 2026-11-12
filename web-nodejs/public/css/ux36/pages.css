@@ -1,0 +1,833 @@
+/*
+ * BetterDesk Console — UX 3.6 page layout.
+ *
+ * The redesign by @rathlinus (issue #493 / PR #495) has one page rhythm: a
+ * single content column with a title row, sections separated by space and
+ * rows separated by hairlines — no floating cards, no heavy borders.
+ *
+ * Our pages keep their existing markup and class names (scripts and tests
+ * depend on them), so this sheet translates those classes onto his rhythm
+ * instead of forking every view. It loads after the UX 3.5 page sheets, so it
+ * wins where both describe the same element.
+ */
+
+/* ── Page column ─────────────────────────────────────────────────────────── */
+.ux36-page .ux35-content > .page-header,
+.ux36-page .ux35-content > .dashboard-shell,
+.ux36-page .ux35-content > .devices-page,
+.ux36-page .ux35-content > .settings-shell {
+    max-width: var(--content-max);
+}
+
+.ux36-page .ux35-content > .page-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 16px;
+    margin-bottom: 24px;
+}
+
+.ux36-page .page-title,
+.ux36-page .devices-title h1,
+.ux36-page .dashboard-hero-copy h1 {
+    margin: 0;
+    font-size: var(--text-xl);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--text);
+}
+
+.ux36-page .page-subtitle,
+.ux36-page .dashboard-hero-copy p,
+.ux36-page .devices-header p {
+    color: var(--text-muted);
+    font-size: var(--text-base);
+}
+
+/* Titles are plain text, not a card with a gradient and a shadow */
+.ux36-page .page-header {
+    padding: 0;
+    border: 0;
+    background: none;
+    box-shadow: none;
+}
+
+/* ── Rules instead of cards ──────────────────────────────────────────────── */
+.ux36-page .ux35-content :is(.card, .settings-panel, .settings-section) {
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--bg);
+    box-shadow: none;
+}
+
+.ux36-page .ux35-content :is(.card-header, .settings-panel-header) {
+    border-bottom: 1px solid var(--rule);
+    padding: 12px 16px;
+}
+
+.ux36-page .ux35-content :is(.card-body, .settings-panel-body) {
+    padding: 16px;
+}
+
+/* ── Dashboard ───────────────────────────────────────────────────────────── */
+.ux36-page .dashboard-shell {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.ux36-page .dashboard-hero {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 16px;
+    padding: 0;
+    border: 0;
+    background: none;
+}
+
+.ux36-page .dashboard-eyebrow {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    text-transform: none;
+    letter-spacing: normal;
+}
+
+/* Stats read as one ruled row, like the redesign's summary line */
+.ux36-page .dashboard-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+}
+
+.ux36-page .dashboard-stat-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+}
+
+.ux36-page .dashboard-stat-card + .dashboard-stat-card {
+    border-inline-start: 1px solid var(--rule);
+}
+
+.ux36-page .dashboard-stat-card:hover {
+    background: var(--hover);
+}
+
+.ux36-page .dashboard-stat-icon {
+    color: var(--text-muted);
+    background: none;
+}
+
+.ux36-page .dashboard-stat-value {
+    font-size: var(--text-xl);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.ux36-page .dashboard-stat-label {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+.ux36-page .dashboard-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+    gap: 24px 48px;
+    align-items: start;
+}
+
+/* The Dashboard cards come from the v2 sheet: several of them carry a
+   gradient, a blue glow or a glass surface, which reads as a different design
+   language next to the ruled beta layout. Here they become plain surfaces on
+   the same hairlines as every other beta page. The operator's own colours
+   still flow through --bg / --rule, so branding keeps working. */
+.ux36-page .dashboard-shell :is(
+    .client-config-card, .activity-feed-section, .attention-section,
+    .server-status-card, .quick-action-card, .dashboard-tip,
+    .client-config-host-row, .client-config-field, .attention-item
+) {
+    background: var(--bg);
+    background-image: none;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    box-shadow: none;
+}
+
+/* The hero is a title row in the redesign, not a panel with a glow */
+.ux36-page .dashboard-hero {
+    background: none;
+    background-image: none;
+    border: 0;
+    box-shadow: none;
+}
+
+/* Status pills keep their colour meaning, without a glow */
+.ux36-page .system-pill {
+    background: var(--bg-subtle);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-full);
+    font-weight: 500;
+}
+
+.ux36-page .system-pill.running {
+    border-color: color-mix(in srgb, var(--success) 45%, transparent);
+    color: var(--success);
+    background: var(--bg-subtle);
+}
+
+.ux36-page .system-pill.stopped {
+    border-color: color-mix(in srgb, var(--danger) 45%, transparent);
+    color: var(--danger);
+    background: var(--bg-subtle);
+}
+
+/* Inner blocks of the client config card: hairlines, not nested glass panes */
+.ux36-page .client-config-host-row,
+.ux36-page .client-config-field {
+    background: var(--bg-subtle);
+}
+
+.ux36-page .dashboard-tip {
+    background: var(--bg-subtle);
+    border-color: var(--rule);
+}
+
+@media (max-width: 1199px) {
+    .ux36-page .dashboard-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+/* ── Devices ─────────────────────────────────────────────────────────────── */
+.ux36-page .devices-page {
+    display: block;
+}
+
+.ux36-page .devices-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    /* Title, count and the two page actions read as one left-aligned group.
+       The v2 sheet justifies them to the two edges, which is what pushed the
+       actions to the far right. */
+    justify-content: flex-start;
+    gap: 8px 16px;
+    margin-bottom: 16px;
+    padding: 0;
+    border: 0;
+    background: none;
+}
+
+/* Title and its actions read as one left-aligned group: the actions are the
+   page's own controls, so they sit next to the count instead of being pushed
+   to the far edge where they read as unrelated chrome. */
+.ux36-page .devices-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ux36-page .devices-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.ux36-page .devices-count {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Folders and groups filter the list: a 210px rail beside the table, exactly
+   as in the redesign, instead of chips stacked above it. */
+.ux36-page .devices-layout {
+    display: grid;
+    grid-template-columns: 210px minmax(0, 1fr);
+    gap: 0 32px;
+    align-items: start;
+}
+
+.ux36-page .devices-tile-bars {
+    display: contents;
+    background: none;
+    padding: 0;
+    margin: 0;
+    border: 0;
+}
+
+/* Explicit rows: the rail spans the whole page, while the toolbar, table and
+   strategies card stack in the content column in reading order. */
+.ux36-page .devices-chip-bars {
+    grid-column: 1;
+    grid-row: 1 / span 4;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    /* The content column is the scrollport, so "stuck" is measured from its top
+       edge — the top bar is already outside it. */
+    position: sticky;
+    top: var(--space-4);
+    max-height: calc(100dvh - var(--topbar-h) - 3 * var(--space-4));
+    overflow-y: auto;
+    padding-bottom: 8px;
+}
+
+.ux36-page .devices-page .folders-bar,
+.ux36-page .devices-page .groups-bar {
+    border: 0;
+    border-radius: 0;
+    background: none;
+    padding: 0;
+}
+
+/* Heading row: same height and rules as the table header */
+.ux36-page .devices-page .folders-bar > .folders-chips,
+.ux36-page .devices-page .groups-bar > .groups-chips {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.ux36-page .devices-page .folder-chip,
+.ux36-page .devices-page .group-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 36px;
+    padding: 4px 8px 4px 14px;
+    border: 0;
+    border-inline-start: 2px solid transparent;
+    border-radius: 0 var(--radius) var(--radius) 0;
+    background: transparent;
+    color: var(--text);
+    font-size: var(--text-base);
+    text-align: start;
+    cursor: pointer;
+}
+
+.ux36-page .devices-page .folder-chip:hover,
+.ux36-page .devices-page .group-chip:hover {
+    background: var(--hover);
+}
+
+.ux36-page .devices-page .folder-chip.active,
+.ux36-page .devices-page .group-chip.active {
+    border-inline-start-color: var(--accent);
+    background: var(--bg-subtle);
+    color: var(--text);
+    font-weight: 600;
+}
+
+.ux36-page .devices-page .chip-count,
+.ux36-page .devices-page .group-count {
+    margin-inline-start: auto;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Toolbar sits above the table in the content column */
+.ux36-page .devices-page .devices-toolbar {
+    grid-column: 2;
+    grid-row: 1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    padding: 0;
+    border: 0;
+    background: none;
+}
+
+.ux36-page .devices-page .devices-table-container {
+    grid-column: 2;
+    grid-row: 2;
+    min-width: 0;
+    border: 0;
+    background: none;
+}
+
+.ux36-page .devices-page .devices-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.ux36-page .devices-page .devices-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    height: 40px;
+    padding: 8px 12px;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    background: var(--bg);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    text-align: start;
+    white-space: nowrap;
+}
+
+.ux36-page .devices-page .devices-table td {
+    height: 44px;
+    padding: 4px 12px;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: middle;
+}
+
+.ux36-page .devices-page .devices-table tbody tr:hover td {
+    background: var(--hover);
+}
+
+@media (max-width: 899px) {
+    .ux36-page .devices-layout {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 16px;
+    }
+
+    .ux36-page .devices-chip-bars,
+    .ux36-page .devices-toolbar,
+    .ux36-page .devices-table-container {
+        grid-column: 1;
+        grid-row: auto;
+        position: static;
+        max-height: none;
+    }
+
+    .ux36-page .devices-chip-bars {
+        flex-direction: row;
+        gap: 12px;
+        overflow-x: auto;
+    }
+
+    .ux36-page .devices-page .folders-chips,
+    .ux36-page .devices-page .groups-chips {
+        flex-direction: row;
+        gap: 4px;
+    }
+
+    .ux36-page .devices-page .folder-chip,
+    .ux36-page .devices-page .group-chip {
+        width: auto;
+        white-space: nowrap;
+    }
+}
+
+/* ── Settings ────────────────────────────────────────────────────────────── */
+.ux36-page .settings-shell {
+    display: block;
+}
+
+/* Topic tabs: a ruled row of links, not a card */
+.ux36-page .settings-shell-nav {
+    border-bottom: 1px solid var(--rule);
+    background: none;
+}
+
+.ux36-page .settings-shell-tab,
+.ux36-page .settings-tab {
+    min-height: 40px;
+    padding: 0 12px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    background: none;
+    color: var(--text-muted);
+    font-size: var(--text-base);
+    font-weight: 500;
+}
+
+.ux36-page .settings-shell-tab:hover,
+.ux36-page .settings-tab:hover {
+    color: var(--text);
+    background: var(--hover);
+}
+
+.ux36-page .settings-shell-tab.active,
+.ux36-page .settings-tab.active {
+    border-bottom-color: var(--accent);
+    color: var(--text);
+    font-weight: 600;
+}
+
+/* A search field, not a full-width rule: the previous rule-based row let the
+   focus ring of a borderless input paint a floating frame across the whole
+   content column, which read as a broken box and made the field look wider
+   than the panels under it. */
+.ux36-page .settings-search {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    max-width: 520px;
+    margin: var(--space-4) 0 var(--space-5);
+    padding: 0 var(--space-2) 0 var(--space-3);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--bg);
+}
+
+/* The row owns the focus state, so the ring frames one box instead of an
+   invisible input inside it. */
+.ux36-page .settings-search:focus-within {
+    border-color: var(--accent);
+}
+
+.ux36-page .settings-search .form-input {
+    border: 0;
+    background: transparent;
+    min-height: var(--control-h);
+    padding-inline: 0;
+    font-size: var(--text-base);
+}
+
+.ux36-page .settings-search .form-input:focus,
+.ux36-page .settings-search .form-input:focus-within {
+    outline: none;
+}
+
+.ux36-page .settings-search > .material-icons {
+    color: var(--text-muted);
+}
+
+/* The icon and the clear button keep their size; only the text field shrinks */
+.ux36-page .settings-search > .material-icons,
+.ux36-page .settings-search > .btn {
+    flex-shrink: 0;
+}
+
+@media (max-width: 767px) {
+    .ux36-page .settings-search {
+        max-width: none;
+    }
+}
+
+.ux36-page .settings-search-status {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+/* The topic row stays under the bar while the topic is scrolled */
+.ux36-page .settings-shell-nav {
+    position: sticky;
+    top: 0;
+    z-index: var(--layer-sticky);
+    background: var(--bg);
+}
+
+/* Panels inside a topic are ruled sections, not separate cards */
+.ux36-page .settings-tab-content :is(
+    .settings-panel, .settings-section, .settings-group, .backend-card,
+    .logo-type-card, .branding-theme-card, .ux36-shell-choice-option
+) {
+    border-color: var(--rule);
+    background: var(--bg);
+    box-shadow: none;
+}
+
+.ux36-page .settings-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* ── Device details: a side sheet, as in the redesign ────────────────────── */
+@media (min-width: 1100px) {
+    .ux36-page .device-panel-overlay {
+        background: rgba(0, 0, 0, 0.32);
+        justify-content: flex-end;
+    }
+
+    .ux36-page .device-panel-overlay .device-panel {
+        flex: 0 0 auto;
+        width: min(720px, 72vw);
+        max-width: 720px;
+        height: 100%;
+        border-inline-start: 1px solid var(--rule);
+        border-radius: 0;
+        transform: translateX(24px);
+    }
+
+    .ux36-page .device-panel-overlay.open .device-panel {
+        transform: translateX(0);
+    }
+}
+
+/* ── Forms and buttons follow the control scale ──────────────────────────── */
+.ux36-page .ux35-content :is(.form-input, .form-select, .form-textarea) {
+    border-color: var(--border);
+    background: var(--bg);
+}
+
+.ux36-page .ux35-content .btn {
+    font-weight: 500;
+}
+
+/* Tables and lists keep hairlines, never alternating bands */
+.ux36-page .ux35-content :is(.data-table, .table) tbody tr:hover td {
+    background: var(--hover);
+}
+
+/* ── The rest of the console ───────────────────────────────────────────────
+   Pages that keep their UX 3.5 markup get the same rhythm instead of a copy
+   of every sheet: one content column, ruled sections instead of floating
+   cards, stat numbers in one ruled row, tabs as a ruled row, hairlines in
+   tables. Only shared element classes are touched; per-page rules that carry
+   a page's own meaning (a status colour, a fixed-size preview) still apply. */
+
+.ux36-page .ux35-content > :is(
+    .users-page, .toolkit-page, .activity-page, .reports-page,
+    .network-page, .pages-page, .keys-page, .languages-page, .pairing-page,
+    .client-branding-page, .tenants-page, .organizations-page,
+    .permissions-page, .policies-page, .automation-page, .scaling-page,
+    .crossplatform-page, .commercialization-page, .tokens-page,
+    .registrations-page, .agents-page, .help-requests-page,
+    .server-mgmt-page, .sa-page, .inventory-page, .fleet-page,
+    .tickets-page, .secaudit-page, .resource-page, .dataguard-page,
+    .org-page, .policy-page, .secaudit-container, .resource-control-page,
+    .rc-page, .tokens-shell, .agent-download-page
+) {
+    display: block;
+    max-width: var(--content-max);
+}
+
+/* Page titles are plain text with one size, wherever the page puts them */
+.ux36-page .ux35-content h1.page-title,
+.ux36-page .ux35-content .page-title h1,
+.ux36-page .ux35-content .page-header h1 {
+    margin: 0;
+    font-size: var(--text-xl);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--text);
+}
+
+/* A page's own header block (when it is not the shared .page-header) */
+.ux36-page .ux35-content :is(
+    .users-header, .toolkit-header, .activity-header, .reports-header,
+    .network-header, .keys-header, .tenants-header, .org-header,
+    .tokens-header, .registrations-header, .agents-header, .fleet-header,
+    .tickets-header, .secaudit-header, .server-mgmt-header, .inventory-header
+) {
+    padding: 0;
+    border: 0;
+    background: none;
+    box-shadow: none;
+}
+
+/* ── Cards become ruled sections ── */
+
+.ux36-page .ux35-content :is(
+    .key-card, .user-groups-card, .org-card, .policy-card,
+    .tool-card, .hr-card, .sm-card, .sa-card, .lang-card, .tenant-card,
+    .scaling-card, .crossplatform-card, .report-type-card, .relay-health-card,
+    .enrollment-mode-card, .permissions-info-card, .secaudit-panel,
+    .secaudit-harden-card, .secaudit-tls-card, .secaudit-vuln-card,
+    .rc-category-card, .cm-card, .fleet-output-panel, .builder-panel,
+    .detail-section, .tab-panel, .sm-tab-panel, .lang-detail-panel,
+    .tenant-detail-panel, .org-assignments-section, .comments-section,
+    .palette-section, .capacity-section, .modal-card, .comp-stat-card,
+    .att-stat-card, .rc-stat-card, .secaudit-stat-card, .report-stat
+) {
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--bg);
+    box-shadow: none;
+}
+
+/* Card heads and bodies share one inset, like the shell's own panels */
+.ux36-page .ux35-content :is(
+    .key-card-header, .user-groups-card-header, .policy-card-header,
+    .tool-card-header, .hr-card-header, .sm-card-header, .sa-card-header,
+    .lang-card-header, .tenant-card-header, .org-card-icon,
+    .crossplatform-card-header, .secaudit-panel-header
+) {
+    border-bottom: 1px solid var(--rule);
+}
+
+/* ── Numbers: one ruled row, as on the Dashboard ── */
+
+.ux36-page .ux35-content :is(
+    .tickets-stats, .tokens-stats, .inventory-stats, .compliance-stats,
+    .secaudit-stats-grid, .scaling-summary-grid, .crossplatform-summary-grid,
+    .attestation-stats, .hr-stats, .lang-stats-row, .report-summary,
+    .tenant-card-stats, .cp-summary-item, .rc-stats
+) {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 0;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+}
+
+.ux36-page .ux35-content :is(
+    .tickets-stats, .tokens-stats, .inventory-stats, .compliance-stats,
+    .secaudit-stats-grid, .scaling-summary-grid, .crossplatform-summary-grid,
+    .attestation-stats, .hr-stats, .lang-stats-row, .report-summary
+) > * {
+    margin: 0;
+    padding: var(--space-4);
+    border: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+}
+
+.ux36-page .ux35-content :is(
+    .tickets-stats, .tokens-stats, .inventory-stats, .compliance-stats,
+    .secaudit-stats-grid, .scaling-summary-grid, .crossplatform-summary-grid,
+    .attestation-stats, .hr-stats, .lang-stats-row, .report-summary
+) > * + * {
+    border-inline-start: 1px solid var(--rule);
+}
+
+/* The number is the loud part, the label is quiet — same sizes everywhere */
+.ux36-page .ux35-content :is(
+    .stat-value, .tokens-stat-value, .scaling-card-value, .cp-summary-value,
+    .att-stat-value, .rc-stat-value, .comp-stat-value, .report-stat-value,
+    .lang-stat-value, .secaudit-stat-value, .sa-stat-value, .sm-disk-stat strong
+) {
+    font-size: var(--text-xl);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+}
+
+.ux36-page .ux35-content :is(
+    .stat-label, .scaling-card-label, .cp-summary-label, .att-stat-label,
+    .rc-stat-label, .comp-stat-label, .report-stat-label, .lang-stat-label,
+    .secaudit-stat-label
+) {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+/* ── Tabs (page-level) use the Settings row, not a second tab style ── */
+
+.ux36-page .ux35-content :is(
+    .fleet-tabs, .tickets-tabs, .commercialization-tabs, .tokens-tabs,
+    .server-mgmt-tabs, .sm-tabs, .cdap-tabs, .lang-tabs, .activity-tabs
+) {
+    gap: 0;
+    margin-bottom: var(--space-5);
+    border-bottom: 1px solid var(--rule);
+}
+
+.ux36-page .ux35-content :is(
+    .fleet-tab, .tickets-tab, .commercialization-tab, .tokens-tab,
+    .server-mgmt-tab, .sm-tab, .cdap-tab, .lang-tab, .activity-tab
+) {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 40px;
+    margin-bottom: -1px;
+    padding: 0 var(--space-3);
+    border: 0;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    background: none;
+    color: var(--text-muted);
+    font: inherit;
+    font-size: var(--text-base);
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.ux36-page .ux35-content :is(
+    .fleet-tab, .tickets-tab, .commercialization-tab, .tokens-tab,
+    .server-mgmt-tab, .sm-tab, .cdap-tab, .lang-tab, .activity-tab
+):hover {
+    color: var(--text);
+    background: var(--hover);
+}
+
+.ux36-page .ux35-content :is(
+    .fleet-tab, .tickets-tab, .commercialization-tab, .tokens-tab,
+    .server-mgmt-tab, .sm-tab, .cdap-tab, .lang-tab, .activity-tab
+).active {
+    border-bottom-color: var(--accent);
+    color: var(--text);
+    font-weight: 600;
+}
+
+/* ── Tables keep hairlines and lose their card chrome ── */
+
+.ux36-page .ux35-content :is(
+    .table-wrapper, .table-wrap, .table-scroll, .users-table-container,
+    .registrations-table-wrapper, .tokens-table-wrapper, .sm-history-wrap,
+    .fleet-table-wrap, .secaudit-table-wrap, .lang-detail-panel,
+    .crossplatform-matrix-wrap, .scaling-table-wrap, .sm-files-table-wrapper
+) {
+    border-color: var(--rule);
+    background: var(--bg);
+    box-shadow: none;
+}
+
+/* ── Chat and Remote are workspaces: full bleed, one rule between columns ── */
+
+/* A workspace owns the whole column: the column itself must not scroll, or the
+   chat page (sized to the viewport) would add a second, empty scroll range. */
+.ux36-page .ux35-content:has(.chat-page) {
+    overflow: hidden;
+    padding: 0;
+}
+
+.ux36-page .chat-page {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg);
+}
+
+.ux36-page .chat-sidebar {
+    border-inline-end: 1px solid var(--rule);
+    background: var(--bg-subtle);
+}
+
+.ux36-page .chat-conversation-header,
+.ux36-page .chat-sidebar-header,
+.ux36-page .chat-input-wrap {
+    border-color: var(--rule);
+    background: var(--bg);
+}
+
+/* Chips, badges and statuses read as text with a small mark in both themes */
+.ux36-page .ux35-content :is(.status-badge, .ticket-status, .tenant-status) {
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-full);
+    background: var(--bg-subtle);
+    color: var(--text);
+    font-weight: 500;
+}
+
+@media (max-width: 767px) {
+    /* Same rule on a phone: the workspace fills the column, which already ends
+       above the docked navigation. */
+    .ux36-page .chat-page {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+    }
+
+    /* One ruled row on a phone would scroll sideways; wrap the numbers */
+    .ux36-page .ux35-content :is(
+        .tickets-stats, .tokens-stats, .inventory-stats, .compliance-stats,
+        .secaudit-stats-grid, .scaling-summary-grid, .crossplatform-summary-grid,
+        .attestation-stats, .hr-stats, .lang-stats-row, .report-summary
+    ) {
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    }
+}
+

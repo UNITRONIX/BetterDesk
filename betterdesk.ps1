@@ -1,7 +1,7 @@
 ﻿#Requires -RunAsAdministrator
 <#
 .SYNOPSIS
-    BetterDesk Console Manager v3.5.200 - All-in-One Interactive Tool for Windows
+    BetterDesk Console Manager v3.5.233 - All-in-One Interactive Tool for Windows
 
 .DESCRIPTION
     Features:
@@ -122,7 +122,7 @@ param(
 # Configuration
 #===============================================================================
 
-$script:VERSION = "3.5.200"
+$script:VERSION = "3.5.233"
 $script:ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 
 # Auto mode flags
@@ -2942,7 +2942,10 @@ function Do-InstallMinimal {
     
     # Configure firewall rules (server ports only)
     Print-Step "Configuring firewall rules..."
-    $ports = @([int]$script:GO_API_PORT, 21115, 21116, 21117, 21118, 21119)
+    # Minimum set documented in docs/CONNECTION_PORTS.md: signal, relay, Client API.
+    # 21118/21119 are WebSocket ports and only needed when WebSocket Mode is used; the
+    # panel (5000/5443) is never opened here.
+    $ports = @([int]$script:GO_API_PORT, 21116, 21117)
     foreach ($port in $ports) {
         try {
             New-NetFirewallRule -DisplayName "BetterDesk Port $port" -Direction Inbound -LocalPort $port -Protocol TCP -Action Allow -ErrorAction SilentlyContinue | Out-Null
@@ -4057,7 +4060,10 @@ function Do-Validate {
     $firewallProfile = Get-NetFirewallProfile -ErrorAction SilentlyContinue
     $activeProfiles = $firewallProfile | Where-Object { $_.Enabled -eq $true }
     if ($activeProfiles) {
-        $fwPorts = @(21115, 21116, 21117, 21118, 21119, 5000, 5443, [int]$script:GO_API_PORT, [int]$script:CLIENT_API_PORT)
+        # Ports that must be reachable for clients. The panel (5000/5443) is deliberately
+        # absent: it is a local port and exposing it to WAN defeats the reverse-proxy setup.
+        # See docs/CONNECTION_PORTS.md.
+        $fwPorts = @(21116, 21117, [int]$script:GO_API_PORT)
         $fwMissing = 0
         foreach ($fwPort in $fwPorts) {
             $rules = Get-NetFirewallRule -Direction Inbound -Enabled True -ErrorAction SilentlyContinue | 
@@ -4432,18 +4438,13 @@ function Check-FirewallRules {
         return
     }
     
-    # Check for BetterDesk firewall rules
+    # Check for BetterDesk firewall rules. Minimum WAN set from docs/CONNECTION_PORTS.md;
+    # the panel ports stay local and WebSocket ports are optional.
     $requiredPorts = @(
-        @{Port=21115; Proto="TCP";  Name="NAT Test"},
         @{Port=21116; Proto="TCP";  Name="ID Server TCP"},
         @{Port=21116; Proto="UDP";  Name="ID Server UDP"},
         @{Port=21117; Proto="TCP";  Name="Relay Server"},
-        @{Port=21118; Proto="TCP";  Name="WebSocket Signal"},
-        @{Port=21119; Proto="TCP";  Name="WebSocket Relay"},
-        @{Port=5000;  Proto="TCP";  Name="Web Console"},
-        @{Port=5443;  Proto="TCP";  Name="Web Console HTTPS"},
-        @{Port=[int]$script:GO_API_PORT; Proto="TCP";  Name="Go API (default, direct)"},
-        @{Port=[int]$script:CLIENT_API_PORT; Proto="TCP";  Name="RustDesk client API (backward-compat proxy)"}
+        @{Port=[int]$script:GO_API_PORT; Proto="TCP";  Name="Go API (default, direct)"}
     )
     
     $missingRules = @()
@@ -4471,18 +4472,14 @@ function Configure-Firewall {
     param([array]$MissingRules = @())
     
     if ($MissingRules.Count -eq 0) {
-        # Check all required ports
+        # Minimum WAN set from docs/CONNECTION_PORTS.md. The panel (5000/5443) and the
+        # WebSocket ports (21118/21119) are not required: the panel stays local and native
+        # TCP/UDP works without WS.
         $requiredPorts = @(
-            @{Port=21115; Proto="TCP";  Name="BetterDesk NAT Test"},
             @{Port=21116; Proto="TCP";  Name="BetterDesk ID Server TCP"},
             @{Port=21116; Proto="UDP";  Name="BetterDesk ID Server UDP"},
             @{Port=21117; Proto="TCP";  Name="BetterDesk Relay Server"},
-            @{Port=21118; Proto="TCP";  Name="BetterDesk WebSocket Signal"},
-            @{Port=21119; Proto="TCP";  Name="BetterDesk WebSocket Relay"},
-            @{Port=5000;  Proto="TCP";  Name="BetterDesk Web Console"},
-            @{Port=5443;  Proto="TCP";  Name="BetterDesk Console HTTPS"},
-            @{Port=[int]$script:GO_API_PORT; Proto="TCP";  Name="BetterDesk Go API (default)"},
-            @{Port=[int]$script:CLIENT_API_PORT; Proto="TCP";  Name="BetterDesk client API (compat proxy)"}
+            @{Port=[int]$script:GO_API_PORT; Proto="TCP";  Name="BetterDesk Go API (default)"}
         )
         
         foreach ($p in $requiredPorts) {

@@ -12,10 +12,19 @@ const MIN_MAX_AGE_MS = 5 * 60 * 1000; // 5 minutes
 const MAX_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 const DEFAULT_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
 const DEFAULT_WARN_BEFORE_MS = 60 * 1000; // 1 minute
+const DEFAULT_MAX_SESSIONS_PER_USER = 1; // 1 = single session; 0 = unlimited
+const MAX_MAX_SESSIONS_PER_USER = 1000;
 
 function parsePositiveInt(raw, fallback) {
     const n = parseInt(raw, 10);
     return Number.isFinite(n) && n > 0 ? n : fallback;
+}
+
+function parseNonNegativeInt(raw, fallback) {
+    if (raw === undefined || raw === null || String(raw).trim() === '') return fallback;
+    const s = String(raw).trim();
+    if (!/^\d+$/.test(s)) return fallback;
+    return parseInt(s, 10);
 }
 
 function clamp(n, min, max) {
@@ -25,7 +34,7 @@ function clamp(n, min, max) {
 /**
  * Resolve session policy from environment / config overrides.
  * @param {object} [env]
- * @returns {{ idleTimeoutMs: number, maxAgeMs: number, warnBeforeMs: number }}
+ * @returns {{ idleTimeoutMs: number, maxAgeMs: number, warnBeforeMs: number, maxSessionsPerUser: number }}
  */
 function resolveSessionPolicy(env = process.env) {
     const idleTimeoutMs = clamp(
@@ -47,7 +56,13 @@ function resolveSessionPolicy(env = process.env) {
         15 * 1000,
         Math.min(idleTimeoutMs, 10 * 60 * 1000)
     );
-    return { idleTimeoutMs, maxAgeMs, warnBeforeMs };
+    // Concurrent panel sessions per account. 0 = unlimited; 1 (default) keeps
+    // the single-session behaviour; N keeps the N most recently active.
+    const maxSessionsPerUser = Math.min(
+        MAX_MAX_SESSIONS_PER_USER,
+        parseNonNegativeInt(env.SESSION_MAX_PER_USER, DEFAULT_MAX_SESSIONS_PER_USER)
+    );
+    return { idleTimeoutMs, maxAgeMs, warnBeforeMs, maxSessionsPerUser };
 }
 
 const END_REASONS = Object.freeze({
@@ -87,6 +102,8 @@ module.exports = {
     MAX_MAX_AGE_MS,
     DEFAULT_MAX_AGE_MS,
     DEFAULT_WARN_BEFORE_MS,
+    DEFAULT_MAX_SESSIONS_PER_USER,
+    MAX_MAX_SESSIONS_PER_USER,
     END_REASONS,
     resolveSessionPolicy,
     sanitizeUserAgent,

@@ -10,6 +10,18 @@
         grid.replaceChildren(empty);
     }
 
+    function emptyMessage(data) {
+        if (data && data.reason === 'no_release_imported') {
+            return 'No agent package has been published by your administrator yet. '
+                + 'Ask them to import the latest Support Agent release in the console, then reload this page.';
+        }
+        if (data && data.reason === 'release_cache_incomplete') {
+            return 'An agent package was imported but its files are incomplete. '
+                + 'Ask your administrator to import the latest release again.';
+        }
+        return 'No installers available yet.';
+    }
+
     fetch('/api/portal/installers', { credentials: 'omit' })
         .then(function (response) {
             if (!response.ok) throw new Error('Installer request failed');
@@ -20,7 +32,7 @@
                 throw new Error('Invalid installer response');
             }
             if (data.installers.length === 0) {
-                showMessage('No installers available yet.');
+                showMessage(emptyMessage(data));
                 return;
             }
             var labels = { windows: 'Windows', linux: 'Linux', macos: 'macOS' };
@@ -32,7 +44,9 @@
                 var card = document.createElement('div');
                 card.className = 'portal-card';
                 var heading = document.createElement('h3');
-                heading.textContent = Object.hasOwn(labels, installer.platform) ? labels[installer.platform] : installer.platform;
+                heading.textContent = Object.prototype.hasOwnProperty.call(labels, installer.platform)
+                    ? labels[installer.platform]
+                    : installer.platform;
                 var arch = document.createElement('div');
                 arch.className = 'arch';
                 arch.textContent = (installer.arch || '') + ' · ' + (installer.format || '');

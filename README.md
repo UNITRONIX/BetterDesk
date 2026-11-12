@@ -9,7 +9,7 @@
 ![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)
 ![Go](https://img.shields.io/badge/Go-1.25+-00ADD8.svg)
 ![Node.js](https://img.shields.io/badge/Node.js-22+-339933.svg)
-![Version](https://img.shields.io/badge/version-3.5.200-brightgreen.svg)
+![Version](https://img.shields.io/badge/version-3.5.233-brightgreen.svg)
 
 [![Sponsor](https://img.shields.io/badge/GitHub-Sponsor-181717?logo=github&logoColor=white&style=flat)](https://github.com/sponsors/UNITRONIX)
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-%23FFDD00?logo=buy-me-a-coffee&logoColor=black&style=flat)](https://buymeacoffee.com/unitronix)
@@ -55,12 +55,28 @@ Choose **1** for a new install, or `sudo ./betterdesk.sh --auto`.
 
 ### Docker
 
+One container with everything inside (server + relay + web console) — the recommended setup:
+
 ```bash
-curl -fsSL https://raw.githubusercontent.com/UNITRONIX/BetterDesk/main/docker-compose.quick.yml -o docker-compose.yml
-docker compose up -d
+curl -fsSL https://raw.githubusercontent.com/UNITRONIX/BetterDesk/main/docker-compose.quick.single.yml -o docker-compose.yml
+docker compose pull && docker compose up -d
+docker compose exec betterdesk betterdesk-show-admin-credentials
 ```
 
-Open **http://your-server:5000**.
+Open **http://your-server:5000** (plain HTTP, not HTTPS).
+
+<details>
+<summary>Legacy two-container layout (split images)</summary>
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/UNITRONIX/BetterDesk/main/docker-compose.quick.yml -o docker-compose.yml
+docker compose pull && docker compose up -d
+docker compose exec console betterdesk-show-admin-credentials
+```
+
+The split layout is kept for existing deployments (API port **21114**, single container uses **21121**). New installs should use the all-in-one image above.
+
+</details>
 
 ### Windows
 
@@ -86,7 +102,9 @@ Wiki source in-repo: [`docs/wiki/`](docs/wiki/) (sync with `scripts/sync-wiki.ps
 
 ## Web console preview
 
-The BetterDesk web console uses the UX 3.5 interface. These preview images show the dark theme in English with fictional device data:
+The BetterDesk web console defaults to the UX 3.5 interface; an opt-in **UX 3.6 beta** layout
+(grouped sidebar, list-first devices, per-topic settings) is available in Settings → General.
+These preview images show the UX 3.5 dark theme in English with fictional device data:
 
 <table>
   <tr>
@@ -133,6 +151,26 @@ See the [Web Console wiki page](https://github.com/UNITRONIX/BetterDesk/wiki/Web
 ## Contributing
 
 Diagnostics → [issue](https://github.com/UNITRONIX/BetterDesk/issues) → fork / PR. See [docs/development/CONTRIBUTING.md](docs/development/CONTRIBUTING.md).
+
+---
+
+## Credits
+
+### Console redesign — UX 3.6
+
+The **UX 3.6 beta** console layout is modelled on the community redesign by
+**[Linus Rath (@rathlinus)](https://github.com/rathlinus)** — the grouped
+sidebar (Devices / Support / People / Activity / Settings), the list-first
+device view with side panels, per-topic Settings with search, and light/dark
+coverage across all 26 locales. The redesign was proposed in
+[issue #493](https://github.com/UNITRONIX/BetterDesk/issues/493)
+([PR #495](https://github.com/UNITRONIX/BetterDesk/pull/495)) and is
+implemented in BetterDesk's existing EJS/JavaScript/CSS stack rather than
+merged as a branch.
+
+Design credit is recorded in
+[docs/development/CONTRIBUTOR-ATTRIBUTIONS.md](docs/development/CONTRIBUTOR-ATTRIBUTIONS.md)
+and shown in the console (Settings → General → Console interface).
 
 ---
 

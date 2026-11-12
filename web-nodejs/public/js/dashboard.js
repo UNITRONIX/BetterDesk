@@ -24,8 +24,11 @@
     let showIntuneScriptHandler = null;
     let showClientQrButton = null;
     let showClientQrHandler = null;
-    let activateAgentQrButton = null;
-    let activateAgentQrHandler = null;
+    let pairCodeButton = null;
+    let pairCodeButtonHandler = null;
+    let pairCodeModal = null;
+    let pairCodeCountdown = null;
+    const pairCodeListeners = [];
     let activationModal = null;
     let activationCloseButton = null;
     let activationStopButton = null;
@@ -124,6 +127,7 @@
         showClientQrHandler = showClientConfigQr;
         showClientQrButton?.addEventListener('click', showClientQrHandler);
 
+        initAgentPairingCode();
         initAgentActivation();
 
         clientConfigHostInput = findById('client-config-host-input');
@@ -162,9 +166,14 @@
         if (copyDeployStringButton && copyDeployStringHandler) copyDeployStringButton.removeEventListener('click', copyDeployStringHandler);
         if (showIntuneScriptButton && showIntuneScriptHandler) showIntuneScriptButton.removeEventListener('click', showIntuneScriptHandler);
         if (showClientQrButton && showClientQrHandler) showClientQrButton.removeEventListener('click', showClientQrHandler);
-        if (activateAgentQrButton && activateAgentQrHandler) {
-            activateAgentQrButton.removeEventListener('click', activateAgentQrHandler);
+        if (pairCodeButton && pairCodeButtonHandler) {
+            pairCodeButton.removeEventListener('click', pairCodeButtonHandler);
         }
+        pairCodeListeners.forEach(([element, type, handler]) => {
+            element.removeEventListener(type, handler);
+        });
+        pairCodeListeners.length = 0;
+        closePairCodeModal();
         stopAgentActivation();
         if (applyClientHostButton && applyClientHostHandler) applyClientHostButton.removeEventListener('click', applyClientHostHandler);
         clientConfigCopyButtons.forEach(button => {
@@ -191,8 +200,9 @@
         showIntuneScriptHandler = null;
         showClientQrButton = null;
         showClientQrHandler = null;
-        activateAgentQrButton = null;
-        activateAgentQrHandler = null;
+        pairCodeButton = null;
+        pairCodeButtonHandler = null;
+        pairCodeModal = null;
         clientConfigHostInput = null;
         applyClientHostButton = null;
         applyClientHostHandler = null;
@@ -458,6 +468,8 @@
             setText('client-config-api-url', clientConfig.api_url || '-');
             renderPublicKeyField(clientConfig.public_key || '', false);
             updateClientHostControls(clientConfig);
+            // The pairing modal may have opened before the client config arrived.
+            if (pairCodeModal && !pairCodeModal.hidden) fillPairCodeHost();
         } catch (err) {
             console.error('Client config load error:', err);
             clientConfig = null;
@@ -773,12 +785,172 @@ Start-Process -FilePath $RustDesk -ArgumentList @('--config', $CfgString) -Wait 
         }
     }
 
+    function initAgentPairingCode() {
+        pairCodeButton = findById('activate-agent-code-btn');
+        pairCodeModal = findById('dashboard-pair-code-modal');
+        if (!pairCodeModal) return;
+
+        pairCodeButtonHandler = openPairCodeModal;
+        pairCodeButton?.addEventListener('click', pairCodeButtonHandler);
+
+        const bind = (id, event, handler) => {
+            const el = findById(id);
+            if (!el) return;
+            el.addEventListener(event, handler);
+            pairCodeListeners.push([el, event, handler]);
+        };
+
+        bind('dashboard-pair-code-close', 'click', closePairCodeModal);
+        bind('dashboard-pair-code-generate', 'click', generatePairCode);
+        bind('dashboard-pair-code-copy', 'click', copyPairCode);
+        bind('dashboard-pair-code-scan', 'click', () => {
+            if (!activationModal) {
+                setPairCodeStatus(_('dashboard.activate_agent_camera_unavailable'), true);
+                return;
+            }
+            closePairCodeModal();
+            openAgentActivation();
+        });
+        bind('dashboard-pair-code-host', 'keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                generatePairCode();
+            }
+        });
+    }
+
+    function openPairCodeModal() {
+        if (!pairCodeModal) return;
+        // The class is the only switch: an inline display would fight the sheet
+        // and leave the overlay transparent but still covering the panel.
+        pairCodeModal.hidden = false;
+        pairCodeModal.classList.add('open');
+        resetPairCodeResult();
+        fillPairCodeHost();
+        const labelInput = findById('dashboard-pair-code-label');
+        if (labelInput) labelInput.value = '';
+    }
+
+    /**
+     * Prefill the host the client will type: the resolved client-facing address, not the
+     * panel's own URL (they differ when the panel runs behind a different port/domain).
+     */
+    function fillPairCodeHost() {
+        const hostInput = findById('dashboard-pair-code-host');
+        if (!hostInput || hostInput.value.trim()) return;
+        // The client-config host field is the operator-visible source; the cached config may
+        // still be in flight when the modal opens from a deep link.
+        const hostField = findById('client-config-host-input');
+        const host = (clientConfig && clientConfig.client_server_host)
+            || (hostField && hostField.value.trim())
+            || '';
+        if (host) hostInput.value = host;
+    }
+
+    function closePairCodeModal() {
+        if (pairCodeCountdown) clearInterval(pairCodeCountdown);
+        pairCodeCountdown = null;
+        if (pairCodeModal) {
+            pairCodeModal.classList.remove('open');
+            pairCodeModal.hidden = true;
+        }
+    }
+
+    function resetPairCodeResult() {
+        if (pairCodeCountdown) clearInterval(pairCodeCountdown);
+        pairCodeCountdown = null;
+        const result = findById('dashboard-pair-code-result');
+        if (result) result.hidden = true;
+        const value = findById('dashboard-pair-code-value');
+        if (value) {
+            value.classList.remove('is-expired');
+            value.textContent = '';
+        }
+        setText('dashboard-pair-code-host-out', '');
+        setText('dashboard-pair-code-ttl', '');
+        setPairCodeStatus('');
+    }
+
+    function setPairCodeStatus(message, isError) {
+        const status = findById('dashboard-pair-code-status');
+        if (!status) return;
+        status.textContent = message || '';
+        status.classList.toggle('is-error', Boolean(isError));
+    }
+
+    function formatPairCodeTtl(seconds) {
+        const total = Math.max(0, Math.floor(Number(seconds) || 0));
+        const minutes = Math.floor(total / 60);
+        const rest = total % 60;
+        return `${minutes}:${String(rest).padStart(2, '0')}`;
+    }
+
+    async function generatePairCode() {
+        const button = findById('dashboard-pair-code-generate');
+        if (button) button.disabled = true;
+        setPairCodeStatus(_('pairing.generating'));
+        try {
+            const labelInput = findById('dashboard-pair-code-label');
+            const hostInput = findById('dashboard-pair-code-host');
+            const label = (labelInput && labelInput.value.trim()) || '';
+            const payload = await Utils.api('/api/panel/pairing/codes', {
+                method: 'POST',
+                body: JSON.stringify({ label }),
+            });
+            const code = (payload && payload.code) || '';
+            if (!code) throw new Error(_('pairing.create_failed'));
+
+            const result = findById('dashboard-pair-code-result');
+            if (result) result.hidden = false;
+            const value = findById('dashboard-pair-code-value');
+            if (value) {
+                value.classList.remove('is-expired');
+                value.textContent = code;
+            }
+            setText('dashboard-pair-code-host-out',
+                (hostInput && hostInput.value.trim()) || (payload && payload.host) || '');
+            setPairCodeStatus('');
+
+            let remaining = Number(payload.expires_in) || 600;
+            setText('dashboard-pair-code-ttl', formatPairCodeTtl(remaining));
+            if (pairCodeCountdown) clearInterval(pairCodeCountdown);
+            pairCodeCountdown = setInterval(() => {
+                remaining -= 1;
+                if (remaining <= 0) {
+                    clearInterval(pairCodeCountdown);
+                    pairCodeCountdown = null;
+                    setText('dashboard-pair-code-ttl', _('pairing.expired'));
+                    const value = findById('dashboard-pair-code-value');
+                    if (value) value.classList.add('is-expired');
+                    return;
+                }
+                setText('dashboard-pair-code-ttl', formatPairCodeTtl(remaining));
+            }, 1000);
+
+            Notifications.success(_('pairing.created'));
+        } catch (error) {
+            setPairCodeStatus(
+                `${_('pairing.create_failed')}: ${error.message || _('errors.server_error')}`, true);
+        } finally {
+            if (button) button.disabled = false;
+        }
+    }
+
+    async function copyPairCode() {
+        const value = findById('dashboard-pair-code-value');
+        const code = value ? value.textContent.trim() : '';
+        if (!code) return;
+        try {
+            await navigator.clipboard.writeText(code);
+            Notifications.success(_('pairing.copied'));
+        } catch (_) {
+            Notifications.warning(_('pairing.copy_failed'));
+        }
+    }
+
     function initAgentActivation() {
-        activateAgentQrButton = findById('activate-agent-qr-btn');
         activationModal = findById('dashboard-agent-activation-modal');
         if (!activationModal) return;
-        activateAgentQrHandler = openAgentActivation;
-        activateAgentQrButton?.addEventListener('click', activateAgentQrHandler);
         activationCloseButton = findById('dashboard-agent-activation-close');
         activationStopButton = findById('dashboard-agent-activation-stop');
         activationFileButton = findById('dashboard-agent-activation-file-btn');
@@ -794,24 +966,12 @@ Start-Process -FilePath $RustDesk -ArgumentList @('--config', $CfgString) -Wait 
         activationFileButton?.addEventListener('click', () => activationFileInput?.click());
         activationFileInput?.addEventListener('change', scanAgentQrImage);
         activationSubmitButton?.addEventListener('click', submitAgentActivation);
-
-        // Deep-link from Główne → Aktywuj agenta (/?activateAgent=1)
-        try {
-            const params = new URLSearchParams(window.location.search || '');
-            if (params.get('activateAgent') === '1') {
-                const navItem = document.getElementById('nav-activate-agent');
-                if (navItem) navItem.classList.add('active');
-                if (activateAgentQrButton || activationModal) {
-                    openAgentActivation();
-                }
-            }
-        } catch (_) { /* ignore */ }
     }
 
     async function openAgentActivation() {
         if (!activationModal) return;
         activationModal.hidden = false;
-        activationModal.style.display = 'flex';
+        activationModal.classList.add('open');
         activationForm.hidden = true;
         activationDeviceId = '';
         setActivationStatus(_('dashboard.activate_agent_scanning'));
@@ -821,8 +981,8 @@ Start-Process -FilePath $RustDesk -ArgumentList @('--config', $CfgString) -Wait 
     function closeAgentActivation() {
         stopAgentActivation();
         if (activationModal) {
+            activationModal.classList.remove('open');
             activationModal.hidden = true;
-            activationModal.style.display = 'none';
         }
     }
 

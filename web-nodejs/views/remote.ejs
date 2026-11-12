@@ -58,7 +58,7 @@
                             <button class="dropdown-item" id="btn-refresh-screen">
                                 <span class="material-icons">refresh</span> ${_('remote.refresh_screen')}
                             </button>
-                            <button class="dropdown-item" id="btn-clipboard-paste">
+                            <button class="dropdown-item" id="btn-clipboard-paste" title="${_('remote.clipboard_paste_hint')}">
                                 <span class="material-icons">content_paste</span> ${_('remote.clipboard_paste')}
                             </button>
                             <button class="dropdown-item" id="btn-reset-keyboard">
@@ -68,6 +68,20 @@
                             <button class="dropdown-item toggle-item" id="btn-block-input" data-active="false">
                                 <span class="material-icons">block</span> ${_('remote.block_input')}
                             </button>
+                        </div>
+                    </div>
+                    <div class="toolbar-dropdown">
+                        <button class="toolbar-btn" id="btn-type-text" title="${_('remote.type_text')}" aria-expanded="false" aria-controls="type-text-menu">
+                            <span class="material-icons">password</span>
+                        </button>
+                        <div class="toolbar-dropdown-menu toolbar-type-text-menu" id="type-text-menu">
+                            <div class="type-text-panel">
+                                <label class="dropdown-label" for="type-text-input">${_('remote.type_text')}</label>
+                                <textarea id="type-text-input" class="type-text-input" rows="3" autocomplete="off" spellcheck="false" placeholder="${_('remote.type_text_placeholder')}"></textarea>
+                                <button type="button" class="type-text-send" id="btn-type-text-send">
+                                    <span class="material-icons">send</span> ${_('remote.type_text_send')}
+                                </button>
+                            </div>
                         </div>
                     </div>
                     <div class="toolbar-dropdown">
