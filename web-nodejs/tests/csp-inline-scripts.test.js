@@ -66,10 +66,16 @@ describe('inline scripts carry the CSP nonce', () => {
             "enabling 'unsafe-inline' would defeat the policy instead of fixing the script");
     });
 
-    it('serves the download portal with a nonced script', () => {
+    it('serves the download portal with a same-origin external script', () => {
         // The public portal uses no layout, so it is the easiest page to forget.
+        // Keep the fetch in /js/portal.js so CSP 'self' covers it without
+        // unsafe-inline and without a per-request nonce on this page.
         const portal = fs.readFileSync(path.join(viewsDir, 'downloads-portal.ejs'), 'utf8');
-        assert.match(portal, /<script nonce="<%= cspNonce %>">/);
-        assert.match(portal, /\/api\/portal\/installers/);
+        assert.match(portal, /<script src="\/js\/portal\.js" defer>/);
+        assert.doesNotMatch(portal, /<script(?![^>]*\bsrc\s*=)[^>]*>/i);
+        assert.match(
+            fs.readFileSync(path.join(root, 'public', 'js', 'portal.js'), 'utf8'),
+            /\/api\/portal\/installers/
+        );
     });
 });
