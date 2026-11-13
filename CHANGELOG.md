@@ -1,7 +1,7 @@
 ## [Unreleased]
 
 ### Changed
-- _(none yet)_
+- Restrict WAN `/api/currentUser` to GET and POST while preserving OPTIONS handling.
 
 ---
 
