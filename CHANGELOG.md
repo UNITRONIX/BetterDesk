@@ -1,5 +1,18 @@
 ## [Unreleased]
 
+### Fixed
+- **Enrollment tokens were ignored in `managed` mode.** The most common
+  operator-facing enrollment mode queued every registration for manual approval,
+  including devices presenting a valid token — an unattended install (Docker
+  image, MDM script, golden image) therefore waited for a human click forever,
+  and nothing in the answer said why. A valid unbound token now admits the device
+  immediately and issues its device credential; an invalid or already-bound token
+  is refused with `403 enrollment_token_rejected` instead of being queued as if
+  it were fine. The queue path is unchanged for devices without a token.
+- Both `managed` and `locked` now share one redemption helper, so the token rules
+  (exists, active, unbound or bound to this exact device, uses remaining) apply
+  identically in each mode.
+
 ### Changed
 - _(none yet)_
 

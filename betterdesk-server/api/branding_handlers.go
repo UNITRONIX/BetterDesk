@@ -13,6 +13,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/unitronix/betterdesk-server/audit"
 	"github.com/unitronix/betterdesk-server/db"
 	"github.com/unitronix/betterdesk-server/events"
 )
@@ -648,6 +649,42 @@ func (s *Server) handleDeviceRegister(w http.ResponseWriter, r *http.Request) {
 		}
 
 	case "managed":
+		// Managed mode keeps the operator-approval queue, but a device holding a
+		// valid enrollment token must not wait in it: the token *is* the
+		// admission decision, issued by that same operator. Before this check a
+		// token-bearing device was queued as "pending" and never became online,
+		// which made unattended installs (Docker images, MDM scripts) impossible
+		// in the most common enrollment mode.
+		if token := strings.TrimSpace(req.Token); token != "" {
+			if ok, deviceToken := s.admitByEnrollmentToken(&req, token, clientIP, "managed"); ok {
+				resp := s.buildEnrollmentResponse("approved", req.DeviceID, "standard", "")
+				resp.DeviceToken = deviceToken
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(resp)
+				return
+			}
+			// An invalid token is not silently downgraded to the queue: that
+			// answer would look like success ("waiting for approval") while the
+			// real problem — a wrong or expired token — stayed invisible.
+			resp := EnrollmentResponse{
+				Status:     "rejected",
+				DeviceID:   req.DeviceID,
+				Error:      "enrollment_token_rejected",
+				Message:    "The enrollment token is invalid, expired, or already bound to another device",
+				ServerTime: timeNowUnixMilli(),
+			}
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusForbidden)
+			json.NewEncoder(w).Encode(resp)
+			if s.auditLog != nil {
+				s.auditLog.Log(audit.ActionPeerRegistrationRejected, clientIP, req.DeviceID, map[string]string{
+					"reason": "enrollment_token_rejected",
+					"stage":  "register",
+					"mode":   "managed",
+				})
+			}
+			return
+		}
 		// Each support-agent installation registers without a shared bundle token.
 		// Operator approval issues a unique device_token per device.
 		if err := s.storePendingDevice(&req, clientIP); err != nil {
@@ -697,32 +734,11 @@ func (s *Server) handleDeviceRegister(w http.ResponseWriter, r *http.Request) {
 	case "locked":
 		// Only allow enrollment with a valid token
 		if req.Token != "" {
-			if tok, err := s.db.ValidateToken(hashToken(req.Token)); err == nil && tok != nil &&
-				(tok.PeerID == "" || tok.PeerID == req.DeviceID) {
-				// Valid token — activate and bind to this device, then approve
-				if tok.Status == "pending" {
-					_ = s.db.BindTokenToPeer(tok.TokenHash, req.DeviceID)
-				}
-				_ = s.db.IncrementTokenUse(tok.TokenHash)
-				if err := s.createPeerFromEnrollment(&req, clientIP, true); err != nil {
-					http.Error(w, "Failed to enroll device", http.StatusInternalServerError)
-					return
-				}
+			if ok, deviceToken := s.admitByEnrollmentToken(&req, req.Token, clientIP, "locked"); ok {
 				resp := s.buildEnrollmentResponse("approved", req.DeviceID, "standard", "")
-				if deviceToken, err := s.issueEnrollmentDeviceToken(req.DeviceID); err == nil {
-					resp.DeviceToken = deviceToken
-				} else {
-					log.Printf("[API] Failed to issue device token after token-enroll for %s: %v", req.DeviceID, err)
-					resp.DeviceToken = req.Token
-				}
+				resp.DeviceToken = deviceToken
 				w.Header().Set("Content-Type", "application/json")
 				json.NewEncoder(w).Encode(resp)
-
-				if s.auditLog != nil {
-					s.auditLog.Log("device_enrolled", clientIP, req.DeviceID, map[string]string{
-						"mode": "locked", "method": "token", "hostname": req.Hostname,
-					})
-				}
 				return
 			}
 		}
@@ -736,6 +752,47 @@ func (s *Server) handleDeviceRegister(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusForbidden)
 		json.NewEncoder(w).Encode(resp)
 	}
+}
+
+// admitByEnrollmentToken redeems an enrollment token for this device.
+//
+// Shared by the `managed` and `locked` modes so both apply identical checks:
+// the token must exist, be active, be unbound or bound to this exact device, and
+// must not be exhausted. A successful redemption creates the peer, binds the
+// token, records the use and issues the device credential.
+//
+// Returns the issued device token and whether admission succeeded.
+func (s *Server) admitByEnrollmentToken(req *EnrollmentRequest, rawToken, clientIP, mode string) (bool, string) {
+	tok, err := s.db.ValidateToken(hashToken(rawToken))
+	if err != nil || tok == nil {
+		return false, ""
+	}
+	// A token already bound to a different device cannot admit this one; that
+	// is the property that keeps a leaked token from enrolling a second machine.
+	if tok.PeerID != "" && tok.PeerID != req.DeviceID {
+		return false, ""
+	}
+	if tok.Status == db.TokenStatusPending {
+		_ = s.db.BindTokenToPeer(tok.TokenHash, req.DeviceID)
+	}
+	_ = s.db.IncrementTokenUse(tok.TokenHash)
+	if err := s.createPeerFromEnrollment(req, clientIP, true); err != nil {
+		log.Printf("[API] Failed to enroll %s by token: %v", req.DeviceID, err)
+		return false, ""
+	}
+	deviceToken, err := s.issueEnrollmentDeviceToken(req.DeviceID)
+	if err != nil {
+		// The device is enrolled; without a fresh credential it can still prove
+		// itself with the token it already holds.
+		log.Printf("[API] Failed to issue device token after token-enroll for %s: %v", req.DeviceID, err)
+		deviceToken = rawToken
+	}
+	if s.auditLog != nil {
+		s.auditLog.Log("device_enrolled", clientIP, req.DeviceID, map[string]string{
+			"mode": mode, "method": "token", "hostname": req.Hostname,
+		})
+	}
+	return true, deviceToken
 }
 
 // handleDeviceRegisterStatus lets the client poll its enrollment status.
