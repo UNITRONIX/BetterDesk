@@ -1212,6 +1212,7 @@
     "username": "사용자 이름",
     "username_placeholder": "사용자 이름을 입력하세요",
     "username_hint": "3~32자, 문자, 숫자, 밑줄만 가능",
+    "username_change_warning": "사용자 이름을 변경하면 주소록과 그룹 할당도 업데이트되고 모든 곳에서 로그아웃됩니다.",
     "password": "비밀번호",
     "password_placeholder": "비밀번호를 입력하세요",
     "password_hint": "대소문자, 숫자, 기호를 혼합하여 최소 8자 이상",

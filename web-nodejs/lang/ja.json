@@ -1212,6 +1212,7 @@
     "username": "ユーザー名",
     "username_placeholder": "ユーザー名を入力してください",
     "username_hint": "3 ～ 32 文字、文字、数字、アンダースコアのみ",
+    "username_change_warning": "ユーザー名を変更すると、アドレス帳とグループ割り当ても更新され、すべての場所でサインアウトされます。",
     "password": "パスワード",
     "password_placeholder": "パスワードを入力してください",
     "password_hint": "大文字と小文字を混合した少なくとも 8 文字、数字、記号",

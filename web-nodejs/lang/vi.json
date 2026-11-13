@@ -1218,6 +1218,7 @@
     "username": "Tên người dùng",
     "username_placeholder": "Nhập tên người dùng",
     "username_hint": "Chỉ 3-32 ký tự, chữ cái, số và dấu gạch dưới",
+    "username_change_warning": "Thay đổi tên người dùng cũng cập nhật sổ địa chỉ và phân công nhóm, đồng thời đăng xuất người dùng ở mọi nơi.",
     "password": "Mật khẩu",
     "password_placeholder": "Nhập mật khẩu",
     "password_hint": "Tối thiểu 8 ký tự bao gồm cả chữ, số và ký hiệu",

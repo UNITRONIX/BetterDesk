@@ -1229,6 +1229,7 @@
     "username": "Nom d'utilisateur",
     "username_placeholder": "Entrez le nom d'utilisateur",
     "username_hint": "3-32 caractères, lettres, chiffres et underscores uniquement",
+    "username_change_warning": "Modifier le nom d'utilisateur met aussi à jour le carnet d'adresses et les affectations de groupes, et déconnecte l'utilisateur partout.",
     "password": "Mot de passe",
     "password_placeholder": "Entrez le mot de passe",
     "password_hint": "Minimum 8 caractères avec majuscules, minuscules, chiffres et symboles",

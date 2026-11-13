@@ -1212,6 +1212,7 @@
     "username": "用户名",
     "username_placeholder": "请输入用户名",
     "username_hint": "3-32 个字符，仅限字母、数字和下划线",
+    "username_change_warning": "更改用户名还会更新通讯录和分组分配，并在所有设备上退出登录。",
     "password": "密码",
     "password_placeholder": "请输入密码",
     "password_hint": "至少 8 个字符，包含大小写字母、数字和符号",

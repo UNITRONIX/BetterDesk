@@ -1218,6 +1218,7 @@
     "username": "Käyttäjätunnus",
     "username_placeholder": "Anna käyttäjänimi",
     "username_hint": "Vain 3-32 merkkiä, kirjaimia, numeroita ja alaviivoja",
+    "username_change_warning": "Käyttäjänimen muuttaminen päivittää myös osoitekirjan ja ryhmämääritykset sekä kirjaa käyttäjän ulos kaikkialta.",
     "password": "Salasana",
     "password_placeholder": "Anna salasana",
     "password_hint": "Vähintään 8 merkkiä sekakokoisina isoilla kirjaimilla, numeroilla ja symboleilla",

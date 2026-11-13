@@ -1218,6 +1218,7 @@
     "username": "Nama pengguna",
     "username_placeholder": "Masukkan nama pengguna",
     "username_hint": "3-32 karakter, huruf, angka dan garis bawah saja",
+    "username_change_warning": "Mengubah nama pengguna juga memperbarui buku alamat dan penetapan grup, serta mengeluarkan pengguna dari semua sesi.",
     "password": "Kata sandi",
     "password_placeholder": "Masukkan kata sandi",
     "password_hint": "Minimal 8 karakter dengan campuran huruf besar-kecil, angka dan simbol",

@@ -1688,6 +1688,44 @@ function createSqliteAdapter(config) {
         async updateUserLanguage(id, lang) {
             openAuth().prepare('UPDATE users SET preferred_language = ? WHERE id = ?').run(lang, id);
         },
+        /**
+         * Rename a user and cascade to the tables keyed by username.
+         *
+         * Issue #498 (2026-11-13): `username` is the PK of `address_books` and a
+         * lookup key in `org_users` / `strategy_assignments`, so a partial rename
+         * would orphan data. One transaction, `ErrUsernameTaken`-style error on
+         * collision.
+         *
+         * @returns {Promise<{ ok: true } | { ok: false, code: 'taken'|'invalid'|'missing' }>}
+         */
+        async renameUser(id, newUsername) {
+            const { renameUserCascade } = require('../lib/renameUserCascade');
+            const db = openAuth();
+            const tx = db.transaction(() => {
+                const row = db.prepare('SELECT username FROM users WHERE id = ?').get(id);
+                if (!row) return { ok: false, code: 'missing' };
+                if (row.username === newUsername) return { ok: true };
+                const taken = db.prepare('SELECT COUNT(*) AS c FROM users WHERE username = ? AND id <> ?')
+                    .get(newUsername, id);
+                if (taken && taken.c > 0) return { ok: false, code: 'taken' };
+
+                db.prepare('UPDATE users SET username = ? WHERE id = ?').run(newUsername, id);
+                renameUserCascade({
+                    exec: (sql, params) => db.prepare(sql).run(...(params || [])),
+                    run: (sql, params) => db.prepare(sql).run(...(params || [])),
+                    dialect: 'sqlite',
+                }, row.username, newUsername);
+                return { ok: true };
+            });
+            try {
+                return tx();
+            } catch (err) {
+                if (/unique|constraint/i.test(String(err.message || ''))) {
+                    return { ok: false, code: 'taken' };
+                }
+                throw err;
+            }
+        },
         // Phase 4: update operator identity profile (first_name, last_name, email, phone, role_display, avatar_url)
         async updateUserProfile(id, fields) {
             const allowed = ['first_name', 'last_name', 'email', 'phone', 'role_display', 'avatar_url'];
@@ -5295,6 +5333,56 @@ function createPostgresAdapter() {
 
         async getUserByUsername(username) { return one('SELECT * FROM users WHERE username = $1', [username]); },
         async getUserById(id) { return one('SELECT * FROM users WHERE id = $1', [id]); },
+        /**
+         * Rename a user with the dependent-table cascade (issue #498).
+         * See the SQLite adapter for the rationale.
+         *
+         * @returns {Promise<{ ok: true } | { ok: false, code: 'taken'|'invalid'|'missing' }>}
+         */
+        async renameUser(id, newUsername) {
+            const { renameUserCascade } = require('../lib/renameUserCascade');
+            const client = await getPool().connect();
+            try {
+                await client.query('BEGIN');
+                const existing = await client.query('SELECT username FROM users WHERE id = $1', [id]);
+                if (existing.rowCount === 0) {
+                    await client.query('ROLLBACK');
+                    return { ok: false, code: 'missing' };
+                }
+                const oldUsername = existing.rows[0].username;
+                if (oldUsername === newUsername) {
+                    await client.query('COMMIT');
+                    return { ok: true };
+                }
+                const taken = await client.query(
+                    'SELECT COUNT(*)::INTEGER AS c FROM users WHERE username = $1 AND id <> $2',
+                    [newUsername, id]
+                );
+                if (taken.rows[0].c > 0) {
+                    await client.query('ROLLBACK');
+                    return { ok: false, code: 'taken' };
+                }
+                await client.query('UPDATE users SET username = $1 WHERE id = $2', [newUsername, id]);
+                // The cascade helper emits `?` placeholders; rewrite them for pg.
+                let paramIndex = 0;
+                const runPg = (sql, params) => client.query(
+                    String(sql).replace(/\?/g, () => `$${++paramIndex}`),
+                    params || []
+                );
+                paramIndex = 0;
+                await renameUserCascade({ run: runPg, dialect: 'postgres' }, oldUsername, newUsername);
+                await client.query('COMMIT');
+                return { ok: true };
+            } catch (err) {
+                try { await client.query('ROLLBACK'); } catch (_) { /* already rolled back */ }
+                if (/unique|duplicate key/i.test(String(err.message || ''))) {
+                    return { ok: false, code: 'taken' };
+                }
+                throw err;
+            } finally {
+                client.release();
+            }
+        },
         async createUser(username, passwordHash, role = 'admin', authProvider = 'local') {
             const provider = authProvider || 'local';
             const r = await one(

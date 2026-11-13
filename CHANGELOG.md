@@ -65,8 +65,14 @@
   rebuild the server. Workflow Actions are pinned to commit SHAs.
 
 ### Added
+- **Administrator username can be changed (issue #498).** `PATCH /api/users/:id`
+  accepts `username` for local accounts: the rename cascades to the address book,
+  organisation membership, strategy assignments and lockout history in one
+  transaction, and the panel unlocks the field in the edit dialog with a warning.
+  LDAP/OIDC accounts keep the name their provider issues. Account names now allow
+  `A-Z a-z 0-9 . _ @ -` (3-64 characters).
 - `lib/enrollmentProof.js`, `lib/redirectHost.js`, `lib/safeJsonScript.js`,
-  `lib/updateManifestSignature.js`.
+  `lib/updateManifestSignature.js`, `lib/renameUserCascade.js`.
 - `scripts/security/pentest-local.sh` / `.ps1` local security gate and
   `scripts/check-security-regressions.sh` CI gate.
 - `docs/security/AUDIT_2026-11-13.md` with the full report and fix status.

@@ -1218,6 +1218,7 @@
     "username": "Användarnamn",
     "username_placeholder": "Ange användarnamn",
     "username_hint": "Endast 3-32 tecken, bokstäver, siffror och understreck",
+    "username_change_warning": "Att ändra användarnamnet uppdaterar även adressboken och grupptilldelningar och loggar ut användaren överallt.",
     "password": "Lösenord",
     "password_placeholder": "Ange lösenord",
     "password_hint": "Minst 8 tecken med blandade versaler, siffror och symboler",

@@ -1218,6 +1218,7 @@
     "username": "Kullanıcı adı",
     "username_placeholder": "Kullanıcı adını girin",
     "username_hint": "Yalnızca 3-32 karakter, harf, rakam ve alt çizgi",
+    "username_change_warning": "Kullanıcı adını değiştirmek adres defterini ve grup atamalarını da günceller ve kullanıcıyı her yerden çıkış yaptırır.",
     "password": "Şifre",
     "password_placeholder": "Şifreyi girin",
     "password_hint": "Karışık harf, sayı ve simgelerden oluşan minimum 8 karakter",

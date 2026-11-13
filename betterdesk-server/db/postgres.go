@@ -1836,7 +1836,78 @@ func (pg *PostgresDB) UpdateUser(u *User) error {
 	return err
 }
 
-// DeleteUser removes a user by ID and clears org membership links (Issue #292).
+// RenameUser changes a username and cascades to the tables that key on it.
+// See the SQLite implementation for the rationale (issue #498, 2026-11-13).
+func (pg *PostgresDB) RenameUser(id int64, newUsername string) error {
+	newUsername = strings.TrimSpace(newUsername)
+	if !ValidUsername(newUsername) {
+		return ErrInvalidUsername
+	}
+
+	tx, err := pg.pool.Begin(pg.ctx)
+	if err != nil {
+		return fmt.Errorf("db: RenameUser begin: %w", err)
+	}
+	defer func() { _ = tx.Rollback(pg.ctx) }()
+
+	var oldUsername string
+	err = tx.QueryRow(pg.ctx, `SELECT username FROM users WHERE id = $1`, id).Scan(&oldUsername)
+	if err == pgx.ErrNoRows {
+		return ErrPeerNotFound
+	}
+	if err != nil {
+		return fmt.Errorf("db: RenameUser load: %w", err)
+	}
+	if oldUsername == newUsername {
+		return nil
+	}
+
+	var taken int
+	if err := tx.QueryRow(pg.ctx,
+		`SELECT COUNT(*) FROM users WHERE username = $1 AND id <> $2`, newUsername, id).Scan(&taken); err != nil {
+		return fmt.Errorf("db: RenameUser collision check: %w", err)
+	}
+	if taken > 0 {
+		return ErrUsernameTaken
+	}
+
+	if _, err := tx.Exec(pg.ctx, `UPDATE users SET username = $1 WHERE id = $2`, newUsername, id); err != nil {
+		if isUniqueViolation(err) {
+			return ErrUsernameTaken
+		}
+		return fmt.Errorf("db: RenameUser users: %w", err)
+	}
+
+	// Address books are keyed by (username, ab_type).
+	_, _ = tx.Exec(pg.ctx, `DELETE FROM address_books WHERE username = $1`, newUsername)
+	if _, err := tx.Exec(pg.ctx,
+		`UPDATE address_books SET username = $1 WHERE username = $2`, newUsername, oldUsername); err != nil {
+		if !isMissingTable(err) {
+			return fmt.Errorf("db: RenameUser address books: %w", err)
+		}
+	}
+
+	// Organisation membership and strategy assignments reference the name.
+	_, _ = tx.Exec(pg.ctx, `UPDATE org_users SET username = $1 WHERE username = $2`, newUsername, oldUsername)
+	_, _ = tx.Exec(pg.ctx,
+		`UPDATE strategy_assignments SET target_key = $1 WHERE target_key = $2 AND target_type = 'user'`,
+		newUsername, oldUsername)
+
+	// Stale lockout history must not lock the fresh name.
+	_, _ = tx.Exec(pg.ctx, `DELETE FROM account_lockouts WHERE username = $1`, newUsername)
+	if _, err := tx.Exec(pg.ctx,
+		`UPDATE login_attempts SET username = $1 WHERE username = $2`, newUsername, oldUsername); err != nil {
+		if !isMissingTable(err) {
+			return fmt.Errorf("db: RenameUser attempts: %w", err)
+		}
+	}
+
+	if err := tx.Commit(pg.ctx); err != nil {
+		return fmt.Errorf("db: RenameUser commit: %w", err)
+	}
+	return nil
+}
+
 func (pg *PostgresDB) DeleteUser(id int64) error {
 	if _, err := pg.pool.Exec(pg.ctx,
 		`DELETE FROM org_users WHERE server_user_id = $1 AND server_user_id > 0`, id); err != nil {

@@ -1212,6 +1212,7 @@
     "username": "Uživatelské jméno",
     "username_placeholder": "Zadejte uživatelské jméno",
     "username_hint": "3–32 znaků, pouze písmena, číslice a podtržítka",
+    "username_change_warning": "Změna uživatelského jména aktualizuje také adresář, přiřazení skupin a odhlásí uživatele ze všech zařízení.",
     "password": "Heslo",
     "password_placeholder": "Zadejte heslo",
     "password_hint": "Minimálně 8 znaků, s malými a velkými písmeny, čísly a symboly",

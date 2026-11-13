@@ -1218,6 +1218,7 @@
     "username": "Brukernavn",
     "username_placeholder": "Skriv inn brukernavn",
     "username_hint": "Kun 3-32 tegn, bokstaver, tall og understreker",
+    "username_change_warning": "Endring av brukernavnet oppdaterer også adresseboken og gruppetilordninger, og logger brukeren ut overalt.",
     "password": "Passord",
     "password_placeholder": "Skriv inn passord",
     "password_hint": "Minimum 8 tegn med blandet store og små bokstaver, tall og symboler",

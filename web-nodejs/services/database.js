@@ -95,6 +95,9 @@ const facade = {
         ? adapter.updateUserLanguage(id, lang)
         : Promise.resolve(),
     deleteUser:       (id) => adapter.deleteUser(id),
+    renameUser:       (id, newUsername) => (adapter.renameUser
+        ? adapter.renameUser(id, newUsername)
+        : Promise.resolve({ ok: false, code: 'invalid' })),
     updateUserProfile: (id, fields) => adapter.updateUserProfile(id, fields),
     getUsersEmailsByUsernames: (usernames) => adapter.getUsersEmailsByUsernames(usernames),
     getUsernamesByUserGroupGuid: (guid) => adapter.getUsernamesByUserGroupGuid(guid),

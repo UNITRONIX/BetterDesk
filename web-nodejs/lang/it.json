@@ -1212,6 +1212,7 @@
     "username": "Nome utente",
     "username_placeholder": "Inserisci il nome utente",
     "username_hint": "3-32 caratteri, solo lettere, numeri e underscore",
+    "username_change_warning": "Cambiare il nome utente aggiorna anche la rubrica e le assegnazioni dei gruppi e disconnette l'utente ovunque.",
     "password": "Parola d’accesso",
     "password_placeholder": "Inserisci la password",
     "password_hint": "Minimo 8 caratteri con maiuscole, minuscole, numeri e simboli",

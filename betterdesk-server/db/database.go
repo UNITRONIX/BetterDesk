@@ -150,6 +150,11 @@ var (
 	ErrPeerNotFound      = errors.New("db: peer not found")
 	ErrPeerIDExists      = errors.New("db: peer ID already exists")
 	ErrPeerIDSoftDeleted = errors.New("db: peer ID belongs to a deleted peer")
+	// ErrUsernameTaken is returned by RenameUser when the target name is in use.
+	ErrUsernameTaken = errors.New("db: username already exists")
+	// ErrInvalidUsername is returned by RenameUser for a name that fails the
+	// account-name format check.
+	ErrInvalidUsername = errors.New("db: invalid username")
 )
 
 // PeerMetric represents a single heartbeat metric data point.
@@ -602,6 +607,10 @@ type Database interface {
 	GetUserByID(id int64) (*User, error)
 	ListUsers() ([]*User, error)
 	UpdateUser(u *User) error
+	// RenameUser changes a username and cascades to every table that keys on it
+	// (address books, org membership, strategy assignments, lockouts). It runs in
+	// one transaction and returns ErrUsernameTaken on a collision.
+	RenameUser(id int64, newUsername string) error
 	DeleteUser(id int64) error
 	UpdateUserLogin(id int64) error
 	UserCount() (int, error)

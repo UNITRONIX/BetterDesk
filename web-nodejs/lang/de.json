@@ -1212,6 +1212,7 @@
     "username": "Benutzername",
     "username_placeholder": "Benutzername eingeben",
     "username_hint": "3-32 Zeichen, nur Buchstaben, Zahlen und Unterstriche",
+    "username_change_warning": "Das Ändern des Benutzernamens aktualisiert auch das Adressbuch und Gruppenzuweisungen und meldet den Benutzer überall ab.",
     "password": "Passwort",
     "password_placeholder": "Passwort eingeben",
     "password_hint": "Mindestens 8 Zeichen mit Groß-/Kleinbuchstaben, Zahlen und Sonderzeichen",

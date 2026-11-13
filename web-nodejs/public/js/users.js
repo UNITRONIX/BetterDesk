@@ -832,8 +832,25 @@
                 
                 if (usernameInput) {
                     usernameInput.value = user.username;
-                    usernameInput.readOnly = true;
-                    usernameInput.classList.add('readonly');
+                    // Issue #498 (2026-11-13): local accounts may be renamed. The
+                    // provider owns the name for LDAP/OIDC, so the field stays
+                    // locked there to avoid the next login recreating the old id.
+                    const providerForName = (user.auth_provider || 'local').toLowerCase();
+                    const canRename = providerForName !== 'ldap' && providerForName !== 'oidc';
+                    usernameInput.readOnly = !canRename;
+                    if (canRename) {
+                        usernameInput.classList.remove('readonly');
+                        const nameGroup = usernameInput.closest('.form-group');
+                        if (nameGroup && !nameGroup.querySelector('.username-change-warning')) {
+                            const warn = document.createElement('span');
+                            warn.className = 'form-hint username-change-warning';
+                            warn.textContent = _('users.username_change_warning')
+                                || 'Changing the username updates address books, group assignments and signs the user out everywhere.';
+                            nameGroup.appendChild(warn);
+                        }
+                    } else {
+                        usernameInput.classList.add('readonly');
+                    }
                 }
                 if (roleSelect) roleSelect.value = user.role;
                 const emailInput = document.getElementById('user-email');
@@ -971,7 +988,7 @@
                 return;
             }
             
-            if (!/^[a-zA-Z0-9_]{3,32}$/.test(username)) {
+            if (!/^[A-Za-z0-9_.@-]{3,64}$/.test(username)) {
                 Notifications.error(_('users.invalid_username'));
                 return;
             }
@@ -993,6 +1010,11 @@
                 }
                 if (provider === 'local' && password) {
                     if (password) data.password = password;
+                }
+                // Issue #498: send the name only when the operator actually changed
+                // it, so an unmodified form cannot accidentally trigger a rename.
+                if (provider === 'local' && username && username !== user?.username) {
+                    data.username = username;
                 }
                 
                 await Utils.api(`/api/users/${editingUserId}`, {

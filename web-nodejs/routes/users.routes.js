@@ -260,8 +260,16 @@ function normalizeUserEmail(value) {
     return trimmed;
 }
 
-const VALID_USER_ROLES = new Set([
-    'super_admin',
+/**
+ * Account-name format for the panel (issue #498, 2026-11-13).
+ *
+ * Matches the Go server's `db.ValidUsername`. A username ends up in filesystem
+ * paths, audit lines and address-book keys, so no whitespace, path separators or
+ * control characters are allowed.
+ */
+const USERS_USERNAME_RE = /^[A-Za-z0-9_.@-]{3,64}$/;
+
+const VALID_USER_ROLES = new Set([    'super_admin',
     'admin',
     'server_admin',
     'global_admin',
@@ -449,7 +457,7 @@ router.post('/api/users', requireAuth, requirePermission('user.create'), passwor
         }
         
         // Validate username format
-        if (!/^[a-zA-Z0-9_]{3,32}$/.test(username)) {
+        if (!USERS_USERNAME_RE.test(username)) {
             return res.status(400).json({
                 success: false,
                 error: req.t('users.invalid_username')
@@ -576,6 +584,58 @@ router.patch('/api/users/:id', requireAuth, requirePermission('user.edit'), asyn
                 success: false,
                 error: req.t('users.provider_managed_hint')
             });
+        }
+
+        // Username change (issue #498, 2026-11-13). LDAP/OIDC accounts keep the
+        // name their provider issues; renaming them would make the next login
+        // recreate the old identity. The cascade (address book, org membership,
+        // strategy assignment, lockouts) runs in one transaction.
+        const nextUsername = typeof req.body?.username === 'string' ? req.body.username.trim() : '';
+        if (nextUsername && nextUsername !== user.username) {
+            if (isExternalAccount) {
+                return res.status(400).json({
+                    success: false,
+                    error: req.t('users.provider_managed_hint')
+                });
+            }
+            if (!USERS_USERNAME_RE.test(nextUsername)) {
+                return res.status(400).json({
+                    success: false,
+                    error: req.t('users.invalid_username')
+                });
+            }
+            const rename = await db.renameUser(userId, nextUsername);
+            if (!rename || rename.ok !== true) {
+                if (rename && rename.code === 'taken') {
+                    return res.status(409).json({
+                        success: false,
+                        error: req.t('users.username_exists')
+                    });
+                }
+                if (rename && rename.code === 'invalid') {
+                    return res.status(400).json({
+                        success: false,
+                        error: req.t('users.invalid_username')
+                    });
+                }
+                return res.status(404).json({
+                    success: false,
+                    error: req.t('users.not_found')
+                });
+            }
+
+            await db.logAction(
+                req.session.userId,
+                'user_renamed',
+                `Renamed user ${user.username} -> ${nextUsername}`,
+                req.ip
+            );
+            // Every credential minted under the old name must stop working.
+            try {
+                await authService.revokeUserSessionsAndTokens?.(userId);
+            } catch (_) { /* best effort; the Go side is authoritative */ }
+            runBestEffortUserSync(() => userSync.mirrorUpdate(nextUsername, {}));
+            user.username = nextUsername;
         }
         
         // Prevent self-demotion from admin-level role

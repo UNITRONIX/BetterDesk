@@ -2190,6 +2190,86 @@ func (s *SQLiteDB) UpdateUser(u *User) error {
 	return err
 }
 
+// RenameUser changes a username and cascades to the tables that key on it.
+//
+// Issue #498 (2026-11-13): the panel could not change an administrator's login
+// name. `username` is the primary key of `address_books` and a lookup key in
+// `org_users` and `strategy_assignments.target_key`, so the rename has to be one
+// transaction; a partial rename would orphan an address book or silently detach
+// org membership and strategy assignments.
+func (s *SQLiteDB) RenameUser(id int64, newUsername string) error {
+	newUsername = strings.TrimSpace(newUsername)
+	if !ValidUsername(newUsername) {
+		return ErrInvalidUsername
+	}
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	tx, err := s.db.Begin()
+	if err != nil {
+		return fmt.Errorf("db: RenameUser begin: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	var oldUsername string
+	err = tx.QueryRow(`SELECT username FROM users WHERE id = ?`, id).Scan(&oldUsername)
+	if err == sql.ErrNoRows {
+		return ErrPeerNotFound
+	}
+	if err != nil {
+		return fmt.Errorf("db: RenameUser load: %w", err)
+	}
+	if oldUsername == newUsername {
+		return nil
+	}
+
+	var taken int
+	if err := tx.QueryRow(`SELECT COUNT(*) FROM users WHERE username = ? AND id <> ?`, newUsername, id).Scan(&taken); err != nil {
+		return fmt.Errorf("db: RenameUser collision check: %w", err)
+	}
+	if taken > 0 {
+		return ErrUsernameTaken
+	}
+
+	if _, err := tx.Exec(`UPDATE users SET username = ? WHERE id = ?`, newUsername, id); err != nil {
+		if isUniqueViolation(err) {
+			return ErrUsernameTaken
+		}
+		return fmt.Errorf("db: RenameUser users: %w", err)
+	}
+
+	// Address books are keyed by (username, ab_type): rename in place, and drop
+	// any book already stored under the new name to avoid a PK conflict.
+	_, _ = tx.Exec(`DELETE FROM address_books WHERE username = ?`, newUsername)
+	if _, err := tx.Exec(`UPDATE address_books SET username = ? WHERE username = ?`, newUsername, oldUsername); err != nil {
+		if !isMissingTable(err) {
+			return fmt.Errorf("db: RenameUser address books: %w", err)
+		}
+	}
+
+	// Organisation membership and strategy assignments reference the name, not
+	// the id, so they must follow the rename.
+	_, _ = tx.Exec(`UPDATE org_users SET username = ? WHERE username = ?`, newUsername, oldUsername)
+	_, _ = tx.Exec(
+		`UPDATE strategy_assignments SET target_key = ? WHERE target_key = ? AND target_type = 'user'`,
+		newUsername, oldUsername,
+	)
+
+	// Stale lockout history must not lock the fresh name.
+	_, _ = tx.Exec(`DELETE FROM account_lockouts WHERE username = ?`, newUsername)
+	if _, err := tx.Exec(`UPDATE login_attempts SET username = ? WHERE username = ?`, newUsername, oldUsername); err != nil {
+		if !isMissingTable(err) {
+			return fmt.Errorf("db: RenameUser attempts: %w", err)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("db: RenameUser commit: %w", err)
+	}
+	return nil
+}
+
 // DeleteUser removes a user by ID and clears org membership links (Issue #292).
 func (s *SQLiteDB) DeleteUser(id int64) error {
 	s.mu.Lock()

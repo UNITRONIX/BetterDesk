@@ -1218,6 +1218,7 @@
     "username": "Brugernavn",
     "username_placeholder": "Indtast brugernavn",
     "username_hint": "Kun 3-32 tegn, bogstaver, tal og understregninger",
+    "username_change_warning": "Ændring af brugernavnet opdaterer også adressebogen, gruppetildelinger og logger brugeren ud overalt.",
     "password": "Adgangskode",
     "password_placeholder": "Indtast adgangskode",
     "password_hint": "Minimum 8 tegn med blandet store og små bogstaver, tal og symboler",

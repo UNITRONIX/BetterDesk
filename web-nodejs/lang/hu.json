@@ -1218,6 +1218,7 @@
     "username": "Felhasználónév",
     "username_placeholder": "Adja meg a felhasználónevet",
     "username_hint": "Csak 3-32 karakter, betűk, számok és aláhúzás",
+    "username_change_warning": "A felhasználónév módosítása frissíti a címjegyzéket és a csoport-hozzárendeléseket, valamint mindenhol kijelentkezteti a felhasználót.",
     "password": "Jelszó",
     "password_placeholder": "Írja be a jelszót",
     "password_hint": "Legalább 8 karakter vegyes kis- és nagybetűkkel, számokkal és szimbólumokkal",

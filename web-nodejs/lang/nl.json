@@ -1212,6 +1212,7 @@
     "username": "Gebruikersnaam",
     "username_placeholder": "Voer gebruikersnaam in",
     "username_hint": "3-32 tekens, alleen letters, cijfers en underscores",
+    "username_change_warning": "Het wijzigen van de gebruikersnaam werkt ook het adresboek en de groepsindelingen bij en meldt de gebruiker overal af.",
     "password": "Wachtwoord",
     "password_placeholder": "Voer wachtwoord in",
     "password_hint": "Minimaal 8 tekens met hoofdletters, kleine letters, cijfers en symbolen",

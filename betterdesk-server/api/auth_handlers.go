@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -710,12 +711,52 @@ func (s *Server) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var body struct {
+		Username string `json:"username,omitempty"`
 		Password string `json:"password,omitempty"`
 		Role     string `json:"role,omitempty"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid JSON"})
 		return
+	}
+
+	// Username change (issue #498, 2026-11-13). Provider-managed accounts keep
+	// the name the IdP/Directory issues, otherwise the next login would recreate
+	// the old identity. The rename cascades to address books, org membership and
+	// strategy assignments in one transaction.
+	if newUsername := strings.TrimSpace(body.Username); newUsername != "" && newUsername != user.Username {
+		provider := user.AuthProvider
+		if provider == "" {
+			provider = db.AuthProviderLocal
+		}
+		if provider != db.AuthProviderLocal {
+			writeJSON(w, http.StatusBadRequest, map[string]string{
+				"error": "Username is managed by the identity provider for LDAP/OIDC accounts",
+			})
+			return
+		}
+		if !db.ValidUsername(newUsername) {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid username"})
+			return
+		}
+		if err := s.db.RenameUser(id, newUsername); err != nil {
+			switch {
+			case errors.Is(err, db.ErrUsernameTaken):
+				writeJSON(w, http.StatusConflict, map[string]string{"error": "Username already exists"})
+			case errors.Is(err, db.ErrInvalidUsername):
+				writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid username"})
+			default:
+				log.Printf("api: rename user %d failed: %v", id, err)
+				writeInternalError(w, err, "RenameUser")
+			}
+			return
+		}
+		if s.auditLog != nil {
+			s.auditLog.Log(audit.ActionUserUpdated, s.remoteIP(r), newUsername, map[string]string{
+				"renamed_from": user.Username,
+			})
+		}
+		user.Username = newUsername
 	}
 
 	if body.Password != "" {

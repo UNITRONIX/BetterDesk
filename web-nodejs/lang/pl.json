@@ -1225,6 +1225,7 @@
     "username": "Nazwa użytkownika",
     "username_placeholder": "Wprowadź nazwę użytkownika",
     "username_hint": "3-32 znaki, tylko litery, cyfry i podkreślenia",
+    "username_change_warning": "Zmiana nazwy użytkownika aktualizuje także książkę adresową i przypisania grup oraz wylogowuje użytkownika wszędzie.",
     "password": "Hasło",
     "password_placeholder": "Wprowadź hasło",
     "password_hint": "Minimum 8 znaków z dużymi literami, cyframi i symbolami",

@@ -1229,6 +1229,7 @@
     "username": "用戶名",
     "username_placeholder": "請輸入用戶名",
     "username_hint": "3-32 個字符，僅限字母、數字和下劃線",
+    "username_change_warning": "變更使用者名稱也會更新通訊錄與群組指派，並在所有裝置上登出。",
     "password": "密碼",
     "password_placeholder": "請輸入密碼",
     "password_hint": "至少 8 個字符，包含大小寫字母、數字和符號",

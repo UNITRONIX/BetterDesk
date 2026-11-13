@@ -1218,6 +1218,7 @@
     "username": "Nume de utilizator",
     "username_placeholder": "Introduceți numele de utilizator",
     "username_hint": "Doar 3-32 de caractere, litere, cifre și caractere de subliniere",
+    "username_change_warning": "Schimbarea numelui de utilizator actualizează și agenda și atribuirile de grup și deconectează utilizatorul peste tot.",
     "password": "Parolă",
     "password_placeholder": "Introduceți parola",
     "password_hint": "Minim 8 caractere cu majuscule, numere și simboluri mixte",

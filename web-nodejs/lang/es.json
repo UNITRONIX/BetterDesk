@@ -1212,6 +1212,7 @@
     "username": "Nombre de usuario",
     "username_placeholder": "Introduzca el nombre de usuario",
     "username_hint": "3-32 caracteres, solo letras, números y guiones bajos",
+    "username_change_warning": "Cambiar el nombre de usuario también actualiza la libreta de direcciones y las asignaciones de grupos, y cierra la sesión del usuario en todas partes.",
     "password": "Contraseña",
     "password_placeholder": "Introduzca la contraseña",
     "password_hint": "Mínimo 8 caracteres con mayúsculas, minúsculas, números y símbolos",
