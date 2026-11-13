@@ -358,7 +358,7 @@ router.get('/portal', (req, res) => {
  * here": a fresh install has imported no release yet, while a missing cache
  * directory means the import never completed (#439 / #475).
  */
-router.get('/api/portal/installers', async (req, res) => {
+router.get('/api/portal/installers', fileAccessLimiter, async (req, res) => {
     const base = req.protocol + '://' + req.get('host');
     let cached = [];
     let reason = null;
