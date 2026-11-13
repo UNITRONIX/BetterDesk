@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.235] — 2026-11-13
+
 ### Security
 - **Device registration is authenticated (C1).** `POST /api/bd/register` now
   requires an Ed25519 proof of possession (`bd-enrollment-v1` headers) for a
@@ -5000,3 +5007,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.232]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.231...v3.5.232
 [3.5.233]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.232...v3.5.233
 [3.5.234]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.233...v3.5.234
+[3.5.235]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.234...v3.5.235
