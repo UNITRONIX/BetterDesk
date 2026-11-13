@@ -112,8 +112,9 @@ router.get('/api/panel/security-audit/overview', requireAuth, requirePermission(
 
 // ── API: Audit events ────────────────────────────────────────
 router.get('/api/panel/security-audit/events', requireAuth, requirePermission('audit.view'), (req, res) => {
-  const limit = parseInt(req.query.limit) || 50;
-  const offset = parseInt(req.query.offset) || 0;
+  // SECURITY (audit M5, 2026-11-13): clamp pagination before proxying to Go.
+  const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 1), 500);
+  const offset = Math.min(Math.max(parseInt(req.query.offset, 10) || 0, 0), 10000);
   const action = req.query.action || '';
   let path = `/audit/events?limit=${limit}&offset=${offset}`;
   if (action) path += `&action=${encodeURIComponent(action)}`;

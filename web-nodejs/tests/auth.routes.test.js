@@ -29,7 +29,9 @@ jest.mock('../services/authService', () => ({
     isTotpEnabled: jest.fn().mockResolvedValue(false),
     generateTotpSetup: jest.fn().mockResolvedValue({ success: true, qrCode: 'qr', secret: 'SECRET', otpauthUrl: 'otpauth://totp/test' }),
     generateRecoveryCodes: jest.fn().mockReturnValue(['CODE1', 'CODE2']),
-    recordAttempt: jest.fn().mockResolvedValue(undefined)
+    recordAttempt: jest.fn().mockResolvedValue(undefined),
+    // Audit H4 (2026-11-13): panel login now consults the shared lockout tracker.
+    checkBruteForce: jest.fn().mockResolvedValue({ blocked: false, reason: '', retryAfter: 0 })
 }));
 
 jest.mock('../services/userSync', () => ({

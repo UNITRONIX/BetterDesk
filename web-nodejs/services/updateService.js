@@ -36,6 +36,7 @@ const {
     restartService: privilegedRestartService,
 } = require('../lib/privilegedUpdateHelper');
 const { readProductVersion, readEmbeddedServerVersion } = require('../lib/productVersion');
+const updateManifestSignature = require('../lib/updateManifestSignature');
 const { createConsoleDeployGraph } = require('../lib/consoleDeployGraph');
 const { resolveChildPath, resolvePathUnderRoot, existsConfinedChild, removeConfinedChild } = require('../lib/safePath');
 const { runConsoleNpmInstall } = require('../lib/consoleNpmInstall');
@@ -1705,7 +1706,12 @@ const GO_TOOLCHAIN_DIR = path.join(config.dataDir, 'go-toolchain');
 // Minimum Go version required to build the server. Keep this aligned with the
 // toolchain pinned in betterdesk-server/go.mod so builds do not trigger a
 // hidden automatic toolchain download.
-const GO_MIN_VERSION = '1.26.9';
+//
+// SECURITY (audit M14, 2026-11-13): go1.26.10 has GO-2026-6859 (net/http
+// MaxBytesReader race); the server now pins go1.26.11. The console must build
+// with at least that patch level, otherwise a panel-triggered rebuild could
+// reintroduce the vulnerable stdlib.
+const GO_MIN_VERSION = '1.26.11';
 
 function getToolchainKey() {
     const arch = process.arch === 'arm64' ? 'arm64' : 'amd64';
@@ -2508,6 +2514,24 @@ async function applyUpdate(remoteSHA, changedData, opts = {}) {
         throw new Error(`In-app updates are disabled in Docker image deployments. Update containers instead: ${hint}`);
     }
     if (_updateInProgress) throw new Error('Another update is already in progress');
+
+    // SECURITY (audit H8, 2026-11-13): refuse an update whose file set is not
+    // covered by a signature we can verify. `evaluateUpdateTrust` is permissive
+    // only while no public key is configured; the outcome is recorded in the
+    // results so the Updates page can show the remaining supply-chain gap.
+    const trust = updateManifestSignature.evaluateUpdateTrust({
+        manifest: opts.manifest || changedData.manifest || null,
+        signature: opts.manifestSignature || changedData.manifestSignature || null,
+    });
+    if (!trust.ok) {
+        const err = new Error(trust.reason || 'Update signature verification failed');
+        err.code = trust.code || 'signature_required';
+        throw err;
+    }
+    if (!trust.verified && trust.reason) {
+        console.warn(`[UPDATE] ${trust.code}: ${trust.reason}`);
+    }
+
     _updateInProgress = true;
     writeUpdateInProgressMarker({
         sha: remoteSHA,

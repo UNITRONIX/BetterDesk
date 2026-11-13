@@ -685,7 +685,7 @@ func (s *Server) processRegisterPk(msg *pb.RegisterPk, addrStr string) *pb.Rende
 
 	// Check for ID change request
 	if msg.OldId != "" {
-		return s.processIDChange(msg)
+		return s.processIDChange(msg, addrStr)
 	}
 
 	// Panel rename: map stale client IDs to the successor row before enrollment/DB checks.
@@ -832,7 +832,18 @@ func (s *Server) processRegisterPk(msg *pb.RegisterPk, addrStr string) *pb.Rende
 }
 
 // processIDChange handles old_id → new id change requests.
-func (s *Server) processIDChange(msg *pb.RegisterPk) *pb.RendezvousMessage {
+//
+// SECURITY (audit C2, 2026-11-13): the change was applied for anyone who knew
+// an existing peer id. `RegisterPk` with `old_id=<victim>`, no `pk`, and no
+// matching UUID moved (and deleted) the victim row, which under open
+// enrollment let a second registration claim the freed id.
+//
+// Stock RustDesk change-ID sends `old_id` + `id` + machine UUID and *no* pk
+// (see `change_id_shared` in the client), so an empty pk must stay valid — but
+// only when the caller proves the identity another way. This now mirrors hbbs:
+// accept a change when the supplied pk matches the stored pk, or when the
+// supplied UUID matches the stored UUID. Everything else is rejected.
+func (s *Server) processIDChange(msg *pb.RegisterPk, addrStr string) *pb.RendezvousMessage {
 	oldID := msg.OldId
 	newID := msg.Id
 
@@ -855,7 +866,8 @@ func (s *Server) processIDChange(msg *pb.RegisterPk) *pb.RendezvousMessage {
 	}
 
 	// RustDesk 1.4.x change-ID sends RegisterPk without pk (see change_id_shared).
-	// When pk is omitted, use the stored key; when present, enforce a match (#213).
+	// A supplied pk must match; an omitted pk is only acceptable together with a
+	// matching UUID below (#213 + audit C2).
 	effectivePK := msg.Pk
 	if len(effectivePK) == 0 {
 		effectivePK = oldPeer.PK
@@ -864,12 +876,32 @@ func (s *Server) processIDChange(msg *pb.RegisterPk) *pb.RendezvousMessage {
 		return registerPkResponse(pb.RegisterPkResponse_NOT_SUPPORT)
 	}
 
-	// UUID: stock clients send machine_uid bytes on ID change (not 16-byte get_uuid()).
-	// Enforce match only for wire-format 16-byte UUIDs.
-	if len(msg.Uuid) == 16 && oldPeer.UUID != "" {
-		if !peerUUIDEqual(peerUUIDFromDB(oldPeer.UUID), msg.Uuid) {
-			log.Printf("[signal] Rejected ID change %s → %s: UUID mismatch", oldID, newID)
-			return registerPkResponse(pb.RegisterPkResponse_UUID_MISMATCH)
+	// Proof of identity: matching PK, or matching UUID (machine uid bytes).
+	// The UUID comparison used to be limited to 16-byte wire values, which let
+	// any caller skip the check by sending a different length.
+	storedUUID := peerUUIDFromDB(oldPeer.UUID)
+	pkProven := len(msg.Pk) > 0 && len(oldPeer.PK) > 0 && bytes.Equal(oldPeer.PK, msg.Pk)
+	uuidProven := len(msg.Uuid) > 0 && len(storedUUID) > 0 && peerUUIDEqual(storedUUID, msg.Uuid)
+	// A row with no stored identity has nothing to steal; keep legacy rows working.
+	noStoredIdentity := len(oldPeer.PK) == 0 && len(storedUUID) == 0
+	if !pkProven && !uuidProven && !noStoredIdentity {
+		log.Printf("[signal] Rejected ID change %s → %s: no matching PK or UUID", oldID, newID)
+		if s.auditLog != nil {
+			s.auditLog.Log(audit.ActionPeerRegistrationRejected, hostFromAddrString(addrStr), oldID, map[string]string{
+				"reason": "id_change_without_identity_proof",
+				"stage":  "id_change",
+				"new_id": newID,
+			})
+		}
+		return registerPkResponse(pb.RegisterPkResponse_NOT_SUPPORT)
+	}
+
+	// A TCP session already bound to a different peer must not change somebody
+	// else's identity, even with a leaked UUID.
+	if addrStr != "" {
+		if bound := s.peerIDBySessionAddr(addrStr); bound != "" && bound != oldID {
+			log.Printf("[signal] Rejected ID change %s → %s: address bound to %s", oldID, newID, bound)
+			return registerPkResponse(pb.RegisterPkResponse_NOT_SUPPORT)
 		}
 	}
 
@@ -2476,12 +2508,24 @@ func (s *Server) tcpSessionPeerID(raddr *net.UDPAddr) string {
 	if raddr == nil {
 		return ""
 	}
-	key := normalizeAddrKey(raddr.String())
+	return s.peerIDBySessionAddr(raddr.String())
+}
+
+// peerIDBySessionAddr returns the peer ID bound to an address-keyed TCP punch
+// session, or "" when the address has no bound identity.
+func (s *Server) peerIDBySessionAddr(addrStr string) string {
+	if addrStr == "" {
+		return ""
+	}
+	key := normalizeAddrKey(addrStr)
 	val, ok := s.tcpPunchConns.Load(key)
 	if !ok {
 		return ""
 	}
-	pc := val.(*tcpPunchConn)
+	pc, ok := val.(*tcpPunchConn)
+	if !ok || pc == nil {
+		return ""
+	}
 	return pc.peerID
 }
 

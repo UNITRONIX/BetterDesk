@@ -1,7 +1,76 @@
 ## [Unreleased]
 
-### Changed
-- _(none yet)_
+### Security
+- **Device registration is authenticated (C1).** `POST /api/bd/register` now
+  requires an Ed25519 proof of possession (`bd-enrollment-v1` headers) for a
+  first registration and for any `public_key` / `uuid` change, rejects banned
+  and soft-deleted device ids before writing, and is rate limited to 20
+  requests/min per IP (`BD_REGISTER_RATE_LIMIT_MAX`). `BD_REGISTER_ALLOW_OPEN=true`
+  restores the old unauthenticated behaviour for integrators that cannot sign.
+- **Signal ID change requires identity proof (C2).** A `RegisterPk` carrying
+  `old_id` is applied only when the supplied key or the machine UUID matches the
+  stored peer, so knowing a device id is no longer enough to move or delete it.
+  Stock RustDesk change-ID (no `pk`, matching UUID) keeps working.
+- **Panel can no longer escalate to root (C3, H10).** The Go server runs as
+  `betterdesk` from `/usr/local/bin/betterdesk-server`; `/opt/rustdesk` is no
+  longer group-writable at the directory level, so the console user cannot
+  replace the server binary. The privileged broker no longer manages
+  `DATABASE_URL`, `SESSION_SECRET`, `DEFAULT_ADMIN_PASSWORD`,
+  `UPDATE_GITHUB_TOKEN`, `API_KEY_PATH`, `ORG_PEER_VAULT_KEY`, `SMTP_PASS` or
+  `API_TOKEN_EXPIRY_DAYS`, and reports a protocol `version` so a stale broker is
+  detectable.
+- **Go API surface (H1, M5-M8).** `/metrics` and the detailed health payload
+  (`/api/health/detail`) require the metrics allowlist or an API key; public
+  `/api/health` returns only `{status, version}`. Peer status / online / metrics
+  / linked / policy endpoints now require `device.view` and enforce organisation
+  scope. Audit write endpoints are rate limited. `limit`/`offset` are clamped to
+  500/10000 on both sides.
+- **Panel authentication (H4, M1-M3).** Panel login consults the shared
+  account-lockout tracker and returns `429` with `Retry-After`; delegated 2FA
+  fails closed (`503`) when the Go server is unreachable; the pending-2FA state
+  is written after session regeneration; `GET /logout` no longer destroys the
+  session (use the POST endpoint).
+- **Host and secrets (H2, H3).** Database DSNs and the bootstrap admin password
+  are no longer written into systemd units; plaintext `admin_credentials.txt`
+  files are moved out of the application directory and created `0600 root` only
+  when `STORE_ADMIN_CREDENTIALS=true` (now off by default and no longer settable
+  from the panel).
+- **Redirect and enumeration (H5, H6).** The HTTP→HTTPS redirect builds its
+  `Location` from configuration or the bound listener address instead of the
+  `Host` header, and refuses absolute request targets. The desktop login no
+  longer pre-renders the account list; a rate-limited `/login/lookup` returns at
+  most 8 prefix matches.
+- **Authorisation (H7, H9).** Panel section overrides are clamped to the role
+  ceiling, so a per-user policy cannot grant a permission the role lacks.
+  `/api/devices/:id/*` is covered by one scope guard, closing the gap on tags,
+  rename, change-id, restore and access-policy deletion.
+- **Update integrity (H8).** `applyUpdate` verifies an optional Ed25519-signed
+  manifest (`UPDATE_MANIFEST_PUBLIC_KEY`); `UPDATE_REQUIRE_SIGNED_MANIFEST=true`
+  makes an unsigned update fail closed.
+- **Archive extraction (M4).** Backup restore enforces a decompressed-size and
+  entry-count budget (`BACKUP_MAX_DECOMPRESSED_BYTES`, `BACKUP_MAX_ENTRIES`)
+  instead of expanding the whole upload into memory.
+- **Template escaping (M11).** All data embedded in inline `<script>` blocks is
+  serialised through `lib/safeJsonScript.js`, and the pairing page escapes the
+  suggested host.
+- **Toolchain (M14).** Go toolchain and builder images bumped to `go1.26.11`
+  (GO-2026-6859, `net/http`); the console requires at least that version to
+  rebuild the server. Workflow Actions are pinned to commit SHAs.
+
+### Added
+- `lib/enrollmentProof.js`, `lib/redirectHost.js`, `lib/safeJsonScript.js`,
+  `lib/updateManifestSignature.js`.
+- `scripts/security/pentest-local.sh` / `.ps1` local security gate and
+  `scripts/check-security-regressions.sh` CI gate.
+- `docs/security/AUDIT_2026-11-13.md` with the full report and fix status.
+- Regression tests: device registration, signal ID change, broker manifest,
+  panel auth, redirect host, login enumeration, device scope, panel access
+  ceiling, update signature, archive limits, Go audit limits, template escaping.
+
+### Fixed
+- Two long-standing red tests (`devices.routes`, `users.routes`) caused by a
+  platform-specific loopback address and a missing `panelAccessPolicyService`
+  mock.
 
 ---
 

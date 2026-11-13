@@ -567,7 +567,7 @@ func TestProcessIDChangeSoftDeletedTargetReturnsIDExists(t *testing.T) {
 
 	msg := newRegisterPk("MACPRO")
 	msg.OldId = "OLD213"
-	resp := srv.processIDChange(msg)
+	resp := srv.processIDChange(msg, "")
 	if got := registerPkResult(resp); got != pb.RegisterPkResponse_ID_EXISTS {
 		t.Fatalf("ID change result = %v, want %v", got, pb.RegisterPkResponse_ID_EXISTS)
 	}
@@ -582,7 +582,7 @@ func TestProcessIDChangeRejectsInvalidNewID(t *testing.T) {
 
 	msg := newRegisterPk("bad/id")
 	msg.OldId = "OLD213"
-	resp := srv.processIDChange(msg)
+	resp := srv.processIDChange(msg, "")
 	if got := registerPkResult(resp); got != pb.RegisterPkResponse_NOT_SUPPORT {
 		t.Fatalf("ID change result = %v, want %v", got, pb.RegisterPkResponse_NOT_SUPPORT)
 	}
@@ -609,7 +609,7 @@ func TestProcessIDChangeRejectsSoftDeletedSource(t *testing.T) {
 
 	msg := newRegisterPk("MACPRO1")
 	msg.OldId = "MACPRO"
-	resp := srv.processIDChange(msg)
+	resp := srv.processIDChange(msg, "")
 	if got := registerPkResult(resp); got != pb.RegisterPkResponse_NOT_SUPPORT {
 		t.Fatalf("ID change result = %v, want %v", got, pb.RegisterPkResponse_NOT_SUPPORT)
 	}
@@ -643,7 +643,7 @@ func TestProcessIDChangeRejectsPKMismatch(t *testing.T) {
 
 	msg := newRegisterPk("NEW213")
 	msg.OldId = "OLD213"
-	resp := srv.processIDChange(msg)
+	resp := srv.processIDChange(msg, "")
 	if got := registerPkResult(resp); got != pb.RegisterPkResponse_NOT_SUPPORT {
 		t.Fatalf("ID change result = %v, want %v", got, pb.RegisterPkResponse_NOT_SUPPORT)
 	}
@@ -671,9 +671,9 @@ func TestProcessIDChangeSuccessEmptyPK(t *testing.T) {
 	msg := &pb.RegisterPk{
 		Id:    "MACPRO",
 		OldId: "MACPRO1",
-		Uuid:  []byte("machine-uid-bytes"),
+		Uuid:  []byte("aabbccddeeff00112233445566778899"),
 	}
-	resp := srv.processIDChange(msg)
+	resp := srv.processIDChange(msg, "")
 	if got := registerPkResult(resp); got != pb.RegisterPkResponse_OK {
 		t.Fatalf("ID change result = %v, want %v", got, pb.RegisterPkResponse_OK)
 	}
@@ -704,9 +704,77 @@ func TestProcessIDChangeRejectsWrongPKWhenPKSent(t *testing.T) {
 	msg := newRegisterPk("NEW213")
 	msg.OldId = "OLD213"
 	msg.Pk = bytes.Repeat([]byte{0x42}, 32)
-	resp := srv.processIDChange(msg)
+	resp := srv.processIDChange(msg, "")
 	if got := registerPkResult(resp); got != pb.RegisterPkResponse_NOT_SUPPORT {
 		t.Fatalf("ID change result = %v, want %v", got, pb.RegisterPkResponse_NOT_SUPPORT)
+	}
+}
+
+// Audit C2 (2026-11-13): a caller that supplies neither the stored PK nor the
+// stored UUID must not be able to move (and delete) somebody else's peer row.
+func TestProcessIDChangeRejectsWithoutIdentityProof(t *testing.T) {
+	srv, database := newTestSignalServer(t, config.EnrollmentModeOpen)
+
+	storedPK := bytes.Repeat([]byte{0x99}, 32)
+	if err := database.UpsertPeer(&db.Peer{
+		ID:     "VICTIM01",
+		Status: "ONLINE",
+		PK:     storedPK,
+		UUID:   "aabbccddeeff00112233445566778899",
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	msg := &pb.RegisterPk{
+		Id:    "STOLEN01",
+		OldId: "VICTIM01",
+		Uuid:  []byte("unrelated-machine-uid"),
+	}
+	resp := srv.processIDChange(msg, "")
+	if got := registerPkResult(resp); got != pb.RegisterPkResponse_NOT_SUPPORT {
+		t.Fatalf("ID change result = %v, want %v", got, pb.RegisterPkResponse_NOT_SUPPORT)
+	}
+
+	if peer, err := database.GetPeer("VICTIM01"); err != nil {
+		t.Fatal(err)
+	} else if peer == nil {
+		t.Fatal("VICTIM01 must survive an unproven ID change")
+	}
+	if moved, _ := database.GetPeer("STOLEN01"); moved != nil {
+		t.Fatalf("STOLEN01 must not be created: %+v", moved)
+	}
+}
+
+// Stock RustDesk change-ID sends no pk but the machine UUID; that path stays
+// supported so ID changes keep working for real clients.
+func TestProcessIDChangeAcceptsMatchingUUIDWithoutPK(t *testing.T) {
+	srv, database := newTestSignalServer(t, config.EnrollmentModeOpen)
+
+	storedUUID := []byte("aabbccddeeff00112233445566778899")
+	if err := database.UpsertPeer(&db.Peer{
+		ID:     "REALCLNT",
+		Status: "ONLINE",
+		PK:     bytes.Repeat([]byte{0x99}, 32),
+		UUID:   hex.EncodeToString(storedUUID),
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	msg := &pb.RegisterPk{
+		Id:    "RENAMED1",
+		OldId: "REALCLNT",
+		Uuid:  storedUUID,
+	}
+	resp := srv.processIDChange(msg, "")
+	if got := registerPkResult(resp); got != pb.RegisterPkResponse_OK {
+		t.Fatalf("ID change result = %v, want %v", got, pb.RegisterPkResponse_OK)
+	}
+
+	if peer, err := database.GetPeer("RENAMED1"); err != nil || peer == nil {
+		t.Fatalf("GetPeer RENAMED1: %v %+v", err, peer)
+	}
+	if old, _ := database.GetPeer("REALCLNT"); old != nil {
+		t.Fatalf("REALCLNT should be gone after a proven change: %+v", old)
 	}
 }
 
@@ -739,10 +807,12 @@ func TestTCPIDChangeEmptyPKRustDesk147(t *testing.T) {
 	srv, database := newTestSignalServer(t, config.EnrollmentModeOpen)
 
 	storedPK := bytes.Repeat([]byte{0x42}, 32)
+	machineUID := []byte("machine-uid-bytes")
 	if err := database.UpsertPeer(&db.Peer{
 		ID:     "MACPRO1",
 		Status: "ONLINE",
 		PK:     storedPK,
+		UUID:   hex.EncodeToString(machineUID),
 		IP:     "203.0.113.10",
 	}); err != nil {
 		t.Fatal(err)
@@ -753,10 +823,12 @@ func TestTCPIDChangeEmptyPKRustDesk147(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// Stock RustDesk 1.4.x sends no pk on change-ID; the machine UUID is the
+	// identity proof (audit C2, 2026-11-13).
 	resp := srv.handleRegisterPkTCP(&pb.RegisterPk{
 		OldId: "MACPRO1",
 		Id:    "MACPRO",
-		Uuid:  []byte("machine-uid-bytes"),
+		Uuid:  machineUID,
 	}, fakeAddr)
 	if got := registerPkResult(resp); got != pb.RegisterPkResponse_OK {
 		t.Fatalf("TCP ID change result = %v, want OK", got)
@@ -768,6 +840,45 @@ func TestTCPIDChangeEmptyPKRustDesk147(t *testing.T) {
 	}
 	if !bytes.Equal(peer.PK, storedPK) {
 		t.Fatal("stored PK should be preserved when client omits pk")
+	}
+}
+
+// A row without a stored UUID cannot prove identity, so a pk-less change-ID is
+// refused instead of silently moving the row (audit C2, 2026-11-13). Operators
+// rename such legacy rows from the panel.
+func TestTCPIDChangeLegacyRowWithoutUUIDRejected(t *testing.T) {
+	srv, database := newTestSignalServer(t, config.EnrollmentModeOpen)
+
+	if err := database.UpsertPeer(&db.Peer{
+		ID:     "LEGACY01",
+		Status: "ONLINE",
+		PK:     bytes.Repeat([]byte{0x42}, 32),
+		IP:     "203.0.113.11",
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	fakeAddr, err := net.ResolveTCPAddr("tcp", "203.0.113.11:50124")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	resp := srv.handleRegisterPkTCP(&pb.RegisterPk{
+		OldId: "LEGACY01",
+		Id:    "RENAMED9",
+		Uuid:  []byte("unknown-machine-uid"),
+	}, fakeAddr)
+	if got := registerPkResult(resp); got != pb.RegisterPkResponse_NOT_SUPPORT {
+		t.Fatalf("TCP ID change result = %v, want NOT_SUPPORT", got)
+	}
+
+	if peer, err := database.GetPeer("LEGACY01"); err != nil {
+		t.Fatal(err)
+	} else if peer == nil {
+		t.Fatal("LEGACY01 must survive an unproven change")
+	}
+	if moved, _ := database.GetPeer("RENAMED9"); moved != nil {
+		t.Fatalf("RENAMED9 must not be created: %+v", moved)
 	}
 }
 

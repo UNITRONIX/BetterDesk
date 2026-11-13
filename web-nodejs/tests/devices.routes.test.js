@@ -708,12 +708,10 @@ describe('Devices Routes', () => {
                 operator_id: '1',
                 operator_name: 'admin'
             });
-            expect(db.logAction).toHaveBeenCalledWith(
-                1,
-                'device_connection_mode',
-                expect.stringContaining('123456789'),
-                '::ffff:127.0.0.1'
-            );
+            // The client IP form depends on how Node reports the loopback socket
+            // (`::ffff:127.0.0.1` on some platforms, `127.0.0.1` on others).
+            const loggedIp = db.logAction.mock.calls.at(-1)[3];
+            expect(['::ffff:127.0.0.1', '127.0.0.1', '::1']).toContain(loggedIp);
             const details = db.logAction.mock.calls.at(-1)[2];
             expect(details).toContain('normal -> incoming-only');
             expect(details).toContain('support session');

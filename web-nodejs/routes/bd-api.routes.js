@@ -39,6 +39,8 @@ const {
     requireTokenDeviceMatch,
 } = require('../middleware/deviceAuth');
 const { doubleCsrfProtection } = require('../middleware/csrf');
+const enrollmentProof = require('../lib/enrollmentProof');
+const { registerLimiter } = require('../middleware/rateLimiter');
 
 // ---------------------------------------------------------------------------
 //  Help requests & chat are stored on the Go server (single source of truth).
@@ -239,7 +241,93 @@ async function identifyDevice(req, res, next) {
 //  POST /api/bd/register — Register or update a desktop device
 // ---------------------------------------------------------------------------
 
-router.post('/register', identifyDevice, async (req, res) => {
+/**
+ * Registration policy (2026-11-13 audit, finding C1).
+ *
+ * The endpoint used to accept any caller that sent `X-Device-Id`, which let an
+ * unauthenticated host (a) fill the inventory, (b) resurrect banned or
+ * soft-deleted devices, and (c) replace the public key bound to somebody
+ * else's device id.
+ *
+ * Now:
+ *   - banned / soft-deleted ids are rejected before any write,
+ *   - a first registration requires an Ed25519 proof of possession of the
+ *     public key it is binding (or an explicit BD_REGISTER_ALLOW_OPEN=true for
+ *     legacy integrators),
+ *   - changing `public_key` or `uuid` on an existing device requires a proof
+ *     made with the key that is already bound to that id,
+ *   - plain heartbeats against an existing, key-matching id stay cheap.
+ */
+function registerRejection(status, code, message) {
+    return { status, body: { error: code, message } };
+}
+
+/**
+ * Decide whether a register request may proceed.
+ *
+ * @returns {{ ok: true } | { ok: false, status: number, body: object }}
+ */
+async function evaluateRegisterPolicy(req, { id, uuid, publicKey }) {
+    const existing = typeof db.getPeerRegistrationState === 'function'
+        ? await db.getPeerRegistrationState(id)
+        : null;
+
+    if (existing) {
+        if (existing.banned) {
+            return registerRejection(403, 'device_banned', 'This device is banned');
+        }
+        if (existing.deleted) {
+            return registerRejection(403, 'device_removed', 'This device has been removed');
+        }
+
+        const storedKey = enrollmentProof.canonicalizePublicKey(existing.pk || '');
+        const incomingKey = enrollmentProof.canonicalizePublicKey(publicKey || '');
+        const keyChanged = Boolean(incomingKey) && Boolean(storedKey) && incomingKey !== storedKey;
+        const storedUuid = String(existing.uuid || '').trim();
+        const uuidChanged = Boolean(storedUuid) && Boolean(String(uuid || '').trim())
+            && String(uuid).trim() !== storedUuid;
+
+        if (keyChanged || uuidChanged) {
+            // Identity change: only the current key holder may rotate it.
+            if (!storedKey) {
+                return registerRejection(409, 'identity_change_not_allowed',
+                    'Device identity is already registered; an operator must change it');
+            }
+            const proof = enrollmentProof.verifyProof(req, id, storedKey);
+            if (!proof.ok) {
+                return registerRejection(403, 'identity_proof_required',
+                    `Changing device identity requires proof of possession (${proof.reason})`);
+            }
+            return { ok: true, identityRotated: true };
+        }
+        return { ok: true };
+    }
+
+    // First registration for this id.
+    if (publicKey) {
+        const proof = enrollmentProof.verifyProof(req, id, publicKey);
+        if (proof.ok) return { ok: true };
+        if (!allowOpenRegister()) {
+            return registerRejection(403, 'enrollment_proof_required',
+                `Registration requires an Ed25519 proof of possession (${proof.reason})`);
+        }
+        return { ok: true, unprovenOpenRegister: true };
+    }
+
+    if (!allowOpenRegister()) {
+        return registerRejection(400, 'public_key_required',
+            'public_key is required to register a new device');
+    }
+    return { ok: true, unprovenOpenRegister: true };
+}
+
+/** Legacy escape hatch; off unless the operator opts in explicitly. */
+function allowOpenRegister() {
+    const raw = String(process.env.BD_REGISTER_ALLOW_OPEN || '').trim().toLowerCase();
+    return raw === 'true' || raw === '1' || raw === 'yes';
+}
+
+router.post('/register', registerLimiter, identifyDevice, async (req, res) => {
     try {
         const ip = getClientIp(req);
         const { device_id, uuid, hostname, platform, version, public_key } = req.body;
@@ -251,6 +339,10 @@ router.post('/register', identifyDevice, async (req, res) => {
         const id = claimedId || req.deviceId;
         if (!id) {
             return res.status(400).json({ error: 'device_id is required' });
+        }
+
+        if (!enrollmentProof.DEVICE_ID_RE.test(id)) {
+            return res.status(400).json({ error: 'invalid_device_id' });
         }
 
         let effectiveId = id;
@@ -281,6 +373,16 @@ router.post('/register', identifyDevice, async (req, res) => {
                     message: `This device ID was renamed to ${newId}. Please update your configuration.`,
                 });
             }
+        }
+
+        // Policy: banned/removed devices and identity changes require proof.
+        const policy = await evaluateRegisterPolicy(req, {
+            id: effectiveId,
+            uuid: uuid || '',
+            publicKey: public_key || '',
+        });
+        if (!policy.ok) {
+            return res.status(policy.status).json(policy.body);
         }
 
         // Build info JSON

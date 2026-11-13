@@ -16,6 +16,7 @@ jest.mock('../services/betterdeskApi', () => ({
 jest.mock('../services/database', () => ({
     shouldRejectRenamedPeerRegistration: jest.fn(),
     getRenamedPeerId: jest.fn(),
+    getPeerRegistrationState: jest.fn().mockResolvedValue(null),
     upsertPeer: jest.fn().mockResolvedValue(undefined),
     updatePeerOnlineStatus: jest.fn().mockResolvedValue(undefined),
     getAccessToken: jest.fn(),
@@ -59,11 +60,16 @@ describe('BD-API register rename guard', () => {
 
     it('allows registration when same device owns renamed ID', async () => {
         db.shouldRejectRenamedPeerRegistration.mockResolvedValue({ reject: false });
+        // New registrations require proof of possession unless the operator
+        // opted into open registration (audit C1, 2026-11-13).
+        process.env.BD_REGISTER_ALLOW_OPEN = 'true';
 
         const res = await request(app)
             .post('/api/bd/register')
             .set('X-Device-Id', 'OLDID123')
-            .send({ device_id: 'OLDID123', uuid: 'device-uuid', hostname: 'PC' });
+            .send({ device_id: 'OLDID123', uuid: 'device-uuid', hostname: 'PC', public_key: 'AAAA1111' });
+
+        delete process.env.BD_REGISTER_ALLOW_OPEN;
 
         expect(res.status).toBe(200);
         expect(res.body.success).toBe(true);

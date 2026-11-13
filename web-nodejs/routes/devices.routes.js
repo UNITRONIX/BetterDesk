@@ -409,6 +409,47 @@ async function rejectIfDeviceOutOfScope(req, res, device) {
 }
 
 /**
+ * Scope guard as middleware for every `/api/devices/:id/*` route.
+ *
+ * SECURITY (audit H9, 2026-11-13): the guard was copied into individual
+ * handlers, and several of them (tags, rename, change-id, restore,
+ * access-policy delete, strategies) were missed — an operator with a restricted
+ * device scope could mutate metadata of out-of-scope devices by id. Registering
+ * the check once at mount time makes new routes safe by default.
+ *
+ * Deleted peers are allowed through so `POST /:id/restore` keeps working;
+ * scope membership is evaluated against the stored row.
+ */
+async function requireDeviceInScope(req, res, next) {
+    const id = req.params.id;
+    if (!id) return next();
+    // Authentication is enforced by the route's own requireAuth; skip the extra
+    // lookup for anonymous callers so the 401 path stays cheap.
+    if (!req.session || !req.session.userId || !req.session.user) return next();
+    // Unrestricted roles never need the per-device lookups: the scope resolver
+    // returns `null` (meaning "everything") for them, so checking here would only
+    // add a Go API round trip to every admin request.
+    const role = req.session.user.role;
+    if (role === 'super_admin' || role === 'admin' || role === 'global_admin' || role === 'server_admin') {
+        return next();
+    }
+    try {
+        const device = await serverBackend.getDeviceById(id, { includeDeleted: true });
+        if (!device) {
+            // Let the handler decide between 404 and restore semantics; a
+            // nonexistent device is not an out-of-scope disclosure.
+            return next();
+        }
+        if (await rejectIfDeviceOutOfScope(req, res, device)) return;
+        req.scopedDevice = device;
+        return next();
+    } catch (err) {
+        console.error('Device scope guard error:', err.message);
+        return res.status(500).json({ success: false, error: req.t('errors.server_error') });
+    }
+}
+
+/**
  * GET /api/device-groups - List device groups for the panel.
  */
 router.get('/api/device-groups', requireAuth, requirePermission('device.view'), async (req, res) => {
@@ -544,9 +585,14 @@ router.delete('/api/device-groups/:guid', requireAuth, requirePermission('device
 });
 
 /**
- * GET /api/devices/:id/groups - Get manual and dynamic memberships for a device.
+ * Scope guard for every `/api/devices/:id/*` route (audit H9, 2026-11-13).
+ * Mounted before the device handlers so new routes cannot forget it.
  */
-router.get('/api/devices/:id/groups', requireAuth, requirePermission('device.view'), async (req, res) => {
+router.use('/api/devices/:id', requireDeviceInScope);
+
+/**
+ * GET /api/devices/:id/groups - Get manual and dynamic memberships for a device.
+ */router.get('/api/devices/:id/groups', requireAuth, requirePermission('device.view'), async (req, res) => {
     try {
         const device = await serverBackend.getDeviceById(req.params.id);
         if (!device) return res.status(404).json({ success: false, error: req.t('devices.not_found') });
@@ -811,10 +857,10 @@ router.get('/api/devices/:id/connection-sessions', requireAuth, requirePermissio
         }
         if (await rejectIfDeviceOutOfScope(req, res, device)) return;
 
-        const limit = req.query.limit ? parseInt(req.query.limit, 10) : 50;
-        const result = await betterdeskApi.getPeerConnectionSessions(req.params.id, {
-            limit: Number.isFinite(limit) ? limit : 50
-        });
+        // SECURITY (audit M5, 2026-11-13): clamp the row count forwarded to Go.
+        const requested = parseInt(req.query.limit, 10);
+        const limit = Number.isFinite(requested) ? Math.min(Math.max(requested, 1), 200) : 50;
+        const result = await betterdeskApi.getPeerConnectionSessions(req.params.id, { limit });
         if (result && result.success === false) {
             return res.status(502).json({ success: false, error: result.error || req.t('errors.server_error') });
         }

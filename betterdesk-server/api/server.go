@@ -74,6 +74,10 @@ type Server struct {
 	// branding endpoints to deter device-ID enumeration and config probing.
 	enrollmentLimiter *ratelimit.IPLimiter
 	brandingLimiter   *ratelimit.IPLimiter
+	// SECURITY (audit M6, 2026-11-13): the audit write endpoints are public, so
+	// they need their own budget or an unauthenticated caller can flood the
+	// audit tables. 60/min per IP is far above what a real client fleet sends.
+	auditWriteLimiter *ratelimit.IPLimiter
 	// Short-code pairing: redeem is public and guessable, so it gets its own budget
 	// separate from enrollment (a paired device must not consume the enrollment budget).
 	pairingLimiter *ratelimit.IPLimiter
@@ -122,6 +126,7 @@ func New(cfg *config.Config, database db.Database, peerMap *peer.Map, relaySrv *
 		heartbeatLimiter:  ratelimit.NewIPLimiter(20, 60*time.Second, 5*time.Minute), // BD-2026-001: 20 req/min per IP
 		enrollmentLimiter: ratelimit.NewIPLimiter(20, 1*time.Minute, 5*time.Minute),  // M-07: 20/min per IP, 5-min block
 		brandingLimiter:   ratelimit.NewIPLimiter(60, 1*time.Minute, 5*time.Minute),  // M-07: 60/min per IP
+		auditWriteLimiter: ratelimit.NewIPLimiter(60, 1*time.Minute, 5*time.Minute),  // M6: public audit writes
 		// 10/min per IP: a person redeems once; a script brute-forcing 30 bits would
 		// need ~10^7 minutes at this rate.
 		pairingLimiter: ratelimit.NewIPLimiter(10, 1*time.Minute, 5*time.Minute),
@@ -284,9 +289,12 @@ func (s *Server) InitOIDC() {
 func (s *Server) Start(ctx context.Context) error {
 	mux := http.NewServeMux()
 
-	// Health and public key are needed for client bootstrap. Detailed runtime
-	// stats use the same allowlist/auth policy as Prometheus metrics.
+	// Health and public key are needed for client bootstrap. The health response
+	// is deliberately minimal (status + version); the full operational payload
+	// lives on /api/health/detail behind the same policy as Prometheus metrics
+	// (audit H1, 2026-11-13).
 	mux.HandleFunc("GET /api/health", s.handleHealth)
+	mux.HandleFunc("GET /api/health/detail", s.metricsGuard(s.handleHealthDetail))
 	mux.HandleFunc("GET /api/server/stats", s.metricsGuard(s.handleServerStats))
 	mux.HandleFunc("GET /api/server/pubkey", s.handlePubKey)
 
@@ -300,17 +308,22 @@ func (s *Server) Start(ctx context.Context) error {
 	mux.HandleFunc("POST /api/peers/{id}/restore", s.requirePermission(auth.PermDeviceDelete, s.handleRestorePeer))
 	mux.HandleFunc("POST /api/peers/{id}/change-id", s.requirePermission(auth.PermDeviceChangeID, s.handleChangePeerID))
 
-	// Detailed device status (enhanced in Phase 4)
-	mux.HandleFunc("GET /api/peers/status/summary", s.handleStatusSummary)
-	mux.HandleFunc("GET /api/peers/online", s.handleOnlinePeers)
-	mux.HandleFunc("GET /api/peers/{id}/status", s.handlePeerStatus)
-	mux.HandleFunc("GET /api/peers/{id}/metrics", s.handlePeerMetrics)
+	// Detailed device status (enhanced in Phase 4).
+	//
+	// SECURITY (audit M8, 2026-11-13): these handlers used to run with
+	// authentication but no permission wrapper, so any valid credential —
+	// including a RustDesk client session token — could map the fleet (online
+	// peers, status, metrics, linked devices) without `device.view`.
+	mux.HandleFunc("GET /api/peers/status/summary", s.requirePermission(auth.PermDeviceView, s.handleStatusSummary))
+	mux.HandleFunc("GET /api/peers/online", s.requirePermission(auth.PermDeviceView, s.handleOnlinePeers))
+	mux.HandleFunc("GET /api/peers/{id}/status", s.requirePermission(auth.PermDeviceView, s.handlePeerStatus))
+	mux.HandleFunc("GET /api/peers/{id}/metrics", s.requirePermission(auth.PermDeviceView, s.handlePeerMetrics))
 	mux.HandleFunc("GET /api/peers/{id}/availability", s.requirePermission(auth.PermDeviceView, s.handlePeerAvailability))
 	mux.HandleFunc("GET /api/peers/{id}/connection-sessions", s.requirePermission(auth.PermDeviceView, s.handlePeerConnectionSessions))
 	mux.HandleFunc("GET /api/peers/{id}/telemetry", s.requirePermission(auth.PermDeviceView, s.handleGetPeerTelemetry))
 	mux.HandleFunc("POST /api/peers/{id}/telemetry/refresh", s.requirePermission(auth.PermDeviceEdit, s.handleRefreshPeerHardware))
 	mux.HandleFunc("POST /api/peers/{id}/telemetry/command", s.requireRole(auth.RoleOperator, s.handleQueuePeerTelemetryCommand))
-	mux.HandleFunc("GET /api/peers/{id}/linked", s.handleLinkedPeers)
+	mux.HandleFunc("GET /api/peers/{id}/linked", s.requirePermission(auth.PermDeviceView, s.handleLinkedPeers))
 	mux.HandleFunc("POST /api/peers/{id}/wol", s.requireRole(auth.RoleOperator, s.handleWakeOnLan))
 	mux.HandleFunc("GET /api/peers/{id}/access-policy", s.requireRole(auth.RoleOperator, s.handleGetAccessPolicy))
 	mux.HandleFunc("PUT /api/peers/{id}/access-policy", s.requireRole(auth.RoleAdmin, s.handleSaveAccessPolicy))
@@ -318,7 +331,7 @@ func (s *Server) Start(ctx context.Context) error {
 	mux.HandleFunc("GET /api/peers/{id}/connection-mode", s.requirePermission(auth.PermDeviceView, s.handleGetConnectionMode))
 	mux.HandleFunc("POST /api/peers/{id}/connection-mode", s.requirePermission(auth.PermDeviceConnectionMode, s.handleSetConnectionMode))
 	mux.HandleFunc("POST /api/peers/{id}/session-grant", s.requireRole(auth.RoleOperator, s.handleIssueSupportSessionGrant))
-	mux.HandleFunc("GET /api/peers/{id}/policy", s.handleGetPeerPolicy)
+	mux.HandleFunc("GET /api/peers/{id}/policy", s.requirePermission(auth.PermDeviceView, s.handleGetPeerPolicy))
 
 	// Manually configured RDP/VNC targets.
 	mux.HandleFunc("GET /api/remote-targets", s.requirePermission(auth.PermRemoteTargetView, s.handleListRemoteTargets))
@@ -458,11 +471,11 @@ func (s *Server) Start(ctx context.Context) error {
 	mux.HandleFunc("DELETE /api/strategies/{guid}", s.requirePanelAdmin(s.handleStrategiesDelete))
 	mux.HandleFunc("GET /api/devices", s.requirePermission(auth.PermDeviceView, s.handleProDevicesList))
 	mux.HandleFunc("POST /api/devices/{guid}/assign", s.requirePanelAdmin(s.handleProDeviceAssign))
-	mux.HandleFunc("POST /api/audit/conn", s.handleAuditConnPost)
+	mux.HandleFunc("POST /api/audit/conn", s.rateLimitPublic(s.auditWriteLimiter, s.handleAuditConnPost))
 	mux.HandleFunc("GET /api/audit/conn", s.requirePermission(auth.PermAuditView, s.handleAuditConnGet))
-	mux.HandleFunc("POST /api/audit/file", s.handleAuditFilePost)
+	mux.HandleFunc("POST /api/audit/file", s.rateLimitPublic(s.auditWriteLimiter, s.handleAuditFilePost))
 	mux.HandleFunc("GET /api/audit/file", s.requirePermission(auth.PermAuditView, s.handleAuditFileGet))
-	mux.HandleFunc("POST /api/audit/alarm", s.handleAuditAlarmPost)
+	mux.HandleFunc("POST /api/audit/alarm", s.rateLimitPublic(s.auditWriteLimiter, s.handleAuditAlarmPost))
 	mux.HandleFunc("GET /api/audit/alarm", s.requirePermission(auth.PermAuditView, s.handleAuditAlarmGet))
 	mux.HandleFunc("GET /api/audit", s.requirePermission(auth.PermAuditView, s.handleClientAuditSummary))
 	mux.HandleFunc("GET /api/peer-key/{id}", s.handlePeerKey)
@@ -750,7 +763,23 @@ func (s *Server) Stop() {
 
 // --- Handlers ---
 
+// handleHealth returns a minimal liveness payload.
+//
+// SECURITY (audit H1, 2026-11-13): `/api/health` used to be public and exposed
+// peer counts, relay configuration, clock-sync state and the billing flag — a
+// free fleet map for anyone on the Internet. Anonymous callers now get
+// `{status, version}` only; the operational detail moved to `/api/server/stats`,
+// which is gated by `metricsGuard` (IP allowlist or a valid API key).
 func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
+	writeJSON(w, http.StatusOK, map[string]any{
+		"status":  "ok",
+		"version": s.version,
+	})
+}
+
+// handleHealthDetail serves the full health payload for authorized operators.
+// Access is enforced by metricsGuard, same policy as /metrics.
+func (s *Server) handleHealthDetail(w http.ResponseWriter, r *http.Request) {
 	total, online, _ := s.db.GetPeerCount()
 	payload := map[string]any{
 		"status":       "ok",
@@ -797,8 +826,7 @@ func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 // handlePubKey returns the server's Ed25519 public key in base64 format.
 // This is the "key" value that RustDesk clients use for E2E encryption verification.
 // Public endpoint — no authentication required.
-func (s *Server) handlePubKey(w http.ResponseWriter, r *http.Request) {
-	if s.keyPair == nil {
+func (s *Server) handlePubKey(w http.ResponseWriter, r *http.Request) {	if s.keyPair == nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]string{
 			"error": "Server keypair not initialized",
 		})

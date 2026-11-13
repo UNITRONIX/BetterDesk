@@ -17,7 +17,7 @@
 #   5000  - Web Console (Node.js admin panel)
 
 # ============= Stage 1: Build Go server =============
-FROM golang:1.26.10-alpine AS go-builder
+FROM golang:1.26.11-alpine AS go-builder
 ARG TARGETARCH
 
 # Retry apk in case of transient DNS failures (common on AlmaLinux/CentOS Docker)

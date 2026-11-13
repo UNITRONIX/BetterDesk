@@ -219,6 +219,32 @@ func (s *Server) requireOrgMembership(paramName string, handler http.HandlerFunc
 	}
 }
 
+// canReadDeviceOrg reports whether the caller may read data for a device that
+// belongs to orgID.
+//
+// Devices without an organisation are server-level and visible to any caller
+// that already passed the route's permission check. For org-bound devices only
+// server admins, global admins and members of that organisation may read.
+// (audit M8, 2026-11-13)
+func (s *Server) canReadDeviceOrg(r *http.Request, orgID string) bool {
+	if orgID == "" {
+		return true
+	}
+	userRole := getRoleFromCtx(r)
+	if auth.IsSuperAdminRole(userRole) || userRole == auth.RoleGlobalAdmin {
+		return true
+	}
+	if userOrgID := getOrgIDFromCtx(r); userOrgID != "" && userOrgID == orgID {
+		return true
+	}
+	username := getUsernameFromCtx(r)
+	if username == "" {
+		return false
+	}
+	orgUser, err := s.db.GetOrgUserByUsername(orgID, username)
+	return err == nil && orgUser != nil
+}
+
 // --- Login Handlers ---
 
 // handleLogin authenticates a user with username+password and returns a JWT token.
@@ -1216,10 +1242,17 @@ func (s *Server) authMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		// Public endpoints — no auth required
-		if path == "/api/health" || path == "/metrics" ||
+		// Public endpoints — no auth required.
+		//
+		// SECURITY (audit H1/H5, 2026-11-13):
+		//   - `/metrics` is NOT public. It is served by metricsGuard, which
+		//     enforces METRICS_IP_ALLOWLIST or a valid API key. Listing it here
+		//     bypassed that guard entirely, so anyone on the Internet could read
+		//     fleet size, relay sessions, goroutines and memory.
+		//   - `/api/auth/ldap/verify` is NOT public either: it is a credential
+		//     oracle for the customer's directory. Panel-trust/loopback only.
+		if path == "/api/health" ||
 			path == "/api/auth/login" || path == "/api/auth/login/2fa" ||
-			path == "/api/auth/ldap/verify" ||
 			path == "/api/server/pubkey" ||
 			path == "/api/login" || path == "/api/login-options" || path == "/api/logout" ||
 			path == "/api/oidc/auth" || path == "/api/oidc/auth-query" || path == "/api/oidc/callback" ||

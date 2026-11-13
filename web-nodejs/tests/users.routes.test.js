@@ -50,6 +50,14 @@ jest.mock('../services/authService', () => ({
 jest.mock('../middleware/rateLimiter', () => ({
     passwordChangeLimiter: (_req, _res, next) => next(),
 }));
+// Panel access policies live in their own tables; the users tests only care that
+// the routes call the service, so stub it instead of extending mockDb.
+jest.mock('../services/panelAccessPolicyService', () => ({
+    savePolicy: jest.fn().mockResolvedValue({ sections: [], features: [] }),
+    resolveForUser: jest.fn().mockResolvedValue({ sections: {}, features: {} }),
+    resolveForGroup: jest.fn().mockResolvedValue({ sections: {}, features: {} }),
+    getCatalog: jest.fn().mockReturnValue([]),
+}));
 
 const usersRoutes = require('../routes/users.routes');
 

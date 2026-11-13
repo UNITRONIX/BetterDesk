@@ -1,3 +1,10 @@
+<%# Audit M11 (2026-11-13): data embedded in inline script blocks must not be
+    able to close the block. Uses the server helper when present, with an
+    equivalent fallback for standalone template rendering (tests/previews). %>
+<% var bdJson = (typeof safeJsonScript === 'function') ? safeJsonScript : function (v) {
+    return JSON.stringify(v === undefined ? null : v)
+        .replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
+}; %>
 <%- include('layouts/viewer', {
     title: title || _('remote.title'),
     pageScripts: ['billing-report', 'remote'],
@@ -477,10 +484,10 @@
 
 <!-- Initial session data (from server route) -->
 <script nonce="${cspNonce}">
-    window.__initialDeviceId = ` + JSON.stringify(deviceId) + `;
-    window.__initialDeviceName = ` + JSON.stringify(device && device.hostname ? device.hostname : '') + `;
-    window.__capabilities = ` + JSON.stringify(capabilities || { transport: 'rd' }) + `;
-    window.__guestToken = ` + JSON.stringify((typeof guestToken !== 'undefined' && guestToken) ? guestToken : '') + `;
+    window.__initialDeviceId = ` + bdJson(deviceId) + `;
+    window.__initialDeviceName = ` + bdJson(device && device.hostname ? device.hostname : '') + `;
+    window.__capabilities = ` + bdJson(capabilities || { transport: 'rd' }) + `;
+    window.__guestToken = ` + bdJson((typeof guestToken !== 'undefined' && guestToken) ? guestToken : '') + `;
 </script>
 
 `

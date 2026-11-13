@@ -86,21 +86,15 @@ router.get('/login', guestOnly, async (req, res) => {
     } catch (_) { /* optional */ }
 
     if (useDesktop) {
-        // Fetch user list for multi-user selector (usernames + roles only, no secrets)
-        let loginUsers = [];
-        try {
-            const users = typeof db.getAllUsersForBackup === 'function'
-                ? await db.getAllUsersForBackup() : [];
-            loginUsers = (Array.isArray(users) ? users : []).map(u => ({
-                username: u.username,
-                role: u.role || 'operator'
-            }));
-        } catch (_) { /* empty list is fine */ }
-
+        // SECURITY (audit H6, 2026-11-13): this used to render every account
+        // name and role into the anonymous login page, which handed attackers a
+        // ready-made target list. The desktop login now starts with an empty
+        // selector; `/login/lookup` (rate limited) fills it in on demand once
+        // the visitor starts typing a name.
         return res.render('desktop-login', {
             title: req.t('nav.login'),
             activePage: 'login',
-            loginUsers,
+            loginUsers: [],
             attestationBadge
         });
     }
@@ -110,6 +104,36 @@ router.get('/login', guestOnly, async (req, res) => {
         activePage: 'login',
         attestationBadge
     });
+});
+
+/**
+ * GET /login/lookup?q=prefix — typeahead for the desktop login selector.
+ *
+ * SECURITY (audit H6, 2026-11-13): replaces the pre-rendered full account list.
+ * Returns at most 8 matches for a >=2 character prefix, only usernames and
+ * roles, and is rate limited per IP. Anonymous callers therefore cannot
+ * enumerate the account list in one request; harvesting it costs requests that
+ * are both rate limited and logged.
+ */
+router.get('/login/lookup', loginLimiter, async (req, res) => {
+    const query = typeof req.query.q === 'string' ? req.query.q.trim().toLowerCase() : '';
+    if (query.length < 2 || query.length > 64) {
+        return res.json({ success: true, matches: [] });
+    }
+    try {
+        const users = typeof db.getAllUsersForBackup === 'function'
+            ? await db.getAllUsersForBackup() : [];
+        const matches = (Array.isArray(users) ? users : [])
+            .filter((u) => String(u.username || '').toLowerCase().startsWith(query))
+            .slice(0, 8)
+            .map((u) => ({
+                username: u.username,
+                role: u.role || 'operator',
+            }));
+        return res.json({ success: true, matches });
+    } catch (_) {
+        return res.json({ success: true, matches: [] });
+    }
 });
 
 /**
@@ -134,7 +158,29 @@ router.post('/api/auth/login', loginLimiter, async (req, res) => {
                 error: req.t('auth.invalid_credentials')
             });
         }
-        
+
+        // SECURITY (audit H4, 2026-11-13): the panel login used to rely on the
+        // per-IP limiter alone, while the client API paths already consulted the
+        // shared account-lockout tracker. Without this, rotating source IPs gave
+        // an unlimited password guess budget against the admin account.
+        const lockout = await authService.checkBruteForce(username, req.ip);
+        if (lockout.blocked) {
+            await db.logAction(
+                null,
+                'login_blocked',
+                `Account/IP locked; ip=${clientMeta.ip}`,
+                req.ip
+            ).catch(() => {});
+            const retryAfter = Number.isFinite(lockout.retryAfter) ? lockout.retryAfter : 60;
+            res.set('Retry-After', String(Math.max(1, retryAfter)));
+            return res.status(429).json({
+                success: false,
+                error: req.t('auth.too_many_attempts'),
+                code: 'account_locked',
+                retry_after: Math.max(1, retryAfter),
+            });
+        }
+
         const user = await authService.authenticate(username, password);
 
         if (authService.isAuthFailure(user)) {
@@ -189,18 +235,27 @@ router.post('/api/auth/login', loginLimiter, async (req, res) => {
         
         // Check if TOTP verification is required
         if (user.totpRequired) {
-            // Store pending 2FA session
-            req.session.pendingTotpUserId = user.id;
-            req.session.pendingTotpUser = user;
-            req.session.pendingClientMeta = clientMeta;
-            // Phase A: store Go partial token for delegated TOTP verification
-            if (user.goPartialToken) {
-                req.session.goPartialToken = user.goPartialToken;
-            }
-            
-            return res.json({
-                success: true,
-                totpRequired: true
+            // SECURITY (audit M2, 2026-11-13): regenerate the session BEFORE
+            // storing pending 2FA state. Writing it onto the pre-login session
+            // id gave a session-fixation window: an attacker who planted an id
+            // could inherit the half-authenticated state and finish the second
+            // factor on it.
+            return req.session.regenerate((regenErr) => {
+                if (regenErr) {
+                    console.error('Session regeneration error (2FA):', regenErr);
+                    return res.status(500).json({ success: false, error: 'Server error' });
+                }
+                req.session.pendingTotpUserId = user.id;
+                req.session.pendingTotpUser = user;
+                req.session.pendingClientMeta = clientMeta;
+                // Phase A: store Go partial token for delegated TOTP verification
+                if (user.goPartialToken) {
+                    req.session.goPartialToken = user.goPartialToken;
+                }
+                return res.json({
+                    success: true,
+                    totpRequired: true
+                });
             });
         }
         
@@ -390,8 +445,26 @@ router.post('/api/auth/password', requireAuth, passwordChangeLimiter, async (req
 
 /**
  * GET /logout - Logout (redirect)
+ *
+ * SECURITY (audit M3, 2026-11-13): a state-changing GET without CSRF lets any
+ * page log the operator out with an `<img src="…/logout">`. Destructive session
+ * teardown now requires POST + the double-submit CSRF token (handled by the
+ * global middleware); a GET only renders a confirmation page so old bookmarks
+ * still explain what happened instead of silently failing.
  */
-router.get('/logout', async (req, res) => {
+router.get('/logout', (req, res) => {
+    if (req.session?.userId) {
+        return res.status(405).render('errors/500', {
+            title: 'Logout requires POST',
+            activePage: 'error',
+            error: 'Signing out changed to a POST request for CSRF protection. Use the sign-out button in the panel.',
+        });
+    }
+    return res.redirect('/login');
+});
+
+/** POST /logout — browser form/redirect flow with CSRF protection. */
+router.post('/logout', async (req, res) => {
     const userId = req.session?.userId;
     if (userId) {
         try {
@@ -637,8 +710,23 @@ router.post('/api/auth/totp/verify', loginLimiter, async (req, res) => {
             const goResult = await authService.verifyTotpViaGo(goPartialToken, totpCode);
 
             if (!goResult) {
-                // Go unreachable — don't lock user out, fall through to local
-                console.warn('[AUTH] Go server unreachable during 2FA — falling back to local verification');
+                // SECURITY (audit M1, 2026-11-13): fail closed. Falling back to
+                // local verification while Go is unreachable let an attacker who
+                // already had the password skip Go's 2FA policy and rate limits
+                // whenever the backend was down or partitioned.
+                console.error('[AUTH] Go server unreachable during delegated 2FA — refusing local fallback');
+                await db.logAction(
+                    pendingUserId,
+                    'totp_unavailable',
+                    'Delegated 2FA unavailable (Go unreachable)',
+                    req.ip,
+                ).catch(() => {});
+                return res.status(503).json({
+                    success: false,
+                    error: req.t('auth.totp_temporarily_unavailable')
+                        || 'Two-factor verification is temporarily unavailable. Please try again shortly.',
+                    code: 'totp_backend_unavailable',
+                });
             } else if (goResult.rejected) {
                 if (goResult.rateLimited) {
                     return res.status(429).json({

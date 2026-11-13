@@ -86,6 +86,24 @@ function highestGroupValue(rows, resourceKey, groupKey) {
     return selected;
 }
 
+/**
+ * Lower of two access levels (audit H7, 2026-11-13).
+ *
+ * A per-user or per-group panel section override may narrow what a role can do,
+ * never widen it. `roleCeiling` is derived from the role's permission set, so
+ * `min()` keeps stored overrides from manufacturing permissions the role does
+ * not have (e.g. `server.config` for `global_admin`).
+ */
+function clampToCeiling(level, ceiling) {
+    const normalizedLevel = normalizeAccessLevel(level);
+    const normalizedCeiling = normalizeAccessLevel(ceiling);
+    const rankLevel = ACCESS_LEVEL_RANK[normalizedLevel];
+    const rankCeiling = ACCESS_LEVEL_RANK[normalizedCeiling];
+    if (rankLevel === undefined) return normalizedCeiling;
+    if (rankCeiling === undefined) return normalizedLevel;
+    return rankLevel <= rankCeiling ? normalizedLevel : normalizedCeiling;
+}
+
 async function getRoleCeiling(role) {
     if (role === 'admin' || role === 'super_admin') {
         return new Map(PANEL_ACCESS_CATALOG.map((entry) => [entry.key, ACCESS_LEVELS.WRITE]));
@@ -137,16 +155,22 @@ async function resolveForUser(user) {
     for (const entry of PANEL_ACCESS_CATALOG) {
         const inherited = highestGroupValue(groupRows, entry.key, entry.group);
         const directGroup = directSections.get(`group:${entry.group}`);
-        const access = directSections.has(entry.key)
+        const requested = directSections.has(entry.key)
             ? normalizeAccessLevel(directSections.get(entry.key))
             : directGroup !== undefined
                 ? normalizeAccessLevel(directGroup)
             : inherited || roleCeiling.get(entry.key) || ACCESS_LEVELS.NONE;
+        // SECURITY (audit H7, 2026-11-13): a stored per-user level must never
+        // exceed what the role itself can do. Without the clamp, `global_admin`
+        // (no `server.config`) could write `settings: write` for itself and then
+        // pass `requirePermission('server.config')` through the panel section.
+        const ceiling = roleCeiling.get(entry.key) || ACCESS_LEVELS.NONE;
+        const access = clampToCeiling(requested, ceiling);
         sections[entry.key] = {
             access,
             source: directSections.has(entry.key) || directGroup !== undefined
                 ? SUBJECT_TYPES.USER : inherited ? SUBJECT_TYPES.GROUP : 'role',
-            role_ceiling: roleCeiling.get(entry.key) || ACCESS_LEVELS.NONE,
+            role_ceiling: ceiling,
         };
     }
 
@@ -238,11 +262,64 @@ async function savePolicy(subjectType, subjectId, body) {
     const validatedId = validateSubject(subjectType, subjectId);
     const sections = normalizeSectionPolicies(body?.sections);
     const features = normalizeFeaturePolicies(body?.features);
+
+    // SECURITY (audit H7, 2026-11-13): clamp at write time as well, so the
+    // stored row can never describe a permission the subject's role does not
+    // have — even if a future reader forgets the clamp in resolveForUser().
+    const ceiling = await resolveCeilingForSubject(subjectType, validatedId);
+    const clampedSections = sections.map((row) => {
+        const ceilingKey = row.resource_key.startsWith('group:')
+            ? groupSectionKey(row.resource_key)
+            : row.resource_key;
+        return {
+            ...row,
+            access_level: clampToCeiling(row.access_level, ceiling.get(ceilingKey)),
+        };
+    });
+
     await Promise.all([
-        db.setPanelAccessPolicies(subjectType, validatedId, sections),
+        db.setPanelAccessPolicies(subjectType, validatedId, clampedSections),
         db.setClientFeaturePolicies(subjectType, validatedId, features),
     ]);
-    return { sections, features };
+    return { sections: clampedSections, features };
+}
+
+/** Map a `group:<name>` resource key onto a representative catalog section. */
+function groupSectionKey(resourceKey) {
+    const groupName = String(resourceKey).slice('group:'.length);
+    const entry = PANEL_ACCESS_CATALOG.find((candidate) => candidate.group === groupName);
+    return entry ? entry.key : null;
+}
+
+/**
+ * Role ceiling for the policy subject.
+ *
+ * Users inherit their own role; a group has no role, so its ceiling is the
+ * highest ceiling among its members (an administrator may legitimately grant a
+ * group of admins more than a group of viewers). Members with no ceiling
+ * contribute nothing.
+ */
+async function resolveCeilingForSubject(subjectType, subjectId) {
+    if (subjectType === SUBJECT_TYPES.USER) {
+        const user = await db.getUserById(Number.parseInt(subjectId, 10));
+        return getRoleCeiling(user && user.role);
+    }
+    const members = await db.getUserGroupMembers(subjectId);
+    const merged = new Map(PANEL_ACCESS_CATALOG.map((entry) => [entry.key, ACCESS_LEVELS.NONE]));
+    for (const member of members || []) {
+        const role = typeof member === 'object' ? member.role : null;
+        const memberCeiling = await getRoleCeiling(role);
+        for (const entry of PANEL_ACCESS_CATALOG) {
+            merged.set(entry.key, clampToCeiling(
+                // "highest of the two", expressed as: if member is higher, take it
+                ACCESS_LEVEL_RANK[memberCeiling.get(entry.key)] > ACCESS_LEVEL_RANK[merged.get(entry.key)]
+                    ? memberCeiling.get(entry.key)
+                    : merged.get(entry.key),
+                ACCESS_LEVELS.WRITE,
+            ));
+        }
+    }
+    return merged;
 }
 
 function getCatalog() {

@@ -16,6 +16,19 @@ const config = require('../config/config');
 
 const STATE_PATH = path.join(config.dataDir, '.restart-transaction.json');
 const BOOT_ID = crypto.randomBytes(16).toString('hex');
+
+/**
+ * Constant-time string comparison for restart tokens (audit P3, 2026-11-13).
+ * Returns false for non-strings, differing lengths, or any mismatch.
+ */
+function tokensEqual(expected, actual) {
+    if (typeof expected !== 'string' || typeof actual !== 'string') return false;
+    if (expected.length === 0 || actual.length === 0) return false;
+    const expectedBuf = Buffer.from(expected, 'utf8');
+    const actualBuf = Buffer.from(actual, 'utf8');
+    if (expectedBuf.length !== actualBuf.length) return false;
+    return crypto.timingSafeEqual(expectedBuf, actualBuf);
+}
 const MAX_CHANGES = 32;
 const RESTART_TOKEN_BYTES = 24;
 
@@ -304,7 +317,10 @@ async function confirm(req, id) {
 
 async function getPublicStatus(id, token) {
     const state = readState();
-    if (!state || state.id !== id || state.token !== token) {
+    // SECURITY (audit P3, 2026-11-13): constant-time comparison. Both values are
+    // high-entropy random hex, so this is defence in depth against a timing
+    // oracle on the restart-status polling endpoint.
+    if (!state || !tokensEqual(state.id, id) || !tokensEqual(state.token, token)) {
         return { phase: 'unknown', status: 'unknown', ready: false };
     }
     if (state.phase === 'restarting' && state.bootId !== BOOT_ID) {

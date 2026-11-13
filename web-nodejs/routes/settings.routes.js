@@ -304,10 +304,14 @@ router.post('/api/settings/availability-history', requireAuth, requirePermission
 
 /**
  * GET /api/settings/audit - Get audit log
+ *
+ * SECURITY (audit M5, 2026-11-13): `limit` is now clamped. An uncapped value
+ * let any authenticated user ask the database for millions of rows.
  */
 router.get('/api/settings/audit', requireAuth, async (req, res) => {
     try {
-        const limit = parseInt(req.query.limit, 10) || 100;
+        const requested = parseInt(req.query.limit, 10) || 100;
+        const limit = Math.min(Math.max(requested, 1), 500);
         const logs = await db.getAuditLogs(limit);
         
         res.json({

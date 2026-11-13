@@ -224,6 +224,17 @@ function restoreManagedEnv(payload) {
     return { path: envPath, restoredFrom: backupPath };
 }
 
+/**
+ * Broker protocol version.
+ *
+ * The panel compares this against `BROKER_PROTOCOL_VERSION` in
+ * `web-nodejs/lib/privilegedUpdateHelper.js`. Bumping it makes a stale broker
+ * (for example one still installed from an older release, before secrets were
+ * removed from the managed-key manifest) fail closed instead of silently
+ * accepting actions the panel no longer trusts.
+ */
+const BROKER_VERSION = 2;
+
 function handle(payload) {
     if (!isRoot()) {
         throw new Error('Privileged update broker must run as root');
@@ -231,27 +242,27 @@ function handle(payload) {
 
     switch (payload.action) {
         case 'check':
-            return { success: true, action: 'check' };
+            return { success: true, action: 'check', version: BROKER_VERSION };
         case 'daemon_reload':
             runSystemctl(['daemon-reload']);
-            return { success: true, action: payload.action };
+            return { success: true, action: payload.action, version: BROKER_VERSION };
         case 'restart':
             if (!ALLOWED_SERVICES.has(payload.service)) {
                 throw new Error('Service is not allowlisted');
             }
             runSystemctl(['restart', payload.service]);
-            return { success: true, action: payload.action, service: payload.service };
+            return { success: true, action: payload.action, service: payload.service, version: BROKER_VERSION };
         case 'write_connection_env': {
             const written = writeConnectionEnv(payload.vars);
-            return { success: true, action: payload.action, ...written };
+            return { success: true, action: payload.action, version: BROKER_VERSION, ...written };
         }
         case 'write_env': {
             const written = writeManagedEnv(payload);
-            return { success: true, action: payload.action, ...written };
+            return { success: true, action: payload.action, version: BROKER_VERSION, ...written };
         }
         case 'restore_env': {
             const restored = restoreManagedEnv(payload);
-            return { success: true, action: payload.action, ...restored };
+            return { success: true, action: payload.action, version: BROKER_VERSION, ...restored };
         }
         default:
             throw new Error('Privileged update action is not allowlisted');

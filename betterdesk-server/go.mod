@@ -2,7 +2,9 @@ module github.com/unitronix/betterdesk-server
 
 go 1.26.0
 
-toolchain go1.26.10
+// SECURITY (audit M14, 2026-11-13): go1.26.10 ships GO-2026-6859
+// (net/http MaxBytesReader header race). Fixed in go1.26.11.
+toolchain go1.26.11
 
 require (
 	github.com/coder/websocket v1.8.15

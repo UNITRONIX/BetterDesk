@@ -1519,6 +1519,34 @@ function createSqliteAdapter(config) {
             return parsePeer(row);
         },
 
+        /**
+         * Registration-time view of a peer, including soft-deleted rows.
+         *
+         * `/api/bd/register` must know whether an id is banned or soft-deleted
+         * BEFORE it upserts, otherwise a public register call resurrects rows
+         * that an operator deliberately removed (C1, 2026-11-13 audit).
+         *
+         * @returns {Promise<null | { id: string, uuid: string, pk: string|null,
+         *   banned: boolean, deleted: boolean, banReason: string }>}
+         */
+        async getPeerRegistrationState(id) {
+            const peerId = String(id || '').trim();
+            if (!peerId) return null;
+            const db = openMain();
+            const row = db.prepare(
+                'SELECT id, uuid, pk, is_banned, is_deleted, banned_reason FROM peer WHERE id = ?'
+            ).get(peerId);
+            if (!row) return null;
+            return {
+                id: String(row.id),
+                uuid: row.uuid || '',
+                pk: row.pk || null,
+                banned: row.is_banned === 1 || row.is_banned === true,
+                deleted: row.is_deleted === 1 || row.is_deleted === true,
+                banReason: row.banned_reason || '',
+            };
+        },
+
         async upsertPeer({ id, uuid, pk, info, ip }) {
             openMain().prepare(`
                 INSERT INTO peer (id, uuid, pk, info, ip, status_online, created_at)
@@ -5157,6 +5185,25 @@ function createPostgresAdapter() {
                 }
             }
             return parsePeer(row);
+        },
+
+        /** Registration-time peer view including soft-deleted rows (see SQLite adapter). */
+        async getPeerRegistrationState(id) {
+            const peerId = String(id || '').trim();
+            if (!peerId) return null;
+            const row = await one(
+                'SELECT id, uuid, pk, is_banned, is_deleted, banned_reason FROM peer WHERE id = $1',
+                [peerId]
+            );
+            if (!row) return null;
+            return {
+                id: String(row.id),
+                uuid: row.uuid || '',
+                pk: row.pk || null,
+                banned: row.is_banned === true || row.is_banned === 1,
+                deleted: row.is_deleted === true || row.is_deleted === 1,
+                banReason: row.banned_reason || '',
+            };
         },
 
         async upsertPeer({ id, uuid, pk, info, ip }) {

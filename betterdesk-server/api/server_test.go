@@ -12,6 +12,7 @@ import (
 
 	"github.com/unitronix/betterdesk-server/config"
 	"github.com/unitronix/betterdesk-server/db"
+	"github.com/unitronix/betterdesk-server/metrics"
 	"github.com/unitronix/betterdesk-server/peer"
 	"github.com/unitronix/betterdesk-server/ratelimit"
 	"github.com/unitronix/betterdesk-server/security"
@@ -93,8 +94,92 @@ func TestHealthEndpoint(t *testing.T) {
 	if body["version"] != "1.0.0-test" {
 		t.Errorf("version: %v", body["version"])
 	}
-	if body["peers_total"].(float64) != 2 {
-		t.Errorf("peers_total: %v", body["peers_total"])
+	// Audit H1 (2026-11-13): the anonymous health payload must stay minimal.
+	if _, leaked := body["peers_total"]; leaked {
+		t.Errorf("public /api/health must not expose peers_total: %v", body)
+	}
+	if _, leaked := body["connection"]; leaked {
+		t.Errorf("public /api/health must not expose relay/connection config: %v", body)
+	}
+}
+
+// The full operational payload is available on /api/health/detail, behind the
+// same allowlist/auth policy as Prometheus metrics.
+func TestHealthDetailEndpointRequiresAuth(t *testing.T) {
+	cfg := config.DefaultConfig()
+	database := testSetupDB(t)
+	defer database.Close()
+
+	database.UpsertPeer(&db.Peer{ID: "T1", Status: "ONLINE"})
+	database.UpsertPeer(&db.Peer{ID: "T2", Status: "OFFLINE"})
+
+	cfg.APIPort = 19886
+	srv := New(cfg, database, peer.NewMap(), nil, "1.0.0-test")
+
+	if err := srv.Start(t.Context()); err != nil {
+		t.Fatal(err)
+	}
+	defer srv.Stop()
+	time.Sleep(100 * time.Millisecond)
+
+	resp, err := http.Get(fmt.Sprintf("http://127.0.0.1:%d/api/health/detail", cfg.APIPort))
+	if err != nil {
+		t.Fatalf("GET /api/health/detail: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("anonymous /api/health/detail status = %d, want 401", resp.StatusCode)
+	}
+
+	authed, err := testAuthGet(fmt.Sprintf("http://127.0.0.1:%d/api/health/detail", cfg.APIPort))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer authed.Body.Close()
+	if authed.StatusCode != http.StatusOK {
+		t.Fatalf("authenticated /api/health/detail status = %d, want 200", authed.StatusCode)
+	}
+	var detail map[string]any
+	json.NewDecoder(authed.Body).Decode(&detail)
+	if detail["peers_total"].(float64) != 2 {
+		t.Errorf("peers_total: %v", detail["peers_total"])
+	}
+}
+
+// Audit H1: /metrics is not on the public path list any more, so it must be
+// rejected without the allowlist or a valid API key.
+func TestMetricsEndpointRequiresAuth(t *testing.T) {
+	cfg := config.DefaultConfig()
+	database := testSetupDB(t)
+	defer database.Close()
+
+	cfg.APIPort = 19887
+	srv := New(cfg, database, peer.NewMap(), nil, "1.0.0-test")
+	srv.SetMetrics(metrics.NewCollector())
+
+	if err := srv.Start(t.Context()); err != nil {
+		t.Fatal(err)
+	}
+	defer srv.Stop()
+	time.Sleep(100 * time.Millisecond)
+
+	resp, err := http.Get(fmt.Sprintf("http://127.0.0.1:%d/metrics", cfg.APIPort))
+	if err != nil {
+		t.Fatalf("GET /metrics: %v", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("anonymous /metrics status = %d, want 401", resp.StatusCode)
+	}
+
+	authed, err := testAuthGet(fmt.Sprintf("http://127.0.0.1:%d/metrics", cfg.APIPort))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer authed.Body.Close()
+	if authed.StatusCode != http.StatusOK {
+		t.Fatalf("authenticated /metrics status = %d, want 200", authed.StatusCode)
 	}
 }
 

@@ -56,8 +56,16 @@ func coerceStr(v any) string {
 }
 
 // queryLimitOffset parses limit/offset query params with sane defaults.
+//
+// SECURITY (audit M5, 2026-11-13): both values are clamped. An authenticated
+// caller used to be able to ask for an unbounded number of audit rows.
 func queryLimitOffset(r *http.Request) (int, int) {
-	limit := 100
+	const (
+		defaultLimit = 100
+		maxLimit     = 500
+		maxOffset    = 10000
+	)
+	limit := defaultLimit
 	offset := 0
 	if v := r.URL.Query().Get("limit"); v != "" {
 		if n, err := strconv.Atoi(v); err == nil {
@@ -68,6 +76,18 @@ func queryLimitOffset(r *http.Request) (int, int) {
 		if n, err := strconv.Atoi(v); err == nil {
 			offset = n
 		}
+	}
+	if limit < 1 {
+		limit = defaultLimit
+	}
+	if limit > maxLimit {
+		limit = maxLimit
+	}
+	if offset < 0 {
+		offset = 0
+	}
+	if offset > maxOffset {
+		offset = maxOffset
 	}
 	return limit, offset
 }

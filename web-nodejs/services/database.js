@@ -40,6 +40,9 @@ const facade = {
     getDeviceById: (id) => adapter.getPeerById(id),
     getDevice:     (id) => adapter.getPeerById(id),
     upsertPeer:    (data) => adapter.upsertPeer(data),
+    getPeerRegistrationState: (id) => (adapter.getPeerRegistrationState
+        ? adapter.getPeerRegistrationState(id)
+        : Promise.resolve(null)),
     updatePeer:    (id, data) => adapter.updatePeer(id, data),
     updateDevice:  (id, data) => adapter.updatePeer(id, data),
     softDeletePeer: (id) => adapter.softDeletePeer(id),

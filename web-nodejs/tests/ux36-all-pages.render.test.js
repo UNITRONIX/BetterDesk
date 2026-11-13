@@ -85,6 +85,12 @@ function locals(shell, page) {
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;'),
+        // Audit M11 (2026-11-13): templates embed server data inside inline
+        // <script> blocks through this helper instead of raw JSON.stringify.
+        safeJsonScript: (value) => JSON.stringify(value === undefined ? null : value)
+            .replace(/</g, '\\u003c')
+            .replace(/>/g, '\\u003e')
+            .replace(/&/g, '\\u0026'),
     };
     return new Proxy(base, {
         has: () => true,

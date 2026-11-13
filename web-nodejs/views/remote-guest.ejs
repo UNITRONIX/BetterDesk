@@ -1,3 +1,10 @@
+<%# Audit M11 (2026-11-13): data embedded in inline script blocks must not be
+    able to close the block. Uses the server helper when present, with an
+    equivalent fallback for standalone template rendering (tests/previews). %>
+<% var bdJson = (typeof safeJsonScript === 'function') ? safeJsonScript : function (v) {
+    return JSON.stringify(v === undefined ? null : v)
+        .replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
+}; %>
 <%- include('layouts/remote-desk', {
     title: typeof title !== 'undefined' ? title : _('guest_access.title'),
     pageStyles: ['remote-dashboard'],
@@ -34,8 +41,8 @@
     </div>
 </div>
 <script nonce="${cspNonce}">
-    window.__guestAccess = ` + JSON.stringify(typeof guestMeta !== 'undefined' ? guestMeta : {}) + `;
-    window.__guestToken = ` + JSON.stringify(typeof guestToken !== 'undefined' ? guestToken : '') + `;
+    window.__guestAccess = ` + bdJson(typeof guestMeta !== 'undefined' ? guestMeta : {}) + `;
+    window.__guestToken = ` + bdJson(typeof guestToken !== 'undefined' ? guestToken : '') + `;
 </script>
 `
 }); %>

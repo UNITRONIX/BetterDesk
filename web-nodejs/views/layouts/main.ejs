@@ -1,3 +1,10 @@
+<%# Audit M11 (2026-11-13): data embedded in inline script blocks must not be
+    able to close the block. Uses the server helper when present, with an
+    equivalent fallback for standalone template rendering (tests/previews). %>
+<% var bdJson = (typeof safeJsonScript === 'function') ? safeJsonScript : function (v) {
+    return JSON.stringify(v === undefined ? null : v)
+        .replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
+}; %>
 <%
     // Shell contract: resolved once in server.js (lib/uiShell.js). UX 3.5 is the
     // default; UX 3.6 is the opt-in beta. Anything unknown falls back to UX 3.5.
@@ -112,18 +119,18 @@
     <script nonce="<%= cspNonce %>">
         window.BetterDesk = {
             lang: '<%= lang || "en" %>',
-            availableLanguages: <%- JSON.stringify(availableLanguageList || []) %>,
-            translations: <%- JSON.stringify(translations || {}) %>,
+            availableLanguages: <%- bdJson(availableLanguageList || []) %>,
+            translations: <%- bdJson(translations || {}) %>,
             cacheVersion: '<%= cacheVersion %>',
             csrfToken: '<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>',
-            user: <%- JSON.stringify(user || null) %>,
-            sessionPolicy: <%- JSON.stringify(typeof sessionPolicy !== 'undefined' ? sessionPolicy : null) %>,
-            branding: <%- JSON.stringify(branding || {}) %>,
-            themePalettes: <%- JSON.stringify(typeof themePalettes !== 'undefined' ? themePalettes : {}) %>,
+            user: <%- bdJson(user || null) %>,
+            sessionPolicy: <%- bdJson(typeof sessionPolicy !== 'undefined' ? sessionPolicy : null) %>,
+            branding: <%- bdJson(branding || {}) %>,
+            themePalettes: <%- bdJson(typeof themePalettes !== 'undefined' ? themePalettes : {}) %>,
             embed: <%= embed ? 'true' : 'false' %>,
             uiShell: '<%= shell %>',
             /* Pages this session may open, for the global search dialog. */
-            searchPages: <%- JSON.stringify(typeof consoleSearchPages !== 'undefined' ? consoleSearchPages : []) %>,
+            searchPages: <%- bdJson(typeof consoleSearchPages !== 'undefined' ? consoleSearchPages : []) %>,
             /* Which data searches may run, so the dialog calls no forbidden API. */
             searchCaps: {
                 devices: <%= typeof hasPermission === 'function' && hasPermission('device.view') ? 'true' : 'false' %>,

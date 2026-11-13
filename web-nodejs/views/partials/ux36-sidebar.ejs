@@ -1,3 +1,10 @@
+<%# Audit M11 (2026-11-13): data embedded in inline script blocks must not be
+    able to close the block. Uses the server helper when present, with an
+    equivalent fallback for standalone template rendering (tests/previews). %>
+<% var bdJson = (typeof safeJsonScript === 'function') ? safeJsonScript : function (v) {
+    return JSON.stringify(v === undefined ? null : v)
+        .replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
+}; %>
 <%
     /*
      * UX 3.6 sidebar — structure and classes from the redesign by @rathlinus
@@ -184,7 +191,7 @@
                 if (button) {
                     button.setAttribute('aria-expanded', 'true');
                     var label = button.querySelector('.nav-label');
-                    if (label) label.textContent = <%- JSON.stringify(_('nav.fewer')) %>;
+                    if (label) label.textContent = <%- bdJson(_('nav.fewer')) %>;
                     var chevron = button.querySelector('.nav-more-chevron');
                     if (chevron) chevron.textContent = 'expand_less';
                 }

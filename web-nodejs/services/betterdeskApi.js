@@ -88,14 +88,24 @@ function wrap(data) {
 
 /**
  * GET /api/health
+ *
+ * Audit H1 (2026-11-13): the anonymous payload is now minimal
+ * (`status` + `version`). Operational detail (peer counts, relay config,
+ * clock-sync) lives on `/api/health/detail`, which requires the API key. The
+ * panel keeps the old rich shape by preferring the detail endpoint and falling
+ * back to the minimal one on older servers.
  */
 async function getHealth() {
     try {
-        const { data } = await apiClient.get('/health');
-        // Go server returns status:'ok'; normalise to status:'running' for panel compatibility
+        const { data } = await apiClient.get('/health/detail');
         return { ...data, status: 'running', backend: 'betterdesk' };
-    } catch (err) {
-        return { status: 'unreachable', backend: 'betterdesk', error: err.message };
+    } catch (_detailErr) {
+        try {
+            const { data } = await apiClient.get('/health');
+            return { ...data, status: 'running', backend: 'betterdesk' };
+        } catch (err) {
+            return { status: 'unreachable', backend: 'betterdesk', error: err.message };
+        }
     }
 }
 

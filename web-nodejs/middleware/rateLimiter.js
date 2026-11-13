@@ -283,6 +283,26 @@ const fileAccessLimiter = rateLimit({
     keyGenerator: defaultKeyGenerator
 });
 
+/**
+ * Device self-registration limiter.
+ *
+ * SECURITY (audit C1, 2026-11-13): registration used to be unbounded, so a
+ * single host could create thousands of peers in seconds. 20/min per IP is far
+ * above any real fleet bootstrap (devices register once, then only heartbeat)
+ * and keeps inventory flooding expensive.
+ */
+const registerLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: parseInt(process.env.BD_REGISTER_RATE_LIMIT_MAX, 10) || 20,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+        success: false,
+        error: 'Too many registration requests. Please slow down.'
+    },
+    keyGenerator: defaultKeyGenerator
+});
+
 module.exports = {
     apiLimiter,
     widgetLimiter,
@@ -293,6 +313,7 @@ module.exports = {
     passwordChangeLimiter,
     uploadLimiter,
     fileAccessLimiter,
+    registerLimiter,
     isPanelPollRequest,
     isPanelReadRequest,
     isPanelPreferenceWrite,

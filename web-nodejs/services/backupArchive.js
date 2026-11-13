@@ -19,6 +19,16 @@ const zlib = require('zlib');
 const BLOCK_SIZE = 512;
 
 /**
+ * Hard limits for archive extraction (audit M4, 2026-11-13).
+ *
+ * A full disaster-recovery backup is a few tens of MB uncompressed; 2 GiB and
+ * 50k entries leave generous headroom while bounding memory for a restore
+ * endpoint that accepts a 200 MB upload.
+ */
+const MAX_DECOMPRESSED_BYTES = Number(process.env.BACKUP_MAX_DECOMPRESSED_BYTES) || 2 * 1024 * 1024 * 1024;
+const MAX_ARCHIVE_ENTRIES = Number(process.env.BACKUP_MAX_ENTRIES) || 50000;
+
+/**
  * Write a fixed-width, null-terminated octal field into a header buffer.
  * @param {Buffer} buf
  * @param {number} value
@@ -130,11 +140,31 @@ function parseOctal(buf, offset, length) {
 
 /**
  * Extract a gzipped tar archive into a Map of name -> Buffer.
+ *
+ * SECURITY (audit M4, 2026-11-13): `zlib.gunzipSync` expanded the whole payload
+ * into memory with no cap, so a small, highly compressible upload (the restore
+ * endpoint accepts 200 MB) could exhaust the heap and take the panel down.
+ * The budget below bounds the decompressed size and the number of entries, and
+ * is enforced *before* the archive is trusted.
+ *
  * @param {Buffer} buffer gzipped tar archive
+ * @param {{ maxBytes?: number, maxEntries?: number }} [options]
  * @returns {Map<string, Buffer>}
  */
-function extractTarGz(buffer) {
-    const tar = zlib.gunzipSync(buffer);
+function extractTarGz(buffer, options = {}) {
+    const maxBytes = Number.isFinite(options.maxBytes) && options.maxBytes > 0
+        ? options.maxBytes
+        : MAX_DECOMPRESSED_BYTES;
+    const maxEntries = Number.isFinite(options.maxEntries) && options.maxEntries > 0
+        ? options.maxEntries
+        : MAX_ARCHIVE_ENTRIES;
+
+    const gunzipped = zlib.gunzipSync(buffer, { maxOutputLength: maxBytes });
+    const tar = Buffer.isBuffer(gunzipped) ? gunzipped : Buffer.from(gunzipped);
+    if (tar.length > maxBytes) {
+        throw new Error(`Backup archive expands to ${tar.length} bytes, over the ${maxBytes} byte limit`);
+    }
+
     const files = new Map();
     let offset = 0;
 
@@ -151,11 +181,17 @@ function extractTarGz(buffer) {
         const typeflag = header.toString('ascii', 156, 157);
         offset += BLOCK_SIZE;
 
+        if (offset + size > tar.length) {
+            throw new Error(`Backup archive entry ${name} extends past the end of the archive`);
+        }
         const data = tar.slice(offset, offset + size);
         offset += size + padToBlock(size);
 
         // Only collect regular files ('0' or NUL typeflag).
         if (typeflag === '0' || typeflag === '\0' || typeflag === '') {
+            if (files.size >= maxEntries) {
+                throw new Error(`Backup archive has more than ${maxEntries} entries`);
+            }
             files.set(name, Buffer.from(data));
         }
     }
@@ -166,4 +202,6 @@ function extractTarGz(buffer) {
 module.exports = {
     createTarGz,
     extractTarGz,
+    MAX_DECOMPRESSED_BYTES,
+    MAX_ARCHIVE_ENTRIES,
 };

@@ -1,3 +1,11 @@
+<%# Audit M11 (2026-11-13): escape operator-controlled strings interpolated
+    into the page body; the server exposes escapeHtml, with an inline fallback
+    for standalone template rendering (tests/previews). %>
+<% var bdEsc = (typeof escapeHtml === 'function') ? escapeHtml : function (v) {
+    return String(v == null ? '' : v)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}; %>
 <%- include('layouts/main', {
     title: _('pairing.title'),
     pageStyles: ['pages', 'pairing'],
@@ -36,7 +44,7 @@
                 <p class="pairing-address">
                     <span class="material-icons" aria-hidden="true">dns</span>
                     <span>${_('pairing.client_address')}</span>
-                    <strong id="pairing-code-host">${suggested_host || ''}</strong>
+                    <strong id="pairing-code-host">${bdEsc(suggested_host || '')}</strong>
                 </p>
             </div>
         </section>

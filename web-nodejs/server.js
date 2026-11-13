@@ -65,9 +65,11 @@ const { getWanMiddlewareStack } = require('./middleware/wanSecurity');
 const { parseTrustProxy } = require('./lib/parseTrustProxy');
 const {
     resolvePortForCurrentUser,
-    formatHttpsRedirectUrl,
     attachPrivilegedPortErrorHandler,
 } = require('./lib/privilegedPorts');
+const { resolveRedirectHost, buildSafeRedirectUrl } = require('./lib/redirectHost');
+const { safeJsonScript } = require('./lib/safeJsonScript');
+const { escapeHtml } = require('./lib/escapeHtml');
 
 // Create Express app
 const app = express();
@@ -268,6 +270,15 @@ app.use(initI18n());
 // Used by Desktop Mode to load pages inside floating windows (iframes)
 app.use((req, res, next) => {
     res.locals.embed = req.query.embed === '1';
+    // SECURITY (audit M11, 2026-11-13): views embed server data inside inline
+    // <script> blocks. `JSON.stringify` alone lets `</script>` in a string
+    // terminate the block, so every template must use this helper.
+    res.locals.safeJsonScript = safeJsonScript;
+    // SECURITY (audit M11, 2026-11-13): templates build view strings with
+    // template literals, so operator-controlled values (suggested host, device
+    // names) must be escaped at the call site. Expose the same helper the API
+    // layer uses instead of hand-rolling it per template.
+    res.locals.escapeHtml = escapeHtml;
     // Shell choice is resolved once (lib/uiShell.js) so SSR markup, CSS/JS
     // includes and window.BetterDesk.uiShell cannot disagree. UX 3.5 is the
     // default; UX 3.6 is an opt-in beta. Unknown values (including the removed
@@ -542,11 +553,32 @@ function shouldUseRustDeskApiTls(sslOptions) {
 
 /**
  * Create HTTP redirect server (redirects all HTTP to HTTPS)
+ *
+ * SECURITY (audit H5, 2026-11-13): the Location header must not be derived from
+ * the request `Host` header. See `lib/redirectHost.js` for the reasoning; this
+ * function only ever redirects to a configured host or the bound listener
+ * address.
  */
-function createHttpRedirectServer(httpsPort) {
+function createHttpRedirectServer(httpsPort, options = {}) {
     const redirectApp = express();
+    const publicHost = (() => {
+        try {
+            return require('./services/rustDeskPublicEndpointsService').readPanelPublicHostValue();
+        } catch (_) {
+            return '';
+        }
+    })();
+    const target = resolveRedirectHost({
+        configuredHost: options.configuredHost || publicHost || process.env.PANEL_PUBLIC_HOST || '',
+        listenHost: options.listenHost || config.host,
+    });
+
     redirectApp.use((req, res) => {
-        const httpsUrl = formatHttpsRedirectUrl(req.hostname, httpsPort, req.url);
+        const httpsUrl = buildSafeRedirectUrl({
+            host: target.host,
+            port: httpsPort,
+            urlPath: req.url,
+        });
         res.setHeader('Cache-Control', 'no-store');
         res.redirect(307, httpsUrl);
     });
@@ -599,7 +631,9 @@ async function startServer() {
                 
                 // Optionally start HTTP redirect server
                 if (config.httpRedirect) {
-                    const redirectServer = createHttpRedirectServer(listenHttpsPort);
+                    const redirectServer = createHttpRedirectServer(listenHttpsPort, {
+                        listenHost: config.host,
+                    });
                     attachPrivilegedPortErrorHandler(redirectServer, { port: listenPort, label: 'HTTP redirect' });
                     redirectServer.listen(listenPort, config.host, () => {
                         console.log(`  HTTP -> HTTPS redirect active on port ${listenPort}`);

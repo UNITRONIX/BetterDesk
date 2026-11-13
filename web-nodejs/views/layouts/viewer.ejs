@@ -1,3 +1,10 @@
+<%# Audit M11 (2026-11-13): data embedded in inline script blocks must not be
+    able to close the block. Uses the server helper when present, with an
+    equivalent fallback for standalone template rendering (tests/previews). %>
+<% var bdJson = (typeof safeJsonScript === 'function') ? safeJsonScript : function (v) {
+    return JSON.stringify(v === undefined ? null : v)
+        .replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
+}; %>
 <!DOCTYPE html>
 <html lang="<%= lang || 'en' %>">
 <head>
@@ -24,13 +31,13 @@
         // Global config for viewer
         window.BetterDesk = {
             lang: '<%= lang || "en" %>',
-            translations: <%- JSON.stringify(translations || {}) %>,
+            translations: <%- bdJson(translations || {}) %>,
             csrfToken: '<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>',
-            user: <%- JSON.stringify(user || null) %>,
+            user: <%- bdJson(user || null) %>,
             serverPubKey: '<%= typeof serverPubKey !== 'undefined' ? serverPubKey : '' %>',
-            connection: <%- JSON.stringify(typeof connection !== 'undefined' && connection ? connection : {}) %>,
-            branding: <%- JSON.stringify(branding || {}) %>,
-            availableLanguages: <%- JSON.stringify(availableLanguageList || []) %>
+            connection: <%- bdJson(typeof connection !== 'undefined' && connection ? connection : {}) %>,
+            branding: <%- bdJson(branding || {}) %>,
+            availableLanguages: <%- bdJson(availableLanguageList || []) %>
         };
     </script>
 

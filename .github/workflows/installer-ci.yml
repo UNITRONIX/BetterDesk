@@ -55,7 +55,7 @@ jobs:
     name: Bash installer syntax
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Parse all Bash installers
         run: |
           set -euo pipefail
@@ -90,7 +90,7 @@ jobs:
     name: PowerShell installer syntax
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Parse PowerShell installers
         shell: pwsh
         run: |
@@ -118,8 +118,8 @@ jobs:
       run:
         working-directory: web-nodejs
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '22.23.2'
           cache: npm
@@ -138,7 +138,7 @@ jobs:
     name: Installer non-mutating CLI checks
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Verify help paths do not mutate the host
         run: |
           set -euo pipefail
@@ -153,7 +153,7 @@ jobs:
       PG_PASSWORD: installer-ci-placeholder
       MACVLAN_IPV4: 192.0.2.51
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Validate compose manifests
         run: |
           set -euo pipefail
@@ -175,7 +175,7 @@ jobs:
     env:
       BETTERDESK_IMAGE_TAG: ${{ inputs.image_tag || 'latest' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Verify hardened bind mounts and restart behavior
         run: bash scripts/test-docker-hardening.sh
 
@@ -188,7 +188,7 @@ jobs:
       BETTERDESK_IMAGE_TAG: ${{ inputs.image_tag || 'latest' }}
       ADMIN_PASSWORD: InstallerSmoke-ChangeMe-9
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Start official single-container stack
         run: |
           set -euo pipefail

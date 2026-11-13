@@ -29,3 +29,16 @@ updates:
       betterdesk-server-gomod:
         patterns:
           - "*"
+
+  # Audit P3 (2026-11-13): GitHub Actions are pinned by moving tags (@v4, @v6),
+  # which a compromised or retargeted tag can silently replace. Dependabot keeps
+  # the pinned commit SHAs fresh instead.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 3
+    groups:
+      github-actions:
+        patterns:
+          - "*"
