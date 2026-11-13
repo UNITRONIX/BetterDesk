@@ -127,7 +127,9 @@ describe('BD-API register hardening (C1)', () => {
             .send(body);
 
         expect(second.status).toBe(403);
-        expect(second.body.message).toMatch(/replayed/i);
+        // The refusal is deliberately neutral: it must not tell a caller whether
+        // a proof was replayed, missing, or simply not accepted.
+        expect(second.body.error).toBe('enrollment_proof_required');
     });
 
     it('rejects a banned device before writing anything', async () => {
@@ -251,14 +253,17 @@ describe('BD-API register hardening (C1)', () => {
         expect(db.upsertPeer).toHaveBeenCalledTimes(1);
     });
 
-    it('requires a public_key when open registration is disabled', async () => {
+    it('requires admission (approval, token or key) when open registration is disabled', async () => {
+        // A caller with no public_key, no approval and no token is refused with
+        // the same neutral error a wrong proof gets, so the response cannot be
+        // used to probe which admission method the server is missing.
         const res = await request(app)
             .post('/api/bd/register')
             .set('X-Device-Id', 'NOKEY001')
             .send({ device_id: 'NOKEY001' });
 
-        expect(res.status).toBe(400);
-        expect(res.body.error).toBe('public_key_required');
+        expect(res.status).toBe(403);
+        expect(res.body.error).toBe('enrollment_proof_required');
         expect(db.upsertPeer).not.toHaveBeenCalled();
     });
 

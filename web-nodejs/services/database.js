@@ -219,6 +219,12 @@ const facade = {
 
     // ---- Agent installer bundles (Generator) ----
     listAgentBundles:           (opts) => adapter.listAgentBundles(opts),
+    // ---- Agent enrollment templates (Registrations / Support Agent) ----
+    // Previously unreachable from the facade, which broke the template tab and
+    // `POST /api/bd/enroll` for every token (audit follow-up, 2026-11-13).
+    listAgentTemplates:         () => adapter.listAgentTemplates(),
+    getAgentTemplateByToken:    (token) => adapter.getAgentTemplateByToken(token),
+    createAgentTemplate:        (data) => adapter.createAgentTemplate(data),
     getAgentBundle:             (bundleId) => adapter.getAgentBundle(bundleId),
     getAgentBundleByPublicId:   (publicId) => adapter.getAgentBundleByPublicId(publicId),
     isAgentBundleSlugTaken:     (slug, excludeBundleId) => adapter.isAgentBundleSlugTaken(slug, excludeBundleId),

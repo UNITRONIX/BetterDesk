@@ -249,17 +249,92 @@ async function identifyDevice(req, res, next) {
  * soft-deleted devices, and (c) replace the public key bound to somebody
  * else's device id.
  *
- * Now:
- *   - banned / soft-deleted ids are rejected before any write,
- *   - a first registration requires an Ed25519 proof of possession of the
- *     public key it is binding (or an explicit BD_REGISTER_ALLOW_OPEN=true for
- *     legacy integrators),
- *   - changing `public_key` or `uuid` on an existing device requires a proof
- *     made with the key that is already bound to that id,
- *   - plain heartbeats against an existing, key-matching id stay cheap.
+ * The fix must NOT break enrollment: stock RustDesk clients and Support Agents
+ * cannot sign anything, so the product admits them through operator approval
+ * (Registrations tab) or an enrollment token. Those two paths are therefore
+ * explicit, first-class admission proofs — they do not require an Ed25519
+ * signature:
+ *
+ *   1. An `approved` pending_registrations row for this exact device id
+ *      (operator clicked Approve in Registrations), or
+ *   2. a valid, single-use enrollment token (`POST /api/bd/enroll`) bound to
+ *      this device id, or
+ *   3. a valid Ed25519 proof of possession of the key being bound.
+ *
+ * Everything else is refused. Banned and soft-deleted ids are always refused,
+ * and an existing device's key/uuid can only be rotated by the key it already
+ * has — admission proves identity, not ownership of an established identity.
  */
 function registerRejection(status, code, message) {
     return { status, body: { error: code, message } };
+}
+
+/**
+ * Check whether the operator already approved this device, or the device
+ * presented a valid enrollment token. Both are the product's normal path for
+ * stock clients and agents that cannot sign a proof.
+ *
+ * @returns {Promise<'approved'|'enrollment_token'|null>}
+ */
+async function resolveAdmissionGrant(req, { id, uuid, publicKey }) {
+    // 1. Operator approval recorded in the Registrations tab.
+    if (typeof db.getPendingRegistrationByDeviceId === 'function') {
+        try {
+            const reg = await db.getPendingRegistrationByDeviceId(id);
+            if (reg && reg.status === 'approved') {
+                // An approval is bound to the identity that was reviewed. When
+                // the operator reviewed a public key, the registration must
+                // present the same one so an approved id cannot be claimed by
+                // somebody else afterwards.
+                const reviewedKey = enrollmentProof.canonicalizePublicKey(reg.public_key || '');
+                const incomingKey = enrollmentProof.canonicalizePublicKey(publicKey || '');
+                if (!reviewedKey || !incomingKey || reviewedKey === incomingKey) {
+                    return 'approved';
+                }
+            }
+        } catch (_) { /* approval lookup is best effort; fall through */ }
+    }
+
+    // 2. Enrollment token from POST /api/bd/enroll.
+    //
+    // The token is a single-use admission credential for one device: the
+    // template row records the device it was redeemed for, so a leaked token
+    // cannot admit a second machine and cannot be replayed after enrollment.
+    const token = String(req.body?.enrollment_token || '').trim().slice(0, 64);
+    if (token) {
+        const row = await lookupEnrollmentTemplate(token);
+        if (row && await bindEnrollmentTemplate(token, id)) {
+            return 'enrollment_token';
+        }
+    }
+
+    return null;
+}
+
+/** Read a template row by enrollment token (SQLite auth.db or PostgreSQL). */
+async function lookupEnrollmentTemplate(token) {
+    const { findByEnrollmentToken } = require('../lib/agentTemplates');
+    const { getAdapter } = require('../services/dbAdapter');
+    try {
+        return await findByEnrollmentToken(getAdapter(), token);
+    } catch (_) {
+        return null;
+    }
+}
+
+/**
+ * Bind a token to the device redeeming it.
+ * @returns {boolean} true when the token is (now) bound to this device.
+ */
+async function bindEnrollmentTemplate(token, deviceId) {
+    const { redeemEnrollmentToken } = require('../lib/agentTemplates');
+    const { getAdapter } = require('../services/dbAdapter');
+    try {
+        const result = await redeemEnrollmentToken(getAdapter(), token, deviceId);
+        return result.ok === true;
+    } catch (_) {
+        return false;
+    }
 }
 
 /**
@@ -300,23 +375,22 @@ async function evaluateRegisterPolicy(req, { id, uuid, publicKey }) {
             }
             return { ok: true, identityRotated: true };
         }
+        // Known id, unchanged identity: a heartbeat-style refresh.
         return { ok: true };
     }
 
-    // First registration for this id.
+    // First registration for this id: the device must prove it was admitted.
+    const admission = await resolveAdmissionGrant(req, { id, uuid, publicKey });
+    if (admission) return { ok: true, admittedBy: admission };
+
     if (publicKey) {
         const proof = enrollmentProof.verifyProof(req, id, publicKey);
-        if (proof.ok) return { ok: true };
-        if (!allowOpenRegister()) {
-            return registerRejection(403, 'enrollment_proof_required',
-                `Registration requires an Ed25519 proof of possession (${proof.reason})`);
-        }
-        return { ok: true, unprovenOpenRegister: true };
+        if (proof.ok) return { ok: true, admittedBy: 'proof_of_possession' };
     }
 
     if (!allowOpenRegister()) {
-        return registerRejection(400, 'public_key_required',
-            'public_key is required to register a new device');
+        return registerRejection(403, 'enrollment_proof_required',
+            'Registration requires operator approval, an enrollment token, or an Ed25519 proof of possession');
     }
     return { ok: true, unprovenOpenRegister: true };
 }

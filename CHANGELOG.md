@@ -30,11 +30,23 @@
 
 ### Security
 - **Device registration is authenticated (C1).** `POST /api/bd/register` now
-  requires an Ed25519 proof of possession (`bd-enrollment-v1` headers) for a
-  first registration and for any `public_key` / `uuid` change, rejects banned
-  and soft-deleted device ids before writing, and is rate limited to 20
-  requests/min per IP (`BD_REGISTER_RATE_LIMIT_MAX`). `BD_REGISTER_ALLOW_OPEN=true`
-  restores the old unauthenticated behaviour for integrators that cannot sign.
+  needs proof that the device was admitted: operator approval in the
+  **Registrations** tab, a single-use enrollment token from
+  `POST /api/bd/enroll`, or an Ed25519 proof of possession
+  (`bd-enrollment-v1` headers). Banned and soft-deleted device ids are rejected
+  before anything is written, and the endpoint is rate limited to 20
+  requests/min per IP (`BD_REGISTER_RATE_LIMIT_MAX`). Stock RustDesk clients and
+  Support Agents keep working unchanged — they were always admitted through
+  approval or a token, and that path is preserved.
+  `BD_REGISTER_ALLOW_OPEN=true` restores the old unauthenticated behaviour for
+  integrators that cannot sign.
+- **Enrollment actually works (fixed alongside C1).** `POST /api/bd/enroll` and
+  the agent-template tab called `db.get()` / `db.query()`, which the database
+  facade never exposed, so every enrollment token answered `401`; PostgreSQL
+  installs had no `agent_templates` table at all. The template store now lives in
+  `lib/agentTemplates.js` with adapter methods for both backends, tokens are
+  single-use and bound to one `device_id` (`enrolled_device_id`), and the table is
+  created by the adapter schema on SQLite and PostgreSQL alike.
 - **Signal ID change requires identity proof (C2).** A `RegisterPk` carrying
   `old_id` is applied only when the supplied key or the machine UUID matches the
   stored peer, so knowing a device id is no longer enough to move or delete it.

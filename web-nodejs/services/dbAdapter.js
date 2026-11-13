@@ -1062,6 +1062,20 @@ function createSqliteAdapter(config) {
             CREATE INDEX IF NOT EXISTS idx_agent_bundles_bundle_id ON agent_bundles (bundle_id);
             CREATE INDEX IF NOT EXISTS idx_agent_bundles_hash ON agent_bundles (branding_hash);
 
+            CREATE TABLE IF NOT EXISTS agent_templates (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL UNIQUE,
+                description TEXT NOT NULL DEFAULT '',
+                config_json TEXT NOT NULL DEFAULT '{}',
+                enrollment_token TEXT NOT NULL UNIQUE,
+                enrolled_device_id TEXT DEFAULT NULL,
+                enrolled_at TEXT DEFAULT NULL,
+                created_by INTEGER DEFAULT NULL,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+            CREATE INDEX IF NOT EXISTS idx_agent_templates_token ON agent_templates (enrollment_token);
+
             CREATE TABLE IF NOT EXISTS agent_bundle_builds (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 branding_hash TEXT NOT NULL,
@@ -3806,6 +3820,71 @@ function createSqliteAdapter(config) {
             return openMain().prepare('SELECT * FROM agent_bundles WHERE bundle_id = ?').get(bundleId) || null;
         },
 
+        /**
+         * Agent enrollment templates (`agent_templates`, auth database).
+         *
+         * These live in auth.db next to users/groups, not in the main peer
+         * database. The routes used to call `db.query` / `db.run`, which the
+         * database facade never exposed, so the template tab and
+         * `POST /api/bd/enroll` silently failed for every token.
+         */
+        async listAgentTemplates() {
+            return openAuth().prepare(`
+                SELECT id, name, description, enrollment_token, created_at, updated_at
+                FROM agent_templates ORDER BY id DESC
+            `).all();
+        },
+
+        async getAgentTemplateByToken(token) {
+            const clean = String(token || '').trim();
+            if (!clean) return null;
+            try {
+                return openAuth().prepare(
+                    'SELECT * FROM agent_templates WHERE enrollment_token = ?'
+                ).get(clean) || null;
+            } catch (err) {
+                if (!/no such table|no such column/i.test(String(err.message || ''))) throw err;
+                try {
+                    return openAuth().prepare(
+                        'SELECT id, name, config_json, enrollment_token FROM agent_templates WHERE enrollment_token = ?'
+                    ).get(clean) || null;
+                } catch (_) {
+                    return null;
+                }
+            }
+        },
+
+        async bindAgentTemplateDevice(token, deviceId) {
+            const clean = String(token || '').trim();
+            const device = String(deviceId || '').trim();
+            if (!clean || !device) return false;
+            try {
+                openAuth().prepare(`
+                    UPDATE agent_templates SET enrolled_device_id = ?, enrolled_at = datetime('now')
+                    WHERE enrollment_token = ? AND (enrolled_device_id IS NULL OR enrolled_device_id = '')
+                `).run(device, clean);
+                return true;
+            } catch (err) {
+                if (!/no such column/i.test(String(err.message || ''))) throw err;
+                // Pre-binding schema: no way to enforce single use here.
+                return false;
+            }
+        },
+
+        async createAgentTemplate({ name, description, configJson, enrollmentToken, createdBy }) {
+            const info = openAuth().prepare(`
+                INSERT INTO agent_templates (name, description, config_json, enrollment_token, created_by)
+                VALUES (?, ?, ?, ?, ?)
+            `).run(
+                String(name || '').slice(0, 100),
+                String(description || '').slice(0, 500),
+                String(configJson || '{}'),
+                String(enrollmentToken || ''),
+                createdBy == null ? null : Number(createdBy)
+            );
+            return { id: info.lastInsertRowid, enrollmentToken };
+        },
+
         async getAgentBundleByPublicId(publicId) {
             return openMain().prepare(`
                 SELECT * FROM agent_bundles WHERE slug = ? OR bundle_id = ? LIMIT 1
@@ -4529,6 +4608,28 @@ function createPostgresAdapter() {
         `);
         await q('CREATE INDEX IF NOT EXISTS idx_pending_reg_status ON pending_registrations (status)');
         await q('CREATE INDEX IF NOT EXISTS idx_pending_reg_device ON pending_registrations (device_id)');
+
+        // -- Agent enrollment templates (Registrations → Support Agent token).
+        // The SQLite path creates this in auth.db; PostgreSQL keeps everything in
+        // one database, so the table must exist here too or the template tab and
+        // POST /api/bd/enroll fail on every Postgres install.
+        await q(`
+            CREATE TABLE IF NOT EXISTS agent_templates (
+                id SERIAL PRIMARY KEY,
+                name TEXT NOT NULL UNIQUE,
+                description TEXT NOT NULL DEFAULT '',
+                config_json TEXT NOT NULL DEFAULT '{}',
+                enrollment_token TEXT NOT NULL UNIQUE,
+                enrolled_device_id TEXT DEFAULT NULL,
+                enrolled_at TIMESTAMPTZ DEFAULT NULL,
+                created_by INTEGER DEFAULT NULL,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            )
+        `);
+        await q('ALTER TABLE agent_templates ADD COLUMN IF NOT EXISTS enrolled_device_id TEXT DEFAULT NULL');
+        await q('ALTER TABLE agent_templates ADD COLUMN IF NOT EXISTS enrolled_at TIMESTAMPTZ DEFAULT NULL');
+        await q('CREATE INDEX IF NOT EXISTS idx_agent_templates_token ON agent_templates (enrollment_token)');
 
         // -- Agent installer bundles (Generator Agenta)
         await q(`
@@ -7463,6 +7564,55 @@ function createPostgresAdapter() {
 
         async getAgentBundle(bundleId) {
             return one('SELECT * FROM agent_bundles WHERE bundle_id = $1', [bundleId]);
+        },
+
+        /** Agent enrollment templates — see the SQLite adapter for context. */
+        async listAgentTemplates() {
+            return all(`
+                SELECT id, name, description, enrollment_token, created_at, updated_at
+                FROM agent_templates ORDER BY id DESC
+            `);
+        },
+
+        async getAgentTemplateByToken(token) {
+            const clean = String(token || '').trim();
+            if (!clean) return null;
+            try {
+                return await one('SELECT * FROM agent_templates WHERE enrollment_token = $1', [clean]);
+            } catch (err) {
+                if (!/does not exist|no such table|no such column/i.test(String(err.message || ''))) throw err;
+                return null;
+            }
+        },
+
+        async bindAgentTemplateDevice(token, deviceId) {
+            const clean = String(token || '').trim();
+            const device = String(deviceId || '').trim();
+            if (!clean || !device) return false;
+            try {
+                await q(`
+                    UPDATE agent_templates SET enrolled_device_id = $1, enrolled_at = NOW()
+                    WHERE enrollment_token = $2 AND (enrolled_device_id IS NULL OR enrolled_device_id = '')
+                `, [device, clean]);
+                return true;
+            } catch (err) {
+                if (!/does not exist|no such column/i.test(String(err.message || ''))) throw err;
+                return false;
+            }
+        },
+
+        async createAgentTemplate({ name, description, configJson, enrollmentToken, createdBy }) {
+            const row = await one(`
+                INSERT INTO agent_templates (name, description, config_json, enrollment_token, created_by)
+                VALUES ($1, $2, $3, $4, $5) RETURNING id
+            `, [
+                String(name || '').slice(0, 100),
+                String(description || '').slice(0, 500),
+                String(configJson || '{}'),
+                String(enrollmentToken || ''),
+                createdBy == null ? null : Number(createdBy),
+            ]);
+            return { id: row && row.id, enrollmentToken };
         },
 
         async getAgentBundleByPublicId(publicId) {
