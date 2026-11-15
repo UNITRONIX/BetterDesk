@@ -79,5 +79,5 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Explicit dispatch — bump commits from GITHUB_TOKEN do not start workflows.
-          gh workflow run "Build & Publish Docker Images" --ref dev -f tag=dev
+          gh workflow run .github/workflows/docker-publish.yml --ref dev -f tag=dev
           echo "Dispatched docker-publish for :dev (VERSION ${{ steps.bump.outputs.version }})"

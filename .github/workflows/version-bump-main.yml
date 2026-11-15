@@ -171,7 +171,7 @@ jobs:
           echo "Dispatching server artifact release for ${TAG}"
           gh workflow run "Build & Release Go Server" --ref "$TAG"
           echo "Dispatching container image publish for ${TAG}"
-          gh workflow run "Build & Publish Docker Images" --ref "$TAG" -f tag=latest
+          gh workflow run .github/workflows/docker-publish.yml --ref "$TAG" -f tag=latest
           echo "Dispatched both publishers for ${TAG}"
           echo "${TAG}" > "${RUNNER_TEMP}/released_tag"
 
