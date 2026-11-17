@@ -55,8 +55,14 @@ func TestForceRelayStillPunchesTarget(t *testing.T) {
 	if gotAddr == nil || !gotAddr.IP.Equal(initiatorAddr.IP) {
 		t.Fatalf("punch socket_addr = %v, want the initiator %v", gotAddr, initiatorAddr)
 	}
-	if !ph.ForceRelay {
-		t.Fatal("relay-mode punch must set force_relay so the target does not attempt P2P")
+	// Upstream forces relay with nat_type=SYMMETRIC, never force_relay: a peer
+	// that sees force_relay skips RequestRelay, invents its own UUID, and the two
+	// sides never meet in the relay's pending map.
+	if ph.NatType != pb.NatType_SYMMETRIC {
+		t.Fatalf("nat_type = %v, want SYMMETRIC to force relay", ph.NatType)
+	}
+	if ph.ForceRelay {
+		t.Fatal("force_relay must stay false: it makes the peer skip RequestRelay and use its own UUID")
 	}
 }
 
