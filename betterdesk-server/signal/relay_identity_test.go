@@ -10,11 +10,8 @@ import (
 	pb "github.com/unitronix/betterdesk-server/proto"
 )
 
-// Recent RustDesk clients validate an incoming relay request against the relay
-// they configured (check_port(..., RELAY_PORT)) and silently drop a mismatch.
-// The server must therefore forward the target's own reported spelling instead
-// of overwriting it with the server-derived endpoint, otherwise the relay pair
-// never gets its second connection and the session dies with "Pair timeout".
+// A peer's own relay value wins over the server-derived one, because the peer
+// validates the incoming request against its own configuration.
 func TestRelayAdvertisedToTargetPrefersPeerReportedRelay(t *testing.T) {
 	target := &peer.Entry{ID: "TGT1", RelayServer: "desk.example.com"}
 
@@ -37,9 +34,11 @@ func TestRelayAdvertisedToTargetFallsBackForOldClients(t *testing.T) {
 	}
 }
 
-// The reported relay is captured from PunchHoleSent, but sanitized: agent
-// builds that report the API port as their relay must not poison forwarding.
-func TestHandlePunchHoleSentRecordsSanitizedPeerRelay(t *testing.T) {
+// The reported relay is stored verbatim: the peer validates incoming relay
+// requests against its own value, so rewriting it makes the peer drop them.
+// A peer reporting the API port works because that port also speaks relay
+// framing (api/sniff_listener.go).
+func TestHandlePunchHoleSentRecordsPeerRelayVerbatim(t *testing.T) {
 	srv, _ := newTestSignalServer(t, config.EnrollmentModeOpen)
 	srv.localIP.Store("198.51.100.20")
 	srv.cfg.RelayServers = "85.14.70.12"
@@ -55,7 +54,7 @@ func TestHandlePunchHoleSentRecordsSanitizedPeerRelay(t *testing.T) {
 	srv.peers.Put(target)
 
 	initiatorAddr := udpAddr("203.0.113.90", 51000)
-	// This is what the broken agent reports: the API port as relay.
+	// The failing agent reports the API port as its relay.
 	srv.handlePunchHoleSent(&pb.PunchHoleSent{
 		Id:          "TGTREP1",
 		SocketAddr:  cryptopkg.EncodeAddr(initiatorAddr),
@@ -66,11 +65,10 @@ func TestHandlePunchHoleSentRecordsSanitizedPeerRelay(t *testing.T) {
 	if entry == nil {
 		t.Fatal("target disappeared")
 	}
-	if entry.RelayServer != "85.14.70.12:21117" {
-		t.Fatalf("stored relay = %q, want the sanitized relay endpoint", entry.RelayServer)
+	if entry.RelayServer != "85.14.70.12:21114" {
+		t.Fatalf("stored relay = %q, want the peer's own value (rewriting it makes the peer drop the request)", entry.RelayServer)
 	}
-	if relayAdvertisedToTarget(entry, "fallback:21117") != "85.14.70.12:21117" {
-		t.Fatalf("forwarded relay = %q, want the sanitized relay endpoint",
-			relayAdvertisedToTarget(entry, "fallback:21117"))
+	if got := relayAdvertisedToTarget(entry, "fallback:21117"); got != "85.14.70.12:21114" {
+		t.Fatalf("forwarded relay = %q, want the peer's own value", got)
 	}
 }

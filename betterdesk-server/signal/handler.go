@@ -1466,23 +1466,14 @@ func (s *Server) handlePunchHoleSent(phs *pb.PunchHoleSent, senderAddr *net.UDPA
 		log.Printf("[signal] PunchHoleSent shared public IP %s detected (issue #121 hairpin) → keeping public relay=%s", senderAddr.IP, relayServer)
 	}
 
-	// Remember the relay the peer advertised, but *sanitized*: some agent builds
-	// report the API port as their relay (85.14.70.12:21114), and forwarding
-	// that verbatim makes both sides dial the HTTP listener. sanitize converts
-	// such ports to the real relay port while keeping the peer's host spelling,
-	// which is what check_relay_request compares against.
-	if targetID != "" {
-		s.peers.SetRelayServer(targetID, relayServer)
-	}
-	// A peer that reports a non-relay port as its relay has a broken baked
-	// configuration (its custom.txt carried a portless host and the client
-	// filled in the API port). No server-side rewrite can fix that: the client
-	// rejects any relay that differs from its own value, and its own value is
-	// an HTTP listener. Surface it so the operator rebuilds the bundle.
-	if phs.RelayServer != "" && relayServer != phs.RelayServer {
-		log.Printf("[signal] WARNING: peer %s reports relay %q which is not a relay endpoint; "+
-			"its baked config is stale — rebuild the agent bundle with relay %s",
-			targetID, phs.RelayServer, relayServer)
+	// Remember the relay the peer itself advertised, verbatim.
+	//
+	// The peer validates an incoming relay request against this value, so it must
+	// not be rewritten: forwarding a "corrected" endpoint makes the peer drop the
+	// request and the pair never completes. A peer that reports the API port is
+	// handled by the relay-framing fallback on that port instead.
+	if targetID != "" && phs.RelayServer != "" {
+		s.peers.SetRelayServer(targetID, phs.RelayServer)
 	}
 
 	phr := &pb.PunchHoleResponse{
@@ -2156,13 +2147,22 @@ func (s *Server) handleLocalAddr(msg *pb.LocalAddr, raddr *net.UDPAddr) {
 }
 
 // relayAdvertisedToTarget returns the relay endpoint to put in a RequestRelay
-// sent to target. Recent RustDesk clients compare it with their own configured
-// relay using check_port(..., RELAY_PORT) and drop the request when it differs
-// ("relay server ... was not offered by this peer"), which shows up server-side
-// as a relay pair that never gets its second connection.
+// sent to target.
 //
-// The peer's own reported spelling therefore wins; the server-derived value is
-// only a fallback for peers that never reported one (older clients).
+// A RustDesk peer validates the incoming relay against its own configured value
+// with check_port(..., RELAY_PORT) and silently drops any request that differs
+// ("relay server ... was not offered by this peer"). Sending a "corrected"
+// endpoint therefore guarantees the peer never answers, which is exactly what
+// production showed: a peer reporting 85.14.70.12:21114 replied while we sent
+// :21114, and went silent once we rewrote it to :21117.
+//
+// So the peer's own value wins. The API port now also speaks relay framing
+// (see api/sniff_listener.go), which is why that value works end to end: the
+// peer accepts the request and its subsequent connection is served by the relay
+// handler instead of the HTTP listener.
+//
+// The server-derived endpoint stays as the fallback for peers that never
+// reported one (older clients).
 func relayAdvertisedToTarget(target *peer.Entry, fallback string) string {
 	if target != nil {
 		if reported := strings.TrimSpace(target.RelayServer); reported != "" {
