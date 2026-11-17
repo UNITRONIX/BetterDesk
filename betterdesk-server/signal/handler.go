@@ -1265,38 +1265,17 @@ func (s *Server) handlePunchHoleRequestTCPWithHint(msg *pb.PunchHoleRequest, rad
 		s.requiresRelayOnlyCompatibility(targetID) {
 		log.Printf("[signal] PunchHole (TCP): force relay for %s (returning SYMMETRIC to let client drive relay UUID)", targetID)
 
-		// Punch the target anyway, exactly as upstream hbbs does for every
-		// PunchHoleRequest. Two things depend on it:
-		//   - the target learns the initiator's address, which it needs to build
-		//     its RelayResponse;
-		//   - the target answers with PunchHoleSent, and that message carries the
-		//     relay endpoint it configured. Without it we have no idea which relay
-		//     value the target will accept in RequestRelay, because newer clients
-		//     drop a request whose relay_server differs from their own.
-		// Punch the target so it learns the initiator's address.
+		// Do NOT punch the target here.
 		//
-		// nat_type stays as the initiator reported it — do NOT set SYMMETRIC and
-		// do NOT set force_relay. Upstream forces relay only for its own
-		// ALWAYS_USE_RELAY/LAN cases, and a peer that sees either marker treats
-		// itself as relay initiator: it mints its own UUID (initiate=true) and
-		// answers RelayResponse with that UUID instead of an empty one, which
-		// breaks the pending correlation the initiator depends on.
-		punchForTarget := &pb.RendezvousMessage{
-			Union: &pb.RendezvousMessage_PunchHole{
-				PunchHole: &pb.PunchHole{
-					SocketAddr:     crypto.EncodeAddr(raddr),
-					RelayServer:    relayServer,
-					NatType:        msg.NatType,
-					UdpPort:        msg.UdpPort,
-					UpnpPort:       msg.UpnpPort,
-					WebrtcSdpOffer: msg.WebrtcSdpOffer,
-				},
-			},
-		}
-		if s.sendToPeer(targetID, punchForTarget) {
-			log.Printf("[signal] PunchHole (TCP): relay-mode punch sent to %s so it learns the initiator and reports its relay", targetID)
-		}
-
+		// Production proved a punch changes the target's role: with one present it
+		// treats itself as relay initiator and answers RelayResponse with its own
+		// uuid and id (10:07: uuid=5d0f61e5, id=275129227). Without it the answer
+		// carries an empty uuid (09:11: uuid=, id=), which is the shape
+		// handleRelayResponseForward recovers from the pending store.
+		//
+		// The target still receives RequestRelay carrying the initiator address,
+		// which is all it needs to answer, and the initiator still gets its prompt
+		// RelayResponse below.
 		var signedPk []byte
 		targetPK := s.peerPublicKey(targetID, target)
 		if len(targetPK) > 0 {
