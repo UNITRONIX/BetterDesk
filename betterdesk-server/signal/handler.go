@@ -1472,9 +1472,17 @@ func (s *Server) handlePunchHoleSent(phs *pb.PunchHoleSent, senderAddr *net.UDPA
 	// such ports to the real relay port while keeping the peer's host spelling,
 	// which is what check_relay_request compares against.
 	if targetID != "" {
-		if entry := s.peers.Get(targetID); entry != nil {
-			entry.RelayServer = relayServer
-		}
+		s.peers.SetRelayServer(targetID, relayServer)
+	}
+	// A peer that reports a non-relay port as its relay has a broken baked
+	// configuration (its custom.txt carried a portless host and the client
+	// filled in the API port). No server-side rewrite can fix that: the client
+	// rejects any relay that differs from its own value, and its own value is
+	// an HTTP listener. Surface it so the operator rebuilds the bundle.
+	if phs.RelayServer != "" && relayServer != phs.RelayServer {
+		log.Printf("[signal] WARNING: peer %s reports relay %q which is not a relay endpoint; "+
+			"its baked config is stale — rebuild the agent bundle with relay %s",
+			targetID, phs.RelayServer, relayServer)
 	}
 
 	phr := &pb.PunchHoleResponse{

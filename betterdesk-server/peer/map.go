@@ -260,6 +260,23 @@ func (m *Map) SetPKIfEmpty(id string, pk []byte) bool {
 	return true
 }
 
+// SetRelayServer records the relay endpoint a peer itself advertised.
+// Must be called under the map lock: Entry is shared, so writing through a
+// pointer returned by Get() would race with readers.
+func (m *Map) SetRelayServer(id, relay string) bool {
+	if m == nil || id == "" {
+		return false
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	e, ok := m.entries[id]
+	if !ok {
+		return false
+	}
+	e.RelayServer = relay
+	return true
+}
+
 // UpdateHeartbeat refreshes the heartbeat timestamp and address for a peer.
 // Returns false if the peer is not in the map.
 func (m *Map) UpdateHeartbeat(id string, addr *net.UDPAddr, serial int32) bool {
