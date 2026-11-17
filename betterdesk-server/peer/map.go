@@ -66,6 +66,13 @@ type Entry struct {
 	LocalAddr string       // Peer's self-reported local address
 	Version   string       // Client version string
 
+	// RelayServer is the relay endpoint this peer itself advertised (from
+	// PunchHoleSent). Recent RustDesk clients validate an incoming relay
+	// request against their own configured relay with check_port(..., RELAY_PORT)
+	// and silently drop a mismatch, so forwarding the peer's own spelling is
+	// what makes a relay pair complete.
+	RelayServer string
+
 	// Enhanced status tracking
 	FirstSeen       time.Time // When the peer was first registered in this session
 	HeartbeatCount  int64     // Total heartbeats received in this session

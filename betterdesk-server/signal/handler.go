@@ -1466,6 +1466,15 @@ func (s *Server) handlePunchHoleSent(phs *pb.PunchHoleSent, senderAddr *net.UDPA
 		log.Printf("[signal] PunchHoleSent shared public IP %s detected (issue #121 hairpin) → keeping public relay=%s", senderAddr.IP, relayServer)
 	}
 
+	// Remember the relay the peer itself advertised. Recent clients reject an
+	// incoming relay request whose relay_server does not match their own
+	// spelling, so RequestRelay forwarding must reuse this exact value.
+	if phs.RelayServer != "" && targetID != "" {
+		if entry := s.peers.Get(targetID); entry != nil {
+			entry.RelayServer = phs.RelayServer
+		}
+	}
+
 	phr := &pb.PunchHoleResponse{
 		SocketAddr:  crypto.EncodeAddr(senderAddr),
 		Pk:          signedPk,
@@ -1628,10 +1637,12 @@ func (s *Server) handleRequestRelay(msg *pb.RequestRelay, raddr *net.UDPAddr) {
 	relayReq := &pb.RendezvousMessage{
 		Union: &pb.RendezvousMessage_RequestRelay{
 			RequestRelay: &pb.RequestRelay{
-				SocketAddr:  crypto.EncodeAddr(raddr),
-				Uuid:        relayUUID,
-				Id:          msg.Id,
-				RelayServer: relayServer,
+				SocketAddr: crypto.EncodeAddr(raddr),
+				Uuid:       relayUUID,
+				Id:         msg.Id,
+				// Target validates this against its own relay (see
+				// relayAdvertisedToTarget); prefer what it reported.
+				RelayServer: relayAdvertisedToTarget(target, relayServer),
 			},
 		},
 	}
@@ -1783,10 +1794,13 @@ func (s *Server) handleRequestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr,
 	reqRelay := &pb.RendezvousMessage{
 		Union: &pb.RendezvousMessage_RequestRelay{
 			RequestRelay: &pb.RequestRelay{
-				SocketAddr:         crypto.EncodeAddr(advertisedAddr),
-				Uuid:               relayUUID,
-				Id:                 msg.Id,
-				RelayServer:        relayServer,
+				SocketAddr: crypto.EncodeAddr(advertisedAddr),
+				Uuid:       relayUUID,
+				Id:         msg.Id,
+				// The target validates this against the relay it configured and
+				// silently drops a mismatch, so prefer the endpoint the target
+				// itself reported before falling back to the server's value.
+				RelayServer:        relayAdvertisedToTarget(target, relayServer),
 				Secure:             msg.Secure,
 				ConnType:           msg.ConnType,
 				Token:              msg.Token,
@@ -1797,7 +1811,8 @@ func (s *Server) handleRequestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr,
 	// Store the UUID so we can recover it if target responds with empty UUID.
 	s.storePendingRelay(targetID, raddr, advertisedAddr, relayUUID, initiatorID)
 	if s.sendToPeer(targetID, reqRelay) {
-		log.Printf("[signal] RequestRelay (TCP): forwarded to %s (connType=%s) secure=%v", targetID, target.ConnType, msg.Secure)
+		log.Printf("[signal] RequestRelay (TCP): forwarded to %s (connType=%s) secure=%v relay_to_target=%s",
+			targetID, target.ConnType, msg.Secure, reqRelay.GetRequestRelay().GetRelayServer())
 	}
 
 	// Sign the target's PK for E2E encryption verification
@@ -2128,6 +2143,23 @@ func (s *Server) handleFetchLocalAddr(msg *pb.FetchLocalAddr, raddr *net.UDPAddr
 // the target's actual LAN listener inside a PunchHoleResponse.
 func (s *Server) handleLocalAddr(msg *pb.LocalAddr, raddr *net.UDPAddr) {
 	s.completeLANAddr(msg, raddr)
+}
+
+// relayAdvertisedToTarget returns the relay endpoint to put in a RequestRelay
+// sent to target. Recent RustDesk clients compare it with their own configured
+// relay using check_port(..., RELAY_PORT) and drop the request when it differs
+// ("relay server ... was not offered by this peer"), which shows up server-side
+// as a relay pair that never gets its second connection.
+//
+// The peer's own reported spelling therefore wins; the server-derived value is
+// only a fallback for peers that never reported one (older clients).
+func relayAdvertisedToTarget(target *peer.Entry, fallback string) string {
+	if target != nil {
+		if reported := strings.TrimSpace(target.RelayServer); reported != "" {
+			return reported
+		}
+	}
+	return fallback
 }
 
 // handleIceCandidate relays a WebRTC trickle-ICE candidate from one peer to
