@@ -37,11 +37,14 @@ func TestRelayAdvertisedToTargetFallsBackForOldClients(t *testing.T) {
 	}
 }
 
-// The reported relay is captured from PunchHoleSent so RequestRelay forwarding
-// can reuse it.
-func TestHandlePunchHoleSentRecordsPeerReportedRelay(t *testing.T) {
+// The reported relay is captured from PunchHoleSent, but sanitized: agent
+// builds that report the API port as their relay must not poison forwarding.
+func TestHandlePunchHoleSentRecordsSanitizedPeerRelay(t *testing.T) {
 	srv, _ := newTestSignalServer(t, config.EnrollmentModeOpen)
 	srv.localIP.Store("198.51.100.20")
+	srv.cfg.RelayServers = "85.14.70.12"
+	srv.cfg.RelayPort = 21117
+	srv.cfg.APIPort = 21114
 
 	target := &peer.Entry{
 		ID:       "TGTREP1",
@@ -52,17 +55,22 @@ func TestHandlePunchHoleSentRecordsPeerReportedRelay(t *testing.T) {
 	srv.peers.Put(target)
 
 	initiatorAddr := udpAddr("203.0.113.90", 51000)
+	// This is what the broken agent reports: the API port as relay.
 	srv.handlePunchHoleSent(&pb.PunchHoleSent{
 		Id:          "TGTREP1",
 		SocketAddr:  cryptopkg.EncodeAddr(initiatorAddr),
-		RelayServer: "desk.example.com",
+		RelayServer: "85.14.70.12:21114",
 	}, udpAddr("203.0.113.80", 52100), true)
 
 	entry := srv.peers.Get("TGTREP1")
 	if entry == nil {
 		t.Fatal("target disappeared")
 	}
-	if entry.RelayServer != "desk.example.com" {
-		t.Fatalf("stored relay = %q, want the peer-reported value", entry.RelayServer)
+	if entry.RelayServer != "85.14.70.12:21117" {
+		t.Fatalf("stored relay = %q, want the sanitized relay endpoint", entry.RelayServer)
+	}
+	if relayAdvertisedToTarget(entry, "fallback:21117") != "85.14.70.12:21117" {
+		t.Fatalf("forwarded relay = %q, want the sanitized relay endpoint",
+			relayAdvertisedToTarget(entry, "fallback:21117"))
 	}
 }

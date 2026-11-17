@@ -1466,12 +1466,14 @@ func (s *Server) handlePunchHoleSent(phs *pb.PunchHoleSent, senderAddr *net.UDPA
 		log.Printf("[signal] PunchHoleSent shared public IP %s detected (issue #121 hairpin) → keeping public relay=%s", senderAddr.IP, relayServer)
 	}
 
-	// Remember the relay the peer itself advertised. Recent clients reject an
-	// incoming relay request whose relay_server does not match their own
-	// spelling, so RequestRelay forwarding must reuse this exact value.
-	if phs.RelayServer != "" && targetID != "" {
+	// Remember the relay the peer advertised, but *sanitized*: some agent builds
+	// report the API port as their relay (85.14.70.12:21114), and forwarding
+	// that verbatim makes both sides dial the HTTP listener. sanitize converts
+	// such ports to the real relay port while keeping the peer's host spelling,
+	// which is what check_relay_request compares against.
+	if targetID != "" {
 		if entry := s.peers.Get(targetID); entry != nil {
-			entry.RelayServer = phs.RelayServer
+			entry.RelayServer = relayServer
 		}
 	}
 
