@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "issue_labels": [
+    "Next Updates",
+    "compatibility"
+  ],
+  "checklist_doc": "docs/important/rustdesk-compat-checklist.md",
+  "audit_doc": "docs/RDCLIENT_VS_RUSTDESK_AUDIT.md",
+  "client": {
+    "id": "client",
+    "repository": "rustdesk/rustdesk",
+    "last_seen_tag": "1.5.3",
+    "last_seen_published_at": "2026-11-09T09:43:52Z",
+    "last_reviewed_tag": "1.5.3"
+  },
+  "server_oss": {
+    "id": "server_oss",
+    "repository": "rustdesk/rustdesk-server",
+    "last_seen_tag": "1.1.16",
+    "last_seen_published_at": "2026-07-20T22:25:36Z",
+    "last_reviewed_tag": "1.1.16"
+  }
+}

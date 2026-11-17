@@ -1,6 +1,9 @@
 package api
 
-import "testing"
+import (
+	"encoding/json"
+	"testing"
+)
 
 func TestNormalizeStrategyOptionValue(t *testing.T) {
 	tests := []struct {
@@ -35,5 +38,50 @@ func TestMergeRustDeskStrategyOptionsPreservesBrandingLocks(t *testing.T) {
 	}
 	if got["enable-audio"] != "N" {
 		t.Fatalf("strategy option was not merged: %#v", got)
+	}
+}
+
+// RustDesk 1.5.3+ ignores these keys in heartbeat strategy updates (#16696).
+// BetterDesk must not treat them as deployable via rustDeskStrategyOptionKeys.
+func TestRustDeskStrategyOptionKeysExcludeLockedEndpointKeys(t *testing.T) {
+	locked := []string{
+		"api-server",
+		"custom-rendezvous-server",
+		"relay-server",
+		"key",
+		"2fa",
+		"bot",
+		"enable-trusted-devices",
+		"trusted-device-expiration-days",
+		"websocket-port",
+	}
+	for _, key := range locked {
+		if _, ok := rustDeskStrategyOptionKeys[key]; ok {
+			t.Fatalf("locked 1.5.3 strategy key %q must not be in rustDeskStrategyOptionKeys", key)
+		}
+	}
+}
+
+func TestNormalizeRustDeskStrategyPermissionsDropsLockedKeys(t *testing.T) {
+	got, err := normalizeRustDeskStrategyPermissions(json.RawMessage(`{
+		"enable-audio": true,
+		"relay-server": "relay.example.com:21117",
+		"api-server": "https://api.example.com",
+		"unknown": "Y"
+	}`))
+	if err != nil {
+		t.Fatalf("normalize strategy permissions: %v", err)
+	}
+	var permissions map[string]string
+	if err := json.Unmarshal([]byte(got), &permissions); err != nil {
+		t.Fatalf("decode normalized permissions: %v", err)
+	}
+	if permissions["enable-audio"] != "Y" {
+		t.Fatalf("allowed option was not preserved: %#v", permissions)
+	}
+	for _, key := range []string{"relay-server", "api-server", "unknown"} {
+		if _, ok := permissions[key]; ok {
+			t.Fatalf("disallowed option %q was persisted: %#v", key, permissions)
+		}
 	}
 }

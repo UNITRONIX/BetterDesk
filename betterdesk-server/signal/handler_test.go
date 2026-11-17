@@ -167,8 +167,8 @@ func TestProcessRegisterPkManagedRejectsUnknownPeer(t *testing.T) {
 	srv, database := newTestSignalServer(t, config.EnrollmentModeManaged)
 
 	resp := srv.processRegisterPk(newRegisterPk("NEWPK1"), "203.0.113.10:50123")
-	if got := registerPkResult(resp); got != pb.RegisterPkResponse_NOT_SUPPORT {
-		t.Fatalf("RegisterPk result = %v, want %v", got, pb.RegisterPkResponse_NOT_SUPPORT)
+	if got := registerPkResult(resp); got != pb.RegisterPkResponse_NOT_DEPLOYED {
+		t.Fatalf("RegisterPk result = %v, want %v", got, pb.RegisterPkResponse_NOT_DEPLOYED)
 	}
 
 	peer, err := database.GetPeer("NEWPK1")
@@ -218,8 +218,8 @@ func TestManagedApprovalRetainsSignalTransportAndEnablesInboundRelay(t *testing.
 
 	// A client may send RegisterPk during the pending interval. Reject the
 	// key for now, but preserve the live transport for the later approval.
-	if got := registerPkResult(srv.processRegisterPk(newRegisterPk("APPROVED1"), targetAddr.String())); got != pb.RegisterPkResponse_NOT_SUPPORT {
-		t.Fatalf("pending RegisterPk = %v, want NOT_SUPPORT", got)
+	if got := registerPkResult(srv.processRegisterPk(newRegisterPk("APPROVED1"), targetAddr.String())); got != pb.RegisterPkResponse_NOT_DEPLOYED {
+		t.Fatalf("pending RegisterPk = %v, want NOT_DEPLOYED", got)
 	}
 	if srv.peers.Get("APPROVED1") == nil {
 		t.Fatal("pending RegisterPk must not discard the retained transport")
@@ -303,8 +303,8 @@ func TestProcessRegisterPkLockedDoesNotQueueUnknownPeer(t *testing.T) {
 	srv, database := newTestSignalServer(t, config.EnrollmentModeLocked)
 
 	resp := srv.processRegisterPk(newRegisterPk("LOCKPK1"), "203.0.113.10:50123")
-	if got := registerPkResult(resp); got != pb.RegisterPkResponse_NOT_SUPPORT {
-		t.Fatalf("RegisterPk result = %v, want %v", got, pb.RegisterPkResponse_NOT_SUPPORT)
+	if got := registerPkResult(resp); got != pb.RegisterPkResponse_NOT_DEPLOYED {
+		t.Fatalf("RegisterPk result = %v, want %v", got, pb.RegisterPkResponse_NOT_DEPLOYED)
 	}
 
 	pending, err := database.GetConfig("pending_device_LOCKPK1")

@@ -739,7 +739,7 @@ func (s *Server) processRegisterPk(msg *pb.RegisterPk, addrStr string) *pb.Rende
 		if !s.isPendingEnrollment(id) || s.peers.Get(id) == nil {
 			s.peers.Remove(id)
 		}
-		return registerPkResponse(pb.RegisterPkResponse_NOT_SUPPORT)
+		return registerPkResponse(pb.RegisterPkResponse_NOT_DEPLOYED)
 	}
 
 	// Check ban status
@@ -1325,13 +1325,13 @@ func (s *Server) handlePunchHoleRequestTCPWithHint(msg *pb.PunchHoleRequest, rad
 	punchHole := &pb.RendezvousMessage{
 		Union: &pb.RendezvousMessage_PunchHole{
 			PunchHole: &pb.PunchHole{
-				SocketAddr:   crypto.EncodeAddr(advertisedAddr),
-				RelayServer:  relayServer,
-				NatType:      msg.NatType,
-				UdpPort:      msg.UdpPort,
-				ForceRelay:   msg.ForceRelay,
-				UpnpPort:     msg.UpnpPort,
-				SocketAddrV6: msg.SocketAddrV6,
+				SocketAddr:     crypto.EncodeAddr(advertisedAddr),
+				RelayServer:    relayServer,
+				NatType:        msg.NatType,
+				UdpPort:        msg.UdpPort,
+				ForceRelay:     msg.ForceRelay,
+				UpnpPort:       msg.UpnpPort,
+				SocketAddrV6:   msg.SocketAddrV6,
 				WebrtcSdpOffer: msg.WebrtcSdpOffer,
 			},
 		},
@@ -1653,7 +1653,13 @@ func (s *Server) handleRequestRelay(msg *pb.RequestRelay, raddr *net.UDPAddr) {
 				Id:         msg.Id,
 				// Target validates this against its own relay (see
 				// relayAdvertisedToTarget); prefer what it reported.
-				RelayServer: relayAdvertisedToTarget(target, relayServer),
+				RelayServer:        relayAdvertisedToTarget(target, relayServer),
+				ControlledContext:  msg.ControlledContext,
+				SwitchCode:         msg.SwitchCode,
+				Secure:             msg.Secure,
+				ConnType:           msg.ConnType,
+				Token:              msg.Token,
+				ControlPermissions: msg.ControlPermissions,
 			},
 		},
 	}
@@ -1812,6 +1818,8 @@ func (s *Server) handleRequestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr,
 				// silently drops a mismatch, so prefer the endpoint the target
 				// itself reported before falling back to the server's value.
 				RelayServer:        relayAdvertisedToTarget(target, relayServer),
+				ControlledContext:  msg.ControlledContext,
+				SwitchCode:         msg.SwitchCode,
 				Secure:             msg.Secure,
 				ConnType:           msg.ConnType,
 				Token:              msg.Token,
@@ -2145,9 +2153,10 @@ func (s *Server) handleFetchLocalAddr(msg *pb.FetchLocalAddr, raddr *net.UDPAddr
 	fetch := &pb.RendezvousMessage{
 		Union: &pb.RendezvousMessage_FetchLocalAddr{
 			FetchLocalAddr: &pb.FetchLocalAddr{
-				SocketAddr:   crypto.EncodeAddr(raddr),
-				RelayServer:  msg.RelayServer,
-				SocketAddrV6: copyBytes(msg.SocketAddrV6),
+				SocketAddr:        crypto.EncodeAddr(raddr),
+				RelayServer:       msg.RelayServer,
+				SocketAddrV6:      copyBytes(msg.SocketAddrV6),
+				ControlledContext: msg.ControlledContext,
 			},
 		},
 	}
@@ -2304,6 +2313,12 @@ func (s *Server) sendRelayResponse(target *peer.Entry, raddr *net.UDPAddr, msg *
 		s.sendUDP(s.relayTicketRejectedResponse(relay), raddr)
 		return
 	}
+	// RustDesk 1.5.3 validates the relay in the target-bound RequestRelay
+	// against the relay address that target previously reported (#16858).
+	// Keep the initiator's reachable server-selected relay separate from the
+	// target's peer-offered value; sending the former to the target can make
+	// newer clients silently drop the request and leave a relay timeout.
+	targetRelay := relayAdvertisedToTarget(target, relay)
 
 	// Sign the target's PK with server's Ed25519 key for E2E verification.
 	// Format: [64-byte Ed25519 signature][serialized IdPk protobuf] — NaCl combined mode.
@@ -2342,7 +2357,7 @@ func (s *Server) sendRelayResponse(target *peer.Entry, raddr *net.UDPAddr, msg *
 				Id:          msg.Id,
 				Uuid:        relayUUID,
 				SocketAddr:  crypto.EncodeAddr(raddr),
-				RelayServer: relay,
+				RelayServer: targetRelay,
 				Secure:      false,
 				ConnType:    msg.ConnType,
 			},
@@ -2352,7 +2367,8 @@ func (s *Server) sendRelayResponse(target *peer.Entry, raddr *net.UDPAddr, msg *
 		// Store the UUID so we can recover it if target responds with empty UUID.
 		s.storePendingUUID(target.ID, raddr, relayUUID, initiatorID)
 		s.sendUDP(reqRelay, target.UDPAddr)
-		log.Printf("[signal] sendRelayResponse: forwarded RequestRelay to target %s at %s (uuid=%s)", target.ID, target.UDPAddr, relayUUID[:8])
+		log.Printf("[signal] sendRelayResponse: forwarded RequestRelay to target %s at %s (uuid=%s relay_to_initiator=%s relay_to_target=%s)",
+			target.ID, target.UDPAddr, relayUUID[:8], relay, targetRelay)
 	}
 }
 

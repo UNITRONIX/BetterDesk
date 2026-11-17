@@ -371,6 +371,7 @@
     "strategy_enabled_label": "Strategia włączona",
     "strategy_permissions": "Ustawienia bezpieczeństwa klienta",
     "strategy_permissions_hint": "Używa kluczy zaawansowanych ustawień RustDesk (Y/N). Domyślne pozostawia dziedziczenie po kliencie lub strategii.",
+    "strategy_endpoint_hint": "W RustDesk 1.5.x adresy serwerów i klucze ustawia się podczas wdrażania klienta lub przez Import; strategie sterują tylko uprawnieniami funkcji.",
     "strategy_permissions_count": "{count} ustawień",
     "strategy_perm_default": "Domyślne",
     "strategy_perm_allow": "Zezwól (Y)",

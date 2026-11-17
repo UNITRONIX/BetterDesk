@@ -410,6 +410,7 @@
     "strategy_enabled_label": "Strategy enabled",
     "strategy_permissions": "Client security settings",
     "strategy_permissions_hint": "Uses RustDesk advanced-setting keys (Y/N). Leave Default to keep client or strategy inheritance.",
+    "strategy_endpoint_hint": "Trong RustDesk 1.5.x, địa chỉ máy chủ và khóa được đặt khi triển khai máy khách hoặc qua Nhập; các chiến lược chỉ kiểm soát quyền tính năng.",
     "strategy_permissions_count": "{count} settings",
     "strategy_perm_default": "Default",
     "strategy_perm_allow": "Allow (Y)",

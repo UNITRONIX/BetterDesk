@@ -400,6 +400,7 @@
         "strategy_enabled_label": "Strategy enabled",
         "strategy_permissions": "Client security settings",
         "strategy_permissions_hint": "Uses RustDesk advanced-setting keys (Y/N). Leave Default to keep client or strategy inheritance.",
+        "strategy_endpoint_hint": "RustDesk 1.5.x keeps server endpoints and keys in the client deployment or Import settings; strategies only control feature permissions.",
         "strategy_permissions_count": "{count} settings",
         "strategy_perm_default": "Default",
         "strategy_perm_allow": "Allow (Y)",

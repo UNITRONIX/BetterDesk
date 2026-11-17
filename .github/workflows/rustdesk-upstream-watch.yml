@@ -1,0 +1,58 @@
+name: RustDesk Upstream Watch
+
+on:
+  schedule:
+    # Mon / Wed / Fri ~04:19 UTC
+    - cron: '19 4 * * 1,3,5'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: rustdesk-upstream-watch
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout development branch
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: dev
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.x'
+
+      - name: Watch upstream releases and open review Issues
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 scripts/watch_rustdesk_upstream.py --write
+
+      - name: Commit last_seen manifest updates on dev
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if git diff --quiet -- config/rustdesk-upstream-watch.json; then
+            echo "No manifest changes to commit"
+            exit 0
+          fi
+          git config user.name "betterdesk-rustdesk-watch-bot"
+          git config user.email "betterdesk-rustdesk-watch-bot@users.noreply.github.com"
+          git add config/rustdesk-upstream-watch.json
+          git commit -m "$(cat <<'EOF'
+          chore(compat): refresh RustDesk upstream last_seen tags
+
+          Automated watch of rustdesk/rustdesk and rustdesk/rustdesk-server
+          stable releases. Review Issues use label Next Updates.
+
+          Thanks: INSOLVE (Honorary); Marco Jakobs (@jacotec); MyNameisStitch (@MyNameisStitch); Redspin (@playerumpknow); muopc (@muopc)
+          EOF
+          )"
+          git push origin HEAD:dev

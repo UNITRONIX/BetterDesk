@@ -60,6 +60,8 @@ message ControlPermissions {
     recording = 9;
     block_input = 10;
     remote_modify = 11;
+    privacy_mode = 12;
+    usb = 13;
   }
   uint64 permissions = 1;
 }
@@ -132,6 +134,7 @@ message RegisterPkResponse {
     INVALID_ID_FORMAT = 5;
     NOT_SUPPORT = 6;
     SERVER_ERROR = 7;
+    NOT_DEPLOYED = 8;
   }
   Result result = 1;
   int32 keep_alive = 2;
@@ -175,6 +178,8 @@ message RequestRelay {
   ConnType conn_type = 7;
   string token = 8;
   ControlPermissions control_permissions = 9;
+  ControlledContext controlled_context = 10;
+  string switch_code = 11;
 }
 
 message RelayResponse {
@@ -202,6 +207,7 @@ message FetchLocalAddr {
   string relay_server = 2;
   bytes socket_addr_v6 = 3;
   ControlPermissions control_permissions = 4;
+  ControlledContext controlled_context = 5;
 }
 
 message LocalAddr {
@@ -234,6 +240,25 @@ message OnlineResponse {
 
 message KeyExchange {
   repeated bytes keys = 1;
+  // From the server: the newest key-exchange version it speaks. From the client:
+  // the version it picked. Absent (0) means the original scheme.
+  //
+  // Newer RustDesk clients negotiate against this field; a server that never
+  // sends it leaves them unable to complete the handshake, which shows up as
+  // repeated KeyExchange attempts with zero "secure established" (see the
+  // server-side signature in crypto/secure.go).
+  uint32 version = 2;
+  // Server signature of KxParams. Bit 255 of the signed X25519 public key
+  // requires this field; legacy keys leave it clear.
+  bytes signed_params = 3;
+}
+
+// Signed by the server beside its ephemeral public key: that key as it went out,
+// so the signature belongs to this exchange alone, plus the newest key-exchange
+// version the server speaks.
+message KxParams {
+  bytes pk = 1;
+  uint32 version = 2;
 }
 
 message HealthCheck {

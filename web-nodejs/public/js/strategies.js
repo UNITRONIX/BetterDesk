@@ -345,6 +345,7 @@
                         <label>${_('devices.strategy_permissions')}</label>
                         <div class="strategy-perm-grid">${renderStrategyPermissionOptions(strategy?.permissions || {})}</div>
                         <p class="form-hint">${_('devices.strategy_permissions_hint')}</p>
+                        <p class="form-hint">${_('devices.strategy_endpoint_hint')}</p>
                     </div>
                 </form>
             `,

@@ -1737,10 +1737,11 @@ const RUSTDESK_STRATEGY_PERM_KEYS = [
 function normalizeStrategyPermissions(raw) {
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
     const out = {};
+    const allowedKeys = new Set(RUSTDESK_STRATEGY_PERM_KEYS);
     for (const [key, value] of Object.entries(raw)) {
+        if (!allowedKeys.has(key)) continue;
         if (value === true || value === 'Y' || value === 'y') out[key] = 'Y';
         else if (value === false || value === 'N' || value === 'n') out[key] = 'N';
-        else if (typeof value === 'string' && value.trim()) out[key] = value.trim();
     }
     return out;
 }

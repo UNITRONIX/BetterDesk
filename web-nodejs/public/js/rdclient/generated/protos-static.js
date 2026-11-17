@@ -1389,6 +1389,8 @@ $root.hbb = (function() {
          * @property {number} recording=9 recording value
          * @property {number} block_input=10 block_input value
          * @property {number} remote_modify=11 remote_modify value
+         * @property {number} privacy_mode=12 privacy_mode value
+         * @property {number} usb=13 usb value
          */
         ControlPermissions.Permission = (function() {
             var valuesById = {}, values = Object.create(valuesById);
@@ -1404,6 +1406,8 @@ $root.hbb = (function() {
             values[valuesById[9] = "recording"] = 9;
             values[valuesById[10] = "block_input"] = 10;
             values[valuesById[11] = "remote_modify"] = 11;
+            values[valuesById[12] = "privacy_mode"] = 12;
+            values[valuesById[13] = "usb"] = 13;
             return values;
         })();
 
@@ -3989,6 +3993,7 @@ $root.hbb = (function() {
                 case 5:
                 case 6:
                 case 7:
+                case 8:
                     break;
                 }
             if (message.keepAlive != null && Object.hasOwnProperty.call(message, "keepAlive"))
@@ -4049,6 +4054,10 @@ $root.hbb = (function() {
             case "SERVER_ERROR":
             case 7:
                 message.result = 7;
+                break;
+            case "NOT_DEPLOYED":
+            case 8:
+                message.result = 8;
                 break;
             }
             if (object.keepAlive != null)
@@ -4121,6 +4130,7 @@ $root.hbb = (function() {
          * @property {number} INVALID_ID_FORMAT=5 INVALID_ID_FORMAT value
          * @property {number} NOT_SUPPORT=6 NOT_SUPPORT value
          * @property {number} SERVER_ERROR=7 SERVER_ERROR value
+         * @property {number} NOT_DEPLOYED=8 NOT_DEPLOYED value
          */
         RegisterPkResponse.Result = (function() {
             var valuesById = {}, values = Object.create(valuesById);
@@ -4131,6 +4141,7 @@ $root.hbb = (function() {
             values[valuesById[5] = "INVALID_ID_FORMAT"] = 5;
             values[valuesById[6] = "NOT_SUPPORT"] = 6;
             values[valuesById[7] = "SERVER_ERROR"] = 7;
+            values[valuesById[8] = "NOT_DEPLOYED"] = 8;
             return values;
         })();
 
@@ -5053,6 +5064,8 @@ $root.hbb = (function() {
          * @property {hbb.ConnType|null} [connType] RequestRelay connType
          * @property {string|null} [token] RequestRelay token
          * @property {hbb.IControlPermissions|null} [controlPermissions] RequestRelay controlPermissions
+         * @property {hbb.IControlledContext|null} [controlledContext] RequestRelay controlledContext
+         * @property {string|null} [switchCode] RequestRelay switchCode
          */
 
         /**
@@ -5143,6 +5156,22 @@ $root.hbb = (function() {
         RequestRelay.prototype.controlPermissions = null;
 
         /**
+         * RequestRelay controlledContext.
+         * @member {hbb.IControlledContext|null|undefined} controlledContext
+         * @memberof hbb.RequestRelay
+         * @instance
+         */
+        RequestRelay.prototype.controlledContext = null;
+
+        /**
+         * RequestRelay switchCode.
+         * @member {string} switchCode
+         * @memberof hbb.RequestRelay
+         * @instance
+         */
+        RequestRelay.prototype.switchCode = "";
+
+        /**
          * Creates a new RequestRelay instance using the specified properties.
          * @function create
          * @memberof hbb.RequestRelay
@@ -5188,6 +5217,10 @@ $root.hbb = (function() {
                 writer.uint32(/* id 8, wireType 2 =*/66).string(message.token);
             if (message.controlPermissions != null && Object.hasOwnProperty.call(message, "controlPermissions"))
                 $root.hbb.ControlPermissions.encode(message.controlPermissions, writer.uint32(/* id 9, wireType 2 =*/74).fork(), q + 1).ldelim();
+            if (message.controlledContext != null && Object.hasOwnProperty.call(message, "controlledContext"))
+                $root.hbb.ControlledContext.encode(message.controlledContext, writer.uint32(/* id 10, wireType 2 =*/82).fork(), q + 1).ldelim();
+            if (message.switchCode != null && Object.hasOwnProperty.call(message, "switchCode"))
+                writer.uint32(/* id 11, wireType 2 =*/90).string(message.switchCode);
             return writer;
         };
 
@@ -5274,6 +5307,14 @@ $root.hbb = (function() {
                         message.controlPermissions = $root.hbb.ControlPermissions.decode(reader, reader.uint32(), undefined, long + 1);
                         break;
                     }
+                case 10: {
+                        message.controlledContext = $root.hbb.ControlledContext.decode(reader, reader.uint32(), undefined, long + 1);
+                        break;
+                    }
+                case 11: {
+                        message.switchCode = reader.string();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7, long);
                     break;
@@ -5356,6 +5397,14 @@ $root.hbb = (function() {
                 if (error)
                     return "controlPermissions." + error;
             }
+            if (message.controlledContext != null && Object.hasOwnProperty.call(message, "controlledContext")) {
+                var error = $root.hbb.ControlledContext.verify(message.controlledContext, long + 1);
+                if (error)
+                    return "controlledContext." + error;
+            }
+            if (message.switchCode != null && Object.hasOwnProperty.call(message, "switchCode"))
+                if (!$util.isString(message.switchCode))
+                    return "switchCode: string expected";
             return null;
         };
 
@@ -5431,6 +5480,13 @@ $root.hbb = (function() {
                     throw TypeError(".hbb.RequestRelay.controlPermissions: object expected");
                 message.controlPermissions = $root.hbb.ControlPermissions.fromObject(object.controlPermissions, long + 1);
             }
+            if (object.controlledContext != null) {
+                if (!$util.isObject(object.controlledContext))
+                    throw TypeError(".hbb.RequestRelay.controlledContext: object expected");
+                message.controlledContext = $root.hbb.ControlledContext.fromObject(object.controlledContext, long + 1);
+            }
+            if (object.switchCode != null)
+                message.switchCode = String(object.switchCode);
             return message;
         };
 
@@ -5467,6 +5523,8 @@ $root.hbb = (function() {
                 object.connType = options.enums === String ? "DEFAULT_CONN" : 0;
                 object.token = "";
                 object.controlPermissions = null;
+                object.controlledContext = null;
+                object.switchCode = "";
             }
             if (message.id != null && Object.hasOwnProperty.call(message, "id"))
                 object.id = message.id;
@@ -5486,6 +5544,10 @@ $root.hbb = (function() {
                 object.token = message.token;
             if (message.controlPermissions != null && Object.hasOwnProperty.call(message, "controlPermissions"))
                 object.controlPermissions = $root.hbb.ControlPermissions.toObject(message.controlPermissions, options, q + 1);
+            if (message.controlledContext != null && Object.hasOwnProperty.call(message, "controlledContext"))
+                object.controlledContext = $root.hbb.ControlledContext.toObject(message.controlledContext, options, q + 1);
+            if (message.switchCode != null && Object.hasOwnProperty.call(message, "switchCode"))
+                object.switchCode = message.switchCode;
             return object;
         };
 
@@ -6289,6 +6351,7 @@ $root.hbb = (function() {
          * @property {string|null} [relayServer] FetchLocalAddr relayServer
          * @property {Uint8Array|null} [socketAddrV6] FetchLocalAddr socketAddrV6
          * @property {hbb.IControlPermissions|null} [controlPermissions] FetchLocalAddr controlPermissions
+         * @property {hbb.IControlledContext|null} [controlledContext] FetchLocalAddr controlledContext
          */
 
         /**
@@ -6339,6 +6402,14 @@ $root.hbb = (function() {
         FetchLocalAddr.prototype.controlPermissions = null;
 
         /**
+         * FetchLocalAddr controlledContext.
+         * @member {hbb.IControlledContext|null|undefined} controlledContext
+         * @memberof hbb.FetchLocalAddr
+         * @instance
+         */
+        FetchLocalAddr.prototype.controlledContext = null;
+
+        /**
          * Creates a new FetchLocalAddr instance using the specified properties.
          * @function create
          * @memberof hbb.FetchLocalAddr
@@ -6374,6 +6445,8 @@ $root.hbb = (function() {
                 writer.uint32(/* id 3, wireType 2 =*/26).bytes(message.socketAddrV6);
             if (message.controlPermissions != null && Object.hasOwnProperty.call(message, "controlPermissions"))
                 $root.hbb.ControlPermissions.encode(message.controlPermissions, writer.uint32(/* id 4, wireType 2 =*/34).fork(), q + 1).ldelim();
+            if (message.controlledContext != null && Object.hasOwnProperty.call(message, "controlledContext"))
+                $root.hbb.ControlledContext.encode(message.controlledContext, writer.uint32(/* id 5, wireType 2 =*/42).fork(), q + 1).ldelim();
             return writer;
         };
 
@@ -6440,6 +6513,10 @@ $root.hbb = (function() {
                         message.controlPermissions = $root.hbb.ControlPermissions.decode(reader, reader.uint32(), undefined, long + 1);
                         break;
                     }
+                case 5: {
+                        message.controlledContext = $root.hbb.ControlledContext.decode(reader, reader.uint32(), undefined, long + 1);
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7, long);
                     break;
@@ -6498,6 +6575,11 @@ $root.hbb = (function() {
                 if (error)
                     return "controlPermissions." + error;
             }
+            if (message.controlledContext != null && Object.hasOwnProperty.call(message, "controlledContext")) {
+                var error = $root.hbb.ControlledContext.verify(message.controlledContext, long + 1);
+                if (error)
+                    return "controlledContext." + error;
+            }
             return null;
         };
 
@@ -6536,6 +6618,11 @@ $root.hbb = (function() {
                     throw TypeError(".hbb.FetchLocalAddr.controlPermissions: object expected");
                 message.controlPermissions = $root.hbb.ControlPermissions.fromObject(object.controlPermissions, long + 1);
             }
+            if (object.controlledContext != null) {
+                if (!$util.isObject(object.controlledContext))
+                    throw TypeError(".hbb.FetchLocalAddr.controlledContext: object expected");
+                message.controlledContext = $root.hbb.ControlledContext.fromObject(object.controlledContext, long + 1);
+            }
             return message;
         };
 
@@ -6573,6 +6660,7 @@ $root.hbb = (function() {
                         object.socketAddrV6 = $util.newBuffer(object.socketAddrV6);
                 }
                 object.controlPermissions = null;
+                object.controlledContext = null;
             }
             if (message.socketAddr != null && Object.hasOwnProperty.call(message, "socketAddr"))
                 object.socketAddr = options.bytes === String ? $util.base64.encode(message.socketAddr, 0, message.socketAddr.length) : options.bytes === Array ? Array.prototype.slice.call(message.socketAddr) : message.socketAddr;
@@ -6582,6 +6670,8 @@ $root.hbb = (function() {
                 object.socketAddrV6 = options.bytes === String ? $util.base64.encode(message.socketAddrV6, 0, message.socketAddrV6.length) : options.bytes === Array ? Array.prototype.slice.call(message.socketAddrV6) : message.socketAddrV6;
             if (message.controlPermissions != null && Object.hasOwnProperty.call(message, "controlPermissions"))
                 object.controlPermissions = $root.hbb.ControlPermissions.toObject(message.controlPermissions, options, q + 1);
+            if (message.controlledContext != null && Object.hasOwnProperty.call(message, "controlledContext"))
+                object.controlledContext = $root.hbb.ControlledContext.toObject(message.controlledContext, options, q + 1);
             return object;
         };
 
@@ -7920,6 +8010,8 @@ $root.hbb = (function() {
          * @memberof hbb
          * @interface IKeyExchange
          * @property {Array.<Uint8Array>|null} [keys] KeyExchange keys
+         * @property {number|null} [version] KeyExchange version
+         * @property {Uint8Array|null} [signedParams] KeyExchange signedParams
          */
 
         /**
@@ -7945,6 +8037,22 @@ $root.hbb = (function() {
          * @instance
          */
         KeyExchange.prototype.keys = $util.emptyArray;
+
+        /**
+         * KeyExchange version.
+         * @member {number} version
+         * @memberof hbb.KeyExchange
+         * @instance
+         */
+        KeyExchange.prototype.version = 0;
+
+        /**
+         * KeyExchange signedParams.
+         * @member {Uint8Array} signedParams
+         * @memberof hbb.KeyExchange
+         * @instance
+         */
+        KeyExchange.prototype.signedParams = $util.newBuffer([]);
 
         /**
          * Creates a new KeyExchange instance using the specified properties.
@@ -7977,6 +8085,10 @@ $root.hbb = (function() {
             if (message.keys != null && message.keys.length)
                 for (var i = 0; i < message.keys.length; ++i)
                     writer.uint32(/* id 1, wireType 2 =*/10).bytes(message.keys[i]);
+            if (message.version != null && Object.hasOwnProperty.call(message, "version"))
+                writer.uint32(/* id 2, wireType 0 =*/16).uint32(message.version);
+            if (message.signedParams != null && Object.hasOwnProperty.call(message, "signedParams"))
+                writer.uint32(/* id 3, wireType 2 =*/26).bytes(message.signedParams);
             return writer;
         };
 
@@ -8033,6 +8145,14 @@ $root.hbb = (function() {
                         message.keys.push(reader.bytes());
                         break;
                     }
+                case 2: {
+                        message.version = reader.uint32();
+                        break;
+                    }
+                case 3: {
+                        message.signedParams = reader.bytes();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7, long);
                     break;
@@ -8084,6 +8204,12 @@ $root.hbb = (function() {
                     if (!(message.keys[i] && typeof message.keys[i].length === "number" || $util.isString(message.keys[i])))
                         return "keys: buffer[] expected";
             }
+            if (message.version != null && Object.hasOwnProperty.call(message, "version"))
+                if (!$util.isInteger(message.version))
+                    return "version: integer expected";
+            if (message.signedParams != null && Object.hasOwnProperty.call(message, "signedParams"))
+                if (!(message.signedParams && typeof message.signedParams.length === "number" || $util.isString(message.signedParams)))
+                    return "signedParams: buffer expected";
             return null;
         };
 
@@ -8115,6 +8241,13 @@ $root.hbb = (function() {
                     else if (object.keys[i].length >= 0)
                         message.keys[i] = object.keys[i];
             }
+            if (object.version != null)
+                message.version = object.version >>> 0;
+            if (object.signedParams != null)
+                if (typeof object.signedParams === "string")
+                    $util.base64.decode(object.signedParams, message.signedParams = $util.newBuffer($util.base64.length(object.signedParams)), 0);
+                else if (object.signedParams.length >= 0)
+                    message.signedParams = object.signedParams;
             return message;
         };
 
@@ -8137,11 +8270,25 @@ $root.hbb = (function() {
             var object = {};
             if (options.arrays || options.defaults)
                 object.keys = [];
+            if (options.defaults) {
+                object.version = 0;
+                if (options.bytes === String)
+                    object.signedParams = "";
+                else {
+                    object.signedParams = [];
+                    if (options.bytes !== Array)
+                        object.signedParams = $util.newBuffer(object.signedParams);
+                }
+            }
             if (message.keys && message.keys.length) {
                 object.keys = [];
                 for (var j = 0; j < message.keys.length; ++j)
                     object.keys[j] = options.bytes === String ? $util.base64.encode(message.keys[j], 0, message.keys[j].length) : options.bytes === Array ? Array.prototype.slice.call(message.keys[j]) : message.keys[j];
             }
+            if (message.version != null && Object.hasOwnProperty.call(message, "version"))
+                object.version = message.version;
+            if (message.signedParams != null && Object.hasOwnProperty.call(message, "signedParams"))
+                object.signedParams = options.bytes === String ? $util.base64.encode(message.signedParams, 0, message.signedParams.length) : options.bytes === Array ? Array.prototype.slice.call(message.signedParams) : message.signedParams;
             return object;
         };
 
@@ -8172,6 +8319,281 @@ $root.hbb = (function() {
         };
 
         return KeyExchange;
+    })();
+
+    hbb.KxParams = (function() {
+
+        /**
+         * Properties of a KxParams.
+         * @memberof hbb
+         * @interface IKxParams
+         * @property {Uint8Array|null} [pk] KxParams pk
+         * @property {number|null} [version] KxParams version
+         */
+
+        /**
+         * Constructs a new KxParams.
+         * @memberof hbb
+         * @classdesc Represents a KxParams.
+         * @implements IKxParams
+         * @constructor
+         * @param {hbb.IKxParams=} [properties] Properties to set
+         */
+        function KxParams(properties) {
+            if (properties)
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null && keys[i] !== "__proto__")
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * KxParams pk.
+         * @member {Uint8Array} pk
+         * @memberof hbb.KxParams
+         * @instance
+         */
+        KxParams.prototype.pk = $util.newBuffer([]);
+
+        /**
+         * KxParams version.
+         * @member {number} version
+         * @memberof hbb.KxParams
+         * @instance
+         */
+        KxParams.prototype.version = 0;
+
+        /**
+         * Creates a new KxParams instance using the specified properties.
+         * @function create
+         * @memberof hbb.KxParams
+         * @static
+         * @param {hbb.IKxParams=} [properties] Properties to set
+         * @returns {hbb.KxParams} KxParams instance
+         */
+        KxParams.create = function create(properties) {
+            return new KxParams(properties);
+        };
+
+        /**
+         * Encodes the specified KxParams message. Does not implicitly {@link hbb.KxParams.verify|verify} messages.
+         * @function encode
+         * @memberof hbb.KxParams
+         * @static
+         * @param {hbb.IKxParams} message KxParams message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        KxParams.encode = function encode(message, writer, q) {
+            if (!writer)
+                writer = $Writer.create();
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
+            if (message.pk != null && Object.hasOwnProperty.call(message, "pk"))
+                writer.uint32(/* id 1, wireType 2 =*/10).bytes(message.pk);
+            if (message.version != null && Object.hasOwnProperty.call(message, "version"))
+                writer.uint32(/* id 2, wireType 0 =*/16).uint32(message.version);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified KxParams message, length delimited. Does not implicitly {@link hbb.KxParams.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof hbb.KxParams
+         * @static
+         * @param {hbb.IKxParams} message KxParams message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        KxParams.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
+        };
+
+        /**
+         * Decodes a KxParams message from the specified reader or buffer.
+         * @function decode
+         * @memberof hbb.KxParams
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {hbb.KxParams} KxParams
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        KxParams.decode = function decode(reader, length, error, long) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            if (long === undefined)
+                long = 0;
+            if (long > $Reader.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.KxParams();
+            while (reader.pos < end) {
+                var tag = reader.uint32();
+                if (tag === error)
+                    break;
+                switch (tag >>> 3) {
+                case 1: {
+                        message.pk = reader.bytes();
+                        break;
+                    }
+                case 2: {
+                        message.version = reader.uint32();
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7, long);
+                    break;
+                }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a KxParams message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof hbb.KxParams
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {hbb.KxParams} KxParams
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        KxParams.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a KxParams message.
+         * @function verify
+         * @memberof hbb.KxParams
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        KxParams.verify = function verify(message, long) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                return "maximum nesting depth exceeded";
+            if (message.pk != null && Object.hasOwnProperty.call(message, "pk"))
+                if (!(message.pk && typeof message.pk.length === "number" || $util.isString(message.pk)))
+                    return "pk: buffer expected";
+            if (message.version != null && Object.hasOwnProperty.call(message, "version"))
+                if (!$util.isInteger(message.version))
+                    return "version: integer expected";
+            return null;
+        };
+
+        /**
+         * Creates a KxParams message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof hbb.KxParams
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {hbb.KxParams} KxParams
+         */
+        KxParams.fromObject = function fromObject(object, long) {
+            if (object instanceof $root.hbb.KxParams)
+                return object;
+            if (!$util.isObject(object))
+                throw TypeError(".hbb.KxParams: object expected");
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
+            var message = new $root.hbb.KxParams();
+            if (object.pk != null)
+                if (typeof object.pk === "string")
+                    $util.base64.decode(object.pk, message.pk = $util.newBuffer($util.base64.length(object.pk)), 0);
+                else if (object.pk.length >= 0)
+                    message.pk = object.pk;
+            if (object.version != null)
+                message.version = object.version >>> 0;
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a KxParams message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof hbb.KxParams
+         * @static
+         * @param {hbb.KxParams} message KxParams
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        KxParams.toObject = function toObject(message, options, q) {
+            if (!options)
+                options = {};
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
+            var object = {};
+            if (options.defaults) {
+                if (options.bytes === String)
+                    object.pk = "";
+                else {
+                    object.pk = [];
+                    if (options.bytes !== Array)
+                        object.pk = $util.newBuffer(object.pk);
+                }
+                object.version = 0;
+            }
+            if (message.pk != null && Object.hasOwnProperty.call(message, "pk"))
+                object.pk = options.bytes === String ? $util.base64.encode(message.pk, 0, message.pk.length) : options.bytes === Array ? Array.prototype.slice.call(message.pk) : message.pk;
+            if (message.version != null && Object.hasOwnProperty.call(message, "version"))
+                object.version = message.version;
+            return object;
+        };
+
+        /**
+         * Converts this KxParams to JSON.
+         * @function toJSON
+         * @memberof hbb.KxParams
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        KxParams.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for KxParams
+         * @function getTypeUrl
+         * @memberof hbb.KxParams
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        KxParams.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/hbb.KxParams";
+        };
+
+        return KxParams;
     })();
 
     hbb.HealthCheck = (function() {
@@ -12046,6 +12468,8 @@ $root.hbb = (function() {
          * @interface IIdPk
          * @property {string|null} [id] IdPk id
          * @property {Uint8Array|null} [pk] IdPk pk
+         * @property {string|null} [dtlsFingerprint] IdPk dtlsFingerprint
+         * @property {number|null} [kxVersion] IdPk kxVersion
          */
 
         /**
@@ -12080,6 +12504,22 @@ $root.hbb = (function() {
         IdPk.prototype.pk = $util.newBuffer([]);
 
         /**
+         * IdPk dtlsFingerprint.
+         * @member {string} dtlsFingerprint
+         * @memberof hbb.IdPk
+         * @instance
+         */
+        IdPk.prototype.dtlsFingerprint = "";
+
+        /**
+         * IdPk kxVersion.
+         * @member {number} kxVersion
+         * @memberof hbb.IdPk
+         * @instance
+         */
+        IdPk.prototype.kxVersion = 0;
+
+        /**
          * Creates a new IdPk instance using the specified properties.
          * @function create
          * @memberof hbb.IdPk
@@ -12111,6 +12551,10 @@ $root.hbb = (function() {
                 writer.uint32(/* id 1, wireType 2 =*/10).string(message.id);
             if (message.pk != null && Object.hasOwnProperty.call(message, "pk"))
                 writer.uint32(/* id 2, wireType 2 =*/18).bytes(message.pk);
+            if (message.dtlsFingerprint != null && Object.hasOwnProperty.call(message, "dtlsFingerprint"))
+                writer.uint32(/* id 3, wireType 2 =*/26).string(message.dtlsFingerprint);
+            if (message.kxVersion != null && Object.hasOwnProperty.call(message, "kxVersion"))
+                writer.uint32(/* id 4, wireType 0 =*/32).uint32(message.kxVersion);
             return writer;
         };
 
@@ -12169,6 +12613,14 @@ $root.hbb = (function() {
                         message.pk = reader.bytes();
                         break;
                     }
+                case 3: {
+                        message.dtlsFingerprint = reader.string();
+                        break;
+                    }
+                case 4: {
+                        message.kxVersion = reader.uint32();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7, long);
                     break;
@@ -12219,6 +12671,12 @@ $root.hbb = (function() {
             if (message.pk != null && Object.hasOwnProperty.call(message, "pk"))
                 if (!(message.pk && typeof message.pk.length === "number" || $util.isString(message.pk)))
                     return "pk: buffer expected";
+            if (message.dtlsFingerprint != null && Object.hasOwnProperty.call(message, "dtlsFingerprint"))
+                if (!$util.isString(message.dtlsFingerprint))
+                    return "dtlsFingerprint: string expected";
+            if (message.kxVersion != null && Object.hasOwnProperty.call(message, "kxVersion"))
+                if (!$util.isInteger(message.kxVersion))
+                    return "kxVersion: integer expected";
             return null;
         };
 
@@ -12247,6 +12705,10 @@ $root.hbb = (function() {
                     $util.base64.decode(object.pk, message.pk = $util.newBuffer($util.base64.length(object.pk)), 0);
                 else if (object.pk.length >= 0)
                     message.pk = object.pk;
+            if (object.dtlsFingerprint != null)
+                message.dtlsFingerprint = String(object.dtlsFingerprint);
+            if (object.kxVersion != null)
+                message.kxVersion = object.kxVersion >>> 0;
             return message;
         };
 
@@ -12276,11 +12738,17 @@ $root.hbb = (function() {
                     if (options.bytes !== Array)
                         object.pk = $util.newBuffer(object.pk);
                 }
+                object.dtlsFingerprint = "";
+                object.kxVersion = 0;
             }
             if (message.id != null && Object.hasOwnProperty.call(message, "id"))
                 object.id = message.id;
             if (message.pk != null && Object.hasOwnProperty.call(message, "pk"))
                 object.pk = options.bytes === String ? $util.base64.encode(message.pk, 0, message.pk.length) : options.bytes === Array ? Array.prototype.slice.call(message.pk) : message.pk;
+            if (message.dtlsFingerprint != null && Object.hasOwnProperty.call(message, "dtlsFingerprint"))
+                object.dtlsFingerprint = message.dtlsFingerprint;
+            if (message.kxVersion != null && Object.hasOwnProperty.call(message, "kxVersion"))
+                object.kxVersion = message.kxVersion;
             return object;
         };
 

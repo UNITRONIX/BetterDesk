@@ -377,6 +377,7 @@
     "strategy_enabled_label": "Strategy enabled",
     "strategy_permissions": "Client security settings",
     "strategy_permissions_hint": "Uses RustDesk advanced-setting keys (Y/N). Leave Default to keep client or strategy inheritance.",
+    "strategy_endpoint_hint": "在 RustDesk 1.5.x 中，伺服器位址與金鑰應在部署用戶端或透過匯入時設定；策略只控制功能權限。",
     "strategy_permissions_count": "{count} settings",
     "strategy_perm_default": "Default",
     "strategy_perm_allow": "Allow (Y)",

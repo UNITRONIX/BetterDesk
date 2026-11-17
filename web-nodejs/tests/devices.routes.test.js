@@ -14,6 +14,10 @@ jest.mock('../services/betterdeskApi', () => ({
 // Mock dependencies
 jest.mock('../services/database', () => ({
     logAction: jest.fn().mockResolvedValue(undefined),
+    createStrategy: jest.fn().mockImplementation(async payload => ({
+        guid: 'strategy-1',
+        ...payload,
+    })),
     getPeerSysinfo: jest.fn().mockResolvedValue(null),
     getLatestPeerMetric: jest.fn().mockResolvedValue(null),
     getPeerMetrics: jest.fn().mockResolvedValue([]),
@@ -716,6 +720,32 @@ describe('Devices Routes', () => {
             expect(details).toContain('normal -> incoming-only');
             expect(details).toContain('support session');
             expect(details).toContain('cmd-1');
+        });
+    });
+
+    describe('POST /api/panel/strategies', () => {
+        it('drops RustDesk 1.5.x locked endpoint keys before persistence', async () => {
+            const res = await request(app)
+                .post('/api/panel/strategies')
+                .send({
+                    name: 'Restricted',
+                    permissions: {
+                        'enable-audio': true,
+                        'relay-server': 'relay.example.com:21117',
+                        key: 'secret',
+                    },
+                });
+
+            expect(res.status).toBe(200);
+            expect(db.createStrategy).toHaveBeenCalledWith({
+                name: 'Restricted',
+                user_group_guid: '',
+                device_group_guid: '',
+                enabled: true,
+                permissions: {
+                    'enable-audio': 'Y',
+                },
+            });
         });
     });
 });

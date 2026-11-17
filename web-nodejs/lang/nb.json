@@ -410,6 +410,7 @@
     "strategy_enabled_label": "Strategy enabled",
     "strategy_permissions": "Client security settings",
     "strategy_permissions_hint": "Uses RustDesk advanced-setting keys (Y/N). Leave Default to keep client or strategy inheritance.",
+    "strategy_endpoint_hint": "I RustDesk 1.5.x angis serveradresser og nøkler ved utrulling av klienten eller via import; strategier styrer bare funksjonstillatelser.",
     "strategy_permissions_count": "{count} settings",
     "strategy_perm_default": "Default",
     "strategy_perm_allow": "Allow (Y)",

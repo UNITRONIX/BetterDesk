@@ -8,6 +8,31 @@ import (
 	"github.com/unitronix/betterdesk-server/db"
 )
 
+func normalizeRustDeskStrategyPermissions(raw json.RawMessage) (string, error) {
+	if len(raw) == 0 || string(raw) == "null" {
+		return "{}", nil
+	}
+	var input map[string]any
+	if err := json.Unmarshal(raw, &input); err != nil {
+		return "", err
+	}
+	output := make(map[string]string)
+	for key, value := range input {
+		if _, allowed := rustDeskStrategyOptionKeys[key]; !allowed {
+			continue
+		}
+		normalized, ok := normalizeStrategyOptionValue(value)
+		if ok {
+			output[key] = normalized
+		}
+	}
+	normalized, err := json.Marshal(output)
+	if err != nil {
+		return "", err
+	}
+	return string(normalized), nil
+}
+
 // ── User Groups ───────────────────────────────────────────────────────
 
 // handleUserGroupsGet lists user groups. Auth enforced by route wrapper.
@@ -153,9 +178,10 @@ func (s *Server) handleStrategiesPost(w http.ResponseWriter, r *http.Request) {
 	if body.Enabled != nil {
 		enabled = *body.Enabled
 	}
-	perms := "{}"
-	if len(body.Permissions) > 0 && string(body.Permissions) != "null" {
-		perms = string(body.Permissions)
+	perms, err := normalizeRustDeskStrategyPermissions(body.Permissions)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid strategy permissions"})
+		return
 	}
 
 	guid := truncStr(body.GUID, maxIDLen)

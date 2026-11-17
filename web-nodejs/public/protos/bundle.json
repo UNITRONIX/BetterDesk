@@ -108,7 +108,9 @@
                 "restart": 8,
                 "recording": 9,
                 "block_input": 10,
-                "remote_modify": 11
+                "remote_modify": 11,
+                "privacy_mode": 12,
+                "usb": 13
               }
             }
           }
@@ -292,7 +294,8 @@
                 "TOO_FREQUENT": 4,
                 "INVALID_ID_FORMAT": 5,
                 "NOT_SUPPORT": 6,
-                "SERVER_ERROR": 7
+                "SERVER_ERROR": 7,
+                "NOT_DEPLOYED": 8
               }
             }
           }
@@ -417,6 +420,14 @@
             "controlPermissions": {
               "type": "ControlPermissions",
               "id": 9
+            },
+            "controlledContext": {
+              "type": "ControlledContext",
+              "id": 10
+            },
+            "switchCode": {
+              "type": "string",
+              "id": 11
             }
           }
         },
@@ -501,6 +512,10 @@
             "controlPermissions": {
               "type": "ControlPermissions",
               "id": 4
+            },
+            "controlledContext": {
+              "type": "ControlledContext",
+              "id": 5
             }
           }
         },
@@ -591,6 +606,26 @@
               "rule": "repeated",
               "type": "bytes",
               "id": 1
+            },
+            "version": {
+              "type": "uint32",
+              "id": 2
+            },
+            "signedParams": {
+              "type": "bytes",
+              "id": 3
+            }
+          }
+        },
+        "KxParams": {
+          "fields": {
+            "pk": {
+              "type": "bytes",
+              "id": 1
+            },
+            "version": {
+              "type": "uint32",
+              "id": 2
             }
           }
         },
@@ -895,6 +930,14 @@
             "pk": {
               "type": "bytes",
               "id": 2
+            },
+            "dtlsFingerprint": {
+              "type": "string",
+              "id": 3
+            },
+            "kxVersion": {
+              "type": "uint32",
+              "id": 4
             }
           }
         },

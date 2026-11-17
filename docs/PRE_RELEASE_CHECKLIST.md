@@ -52,6 +52,7 @@ Use this checklist before every tagged release to ensure quality and stability.
 - [ ] **Identity**: durable device ID, secure Ed25519 key and rotating session password survive restart
 - [ ] **Remote desktop**: Windows capture, input, clipboard, bounded files, audio negotiation and monitor enumeration are exercised in both directions
 - [ ] **Interop**: BetterDesk Desktop ↔ BetterDesk server ↔ RustDesk peer and CDAP agent
+- [ ] **Stock RustDesk version**: if a newer stock client (or OSS `rustdesk-server`) shipped since the last review, complete [`docs/important/rustdesk-compat-checklist.md`](important/rustdesk-compat-checklist.md) and update [`docs/RDCLIENT_VS_RUSTDESK_AUDIT.md`](RDCLIENT_VS_RUSTDESK_AUDIT.md) / `config/rustdesk-upstream-watch.json`
 - [ ] **Performance**: UI remains responsive during connection, reconnect and transfers
 
 ## 5. Desktop Client (Tauri — legacy betterdesk-mgmt)
