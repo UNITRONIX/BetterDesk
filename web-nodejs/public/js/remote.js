@@ -127,6 +127,26 @@
     const clipboardHub = window.rdClipboardHub || null;
     let clipboardBridgeEnabled = window.localStorage.getItem('betterdesk.clipboardBridge') !== '0';
 
+    // File transfer uses the same authenticated sessions as the viewer. Keep
+    // this read-only bridge private to the current page so the modal can offer
+    // every open connection without creating another transport.
+    window.__rdGetTransferSessions = function () {
+        return Array.from(sessions.values()).filter(function (session) {
+            return !!(session && session.client && session.client.fileTransfer
+                && session.state === 'streaming');
+        }).map(function (session) {
+            return {
+                id: session.deviceId,
+                name: session.deviceName || session.deviceId,
+                deviceId: session.deviceId,
+                deviceName: session.deviceName || '',
+                client: session.client,
+                session: session,
+                ready: session.state === 'streaming'
+            };
+        });
+    };
+
     const Prefs = window.RemoteViewerPrefs || {};
     const globalViewerPrefs = typeof Prefs.loadRemoteViewerPrefs === 'function'
         ? Prefs.loadRemoteViewerPrefs(window.BetterDesk?.user?.id)
@@ -1746,8 +1766,11 @@
             const item = document.createElement('button');
             item.type = 'button';
             item.className = 'toolbar-monitor-btn' + (m.current ? ' active' : '');
-            item.title = m.name || ('Monitor ' + (i + 1));
-            item.textContent = String(i + 1);
+            const monitorIndex = typeof m.idx === 'number' ? m.idx : i;
+            const monitorLabel = t('remote.monitor_n', 'Monitor {{n}}')
+                .replace('{{n}}', String(monitorIndex));
+            item.title = monitorLabel;
+            item.textContent = monitorLabel;
             item.addEventListener('click', function (e) {
                 e.stopPropagation();
                 session.client.switchMonitor(m.idx);
@@ -1829,17 +1852,20 @@
         listWrap.className = 'monitors-menu-list';
 
         // Physical monitors
-        monitors.forEach(m => {
+        monitors.forEach((m, i) => {
             const item = document.createElement('button');
             item.className = 'dropdown-item monitor-item' + (m.current ? ' active' : '');
             item.dataset.idx = m.idx;
+            const monitorIndex = typeof m.idx === 'number' ? m.idx : i;
+            const monitorLabel = t('remote.monitor_n', 'Monitor {{n}}')
+                .replace('{{n}}', String(monitorIndex));
             const res = (m.width && m.height)
                 ? '<span class="monitor-item-meta">' + m.width + '\u00d7' + m.height + '</span>'
                 : '';
             item.innerHTML = '<span class="material-icons">' +
                 (m.primary ? 'desktop_windows' : 'monitor') +
                 '</span><span class="monitor-item-text">' +
-                '<span class="monitor-item-name">' + escapeHtml(m.name) + '</span>' +
+                '<span class="monitor-item-name">' + escapeHtml(monitorLabel) + '</span>' +
                 res +
                 '</span>';
             item.addEventListener('click', () => {
@@ -2361,6 +2387,26 @@
     var viewerInitialized = false;
     var mobileBindingsDone = false;
 
+    function consumePendingViewerSessions() {
+        if (isGuestAccessMode()) return [];
+        try {
+            const operatorKey = window.BetterDesk && window.BetterDesk.user
+                ? (window.BetterDesk.user.id || window.BetterDesk.user.username || 'current')
+                : 'current';
+            const key = 'betterdesk.remote.pendingSessions.' +
+                encodeURIComponent(String(operatorKey));
+            const pending = JSON.parse(window.localStorage.getItem(key) || '[]');
+            window.localStorage.removeItem(key);
+            if (!Array.isArray(pending)) return [];
+            return pending.filter(function (item) {
+                return item && /^[A-Za-z0-9_-]+$/.test(String(item.deviceId || ''))
+                    && Date.now() - Number(item.queuedAt || 0) < 300000;
+            });
+        } catch (_) {
+            return [];
+        }
+    }
+
     function startViewerInit() {
         if (viewerInitialized) return;
         viewerInitialized = true;
@@ -2389,6 +2435,10 @@
             }
         }
 
+        consumePendingViewerSessions().forEach(function (item) {
+            createSession(String(item.deviceId), item.deviceName || '');
+        });
+
         // ---- BroadcastChannel for cross-tab session adding ----
         // Devices page can send {type:'add-session', deviceId, deviceName}
         // to add a new tab here without opening a new browser tab.
@@ -2397,7 +2447,18 @@
             bc.onmessage = (ev) => {
                 const msg = ev.data;
                 if (!msg || typeof msg !== 'object') return;
-                if (msg.type === 'add-session' && msg.deviceId) {
+                if (msg.type === 'add-sessions' && Array.isArray(msg.sessions)) {
+                    const accepted = [];
+                    msg.sessions.forEach(function (item) {
+                        if (!item || !item.deviceId) return;
+                        const id = String(item.deviceId);
+                        if (!/^[A-Za-z0-9_-]+$/.test(id) || !isPeerAllowedForGuest(id)) return;
+                        createSession(id, item.deviceName || '');
+                        accepted.push(id);
+                    });
+                    bc.postMessage({ type: 'session-added', deviceIds: accepted });
+                    if (accepted.length) window.focus();
+                } else if (msg.type === 'add-session' && msg.deviceId) {
                     // Validate deviceId format (alphanumeric, hyphens, underscores)
                     if (!/^[A-Za-z0-9_-]+$/.test(msg.deviceId)) return;
                     if (!isPeerAllowedForGuest(msg.deviceId)) return;

@@ -175,8 +175,40 @@
             return;
         }
 
+        var operatorKey = window.BetterDesk && window.BetterDesk.user
+            ? (window.BetterDesk.user.id || window.BetterDesk.user.username || 'current')
+            : 'current';
+        var queueKey = 'betterdesk.remote.pendingSessions.' +
+            encodeURIComponent(String(operatorKey));
+        var enqueue = function () {
+            try {
+                var current = JSON.parse(window.localStorage.getItem(queueKey) || '[]');
+                current.push({
+                    deviceId: String(deviceId),
+                    deviceName: deviceName || '',
+                    queuedAt: Date.now()
+                });
+                window.localStorage.setItem(queueKey, JSON.stringify(current.slice(-32)));
+                return true;
+            } catch (_) {
+                return false;
+            }
+        };
+        var drain = function () {
+            try {
+                var current = JSON.parse(window.localStorage.getItem(queueKey) || '[]');
+                window.localStorage.removeItem(queueKey);
+                return Array.isArray(current) ? current.filter(function (item) {
+                    return item && item.deviceId && Date.now() - Number(item.queuedAt || 0) < 300000;
+                }) : [];
+            } catch (_) {
+                return [];
+            }
+        };
+
+        enqueue();
         if (typeof BroadcastChannel === 'undefined') {
-            window.open('/remote/' + encodeURIComponent(deviceId), '_blank');
+            window.open('/remote/', 'betterdesk-rdviewer');
             return;
         }
 
@@ -186,7 +218,14 @@
         bc.onmessage = function (ev) {
             if (ev.data && ev.data.type === 'pong') {
                 handled = true;
-                bc.postMessage({ type: 'add-session', deviceId: deviceId, deviceName: deviceName || '' });
+                var pending = drain();
+                bc.postMessage({
+                    type: 'add-sessions',
+                    sessions: pending.length ? pending : [{
+                        deviceId: deviceId,
+                        deviceName: deviceName || ''
+                    }]
+                });
                 bc.close();
             } else if (ev.data && ev.data.type === 'session-added') {
                 handled = true;
@@ -198,7 +237,7 @@
         setTimeout(function () {
             if (!handled) {
                 bc.close();
-                window.open('/remote/' + encodeURIComponent(deviceId), '_blank');
+                window.open('/remote/', 'betterdesk-rdviewer');
             }
         }, 300);
     }

@@ -1915,7 +1915,8 @@ class RDClient {
         return this._peerInfo.displays.map(function (d, i) {
             return {
                 idx: i,
-                name: d.name || ('Monitor ' + (i + 1)),
+                name: 'Monitor ' + i,
+                osName: d.name || '',
                 width: d.width || 0,
                 height: d.height || 0,
                 // A display positioned at the origin is the primary one.

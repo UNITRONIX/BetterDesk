@@ -2168,6 +2168,24 @@
     border-bottom: 1px solid var(--border-primary, #30363d);
 }
 
+.ft-target-picker {
+    min-width: 0;
+    max-width: 100%;
+    flex: 1;
+    background: var(--bg-secondary, #161b22);
+    border: 1px solid transparent;
+    color: var(--text-secondary, #8b949e);
+    font: inherit;
+    font-weight: 600;
+    padding: 2px 4px;
+    border-radius: 4px;
+}
+
+.ft-target-picker:focus {
+    border-color: var(--accent, #3884ff);
+    outline: none;
+}
+
 .ft-pane-toolbar {
     display: flex;
     align-items: center;

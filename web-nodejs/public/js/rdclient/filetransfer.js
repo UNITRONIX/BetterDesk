@@ -226,6 +226,11 @@ class RDFileTransfer {
         this._clearTransferTimeout(id);
         const fileName = transfer.fileName;
         const resumable = !!options.resumable;
+        if (typeof transfer.captureReject === 'function') {
+            transfer.captureReject(new Error(message || 'Transfer failed'));
+            transfer.captureResolve = null;
+            transfer.captureReject = null;
+        }
         if (transfer.file && transfer.file.__rdNativeHandle && window.__TAURI__ && window.__TAURI__.core) {
             window.__TAURI__.core.invoke('desktop_release_file_handles', {
                 handles: [transfer.file.__rdNativeHandle]
@@ -523,8 +528,11 @@ class RDFileTransfer {
             remoteFileName: fileEntry.name,
             fileSize: Number(fileEntry.size || 0),
             receivedBytes: 0,
-            blocks: this._supportsStreamDownload() ? null : [],
-            streamDownload: this._supportsStreamDownload(),
+            blocks: this._supportsStreamDownload() && !options.forceBuffer ? null : [],
+            streamDownload: this._supportsStreamDownload() && !options.forceBuffer,
+            captureBlob: !!options.captureBlob,
+            captureResolve: options.captureResolve || null,
+            captureReject: options.captureReject || null,
             downloadHandle: null,
             localPath: null,
             localDir: options.localDir || null,
@@ -588,6 +596,32 @@ class RDFileTransfer {
         }
 
         return id;
+    }
+
+    /**
+     * Download a remote file into browser memory for a second remote peer.
+     * This intentionally bypasses the desktop streaming path because the
+     * caller must receive a Blob before it can start the destination upload.
+     * @param {string} remotePath
+     * @param {Object} fileEntry
+     * @returns {Promise<Blob>}
+     */
+    downloadFileToBlob(remotePath, fileEntry) {
+        const size = Number(fileEntry && fileEntry.size || 0);
+        const maxSize = 256 * 1024 * 1024;
+        if (size > maxSize) {
+            return Promise.reject(new Error('Remote-to-remote browser transfer is limited to 256 MB per file'));
+        }
+        const self = this;
+        return new Promise(function (resolve, reject) {
+            self.downloadFile(remotePath, fileEntry, {
+                forceBuffer: true,
+                captureBlob: true,
+                silent: true,
+                captureResolve: resolve,
+                captureReject: reject
+            });
+        });
     }
 
     /**
@@ -1624,6 +1658,20 @@ class RDFileTransfer {
         };
 
         if (transfer.type === 'download') {
+            if (transfer.captureBlob) {
+                try {
+                    const blob = new Blob(transfer.blocks || [], { type: 'application/octet-stream' });
+                    if (typeof transfer.captureResolve === 'function') {
+                        transfer.captureResolve(blob);
+                    }
+                    transfer.captureResolve = null;
+                    transfer.captureReject = null;
+                } catch (err) {
+                    if (typeof transfer.captureReject === 'function') transfer.captureReject(err);
+                }
+                finishComplete();
+                return;
+            }
             if (transfer.streamDownload && transfer.downloadHandle) {
                 if (!folderJobId) {
                     this._emit('file_transfer_progress', {
@@ -1707,6 +1755,11 @@ class RDFileTransfer {
 
         if (transfer) {
             this._clearTransferTimeout(id);
+            if (typeof transfer.captureReject === 'function') {
+                transfer.captureReject(new Error(error.error || 'Unknown error'));
+                transfer.captureResolve = null;
+                transfer.captureReject = null;
+            }
             transfer.status = 'error';
             transfer.resumable = !transfer.folderJobId
                 && (transfer.receivedBytes || transfer.sentBytes || 0) > 0;
