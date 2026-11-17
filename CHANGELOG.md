@@ -1,6 +1,13 @@
 ## [Unreleased]
 
 ### Changed
+- _(none yet)_
+
+---
+
+## [3.5.259] — 2026-11-17
+
+### Changed
 - Web RdClient now provides a shared bidirectional clipboard bridge for text, HTML, and PNG images across the operator and multiple remote sessions. Browser permission failures retain the content in the session hub and expose a user-gesture copy action; Explorer file clipboard remains desktop-only.
 
 ---
@@ -5223,3 +5230,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.256]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.255...v3.5.256
 [3.5.257]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.256...v3.5.257
 [3.5.258]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.257...v3.5.258
+[3.5.259]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.258...v3.5.259
