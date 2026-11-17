@@ -4,7 +4,7 @@
  * Supports multiple concurrent RDClient sessions
  */
 
-/* global RDClient, RDVideo, CDAPSession, RemoteTargetSession */
+/* global RDClient, RDVideo, CDAPSession, RemoteTargetSession, RDClipboard */
 
 (function () {
     'use strict';
@@ -124,6 +124,8 @@
     // ---- Session storage ----
     const sessions = new Map(); // deviceId → SessionInfo
     let activeSessionId = null;
+    const clipboardHub = window.rdClipboardHub || null;
+    let clipboardBridgeEnabled = window.localStorage.getItem('betterdesk.clipboardBridge') !== '0';
 
     const Prefs = window.RemoteViewerPrefs || {};
     const globalViewerPrefs = typeof Prefs.loadRemoteViewerPrefs === 'function'
@@ -506,30 +508,91 @@
         window.location.href = '/devices';
     }
 
-    // ---- Automatic clipboard sync (local -> remote) ----
-    // Native RustDesk pushes the controlling side's clipboard to the peer
-    // automatically, so a plain Ctrl+V on the remote pastes local content.
-    // The browser cannot observe clipboard changes, but it can read the
-    // clipboard once the tab regains focus (with transient activation), so we
-    // push the current local clipboard to the active streaming session then.
-    let _lastSyncedClipboard = '';
+    // ---- Shared clipboard bridge (local <-> all remote sessions) ----
+    function clipboardStatus(message, type) {
+        const el = document.getElementById('clipboard-sync-status');
+        if (el) el.textContent = message;
+        if (message && type) showToast(message, type);
+    }
+
+    function sendClipboardEntry(session, entry) {
+        if (!session || !session.client || session.state !== 'streaming') return false;
+        if (session.client.viewOnly || typeof session.client.sendClipboard !== 'function') return false;
+        const supportsRichClipboard = session.client.proto &&
+            typeof session.client.proto.buildMultiClipboards === 'function';
+        const value = supportsRichClipboard && entry && (entry.html || entry.pngBlob)
+            ? entry
+            : (entry && entry.text) || '';
+        try {
+            session.client.sendClipboard(value);
+            if (clipboardHub && entry.sequence) clipboardHub.markSent(session.deviceId, entry.sequence);
+            return true;
+        } catch (_) {
+            return false;
+        }
+    }
+
+    function sendLatestClipboardToSession(session, force) {
+        if ((!clipboardBridgeEnabled && !force) || !clipboardHub || !session) return;
+        const latest = clipboardHub.getLatest();
+        if (latest && (force || clipboardHub.shouldSendTo(session.deviceId))) {
+            if (sendClipboardEntry(session, latest)) {
+                clipboardStatus(t('remote.clipboard_sent', 'Clipboard sent'));
+            }
+        }
+    }
+
+    function fanoutClipboard(entry) {
+        if (!clipboardBridgeEnabled || !entry) return;
+        let sent = 0;
+        sessions.forEach((session) => {
+            if (!clipboardHub || clipboardHub.shouldSendTo(session.deviceId)) {
+                if (sendClipboardEntry(session, entry)) sent++;
+            }
+        });
+        if (sent) clipboardStatus(t('remote.clipboard_sent', 'Clipboard sent'), 'success');
+    }
+
+    function renderClipboardPreview(entry) {
+        const preview = document.getElementById('clipboard-preview');
+        const image = document.getElementById('clipboard-image-indicator');
+        if (preview) {
+            const text = entry && (entry.text || entry.html);
+            preview.textContent = text
+                ? String(text).replace(/\s+/g, ' ').slice(0, 120)
+                : (entry && entry.pngBlob ? t('remote.clipboard_image', 'Image') : t('remote.clipboard_empty', 'Clipboard is empty'));
+        }
+        if (image) image.hidden = !(entry && entry.pngBlob);
+    }
+
+    if (clipboardHub) {
+        clipboardHub.subscribe((entry) => {
+            renderClipboardPreview(entry);
+            fanoutClipboard(entry);
+        });
+        renderClipboardPreview(clipboardHub.getLatest());
+    }
+
     async function syncLocalClipboardToRemote() {
+        if (!clipboardBridgeEnabled || !clipboardHub) return;
         const session = getActiveSession();
         if (!session || !session.client || session.state !== 'streaming') return;
-        if (session.client.viewOnly) return;
-        if (!navigator.clipboard || !navigator.clipboard.readText) return;
+        if (session.client.viewOnly || typeof RDClipboard === 'undefined') return;
         try {
-            const text = await navigator.clipboard.readText();
-            if (text && text !== _lastSyncedClipboard) {
-                _lastSyncedClipboard = text;
-                session.client.sendClipboard(text);
+            const entry = await RDClipboard.readLocalRich();
+            if (entry && (entry.text || entry.html || entry.pngBlob)) {
+                clipboardHub.setFromLocal(entry);
             }
         } catch {
-            // Permission denied or not focused — ignore, the manual paste
-            // button remains available as a fallback.
+            // Browser permission errors are expected outside a user gesture.
         }
     }
     window.addEventListener('focus', syncLocalClipboardToRemote);
+    window.setInterval(() => {
+        if (document.visibilityState === 'visible' && document.hasFocus()) {
+            syncLocalClipboardToRemote();
+        }
+    }, 2500);
     if (viewerContainer) {
         viewerContainer.addEventListener('mousedown', syncLocalClipboardToRemote);
     }
@@ -756,6 +819,7 @@
 
         if (session.state === 'streaming' && session.client) {
             session.client.setAudioMuted(session.audioMuted);
+            sendLatestClipboardToSession(session);
         }
         syncMobileTouchForActive();
 
@@ -843,6 +907,7 @@
             if (isActive(session)) {
                 if (state !== 'streaming') hideToolbarChromeForSession(session);
                 syncToolbarToSession(session);
+                if (state === 'streaming') sendLatestClipboardToSession(session);
             }
             handleSessionState(session, state);
         });
@@ -858,6 +923,16 @@
             showSessionActions(session);
             if (meta && meta.cdapFallback) showCdapFallback(session);
             if (isActive(session)) setToolbarChromeVisible(false);
+        });
+
+        c.on('clipboard_status', (status) => {
+            if (status && status.ok) {
+                clipboardStatus(t('remote.clipboard_received', 'Clipboard received'));
+            } else if (status && status.reason === 'clipboard_permission_denied') {
+                clipboardStatus(t('remote.clipboard_copy_to_pc', 'Click Copy to my PC to copy it'), 'warning');
+            } else if (status && status.reason === 'clipboard_image_too_large') {
+                clipboardStatus(t('remote.clipboard_image_too_large', 'Image is too large for clipboard sync'), 'error');
+            }
         });
 
         c.on('cdap_fallback_available', () => {
@@ -1404,9 +1479,14 @@
             return;
         }
         try {
-            const text = await navigator.clipboard.readText();
-            if (text) {
-                session.client.sendClipboard(text);
+            const entry = await RDClipboard.readLocalRich();
+            if (entry && (entry.text || entry.html || entry.pngBlob)) {
+                if (clipboardHub) {
+                    clipboardHub.setFromLocal(entry);
+                    sendLatestClipboardToSession(session, true);
+                } else {
+                    sendClipboardEntry(session, entry);
+                }
             } else {
                 showToast(_('remote.clipboard_empty') || 'Clipboard is empty', 'warning');
             }
@@ -1416,6 +1496,50 @@
         }
         closeAllDropdowns();
     });
+
+    document.getElementById('btn-clipboard-send')?.addEventListener('click', async () => {
+        const session = getActiveSession();
+        if (!session || !session.client) return;
+        try {
+            const entry = clipboardHub?.getLatest() || await RDClipboard.readLocalRich();
+            if (!entry || (!entry.text && !entry.html && !entry.pngBlob)) {
+                clipboardStatus(t('remote.clipboard_empty', 'Clipboard is empty'), 'warning');
+            } else if (clipboardHub) {
+                clipboardHub.setFromLocal(entry);
+                sendLatestClipboardToSession(session, true);
+            } else if (sendClipboardEntry(session, entry)) {
+                clipboardStatus(t('remote.clipboard_sent', 'Clipboard sent'), 'success');
+            }
+        } catch {
+            clipboardStatus(t('remote.clipboard_denied', 'Clipboard access denied'), 'error');
+        }
+    });
+
+    document.getElementById('btn-clipboard-copy-local')?.addEventListener('click', async () => {
+        const entry = clipboardHub?.getLatest();
+        if (!entry) {
+            clipboardStatus(t('remote.clipboard_empty', 'Clipboard is empty'), 'warning');
+            return;
+        }
+        const status = await RDClipboard.writeLocalRich(entry);
+        if (status.ok) {
+            clipboardStatus(t('remote.clipboard_copied_local', 'Copied to local clipboard'), 'success');
+        } else {
+            clipboardStatus(t('remote.clipboard_denied', 'Clipboard access denied'), 'error');
+        }
+    });
+
+    const clipboardToggle = document.getElementById('clipboard-bridge-toggle');
+    if (clipboardToggle) {
+        clipboardToggle.checked = clipboardBridgeEnabled;
+        clipboardToggle.addEventListener('change', () => {
+            clipboardBridgeEnabled = clipboardToggle.checked;
+            window.localStorage.setItem('betterdesk.clipboardBridge', clipboardBridgeEnabled ? '1' : '0');
+            clipboardStatus(clipboardBridgeEnabled
+                ? t('remote.clipboard_bridge_on', 'Clipboard bridge enabled')
+                : t('remote.clipboard_bridge_off', 'Clipboard bridge disabled'));
+        });
+    }
 
     // Type text as remote keystrokes (Winlogon / password fields)
     function sendTypeTextFromPanel() {

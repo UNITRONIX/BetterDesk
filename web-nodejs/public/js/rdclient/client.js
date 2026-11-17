@@ -13,7 +13,7 @@
  *   client.disconnect();
  */
 
-/* global RDConnection, RDProtocol, RDCrypto, RDVideo, RDAudio, RDRenderer, RDInput, RDFileConnection, RDClipboard, RDCliprdr, RDPunchHoleResponse, RDConnectionParams, RDKeyboardEncoder */
+/* global RDConnection, RDProtocol, RDCrypto, RDVideo, RDAudio, RDRenderer, RDInput, RDFileConnection, RDClipboard, RDCliprdr, RDClipboardHub, RDPunchHoleResponse, RDConnectionParams, RDKeyboardEncoder */
 
 // eslint-disable-next-line no-unused-vars
 class RDClient {
@@ -1228,13 +1228,21 @@ class RDClient {
 
         const decoded = await RDClipboard.decodeEntries(list);
         const text = RDClipboard.pickBestText(decoded);
+        const entry = {
+            text,
+            html: (decoded.find((e) => e.format === 'html' && e.html) || {}).html || '',
+            pngBlob: (decoded.find((e) => e.pngBlob) || {}).pngBlob || null
+        };
+        const hub = typeof window !== 'undefined' && window.rdClipboardHub;
+        if (hub) hub.setFromRemote(entry, this.deviceId);
         if (text) {
             this._emit('clipboard', text);
         }
 
-        await RDClipboard.applyToLocal(decoded, {
-            enabled: this._clipboardToLocalEnabled
-        });
+        if (this._clipboardToLocalEnabled) {
+            const status = await RDClipboard.writeLocalRich(entry);
+            this._emit('clipboard_status', status, entry);
+        }
     }
 
     _handleClipboard(clipboard) {
@@ -1661,18 +1669,28 @@ class RDClient {
     // ---- Public Utility Methods ----
 
     /**
-     * Send clipboard text to remote
-     * @param {string} text
+     * Send clipboard text or a rich clipboard entry to remote
+     * @param {string|Object} value
      */
-    sendClipboard(text) {
+    sendClipboard(value) {
         if (this._state !== 'streaming') return;
         if (this._viewOnly) return;
-        void this._sendClipboard(text);
+        void this._sendClipboard(value);
     }
 
-    async _sendClipboard(text) {
-        const msg = await this.proto.buildClipboard(text);
-        this._sendPeerMessage(msg);
+    async _sendClipboard(value) {
+        const entry = typeof value === 'string' ? { text: value } : (value || {});
+        try {
+            const msg = (entry.html || entry.pngBlob)
+                ? await this.proto.buildMultiClipboards(entry)
+                : await this.proto.buildClipboard(entry.text || '');
+            this._sendPeerMessage(msg);
+        } catch (err) {
+            this._emit('clipboard_status', {
+                ok: false,
+                reason: err && err.message ? err.message : 'clipboard_send_failed'
+            }, entry);
+        }
     }
 
     /**

@@ -68,6 +68,26 @@
                             <button class="dropdown-item" id="btn-clipboard-paste" title="${_('remote.clipboard_paste_hint')}">
                                 <span class="material-icons">content_paste</span> ${_('remote.clipboard_paste')}
                             </button>
+                            <div class="clipboard-bridge-panel" id="clipboard-bridge-panel">
+                                <div class="dropdown-label">${_('remote.clipboard_bridge')}</div>
+                                <div class="clipboard-preview-row">
+                                    <span class="clipboard-preview" id="clipboard-preview">${_('remote.clipboard_empty')}</span>
+                                    <span class="material-icons clipboard-image-indicator" id="clipboard-image-indicator" hidden>image</span>
+                                </div>
+                                <div class="clipboard-bridge-actions">
+                                    <button type="button" class="clipboard-bridge-btn" id="btn-clipboard-send">
+                                        <span class="material-icons">send</span> ${_('remote.clipboard_send')}
+                                    </button>
+                                    <button type="button" class="clipboard-bridge-btn" id="btn-clipboard-copy-local">
+                                        <span class="material-icons">content_copy</span> ${_('remote.clipboard_copy_local')}
+                                    </button>
+                                </div>
+                                <label class="clipboard-bridge-toggle">
+                                    <input type="checkbox" id="clipboard-bridge-toggle" checked>
+                                    <span>${_('remote.clipboard_bridge_toggle')}</span>
+                                </label>
+                                <div class="clipboard-sync-status" id="clipboard-sync-status">${_('remote.clipboard_ready')}</div>
+                            </div>
                             <button class="dropdown-item" id="btn-reset-keyboard">
                                 <span class="material-icons">keyboard</span> ${_('remote.reset_keyboard')}
                             </button>

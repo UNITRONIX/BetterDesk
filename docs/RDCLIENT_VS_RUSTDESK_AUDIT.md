@@ -19,7 +19,7 @@ Symbols below: ✅ working, ⚠️ partial / behind a feature flag, ❌ missing.
 | Microphone capture (operator → peer) | ✅ | ❌ | ❌ | **missing** |
 | Mouse input (move/buttons/wheel) | ✅ | ✅ | ❌ → being added (Phase 58) | partial |
 | Keyboard input (modifiers, function keys) | ✅ | ✅ | ❌ → being added (Phase 58) | partial |
-| Clipboard sync (text + image) | ✅ bidirectional | ✅ text only via WebSocket | ⚠️ text only via bd-signal `clipboard.*` (planned) | partial |
+| Clipboard sync (text + image) | ✅ bidirectional | ✅ bidirectional text + image via WebSocket and session hub | ⚠️ text only via bd-signal `clipboard.*` (planned) | partial |
 | File transfer (upload/download/resume) | ✅ | ⚠️ basic upload/download, no resume | ⚠️ `files.read` only (no write) | partial |
 | Multi-monitor | ✅ | ✅ peer-side monitor select | ❌ | partial |
 | Session recording (.mp4 / WebM) | ❌ in client | ✅ WebM via canvas.captureStream | ❌ | RDClient-only |

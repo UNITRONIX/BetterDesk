@@ -1,7 +1,7 @@
 ## [Unreleased]
 
 ### Changed
-- _(none yet)_
+- Web RdClient now provides a shared bidirectional clipboard bridge for text, HTML, and PNG images across the operator and multiple remote sessions. Browser permission failures retain the content in the session hub and expose a user-gesture copy action; Explorer file clipboard remains desktop-only.
 
 ---
 

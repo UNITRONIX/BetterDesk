@@ -45,6 +45,16 @@ function loadRdclientModules() {
         sandbox,
         { filename: 'clipboard.js' }
     );
+    vm.runInNewContext(
+        fs.readFileSync(path.join(base, 'clipboard-hub.js'), 'utf8'),
+        sandbox,
+        { filename: 'clipboard-hub.js' }
+    );
+    vm.runInNewContext(
+        fs.readFileSync(path.join(base, 'protocol.js'), 'utf8') + '\nglobalThis.RDProtocol = RDProtocol;',
+        sandbox,
+        { filename: 'protocol.js' }
+    );
     return sandbox;
 }
 
@@ -173,5 +183,56 @@ describe('RDClient clipboard protobuf field', () => {
         const decoded = Message.decode(Message.encode(msg).finish());
         expect(decoded.multiClipboards.clipboards).toHaveLength(1);
         expect(Buffer.from(decoded.multiClipboards.clipboards[0].content).toString('utf8')).toBe('hello');
+    });
+});
+
+describe('RDClipboardHub', () => {
+    let RDClipboardHub;
+
+    beforeAll(() => {
+        RDClipboardHub = loadRdclientModules().RDClipboardHub;
+    });
+
+    it('keeps one latest entry and does not re-emit identical clipboard data', () => {
+        const hub = new RDClipboardHub();
+        const events = [];
+        hub.subscribe((entry) => events.push(entry));
+
+        hub.setFromRemote({ text: 'same' }, 'device-a');
+        hub.setFromLocal({ text: 'same' });
+
+        expect(events).toHaveLength(1);
+        expect(hub.getLatest().sourceSessionId).toBe('device-a');
+    });
+
+    it('does not send back to the source session, but fans out once to others', () => {
+        const hub = new RDClipboardHub();
+        const entry = hub.setFromRemote({ text: 'forward me' }, 'device-a');
+
+        expect(hub.shouldSendTo('device-a')).toBe(false);
+        expect(hub.shouldSendTo('device-b')).toBe(true);
+        hub.markSent('device-b', entry.sequence);
+        expect(hub.shouldSendTo('device-b')).toBe(false);
+    });
+});
+
+describe('RDProtocol clipboard builder', () => {
+    it('builds text and HTML entries in a multi clipboard message', async () => {
+        const sandbox = loadRdclientModules();
+        const protocol = new sandbox.RDProtocol();
+        protocol.enums = {
+            ClipboardFormat: {
+                values: { Text: 0, Html: 2 }
+            }
+        };
+
+        const message = await protocol.buildMultiClipboards({
+            text: 'plain',
+            html: '<b>rich</b>'
+        });
+
+        expect(message.multiClipboards.clipboards).toHaveLength(2);
+        expect(message.multiClipboards.clipboards.map((e) => e.format)).toEqual([0, 2]);
+        expect(new TextDecoder().decode(message.multiClipboards.clipboards[0].content)).toBe('plain');
     });
 });
