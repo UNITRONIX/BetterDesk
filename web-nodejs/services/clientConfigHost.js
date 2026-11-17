@@ -108,7 +108,11 @@ function detectHostSource(req, queryHost, envOverrides) {
 function resolveRustDeskEndpoints(req, queryHost) {
     const envOverrides = publicEndpoints.readPublicEndpointEnv();
     const host = resolveClientFacingHost(req, queryHost);
-    const relay = envOverrides.public_relay_server || host;
+    // Always advertise relay as host:port. A bare host makes RustDesk 1.4.8/1.4.9
+    // clients fall back to the API port and request relay on :21114 (#329-class
+    // failure: relay never pairs, sessions die with "Pair timeout").
+    const relaySourceHost = envOverrides.public_relay_server || host;
+    const relay = conn.relayEndpointForHost(relaySourceHost);
     const api = envOverrides.public_api_url
         || keyService.apiUrlForHost(host, conn.defaultUseHttps());
 

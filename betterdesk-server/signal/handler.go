@@ -2132,14 +2132,15 @@ func (s *Server) handleTestNat(msg *pb.TestNatRequest, raddr net.Addr) *pb.Rende
 		Port: int32(tcpAddr.Port),
 	}
 
-	// M8: Include ConfigUpdate so clients ≥1.3.x learn about relay/rendezvous
-	// servers. This allows dynamic server reconfiguration without client-side changes.
-	rendezvousServers := s.cfg.GetRelayServers()
-	if s.cfg.RendezvousServers != "" {
-		for _, srv := range splitAndTrim(s.cfg.RendezvousServers) {
-			rendezvousServers = append(rendezvousServers, srv)
-		}
-	}
+	// M8: advertise the rendezvous (ID) servers so clients ≥1.3.x can learn
+	// about dynamic reconfiguration.
+	//
+	// SECURITY/CORRECTNESS: this list must never contain relay addresses.
+	// ConfigUpdate.rendezvous_servers tells the client which ID server to use;
+	// filling it from GetRelayServers() made newer clients reconnect their
+	// signal socket to the relay port, stop answering punch/relay requests and
+	// fail every session with a relay pair timeout.
+	rendezvousServers := s.cfg.GetRendezvousServers()
 	if len(rendezvousServers) > 0 {
 		resp.Cu = &pb.ConfigUpdate{
 			Serial:            msg.Serial + 1,

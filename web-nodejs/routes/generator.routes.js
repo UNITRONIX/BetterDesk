@@ -16,6 +16,7 @@ const fs = require('fs');
 const path = require('path');
 const { requireAuth, requireAdmin } = require('../middleware/auth');
 const keyService = require('../services/keyService');
+const conn = require('../services/agentBundleConnection');
 const bundleService = require('../services/agentBundleService');
 const clientTemplateWorker = require('../services/clientTemplateWorker');
 const supportModule = require('../services/supportGeneratorModule');
@@ -828,7 +829,13 @@ router.post('/api/generator/generate-config', requireAuth, async (req, res) => {
         const publicKey = await keyService.resolvePublicKey();
         const lines = [];
         lines.push(`rendezvous_server = ${serverHost}:${serverPort || 21116}`);
-        if (relayHost) lines.push(`relay_server = ${relayHost}:${relayPort || 21117}`);
+        // Relay needs an explicit port; clients given a bare host request relay
+        // on the API port and the relay never pairs. Accept an already-qualified
+        // host:port without doubling it.
+        if (relayHost) {
+            const relayEndpoint = conn.relayEndpointForHost(relayHost, relayPort);
+            if (relayEndpoint) lines.push(`relay_server = ${relayEndpoint}`);
+        }
         if (publicKey) lines.push(`key = ${publicKey}`);
         if (clientName) lines.push(`name = ${clientName}`);
         res.json({

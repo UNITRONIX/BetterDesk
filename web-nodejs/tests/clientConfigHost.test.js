@@ -48,7 +48,9 @@ describe('clientConfigHost', () => {
         );
 
         expect(endpoints.host).toBe('remote.example.com');
-        expect(endpoints.relay).toBe('relay.example.com');
+        // Relay gets an explicit port so RustDesk 1.4.8/1.4.9 does not fall back
+        // to the API port and request relay there (pairing would never complete).
+        expect(endpoints.relay).toBe('relay.example.com:21117');
         expect(endpoints.api).toBe('https://api.example.com');
         expect(endpoints.env_override_active).toBe(true);
         expect(endpoints.sources.host).toBe('env');

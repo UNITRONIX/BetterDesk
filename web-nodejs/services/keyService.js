@@ -170,14 +170,17 @@ function buildRustDeskConfigPayload(endpointsOrHost, options = {}) {
         const host = normalizeHostInput(endpointsOrHost);
         return {
             host,
-            relay: host,
+            // Relay must carry an explicit port: RustDesk 1.4.8/1.4.9 clients
+            // given a bare host fall back to the API port and request relay on
+            // that socket, so the relay never pairs.
+            relay: conn.relayEndpointForHost(host),
             api: apiUrlForHost(host, useHttps),
             key: pubKey,
         };
     }
 
     const host = normalizeHostInput(endpointsOrHost.host);
-    const relay = normalizeHostInput(endpointsOrHost.relay || host);
+    const relay = conn.relayEndpointForHost(endpointsOrHost.relay || host);
     const api = endpointsOrHost.api || apiUrlForHost(host, useHttps);
     return {
         host,
