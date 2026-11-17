@@ -2013,8 +2013,19 @@ func (x *OnlineResponse) GetStates() []byte {
 }
 
 type KeyExchange struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Keys          [][]byte               `protobuf:"bytes,1,rep,name=keys,proto3" json:"keys,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Keys  [][]byte               `protobuf:"bytes,1,rep,name=keys,proto3" json:"keys,omitempty"`
+	// From the server: the newest key-exchange version it speaks. From the client:
+	// the version it picked. Absent (0) means the original scheme.
+	//
+	// Newer RustDesk clients negotiate against this field; a server that never
+	// sends it leaves them unable to complete the handshake, which shows up as
+	// repeated KeyExchange attempts with zero "secure established" (see the
+	// server-side signature in crypto/secure.go).
+	Version uint32 `protobuf:"varint,2,opt,name=version,proto3" json:"version,omitempty"`
+	// Server signature of KxParams. Bit 255 of the signed X25519 public key
+	// requires this field; legacy keys leave it clear.
+	SignedParams  []byte `protobuf:"bytes,3,opt,name=signed_params,json=signedParams,proto3" json:"signed_params,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2056,6 +2067,75 @@ func (x *KeyExchange) GetKeys() [][]byte {
 	return nil
 }
 
+func (x *KeyExchange) GetVersion() uint32 {
+	if x != nil {
+		return x.Version
+	}
+	return 0
+}
+
+func (x *KeyExchange) GetSignedParams() []byte {
+	if x != nil {
+		return x.SignedParams
+	}
+	return nil
+}
+
+// Signed by the server beside its ephemeral public key: that key as it went out,
+// so the signature belongs to this exchange alone, plus the newest key-exchange
+// version the server speaks.
+type KxParams struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Pk            []byte                 `protobuf:"bytes,1,opt,name=pk,proto3" json:"pk,omitempty"`
+	Version       uint32                 `protobuf:"varint,2,opt,name=version,proto3" json:"version,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *KxParams) Reset() {
+	*x = KxParams{}
+	mi := &file_rendezvous_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *KxParams) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*KxParams) ProtoMessage() {}
+
+func (x *KxParams) ProtoReflect() protoreflect.Message {
+	mi := &file_rendezvous_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use KxParams.ProtoReflect.Descriptor instead.
+func (*KxParams) Descriptor() ([]byte, []int) {
+	return file_rendezvous_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *KxParams) GetPk() []byte {
+	if x != nil {
+		return x.Pk
+	}
+	return nil
+}
+
+func (x *KxParams) GetVersion() uint32 {
+	if x != nil {
+		return x.Version
+	}
+	return 0
+}
+
 type HealthCheck struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Token         string                 `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
@@ -2065,7 +2145,7 @@ type HealthCheck struct {
 
 func (x *HealthCheck) Reset() {
 	*x = HealthCheck{}
-	mi := &file_rendezvous_proto_msgTypes[23]
+	mi := &file_rendezvous_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2077,7 +2157,7 @@ func (x *HealthCheck) String() string {
 func (*HealthCheck) ProtoMessage() {}
 
 func (x *HealthCheck) ProtoReflect() protoreflect.Message {
-	mi := &file_rendezvous_proto_msgTypes[23]
+	mi := &file_rendezvous_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2090,7 +2170,7 @@ func (x *HealthCheck) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HealthCheck.ProtoReflect.Descriptor instead.
 func (*HealthCheck) Descriptor() ([]byte, []int) {
-	return file_rendezvous_proto_rawDescGZIP(), []int{23}
+	return file_rendezvous_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *HealthCheck) GetToken() string {
@@ -2110,7 +2190,7 @@ type HeaderEntry struct {
 
 func (x *HeaderEntry) Reset() {
 	*x = HeaderEntry{}
-	mi := &file_rendezvous_proto_msgTypes[24]
+	mi := &file_rendezvous_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2122,7 +2202,7 @@ func (x *HeaderEntry) String() string {
 func (*HeaderEntry) ProtoMessage() {}
 
 func (x *HeaderEntry) ProtoReflect() protoreflect.Message {
-	mi := &file_rendezvous_proto_msgTypes[24]
+	mi := &file_rendezvous_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2135,7 +2215,7 @@ func (x *HeaderEntry) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HeaderEntry.ProtoReflect.Descriptor instead.
 func (*HeaderEntry) Descriptor() ([]byte, []int) {
-	return file_rendezvous_proto_rawDescGZIP(), []int{24}
+	return file_rendezvous_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *HeaderEntry) GetName() string {
@@ -2164,7 +2244,7 @@ type HttpProxyRequest struct {
 
 func (x *HttpProxyRequest) Reset() {
 	*x = HttpProxyRequest{}
-	mi := &file_rendezvous_proto_msgTypes[25]
+	mi := &file_rendezvous_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2176,7 +2256,7 @@ func (x *HttpProxyRequest) String() string {
 func (*HttpProxyRequest) ProtoMessage() {}
 
 func (x *HttpProxyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rendezvous_proto_msgTypes[25]
+	mi := &file_rendezvous_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2189,7 +2269,7 @@ func (x *HttpProxyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HttpProxyRequest.ProtoReflect.Descriptor instead.
 func (*HttpProxyRequest) Descriptor() ([]byte, []int) {
-	return file_rendezvous_proto_rawDescGZIP(), []int{25}
+	return file_rendezvous_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *HttpProxyRequest) GetMethod() string {
@@ -2232,7 +2312,7 @@ type HttpProxyResponse struct {
 
 func (x *HttpProxyResponse) Reset() {
 	*x = HttpProxyResponse{}
-	mi := &file_rendezvous_proto_msgTypes[26]
+	mi := &file_rendezvous_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2244,7 +2324,7 @@ func (x *HttpProxyResponse) String() string {
 func (*HttpProxyResponse) ProtoMessage() {}
 
 func (x *HttpProxyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rendezvous_proto_msgTypes[26]
+	mi := &file_rendezvous_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2257,7 +2337,7 @@ func (x *HttpProxyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HttpProxyResponse.ProtoReflect.Descriptor instead.
 func (*HttpProxyResponse) Descriptor() ([]byte, []int) {
-	return file_rendezvous_proto_rawDescGZIP(), []int{26}
+	return file_rendezvous_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *HttpProxyResponse) GetStatus() int32 {
@@ -2323,7 +2403,7 @@ type RendezvousMessage struct {
 
 func (x *RendezvousMessage) Reset() {
 	*x = RendezvousMessage{}
-	mi := &file_rendezvous_proto_msgTypes[27]
+	mi := &file_rendezvous_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2335,7 +2415,7 @@ func (x *RendezvousMessage) String() string {
 func (*RendezvousMessage) ProtoMessage() {}
 
 func (x *RendezvousMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_rendezvous_proto_msgTypes[27]
+	mi := &file_rendezvous_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2348,7 +2428,7 @@ func (x *RendezvousMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RendezvousMessage.ProtoReflect.Descriptor instead.
 func (*RendezvousMessage) Descriptor() ([]byte, []int) {
-	return file_rendezvous_proto_rawDescGZIP(), []int{27}
+	return file_rendezvous_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *RendezvousMessage) GetUnion() isRendezvousMessage_Union {
@@ -2907,9 +2987,14 @@ const file_rendezvous_proto_rawDesc = "" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05peers\x18\x02 \x03(\tR\x05peers\"(\n" +
 	"\x0eOnlineResponse\x12\x16\n" +
-	"\x06states\x18\x01 \x01(\fR\x06states\"!\n" +
+	"\x06states\x18\x01 \x01(\fR\x06states\"`\n" +
 	"\vKeyExchange\x12\x12\n" +
-	"\x04keys\x18\x01 \x03(\fR\x04keys\"#\n" +
+	"\x04keys\x18\x01 \x03(\fR\x04keys\x12\x18\n" +
+	"\aversion\x18\x02 \x01(\rR\aversion\x12#\n" +
+	"\rsigned_params\x18\x03 \x01(\fR\fsignedParams\"4\n" +
+	"\bKxParams\x12\x0e\n" +
+	"\x02pk\x18\x01 \x01(\fR\x02pk\x12\x18\n" +
+	"\aversion\x18\x02 \x01(\rR\aversion\"#\n" +
 	"\vHealthCheck\x12\x14\n" +
 	"\x05token\x18\x01 \x01(\tR\x05token\"7\n" +
 	"\vHeaderEntry\x12\x12\n" +
@@ -2981,7 +3066,7 @@ func file_rendezvous_proto_rawDescGZIP() []byte {
 }
 
 var file_rendezvous_proto_enumTypes = make([]protoimpl.EnumInfo, 5)
-var file_rendezvous_proto_msgTypes = make([]protoimpl.MessageInfo, 28)
+var file_rendezvous_proto_msgTypes = make([]protoimpl.MessageInfo, 29)
 var file_rendezvous_proto_goTypes = []any{
 	(ConnType)(0),                      // 0: hbb.ConnType
 	(NatType)(0),                       // 1: hbb.NatType
@@ -3011,11 +3096,12 @@ var file_rendezvous_proto_goTypes = []any{
 	(*OnlineRequest)(nil),              // 25: hbb.OnlineRequest
 	(*OnlineResponse)(nil),             // 26: hbb.OnlineResponse
 	(*KeyExchange)(nil),                // 27: hbb.KeyExchange
-	(*HealthCheck)(nil),                // 28: hbb.HealthCheck
-	(*HeaderEntry)(nil),                // 29: hbb.HeaderEntry
-	(*HttpProxyRequest)(nil),           // 30: hbb.HttpProxyRequest
-	(*HttpProxyResponse)(nil),          // 31: hbb.HttpProxyResponse
-	(*RendezvousMessage)(nil),          // 32: hbb.RendezvousMessage
+	(*KxParams)(nil),                   // 28: hbb.KxParams
+	(*HealthCheck)(nil),                // 29: hbb.HealthCheck
+	(*HeaderEntry)(nil),                // 30: hbb.HeaderEntry
+	(*HttpProxyRequest)(nil),           // 31: hbb.HttpProxyRequest
+	(*HttpProxyResponse)(nil),          // 32: hbb.HttpProxyResponse
+	(*RendezvousMessage)(nil),          // 33: hbb.RendezvousMessage
 }
 var file_rendezvous_proto_depIdxs = []int32{
 	1,  // 0: hbb.PunchHoleRequest.nat_type:type_name -> hbb.NatType
@@ -3031,8 +3117,8 @@ var file_rendezvous_proto_depIdxs = []int32{
 	0,  // 10: hbb.RequestRelay.conn_type:type_name -> hbb.ConnType
 	8,  // 11: hbb.RequestRelay.control_permissions:type_name -> hbb.ControlPermissions
 	8,  // 12: hbb.FetchLocalAddr.control_permissions:type_name -> hbb.ControlPermissions
-	29, // 13: hbb.HttpProxyRequest.headers:type_name -> hbb.HeaderEntry
-	29, // 14: hbb.HttpProxyResponse.headers:type_name -> hbb.HeaderEntry
+	30, // 13: hbb.HttpProxyRequest.headers:type_name -> hbb.HeaderEntry
+	30, // 14: hbb.HttpProxyResponse.headers:type_name -> hbb.HeaderEntry
 	5,  // 15: hbb.RendezvousMessage.register_peer:type_name -> hbb.RegisterPeer
 	6,  // 16: hbb.RendezvousMessage.register_peer_response:type_name -> hbb.RegisterPeerResponse
 	7,  // 17: hbb.RendezvousMessage.punch_hole_request:type_name -> hbb.PunchHoleRequest
@@ -3053,9 +3139,9 @@ var file_rendezvous_proto_depIdxs = []int32{
 	25, // 32: hbb.RendezvousMessage.online_request:type_name -> hbb.OnlineRequest
 	26, // 33: hbb.RendezvousMessage.online_response:type_name -> hbb.OnlineResponse
 	27, // 34: hbb.RendezvousMessage.key_exchange:type_name -> hbb.KeyExchange
-	28, // 35: hbb.RendezvousMessage.hc:type_name -> hbb.HealthCheck
-	30, // 36: hbb.RendezvousMessage.http_proxy_request:type_name -> hbb.HttpProxyRequest
-	31, // 37: hbb.RendezvousMessage.http_proxy_response:type_name -> hbb.HttpProxyResponse
+	29, // 35: hbb.RendezvousMessage.hc:type_name -> hbb.HealthCheck
+	31, // 36: hbb.RendezvousMessage.http_proxy_request:type_name -> hbb.HttpProxyRequest
+	32, // 37: hbb.RendezvousMessage.http_proxy_response:type_name -> hbb.HttpProxyResponse
 	11, // 38: hbb.RendezvousMessage.ice_candidate:type_name -> hbb.IceCandidate
 	39, // [39:39] is the sub-list for method output_type
 	39, // [39:39] is the sub-list for method input_type
@@ -3077,7 +3163,7 @@ func file_rendezvous_proto_init() {
 		(*RelayResponse_Id)(nil),
 		(*RelayResponse_Pk)(nil),
 	}
-	file_rendezvous_proto_msgTypes[27].OneofWrappers = []any{
+	file_rendezvous_proto_msgTypes[28].OneofWrappers = []any{
 		(*RendezvousMessage_RegisterPeer)(nil),
 		(*RendezvousMessage_RegisterPeerResponse)(nil),
 		(*RendezvousMessage_PunchHoleRequest)(nil),
@@ -3109,7 +3195,7 @@ func file_rendezvous_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_rendezvous_proto_rawDesc), len(file_rendezvous_proto_rawDesc)),
 			NumEnums:      5,
-			NumMessages:   28,
+			NumMessages:   29,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

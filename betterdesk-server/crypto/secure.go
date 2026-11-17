@@ -282,6 +282,9 @@ func NegotiateSecureTCP(conn net.Conn, edPriv ed25519.PrivateKey) (*HandshakeRes
 	// Step 2: Read client's first response (30s timeout)
 	resp, err := codec.ReadRawProto(conn, 30*time.Second)
 	if err != nil {
+		// A silent peer here means it never completed our KeyExchange. Log the
+		// transport detail so a systematic handshake failure (every new client,
+		// zero "secure established") is distinguishable from ordinary churn.
 		return nil, fmt.Errorf("secure: read client response: %w", err)
 	}
 
@@ -289,6 +292,8 @@ func NegotiateSecureTCP(conn net.Conn, edPriv ed25519.PrivateKey) (*HandshakeRes
 	if ke := resp.GetKeyExchange(); ke != nil {
 		// New client completing secure handshake
 		keys := ke.GetKeys()
+		log.Printf("[signal] client KeyExchange from %s: keys=%d version=%d signedParams=%d bytes",
+			conn.RemoteAddr(), len(keys), ke.GetVersion(), len(ke.GetSignedParams()))
 		if len(keys) < 2 {
 			return nil, fmt.Errorf("secure: KeyExchange from client has %d keys (expected ≥2)", len(keys))
 		}
@@ -334,7 +339,7 @@ func NegotiateSecureTCP(conn net.Conn, edPriv ed25519.PrivateKey) (*HandshakeRes
 	}
 
 	// Step 4: Not a KeyExchange — old client, return the message for direct handling
-	log.Printf("[signal] Non-secure TCP from %s (old client, no KeyExchange)", conn.RemoteAddr())
+	log.Printf("[signal] Non-secure TCP from %s (old client, no KeyExchange; got %T)", conn.RemoteAddr(), resp.GetUnion())
 	return &HandshakeResult{
 		Secure:   false,
 		FirstMsg: resp,
