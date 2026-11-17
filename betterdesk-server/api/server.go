@@ -730,17 +730,30 @@ func (s *Server) Start(ctx context.Context) error {
 		s.httpSrv.TLSConfig = tlsCfg
 	}
 
+	// Bind explicitly so the API port can also accept relay framing from clients
+	// whose baked `relay-server` value carries no port (they resolve it to the API
+	// port). HTTP and TLS pass through untouched; see sniff_listener.go.
+	ln, err := net.Listen("tcp", addr)
+	if err != nil {
+		return fmt.Errorf("api: listen %s: %w", addr, err)
+	}
+	var serveLn net.Listener = ln
+	if s.relay != nil {
+		serveLn = newProtocolSniffListener(ln, s.relay.ServeConn)
+		log.Printf("[api] relay compatibility enabled on %s (portless relay-server clients)", addr)
+	}
+
 	s.wg.Add(1)
 	go func() {
 		defer s.wg.Done()
 		if useTLS {
 			log.Printf("[api] HTTPS listening on %s (TLS enabled)", addr)
-			if err := s.httpSrv.ListenAndServeTLS("", ""); err != nil && err != http.ErrServerClosed {
+			if err := s.httpSrv.ServeTLS(serveLn, "", ""); err != nil && err != http.ErrServerClosed {
 				log.Printf("[api] HTTPS server error: %v", err)
 			}
 		} else {
 			log.Printf("[api] HTTP listening on %s", addr)
-			if err := s.httpSrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			if err := s.httpSrv.Serve(serveLn); err != nil && err != http.ErrServerClosed {
 				log.Printf("[api] HTTP server error: %v", err)
 			}
 		}
