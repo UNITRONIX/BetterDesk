@@ -1265,6 +1265,32 @@ func (s *Server) handlePunchHoleRequestTCPWithHint(msg *pb.PunchHoleRequest, rad
 		s.requiresRelayOnlyCompatibility(targetID) {
 		log.Printf("[signal] PunchHole (TCP): force relay for %s (returning SYMMETRIC to let client drive relay UUID)", targetID)
 
+		// Punch the target anyway, exactly as upstream hbbs does for every
+		// PunchHoleRequest. Two things depend on it:
+		//   - the target learns the initiator's address, which it needs to build
+		//     its RelayResponse;
+		//   - the target answers with PunchHoleSent, and that message carries the
+		//     relay endpoint it configured. Without it we have no idea which relay
+		//     value the target will accept in RequestRelay, because newer clients
+		//     drop a request whose relay_server differs from their own.
+		punchForTarget := &pb.RendezvousMessage{
+			Union: &pb.RendezvousMessage_PunchHole{
+				PunchHole: &pb.PunchHole{
+					SocketAddr:  crypto.EncodeAddr(raddr),
+					RelayServer: relayServer,
+					NatType:     msg.NatType,
+					UdpPort:     msg.UdpPort,
+					ForceRelay:  true,
+					UpnpPort:    msg.UpnpPort,
+					// The offer must reach the peer for WebRTC transport negotiation.
+					WebrtcSdpOffer: msg.WebrtcSdpOffer,
+				},
+			},
+		}
+		if s.sendToPeer(targetID, punchForTarget) {
+			log.Printf("[signal] PunchHole (TCP): relay-mode punch sent to %s so it learns the initiator and reports its relay", targetID)
+		}
+
 		var signedPk []byte
 		targetPK := s.peerPublicKey(targetID, target)
 		if len(targetPK) > 0 {
