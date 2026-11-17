@@ -55,11 +55,12 @@ func TestForceRelayStillPunchesTarget(t *testing.T) {
 	if gotAddr == nil || !gotAddr.IP.Equal(initiatorAddr.IP) {
 		t.Fatalf("punch socket_addr = %v, want the initiator %v", gotAddr, initiatorAddr)
 	}
-	// Upstream forces relay with nat_type=SYMMETRIC, never force_relay: a peer
-	// that sees force_relay skips RequestRelay, invents its own UUID, and the two
-	// sides never meet in the relay's pending map.
-	if ph.NatType != pb.NatType_SYMMETRIC {
-		t.Fatalf("nat_type = %v, want SYMMETRIC to force relay", ph.NatType)
+	// The punch must not mark the peer as a relay initiator. A SYMMETRIC or
+	// force_relay marker makes it mint its own UUID (initiate=true) and answer
+	// RelayResponse with that UUID instead of an empty one, which breaks the
+	// pending correlation the initiator needs to pair.
+	if ph.NatType == pb.NatType_SYMMETRIC {
+		t.Fatal("nat_type must not be forced to SYMMETRIC: the peer would initiate relay with its own UUID")
 	}
 	if ph.ForceRelay {
 		t.Fatal("force_relay must stay false: it makes the peer skip RequestRelay and use its own UUID")

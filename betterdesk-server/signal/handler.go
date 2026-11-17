@@ -1273,23 +1273,22 @@ func (s *Server) handlePunchHoleRequestTCPWithHint(msg *pb.PunchHoleRequest, rad
 		//     relay endpoint it configured. Without it we have no idea which relay
 		//     value the target will accept in RequestRelay, because newer clients
 		//     drop a request whose relay_server differs from their own.
+		// Punch the target so it learns the initiator's address.
+		//
+		// nat_type stays as the initiator reported it — do NOT set SYMMETRIC and
+		// do NOT set force_relay. Upstream forces relay only for its own
+		// ALWAYS_USE_RELAY/LAN cases, and a peer that sees either marker treats
+		// itself as relay initiator: it mints its own UUID (initiate=true) and
+		// answers RelayResponse with that UUID instead of an empty one, which
+		// breaks the pending correlation the initiator depends on.
 		punchForTarget := &pb.RendezvousMessage{
 			Union: &pb.RendezvousMessage_PunchHole{
 				PunchHole: &pb.PunchHole{
-					SocketAddr:  crypto.EncodeAddr(raddr),
-					RelayServer: relayServer,
-					// nat_type=SYMMETRIC is how upstream forces relay: the peer
-					// learns P2P is impossible but still waits for RequestRelay.
-					//
-					// Do NOT set force_relay here. A peer that receives force_relay
-					// skips the RequestRelay handshake, invents its own relay UUID
-					// and connects immediately — while the initiator waits on the
-					// UUID it generated. The two never meet in the relay's pending
-					// map and the session dies with "Pair timeout".
-					NatType:  pb.NatType_SYMMETRIC,
-					UdpPort:  msg.UdpPort,
-					UpnpPort: msg.UpnpPort,
-					// The offer must reach the peer for WebRTC transport negotiation.
+					SocketAddr:     crypto.EncodeAddr(raddr),
+					RelayServer:    relayServer,
+					NatType:        msg.NatType,
+					UdpPort:        msg.UdpPort,
+					UpnpPort:       msg.UpnpPort,
 					WebrtcSdpOffer: msg.WebrtcSdpOffer,
 				},
 			},
