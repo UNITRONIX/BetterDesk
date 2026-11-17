@@ -1449,10 +1449,7 @@ func (s *Server) handlePunchHoleSent(phs *pb.PunchHoleSent, senderAddr *net.UDPA
 	// socket_addr = target's (sender's) address, pk = SIGNED target's public key.
 	// LAN detection: set is_local only for genuine LAN cases. Shared public IP
 	// peers keep the public relay to avoid NAT hairpin failures (#121).
-	relayServer := phs.RelayServer
-	if relayServer == "" {
-		relayServer = s.getRelayServer()
-	}
+	relayServer := s.sanitizeClientRelayAddress(phs.RelayServer)
 	relayServer, sameNetwork, hairpin := s.selectPeerRelayServer(relayServer, senderAddr, initiatorAddr)
 	if sameNetwork {
 		log.Printf("[signal] PunchHoleSent LAN detected: %s and %s on same network, relay=%s", senderAddr.IP, initiatorAddr.IP, relayServer)
@@ -1528,10 +1525,7 @@ func (s *Server) handleRequestRelay(msg *pb.RequestRelay, raddr *net.UDPAddr) {
 
 	log.Printf("[signal] RequestRelay from %s for target %s (uuid=%s, secure=%v, connType=%v)", raddr, targetID, relayUUID, msg.Secure, msg.ConnType)
 
-	relayServer := s.getRelayServer()
-	if msg.RelayServer != "" {
-		relayServer = msg.RelayServer
-	}
+	relayServer := s.sanitizeClientRelayAddress(msg.RelayServer)
 
 	initiatorID, ok := s.requireAuthorizedInitiator(raddr, targetID, msg.GetToken(), 0)
 	if !ok {
@@ -1693,10 +1687,7 @@ func (s *Server) handleRequestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr,
 
 	log.Printf("[signal] RequestRelay (TCP) from %s for target %s (uuid=%s, secure=%v, connType=%v)", raddr, targetID, relayUUID, msg.Secure, msg.ConnType)
 
-	relayServer := s.getRelayServer()
-	if msg.RelayServer != "" {
-		relayServer = msg.RelayServer
-	}
+	relayServer := s.sanitizeClientRelayAddress(msg.RelayServer)
 
 	initiatorID, ok := s.requireAuthorizedInitiator(raddr, targetID, msg.GetToken(), 0)
 	if !ok {
@@ -2814,6 +2805,60 @@ func (s *Server) getRelayServer() string {
 	// Should not happen — detectLocalIP always detects LAN IP
 	log.Printf("[signal] WARN: No relay address available — remote connections will fail")
 	return fmt.Sprintf(":%d", s.cfg.RelayPort)
+}
+
+// sanitizeClientRelayAddress validates a relay endpoint supplied by a client
+// (RequestRelay.RelayServer, PunchHoleSent.RelayServer) before it is echoed
+// back to either peer.
+//
+// RustDesk 1.4.8/1.4.9 clients that are configured with a bare `relay-server`
+// (no port) can send the *API* port instead — observed on production as
+// `relay=85.14.70.12:21114`. Advertising that back makes both peers dial the
+// HTTP API socket, which speaks no relay protocol: the first connection is
+// accepted by the API listener and the relay never pairs, so every session
+// ends in `[relay] Pair timeout`. Reject those endpoints and fall back to the
+// server-configured relay so old and new clients behave the same.
+func (s *Server) sanitizeClientRelayAddress(clientRelay string) string {
+	configured := s.getRelayServer()
+	clientRelay = strings.TrimSpace(clientRelay)
+	if clientRelay == "" {
+		return configured
+	}
+
+	host, portStr, err := net.SplitHostPort(clientRelay)
+	if err != nil {
+		// Host without a port — keep the host, add the relay port.
+		hostOnly := strings.Trim(clientRelay, "[]")
+		if hostOnly == "" {
+			return configured
+		}
+		return net.JoinHostPort(hostOnly, strconv.Itoa(s.cfg.RelayPort))
+	}
+
+	port, convErr := strconv.Atoi(portStr)
+	if convErr != nil || port <= 0 || port > 65535 {
+		return configured
+	}
+
+	// The configured relay host is authoritative: keep its advertised port even
+	// when the client reports a different one for the same host.
+	if cfgHost, _, splitErr := net.SplitHostPort(configured); splitErr == nil {
+		if strings.EqualFold(strings.Trim(cfgHost, "[]"), strings.Trim(host, "[]")) {
+			return configured
+		}
+	}
+
+	// Ports that belong to other listeners on this host are never a relay.
+	switch port {
+	case s.cfg.RelayPort:
+		return clientRelay
+	case s.cfg.APIPort, s.cfg.SignalPort, s.cfg.WSRelayPort():
+		log.Printf("[signal] Ignoring client relay endpoint %s (port %d is not the relay); using %s",
+			clientRelay, port, net.JoinHostPort(host, strconv.Itoa(s.cfg.RelayPort)))
+		return net.JoinHostPort(host, strconv.Itoa(s.cfg.RelayPort))
+	}
+
+	return clientRelay
 }
 
 // getLANRelayServer returns the relay server address suitable for LAN peers.
