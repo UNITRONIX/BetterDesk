@@ -76,6 +76,14 @@
             "socketAddrV6": {
               "type": "bytes",
               "id": 10
+            },
+            "switchCode": {
+              "type": "string",
+              "id": 11
+            },
+            "webrtcSdpOffer": {
+              "type": "string",
+              "id": 12
             }
           }
         },
@@ -138,6 +146,42 @@
             "controlPermissions": {
               "type": "ControlPermissions",
               "id": 8
+            },
+            "controlledContext": {
+              "type": "ControlledContext",
+              "id": 9
+            },
+            "webrtcSdpOffer": {
+              "type": "string",
+              "id": 10
+            }
+          }
+        },
+        "ControlledContext": {
+          "fields": {
+            "connAuditRef": {
+              "type": "string",
+              "id": 1
+            }
+          }
+        },
+        "IceCandidate": {
+          "fields": {
+            "id": {
+              "type": "string",
+              "id": 1
+            },
+            "socketAddr": {
+              "type": "bytes",
+              "id": 2
+            },
+            "sessionKey": {
+              "type": "string",
+              "id": 3
+            },
+            "candidate": {
+              "type": "string",
+              "id": 4
             }
           }
         },
@@ -197,6 +241,10 @@
             "socketAddrV6": {
               "type": "bytes",
               "id": 7
+            },
+            "webrtcSdpAnswer": {
+              "type": "string",
+              "id": 8
             }
           }
         },
@@ -302,6 +350,10 @@
             "socketAddrV6": {
               "type": "bytes",
               "id": 11
+            },
+            "webrtcSdpAnswer": {
+              "type": "string",
+              "id": 12
             }
           },
           "nested": {
@@ -417,6 +469,10 @@
             "upnpPort": {
               "type": "int32",
               "id": 11
+            },
+            "webrtcSdpAnswer": {
+              "type": "string",
+              "id": 12
             }
           }
         },
@@ -626,7 +682,8 @@
                 "keyExchange",
                 "hc",
                 "httpProxyRequest",
-                "httpProxyResponse"
+                "httpProxyResponse",
+                "iceCandidate"
               ]
             }
           },
@@ -722,6 +779,10 @@
             "httpProxyResponse": {
               "type": "HttpProxyResponse",
               "id": 28
+            },
+            "iceCandidate": {
+              "type": "IceCandidate",
+              "id": 29
             }
           }
         },

@@ -423,6 +423,10 @@ func (s *Server) handleMessage(msg *pb.RendezvousMessage, raddr net.Addr) *pb.Re
 			s.handleLocalAddr(msg.GetLocalAddr(), udpAddr)
 		}
 		return nil
+	case msg.GetIceCandidate() != nil:
+		// WebRTC trickle ICE between two new peers; forward and stay silent.
+		s.handleIceCandidate(msg.GetIceCandidate())
+		return nil
 	case msg.GetHc() != nil:
 		return &pb.RendezvousMessage{
 			Union: &pb.RendezvousMessage_Hc{
@@ -1080,6 +1084,9 @@ func (s *Server) handlePunchHoleRequest(msg *pb.PunchHoleRequest, raddr *net.UDP
 				ForceRelay:   msg.ForceRelay,
 				UpnpPort:     msg.UpnpPort,
 				SocketAddrV6: msg.SocketAddrV6,
+				// Recent clients negotiate a WebRTC transport; the offer must reach
+				// the peer verbatim or two new peers cannot establish a session.
+				WebrtcSdpOffer: msg.WebrtcSdpOffer,
 			},
 		},
 	}
@@ -1314,6 +1321,7 @@ func (s *Server) handlePunchHoleRequestTCPWithHint(msg *pb.PunchHoleRequest, rad
 				ForceRelay:   msg.ForceRelay,
 				UpnpPort:     msg.UpnpPort,
 				SocketAddrV6: msg.SocketAddrV6,
+				WebrtcSdpOffer: msg.WebrtcSdpOffer,
 			},
 		},
 	}
@@ -1462,6 +1470,9 @@ func (s *Server) handlePunchHoleSent(phs *pb.PunchHoleSent, senderAddr *net.UDPA
 		SocketAddr:  crypto.EncodeAddr(senderAddr),
 		Pk:          signedPk,
 		RelayServer: relayServer,
+		// WebRTC answer from the target; without it two new peers cannot finish
+		// transport negotiation and fall back to a relay path that never pairs.
+		WebrtcSdpAnswer: phs.WebrtcSdpAnswer,
 	}
 	if sameNetwork {
 		phr.Union = &pb.PunchHoleResponse_IsLocal{IsLocal: true}
@@ -2117,6 +2128,37 @@ func (s *Server) handleFetchLocalAddr(msg *pb.FetchLocalAddr, raddr *net.UDPAddr
 // the target's actual LAN listener inside a PunchHoleResponse.
 func (s *Server) handleLocalAddr(msg *pb.LocalAddr, raddr *net.UDPAddr) {
 	s.completeLANAddr(msg, raddr)
+}
+
+// handleIceCandidate relays a WebRTC trickle-ICE candidate from one peer to
+// another. Recent RustDesk clients exchange candidates through the rendezvous
+// server while negotiating a WebRTC transport; dropping them (the union member
+// did not exist before) leaves two new peers unable to complete negotiation.
+//
+// IceCandidate carries the destination peer id in `id` and the sender's
+// session key, so no additional routing state is required. Unknown or offline
+// targets are ignored: candidates are advisory and trickle may continue.
+func (s *Server) handleIceCandidate(msg *pb.IceCandidate) {
+	if msg == nil {
+		return
+	}
+	targetID := strings.TrimSpace(msg.Id)
+	if targetID == "" {
+		log.Printf("[signal] IceCandidate without target id ignored")
+		return
+	}
+	target := s.peers.Get(targetID)
+	if target == nil || target.IsExpired(config.RegTimeout) {
+		return
+	}
+	fwd := &pb.RendezvousMessage{
+		Union: &pb.RendezvousMessage_IceCandidate{
+			IceCandidate: msg,
+		},
+	}
+	if !s.sendToPeer(targetID, fwd) && target.UDPAddr != nil {
+		s.sendUDP(fwd, target.UDPAddr)
+	}
 }
 
 // handleTestNat handles NAT type detection (TCP port 21115).

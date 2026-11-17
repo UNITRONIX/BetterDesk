@@ -348,6 +348,10 @@ func (s *Server) wsSignalLoop(wsc *codec.WSConn) {
 			}
 			wsc.WriteMessage(resp)
 
+		case msg.GetIceCandidate() != nil:
+			// WebRTC trickle ICE between two new peers (WS transport).
+			s.handleIceCandidate(msg.GetIceCandidate())
+
 		case msg.GetHttpProxyRequest() != nil:
 			req := msg.GetHttpProxyRequest()
 			log.Printf("[signal] WS HttpProxyRequest from %s (method=%s path=%s)", remoteAddr, req.GetMethod(), req.GetPath())

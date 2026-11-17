@@ -39,6 +39,11 @@ message PunchHoleRequest {
   bool force_relay = 8;
   int32 upnp_port = 9;
   bytes socket_addr_v6 = 10;
+  // Added upstream for recent clients: switch-code pairing and the WebRTC offer.
+  // Dropping these fields makes two new peers unable to negotiate a transport,
+  // even though a new peer can still reach an old one that never sends them.
+  string switch_code = 11;
+  string webrtc_sdp_offer = 12;
 }
 
 message ControlPermissions {
@@ -68,6 +73,20 @@ message PunchHole {
   int32 upnp_port = 6;
   bytes socket_addr_v6 = 7;
   ControlPermissions control_permissions = 8;
+  ControlledContext controlled_context = 9;
+  string webrtc_sdp_offer = 10;
+}
+
+// Forwarded verbatim between peers for WebRTC transport negotiation.
+message ControlledContext {
+  string conn_audit_ref = 1;
+}
+
+message IceCandidate {
+  string id = 1;
+  bytes socket_addr = 2;
+  string session_key = 3;
+  string candidate = 4;
 }
 
 message TestNatRequest {
@@ -93,6 +112,7 @@ message PunchHoleSent {
   string version = 5;
   int32 upnp_port = 6;
   bytes socket_addr_v6 = 7;
+  string webrtc_sdp_answer = 8;
 }
 
 message RegisterPk {
@@ -137,6 +157,7 @@ message PunchHoleResponse {
   bool is_udp = 9;
   int32 upnp_port = 10;
   bytes socket_addr_v6 = 11;
+  string webrtc_sdp_answer = 12;
 }
 
 message ConfigUpdate {
@@ -169,6 +190,7 @@ message RelayResponse {
   int32 feedback = 9;
   bytes socket_addr_v6 = 10;
   int32 upnp_port = 11;
+  string webrtc_sdp_answer = 12;
 }
 
 message SoftwareUpdate {
@@ -262,5 +284,7 @@ message RendezvousMessage {
     HealthCheck hc = 26;
     HttpProxyRequest http_proxy_request = 27;
     HttpProxyResponse http_proxy_response = 28;
+    // WebRTC trickle-ICE candidate relay between two new peers.
+    IceCandidate ice_candidate = 29;
   }
 }
