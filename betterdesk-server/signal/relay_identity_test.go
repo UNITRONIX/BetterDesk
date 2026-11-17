@@ -22,15 +22,22 @@ func TestRelayAdvertisedToTargetPrefersPeerReportedRelay(t *testing.T) {
 }
 
 func TestRelayAdvertisedToTargetFallsBackForOldClients(t *testing.T) {
-	// Older clients never report a relay in PunchHoleSent.
+	// Older clients never report a relay in PunchHoleSent. Send the bare host so
+	// the peer's own check_port() normalises it to RELAY_PORT — that matches a
+	// client configured as either `host` or `host:21117`. Production confirmed
+	// this shape pairs, while a forced :21117 did not.
 	target := &peer.Entry{ID: "TGT2"}
 
 	got := relayAdvertisedToTarget(target, "85.14.70.12:21117")
-	if got != "85.14.70.12:21117" {
-		t.Fatalf("relay = %q, want the server fallback", got)
+	if got != "85.14.70.12" {
+		t.Fatalf("relay = %q, want the bare host", got)
 	}
-	if relayAdvertisedToTarget(nil, "fallback:21117") != "fallback:21117" {
-		t.Fatal("nil target must use the fallback")
+	if relayAdvertisedToTarget(nil, "fallback") != "fallback" {
+		t.Fatal("nil target must use the fallback unchanged")
+	}
+	// Hostname fallbacks keep working too.
+	if got := relayAdvertisedToTarget(target, "desk.example.com:21117"); got != "desk.example.com" {
+		t.Fatalf("relay = %q, want the bare host", got)
 	}
 }
 

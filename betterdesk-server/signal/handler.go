@@ -1469,9 +1469,8 @@ func (s *Server) handlePunchHoleSent(phs *pb.PunchHoleSent, senderAddr *net.UDPA
 	// Remember the relay the peer itself advertised, verbatim.
 	//
 	// The peer validates an incoming relay request against this value, so it must
-	// not be rewritten: forwarding a "corrected" endpoint makes the peer drop the
-	// request and the pair never completes. A peer that reports the API port is
-	// handled by the relay-framing fallback on that port instead.
+	// not be rewritten: check_port() normalises a portless host to RELAY_PORT, so
+	// storing what the peer sent is always the best match for its own config.
 	if targetID != "" && phs.RelayServer != "" {
 		s.peers.SetRelayServer(targetID, phs.RelayServer)
 	}
@@ -2150,24 +2149,25 @@ func (s *Server) handleLocalAddr(msg *pb.LocalAddr, raddr *net.UDPAddr) {
 // sent to target.
 //
 // A RustDesk peer validates the incoming relay against its own configured value
-// with check_port(..., RELAY_PORT) and silently drops any request that differs
-// ("relay server ... was not offered by this peer"). Sending a "corrected"
-// endpoint therefore guarantees the peer never answers, which is exactly what
-// production showed: a peer reporting 85.14.70.12:21114 replied while we sent
-// :21114, and went silent once we rewrote it to :21117.
+// with check_port(addr, RELAY_PORT) and silently drops any mismatch ("relay
+// server ... was not offered by this peer").
 //
-// So the peer's own value wins. The API port now also speaks relay framing
-// (see api/sniff_listener.go), which is why that value works end to end: the
-// peer accepts the request and its subsequent connection is served by the relay
-// handler instead of the HTTP listener.
-//
-// The server-derived endpoint stays as the fallback for peers that never
-// reported one (older clients).
+// So the peer's own value wins when we know it. When we do not, send the bare
+// host without a port: check_port() normalises both sides to RELAY_PORT, so a
+// portless value matches a client configured as either `host` or `host:21117`.
+// Production confirms this shape pairs — the peer that repeatedly established
+// sessions reported `85.14.70.12` with no port, while the one we sent
+// `85.14.70.12:21117` to never answered.
 func relayAdvertisedToTarget(target *peer.Entry, fallback string) string {
 	if target != nil {
 		if reported := strings.TrimSpace(target.RelayServer); reported != "" {
 			return reported
 		}
+	}
+	// Drop the port so the peer's own check_port() decides, which is what a
+	// portless `relay-server` in its config produces.
+	if host, _, err := net.SplitHostPort(fallback); err == nil && host != "" {
+		return host
 	}
 	return fallback
 }
