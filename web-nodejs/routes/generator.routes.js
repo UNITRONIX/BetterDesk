@@ -24,7 +24,6 @@ const clientBuilder = require('../services/clientBuilderService');
 const db = require('../services/database');
 const config = require('../config/config');
 const brandingService = require('../services/brandingService');
-const conn = require('../services/agentBundleConnection');
 const clientConfigHost = require('../services/clientConfigHost');
 const { PRODUCT_TYPES, normalizeProductType, isBetterDeskSupportBundle } = require('../lib/generatorBuildTypes');
 const { resolveConfinedMulterPath } = require('../lib/multerCleanup');
