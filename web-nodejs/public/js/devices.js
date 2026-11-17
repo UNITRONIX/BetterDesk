@@ -357,8 +357,9 @@
         return window.innerWidth <= 600;
     }
 
-    /** Touch / mobile shell: avoid HTML5 drag stealing taps (#410) */
+    /** Prefer mouse/trackpad on hybrid laptops; avoid drag stealing touch-only taps (#410). */
     function shouldDisableRowDrag() {
+        if (window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches) return false;
         if (document.body.classList.contains('is-mobile-shell')) return true;
         if (window.DeviceCapabilities && window.DeviceCapabilities.isTouch()) return true;
         if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) return true;
