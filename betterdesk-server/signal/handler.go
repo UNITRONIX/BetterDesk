@@ -1861,7 +1861,16 @@ func (s *Server) handleRequestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr,
 		}
 	}
 
-	// Immediate RelayResponse to TCP initiator — matching the UDP handler's behavior.
+	// Immediate RelayResponse to the initiator.
+	//
+	// Upstream hbbs relies on the target's RelayResponse instead, but this code
+	// path is relied on by working peers in production (188.137.83.41 pairs
+	// repeatedly) and by the whole existing test suite, so the initiator keeps
+	// its prompt answer.
+	//
+	// The UUID divergence is handled where it actually matters: a target that
+	// answers with a different UUID is correlated through the pending entry
+	// stored above, so both sides still reach hbbr and pair.
 	log.Printf("[signal] RequestRelay (TCP): returning RelayResponse to initiator %s (uuid=%s, relay=%s)", raddr, relayUUID[:8], relayServer)
 	return &pb.RendezvousMessage{
 		Union: &pb.RendezvousMessage_RelayResponse{
