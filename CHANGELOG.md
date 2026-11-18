@@ -1,6 +1,13 @@
 ## [Unreleased]
 
 ### Changed
+- _(none yet)_
+
+---
+
+## [3.5.266] — 2026-11-18
+
+### Changed
 - Devices now show the logged-in user's RustDesk legacy address-book alias in an optional, searchable and sortable column. Editing the alias writes only to that user's address book and does not change the global device name.
 
 ---
@@ -5321,3 +5328,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.263]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.262...v3.5.263
 [3.5.264]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.263...v3.5.264
 [3.5.265]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.264...v3.5.265
+[3.5.266]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.265...v3.5.266
