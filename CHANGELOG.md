@@ -1,7 +1,11 @@
 ## [Unreleased]
 
 ### Changed
-- _(none yet)_
+- Devices address-book aliases in BetterDesk mode now read and write the Go-owned
+  `address_books` data through the panel trust bridge, so legacy RustDesk clients,
+  SQLite consolidated/legacy deployments and PostgreSQL use the same source of
+  truth. The full legacy address-book document remains intact when one alias is
+  changed.
 
 ---
 

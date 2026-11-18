@@ -8,7 +8,15 @@ const { createTestApp } = require('./helpers');
 jest.mock('../services/betterdeskApi', () => ({
     getPeerTelemetry: jest.fn().mockResolvedValue({ success: false }),
     getConnectionMode: jest.fn().mockResolvedValue({ success: true, data: { controllable: false } }),
-    setConnectionMode: jest.fn()
+    setConnectionMode: jest.fn(),
+    getPanelLegacyAddressBook: jest.fn().mockResolvedValue({
+        success: true,
+        data: { data: '{}' }
+    }),
+    updatePanelLegacyAddressBookAlias: jest.fn().mockResolvedValue({
+        success: true,
+        data: { address_book_alias: '' }
+    })
 }));
 
 // Mock dependencies
@@ -110,10 +118,13 @@ describe('Devices Routes', () => {
                 { id: '123456789', hostname: 'PC-1' },
                 { id: '987654321', hostname: 'PC-2' }
             ]);
-            db.getAddressBook.mockResolvedValue({
-                data: JSON.stringify({
-                    peers: [{ id: '123456789', alias: 'Office PC' }]
-                })
+            betterdeskApi.getPanelLegacyAddressBook.mockResolvedValue({
+                success: true,
+                data: {
+                    data: JSON.stringify({
+                        peers: [{ id: '123456789', alias: 'Office PC' }]
+                    })
+                }
             });
 
             const res = await request(app).get('/api/devices');
@@ -123,7 +134,7 @@ describe('Devices Routes', () => {
                 expect.objectContaining({ id: '123456789', address_book_alias: 'Office PC' }),
                 expect.objectContaining({ id: '987654321', address_book_alias: '' })
             ]));
-            expect(db.getAddressBook).toHaveBeenCalledWith(1, 'legacy');
+            expect(betterdeskApi.getPanelLegacyAddressBook).toHaveBeenCalled();
         });
 
         it('should sanitize sort parameters', async () => {
@@ -254,8 +265,11 @@ describe('Devices Routes', () => {
                 id: '123456789',
                 hostname: 'PC-1'
             });
-            db.getAddressBook.mockResolvedValue({
-                data: JSON.stringify({ peers: [{ id: '123456789', alias: 'Office PC' }] })
+            betterdeskApi.getPanelLegacyAddressBook.mockResolvedValue({
+                success: true,
+                data: {
+                    data: JSON.stringify({ peers: [{ id: '123456789', alias: 'Office PC' }] })
+                }
             });
 
             const res = await request(app).get('/api/devices/123456789');
@@ -268,18 +282,9 @@ describe('Devices Routes', () => {
     describe('PATCH /api/devices/:id/address-book-alias', () => {
         it('updates one alias in the legacy address book without changing other fields', async () => {
             serverBackend.getDeviceById.mockResolvedValue({ id: '123456789', hostname: 'PC-1' });
-            db.getAddressBook.mockResolvedValue({
-                data: JSON.stringify({
-                    peers: [{
-                        id: '123456789',
-                        alias: 'Old name',
-                        hash: 'keep-hash',
-                        tags: ['Office'],
-                        extra: true
-                    }],
-                    tags: ['Office'],
-                    tag_colors: '{"Office":123}'
-                })
+            betterdeskApi.updatePanelLegacyAddressBookAlias.mockResolvedValue({
+                success: true,
+                data: { address_book_alias: 'New name' }
             });
 
             const res = await request(app)
@@ -288,33 +293,21 @@ describe('Devices Routes', () => {
 
             expect(res.status).toBe(200);
             expect(res.body.data.address_book_alias).toBe('New name');
-            expect(db.saveAddressBook).toHaveBeenCalledWith(
-                1,
-                expect.any(String),
-                'legacy'
-            );
-            const saved = JSON.parse(db.saveAddressBook.mock.calls[0][1]);
-            expect(saved.peers[0]).toEqual(expect.objectContaining({
-                id: '123456789',
-                alias: 'New name',
-                hash: 'keep-hash',
-                tags: ['Office'],
-                extra: true
-            }));
-            expect(saved.tag_colors).toBe('{"Office":123}');
+            expect(betterdeskApi.updatePanelLegacyAddressBookAlias)
+                .toHaveBeenCalledWith('123456789', 'New name', expect.any(Object));
+            expect(db.saveAddressBook).not.toHaveBeenCalled();
         });
 
         it('creates a legacy address book peer when assigning a new alias', async () => {
             serverBackend.getDeviceById.mockResolvedValue({ id: 'NEW123', hostname: 'PC-1' });
-            db.getAddressBook.mockResolvedValue({ data: '{}' });
 
             const res = await request(app)
                 .patch('/api/devices/NEW123/address-book-alias')
                 .send({ alias: 'New device' });
 
             expect(res.status).toBe(200);
-            const saved = JSON.parse(db.saveAddressBook.mock.calls[0][1]);
-            expect(saved.peers).toEqual([{ id: 'NEW123', alias: 'New device' }]);
+            expect(betterdeskApi.updatePanelLegacyAddressBookAlias)
+                .toHaveBeenCalledWith('NEW123', 'New device', expect.any(Object));
         });
 
         it('rejects aliases longer than the client-compatible limit', async () => {

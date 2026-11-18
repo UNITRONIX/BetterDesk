@@ -466,7 +466,10 @@ func (s *Server) handleClientAddressBook(w http.ResponseWriter, r *http.Request)
 			writeJSON(w, http.StatusRequestEntityTooLarge, map[string]string{"error": "Address book too large"})
 			return
 		}
-		if err := s.db.SaveAddressBook(username, "legacy", dataStr); err != nil {
+		s.addressBookMu.Lock()
+		err = s.db.SaveAddressBook(username, "legacy", dataStr)
+		s.addressBookMu.Unlock()
+		if err != nil {
 			log.Printf("[api] SaveAddressBook error for %s: %v", username, err)
 			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "Internal error"})
 			return

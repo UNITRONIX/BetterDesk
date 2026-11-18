@@ -742,6 +742,55 @@ function panelCallConfig(method, path, req) {
     return Object.keys(headers).length ? { headers } : undefined;
 }
 
+function panelTrustConfigOrError(method, path, req) {
+    if (!panelTrust.panelTrustEnabled()) {
+        return { error: 'Panel trust bridge is not configured', status: 503 };
+    }
+    const config = panelCallConfig(method, path, req);
+    if (!config) {
+        return { error: 'Panel operator identity is unavailable', status: 401 };
+    }
+    return { config };
+}
+
+/** Read the current operator's RustDesk legacy address book from Go. */
+async function getPanelLegacyAddressBook(req) {
+    const trust = panelTrustConfigOrError('GET', '/api/ab', req);
+    if (trust.error) return { success: false, error: trust.error, status: trust.status };
+    try {
+        const { data } = await apiClient.get('/ab', trust.config);
+        return wrap(data);
+    } catch (e) {
+        return {
+            success: false,
+            error: e.response?.data?.error || e.message,
+            status: e.response?.status
+        };
+    }
+}
+
+/** Update one alias in the current operator's Go-owned legacy address book. */
+async function updatePanelLegacyAddressBookAlias(peerId, alias, req) {
+    const safePeerId = assertSafeApiId(peerId, 'peerId');
+    const path = `/api/panel/address-book/peers/${encodeURIComponent(safePeerId)}/alias`;
+    const trust = panelTrustConfigOrError('PATCH', path, req);
+    if (trust.error) return { success: false, error: trust.error, status: trust.status };
+    try {
+        const { data } = await apiClient.patch(
+            `/panel/address-book/peers/${encodeURIComponent(safePeerId)}/alias`,
+            { alias },
+            trust.config
+        );
+        return wrap(data);
+    } catch (e) {
+        return {
+            success: false,
+            error: e.response?.data?.error || e.message,
+            status: e.response?.status
+        };
+    }
+}
+
 /** Panel section catalog, permission vocabulary and role defaults (stage P3). */
 async function getPanelCatalog(config) {
     try {
@@ -1917,6 +1966,8 @@ module.exports = {
     acknowledgeHelpRequest,
     resolveHelpRequest,
     // Panel catalog and grouping (strangler P2/P3)
+    getPanelLegacyAddressBook,
+    updatePanelLegacyAddressBookAlias,
     getPanelCatalog,
     listPanelDeviceGroups,
     savePanelDeviceGroup,

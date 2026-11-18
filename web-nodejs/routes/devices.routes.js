@@ -14,8 +14,6 @@ const tagManagementService = require('../services/tagManagementService');
 const { requireAuth, requirePermission, requestHasPermission } = require('../middleware/auth');
 const { bodyInt, bodyString, bodyBool, plainBodyObject } = require('../lib/bodyScalars');
 
-const legacyAddressBookLocks = new Map();
-
 /**
  * GET /devices - Devices list page
  */
@@ -50,14 +48,15 @@ function mapChangeIdError(req, error) {
 
 async function getLegacyAddressBookAliasMap(req) {
     const aliases = new Map();
-    const userId = req.session?.user?.id || req.session?.userId;
-    if (!userId || typeof db.getAddressBook !== 'function') return aliases;
-
     try {
-        const row = await db.getAddressBook(userId, 'legacy');
-        return addressBookSync.buildLegacyAliasMap(row?.data);
+        const result = await betterdeskApi.getPanelLegacyAddressBook(req);
+        if (!result.success) {
+            console.warn('[API:DEVICES] Failed to read Go legacy address book:', result.error);
+            return aliases;
+        }
+        return addressBookSync.buildLegacyAliasMap(result.data?.data);
     } catch (err) {
-        console.warn('[API:DEVICES] Failed to read legacy address book aliases:', err.message);
+        console.warn('[API:DEVICES] Failed to read Go legacy address book aliases:', err.message);
         return aliases;
     }
 }
@@ -67,27 +66,6 @@ async function enrichDeviceWithAddressBookAlias(req, device, aliases) {
     const aliasMap = aliases || await getLegacyAddressBookAliasMap(req);
     device.address_book_alias = aliasMap.get(String(device.id || '').trim()) || '';
     return device;
-}
-
-async function withLegacyAddressBookLock(userId, operation) {
-    const key = String(userId);
-    const previous = legacyAddressBookLocks.get(key) || Promise.resolve();
-    let release;
-    const current = new Promise(resolve => {
-        release = resolve;
-    });
-    const queue = previous.catch(() => {}).then(() => current);
-    legacyAddressBookLocks.set(key, queue);
-
-    await previous.catch(() => {});
-    try {
-        return await operation();
-    } finally {
-        release();
-        if (legacyAddressBookLocks.get(key) === queue) {
-            legacyAddressBookLocks.delete(key);
-        }
-    }
 }
 
 router.get('/api/devices', requireAuth, requirePermission('device.view'), async (req, res) => {
@@ -1038,20 +1016,14 @@ router.patch('/api/devices/:id/address-book-alias', requireAuth, requirePermissi
         }
         if (await rejectIfDeviceOutOfScope(req, res, device)) return;
 
-        const userId = req.session.user?.id || req.session.userId;
-        if (!userId || typeof db.getAddressBook !== 'function' || typeof db.saveAddressBook !== 'function') {
-            return res.status(500).json({
+        const alias = addressBookSync.sanitizeAlias(rawAlias);
+        const result = await betterdeskApi.updatePanelLegacyAddressBookAlias(id, alias, req);
+        if (!result.success) {
+            return res.status(result.status || 502).json({
                 success: false,
-                error: req.t('errors.server_error')
+                error: result.error || req.t('errors.server_error')
             });
         }
-
-        const alias = addressBookSync.sanitizeAlias(rawAlias);
-        await withLegacyAddressBookLock(userId, async () => {
-            const row = await db.getAddressBook(userId, 'legacy');
-            const data = addressBookSync.updateLegacyPeerAlias(row?.data, id, alias);
-            await db.saveAddressBook(userId, data, 'legacy');
-        });
 
         try {
             await db.logAction(

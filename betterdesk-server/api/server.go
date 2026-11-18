@@ -95,6 +95,7 @@ type Server struct {
 	panelStore        db.PanelSyncStore // device groups, folders, ACL (PostgreSQL or legacy auth.db)
 	panelTrustSecret  []byte            // HMAC key for panel-originated requests (nil = bridge off)
 	panelNonces       *panelNonceCache  // replay window for verified panel statements
+	addressBookMu     sync.Mutex        // serializes legacy AB read/modify/write operations
 	timeSync          *timesync.Service
 	billing           *billing.Service
 	peerVault         *peervault.Vault // AES-GCM for org peer credentials (#367)
@@ -545,6 +546,8 @@ func (s *Server) Start(ctx context.Context) error {
 	// role-default definitions (strangler stage P3). Every signed-in principal
 	// may read it: each role needs it to render its own navigation.
 	mux.HandleFunc("GET /api/panel/catalog", s.handlePanelCatalog)
+	mux.HandleFunc("PATCH /api/panel/address-book/peers/{id}/alias",
+		s.requirePermission(auth.PermDeviceView, s.handlePanelAddressBookAlias))
 
 	// Time sync / billing (commercialization)
 	mux.HandleFunc("GET /api/timesync/status", s.requirePermission(auth.PermBillingView, s.handleTimeSyncStatus))
