@@ -48,6 +48,17 @@ router.get('/network', requireAuth, (req, res) => {
     });
 });
 
+// ── Access control strategies (RustDesk Pro) ──
+// Moved out of the Devices page: a card halfway down a device list is not a
+// place anybody looks for a security rule. The API is unchanged.
+
+router.get('/strategies', requireAuth, requirePermission('device.view'), (req, res) => {
+    res.render('strategies', {
+        title: req.t('devices.strategies_title'),
+        activePage: 'strategies',
+    });
+});
+
 // ── Activity Monitoring ──
 
 router.get('/activity', requireAuth, (req, res) => {

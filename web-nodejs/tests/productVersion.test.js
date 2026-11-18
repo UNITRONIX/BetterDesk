@@ -3,7 +3,7 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { readProductVersion } = require('../lib/productVersion');
+const { readProductVersion, readEmbeddedServerVersion } = require('../lib/productVersion');
 
 describe('productVersion', () => {
     let tmpRoot;
@@ -62,5 +62,47 @@ describe('productVersion', () => {
             JSON.stringify({ version: '3.5.108' })
         );
         expect(readProductVersion({ rootDir: consoleDir, consoleDir })).toBe('3.5.108');
+    });
+
+    test('reads the version embedded into the Go server source tree', () => {
+        const serverDir = path.join(tmpRoot, 'betterdesk-server');
+        fs.mkdirSync(path.join(serverDir, 'internal', 'productversion'), { recursive: true });
+        fs.writeFileSync(
+            path.join(serverDir, 'internal', 'productversion', 'VERSION'),
+            '3.5.218\n'
+        );
+        expect(readEmbeddedServerVersion(serverDir)).toBe('3.5.218');
+    });
+
+    test('embedded server version wins over a stale root VERSION at build time', () => {
+        // Regression: applyUpdate() writes the root VERSION after the Go build,
+        // so the root file still holds the previous release when buildGoServer()
+        // runs. Using it produced a freshly compiled server reporting the old
+        // version on /api/health while the panel showed the new one.
+        const serverDir = path.join(tmpRoot, 'betterdesk-server');
+        fs.mkdirSync(path.join(serverDir, 'internal', 'productversion'), { recursive: true });
+        fs.writeFileSync(
+            path.join(serverDir, 'internal', 'productversion', 'VERSION'),
+            '3.5.218\n'
+        );
+        fs.writeFileSync(path.join(tmpRoot, 'VERSION'), '3.5.217\n');
+
+        expect(readProductVersion({ rootDir: tmpRoot, consoleDir: tmpRoot })).toBe('3.5.217');
+        expect(readEmbeddedServerVersion(serverDir)).toBe('3.5.218');
+        // buildGoServer() picks the embedded value first.
+        expect(readEmbeddedServerVersion(serverDir)
+            || readProductVersion({ rootDir: tmpRoot, consoleDir: tmpRoot })).toBe('3.5.218');
+    });
+
+    test('readEmbeddedServerVersion returns null when the file is absent or malformed', () => {
+        const serverDir = path.join(tmpRoot, 'betterdesk-server');
+        fs.mkdirSync(path.join(serverDir, 'internal', 'productversion'), { recursive: true });
+        const embedded = path.join(serverDir, 'internal', 'productversion', 'VERSION');
+
+        expect(readEmbeddedServerVersion(serverDir)).toBeNull();
+        expect(readEmbeddedServerVersion(null)).toBeNull();
+
+        fs.writeFileSync(embedded, 'not-a-version\n');
+        expect(readEmbeddedServerVersion(serverDir)).toBeNull();
     });
 });

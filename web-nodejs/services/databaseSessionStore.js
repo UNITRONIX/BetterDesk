@@ -2,7 +2,8 @@
 
 /**
  * Persistent express-session store backed by the selected BetterDesk database.
- * Enforces idle/absolute timeouts and one active panel session per account.
+ * Enforces idle/absolute timeouts and a per-account concurrent session limit
+ * (SESSION_MAX_PER_USER; default 1, 0 = unlimited).
  */
 
 const session = require('express-session');
@@ -15,13 +16,16 @@ const {
 } = require('../lib/sessionPolicy');
 
 class DatabaseSessionStore extends session.Store {
-    constructor({ config, ttlMs, idleTimeoutMs, maxAgeMs }) {
+    constructor({ config, ttlMs, idleTimeoutMs, maxAgeMs, maxSessionsPerUser }) {
         super();
         this.config = config;
         const policy = resolveSessionPolicy(process.env);
         this.idleTimeoutMs = Math.max(60_000, Number(idleTimeoutMs) || policy.idleTimeoutMs);
         this.maxAgeMs = Math.max(this.idleTimeoutMs, Number(maxAgeMs) || Number(ttlMs) || policy.maxAgeMs);
         this.ttlMs = this.maxAgeMs;
+        this.maxSessionsPerUser = Number.isInteger(maxSessionsPerUser) && maxSessionsPerUser >= 0
+            ? maxSessionsPerUser
+            : policy.maxSessionsPerUser;
         this.type = /^(postgres|postgresql)$/i.test(process.env.DB_TYPE || '')
             || /^postgres(ql)?:\/\//i.test(process.env.DATABASE_URL || '')
             ? 'postgres'
@@ -321,8 +325,10 @@ class DatabaseSessionStore extends session.Store {
     }
 
     /**
-     * Atomically mark the session as the sole active session for a user.
-     * Previous active sessions are ended with reason "replaced".
+     * Atomically activate the session for a user and enforce the per-account
+     * concurrent session limit (this.maxSessionsPerUser). When the limit is
+     * exceeded, the least recently active prior sessions are ended with reason
+     * "replaced". A limit of 0 means unlimited (nothing is replaced).
      * @returns {Promise<{ replaced: Array<{sid, ip_address, user_agent}> }>}
      */
     async activateExclusiveSession(sid, meta = {}) {
@@ -344,16 +350,26 @@ class DatabaseSessionStore extends session.Store {
             const client = await this.pool.connect();
             try {
                 await client.query('BEGIN');
-                const prev = await client.query(
-                    `UPDATE panel_sessions
-                     SET is_active = FALSE,
-                         ended_at = $2,
-                         end_reason = $3,
-                         updated_at = NOW()
-                     WHERE user_id = $1 AND is_active = TRUE AND sid <> $4
-                     RETURNING sid, ip_address, user_agent, username`,
-                    [userId, now, END_REASONS.REPLACED, sid]
+                const others = await client.query(
+                    `SELECT sid, ip_address, user_agent, username
+                     FROM panel_sessions
+                     WHERE user_id = $1 AND is_active = TRUE AND sid <> $2
+                     ORDER BY COALESCE(last_activity_at, created_at, 0) DESC, sid
+                     FOR UPDATE`,
+                    [userId, sid]
                 );
+                const toReplace = this._sessionsOverLimit(others.rows || []);
+                if (toReplace.length) {
+                    await client.query(
+                        `UPDATE panel_sessions
+                         SET is_active = FALSE,
+                             ended_at = $2,
+                             end_reason = $3,
+                             updated_at = NOW()
+                         WHERE sid = ANY($1::text[])`,
+                        [toReplace.map((r) => r.sid), now, END_REASONS.REPLACED]
+                    );
+                }
                 await client.query(
                     `UPDATE panel_sessions
                      SET user_id = $2,
@@ -372,7 +388,7 @@ class DatabaseSessionStore extends session.Store {
                     [sid, userId, username, ip, ua, fp, createdAt, lastActivity, expiresAt]
                 );
                 await client.query('COMMIT');
-                return { replaced: prev.rows || [] };
+                return { replaced: toReplace };
             } catch (err) {
                 await client.query('ROLLBACK');
                 throw err;
@@ -382,16 +398,21 @@ class DatabaseSessionStore extends session.Store {
         }
 
         const replaceTxn = this.sqlite.transaction(() => {
-            const replaced = this.sqlite.prepare(
+            const others = this.sqlite.prepare(
                 `SELECT sid, ip_address, user_agent, username
                  FROM panel_sessions
-                 WHERE user_id = ? AND is_active = 1 AND sid <> ?`
+                 WHERE user_id = ? AND is_active = 1 AND sid <> ?
+                 ORDER BY COALESCE(last_activity_at, created_at, 0) DESC, sid`
             ).all(userId, sid);
-            this.sqlite.prepare(
+            const replaced = this._sessionsOverLimit(others);
+            const endStmt = this.sqlite.prepare(
                 `UPDATE panel_sessions
                  SET is_active = 0, ended_at = ?, end_reason = ?, updated_at = datetime('now')
-                 WHERE user_id = ? AND is_active = 1 AND sid <> ?`
-            ).run(now, END_REASONS.REPLACED, userId, sid);
+                 WHERE sid = ?`
+            );
+            for (const row of replaced) {
+                endStmt.run(now, END_REASONS.REPLACED, row.sid);
+            }
             this.sqlite.prepare(
                 `UPDATE panel_sessions
                  SET user_id = ?,
@@ -411,6 +432,17 @@ class DatabaseSessionStore extends session.Store {
             return replaced;
         });
         return { replaced: replaceTxn() || [] };
+    }
+
+    /**
+     * Given the user's other active sessions ordered most recently active
+     * first, return the ones that must end so that, together with the session
+     * being activated, at most maxSessionsPerUser remain active.
+     */
+    _sessionsOverLimit(othersByRecency) {
+        const limit = this.maxSessionsPerUser;
+        if (!limit) return [];
+        return othersByRecency.slice(Math.max(0, limit - 1));
     }
 
     async endSession(sid, reason = END_REASONS.LOGOUT) {

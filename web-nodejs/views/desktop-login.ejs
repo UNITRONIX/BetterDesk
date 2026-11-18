@@ -1,3 +1,10 @@
+<%# Audit M11 (2026-11-13): data embedded in inline script blocks must not be
+    able to close the block. Uses the server helper when present, with an
+    equivalent fallback for standalone template rendering (tests/previews). %>
+<% var bdJson = (typeof safeJsonScript === 'function') ? safeJsonScript : function (v) {
+    return JSON.stringify(v === undefined ? null : v)
+        .replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
+}; %>
 <!DOCTYPE html>
 <html lang="<%= lang || 'en' %>">
 <head>
@@ -157,10 +164,10 @@
         window.BetterDesk = {
             csrfToken: '<%= csrfToken || "" %>',
             lang: '<%= lang || "en" %>',
-            availableLanguages: <%- JSON.stringify(availableLanguageList || []) %>,
-            translations: <%- JSON.stringify(translations || {}) %>,
-            branding: <%- JSON.stringify(branding || {}) %>,
-            users: <%- JSON.stringify(loginUsers || []) %>
+            availableLanguages: <%- bdJson(availableLanguageList || []) %>,
+            translations: <%- bdJson(translations || {}) %>,
+            branding: <%- bdJson(branding || {}) %>,
+            users: <%- bdJson(loginUsers || []) %>
         };
     </script>
     <script src="/js/utils.js?v=<%= cacheVersion %>"></script>

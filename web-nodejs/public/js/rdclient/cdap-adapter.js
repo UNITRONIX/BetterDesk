@@ -798,7 +798,8 @@
                     const list = Array.isArray(msg.monitors) ? msg.monitors : [];
                     this._monitors = list.map((m, idx) => ({
                         idx: typeof m.idx === 'number' ? m.idx : idx,
-                        name: m.name || `Monitor ${idx + 1}`,
+                        name: `Monitor ${typeof m.idx === 'number' ? m.idx : idx}`,
+                        osName: m.name || '',
                         primary: !!m.primary,
                         width: m.width | 0,
                         height: m.height | 0,

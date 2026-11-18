@@ -2,6 +2,8 @@
 
 Guide for mass-deploying the **stock RustDesk MSI** against a BetterDesk server. For custom branded installers, see the **Client Generator** in the web console.
 
+> **RustDesk 1.5.x:** Clients no longer apply server-pushed `ConfigUpdate` rendezvous lists, and heartbeat **strategy/policy cannot** change `api-server`, `custom-rendezvous-server`, `relay-server`, or `key`. Always set ID / relay (`host:port`) / API / key via this deploy string, Network UI, or Import. See [`RDCLIENT_VS_RUSTDESK_AUDIT.md`](../RDCLIENT_VS_RUSTDESK_AUDIT.md) (1.5.3 section) and [`rustdesk-compat-checklist.md`](../important/rustdesk-compat-checklist.md).
+
 ## Quick local test (do this before Intune)
 
 1. Install RustDesk on a test VM (same MSI you plan to push).

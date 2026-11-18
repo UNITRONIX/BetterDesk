@@ -14,6 +14,7 @@ const settingsRoutes = require('./settings.routes');
 const generatorRoutes = require('./generator.routes');
 const i18nRoutes = require('./i18n.routes');
 const usersRoutes = require('./users.routes');
+const panelAccessRoutes = require('./panel-access.routes');
 const foldersRoutes = require('./folders.routes');
 const remoteRoutes = require('./remote.routes');
 // bdApiRoutes mounted in server.js (before CSRF) for desktop client access
@@ -60,6 +61,7 @@ const systemRoutes = lazyRoute('./system.routes');
 const cdapStudioRoutes = lazyRoute('./cdap-studio.routes');
 const permissionsRoutes = lazyRoute('./permissions.routes');
 const phase45Routes = lazyRoute('./phase4_5.routes');
+const pairingRoutes = lazyRoute('./pairing.routes');
 const serverManagementRoutes = lazyRoute('./server-management.routes');
 const serverAttestationRoutes = lazyRoute('./server-attestation.routes');
 
@@ -112,6 +114,8 @@ router.use('/', settingsRoutes);
 router.use('/', generatorRoutes);
 router.use('/', require('./client-branding.routes'));
 router.use('/', usersRoutes);
+router.use('/', panelAccessRoutes);
+router.use('/', require('./ui-shell.routes'));      // admin-facing: /api/ui-shell (UX 3.5 / 3.6 beta toggle)
 router.use('/', foldersRoutes);
 router.use('/', remoteRoutes);
 router.use('/', require('./guest.routes'));
@@ -160,5 +164,6 @@ router.use('/', permissionsRoutes);                      // admin-facing: /permi
 router.use('/', serverManagementRoutes);                 // admin-facing: /server-management, /api/server-management/* (BETA)
 router.use('/', serverAttestationRoutes);                // admin-facing: /server-attestation, /api/server-attestation/*
 router.use('/', phase45Routes);                          // Phase 4/5: /api/users/me/profile, /api/agent-templates, /portal
+router.use('/', pairingRoutes);                           // Short-code pairing: /pairing, /api/panel/pairing/codes
 
 module.exports = router;

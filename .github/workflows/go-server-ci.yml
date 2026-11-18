@@ -15,6 +15,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: go-server-ci-${{ github.ref }}
+  cancel-in-progress: true
+
 defaults:
   run:
     working-directory: betterdesk-server
@@ -23,10 +27,11 @@ jobs:
   test:
     if: github.event_name != 'push' || !contains(github.event.head_commit.message, '[version-bump]')
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
         with:
           go-version-file: betterdesk-server/go.mod
           cache-dependency-path: betterdesk-server/go.sum
@@ -46,10 +51,11 @@ jobs:
   mesh-interop:
     if: github.event_name != 'push' || !contains(github.event.head_commit.message, '[version-bump]')
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
         with:
           go-version-file: betterdesk-server/go.mod
           cache-dependency-path: betterdesk-server/go.sum

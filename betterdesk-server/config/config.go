@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/url"
 	"os"
 	"runtime"
 	"strconv"
@@ -777,6 +778,38 @@ func (c *Config) GetRelayServers() []string {
 	return result
 }
 
+// GetRendezvousServers parses the configured rendezvous (ID) server list for
+// ConfigUpdate advertisements. Entries get the signal port when it is missing.
+//
+// ConfigUpdate.rendezvous_servers tells the client which ID server to talk to,
+// so it must never be populated with relay addresses: a RustDesk client that
+// honours ConfigUpdate would reconnect its signal socket to the relay port
+// (21117), stop answering punch/relay requests, and every session would fail
+// with a relay pair timeout.
+func (c *Config) GetRendezvousServers() []string {
+	if c.RendezvousServers == "" {
+		return nil
+	}
+	servers := strings.Split(c.RendezvousServers, ",")
+	result := make([]string, 0, len(servers))
+	for _, s := range servers {
+		s = strings.TrimSpace(s)
+		if s == "" {
+			continue
+		}
+		if _, _, err := net.SplitHostPort(s); err != nil {
+			s = net.JoinHostPort(s, strconv.Itoa(c.SignalPort))
+		}
+		host, _, err := net.SplitHostPort(s)
+		if err != nil || len(host) < 2 {
+			log.Printf("[config] WARNING: Ignoring invalid rendezvous server %q (host too short or malformed)", s)
+			continue
+		}
+		result = append(result, s)
+	}
+	return result
+}
+
 // GetAllowedWSOrigins parses the comma-separated list of allowed WebSocket origins.
 // Returns nil when unset so websocket.Accept uses its safe same-host default.
 // Supports glob patterns accepted by nhooyr.io/websocket:
@@ -869,4 +902,47 @@ func (c *Config) CDAPTLSEnabled() bool {
 // dual-mode protocol.
 func (c *Config) CDAPTLSRequiredEnabled() bool {
 	return c.CDAPTLSRequired && c.HasTLSCert()
+}
+
+// RedactedDBPath returns a loggable form of DBPath with credentials removed.
+//
+// GHSA-qxwx-jg77-5v67: the startup banner printed DBPath verbatim, so a
+// PostgreSQL DSN leaked the database password into container logs on every
+// start. Only the scheme, user, host, port and database name are kept; the
+// password is replaced with "xxxxx". SQLite file paths contain no credentials
+// and are returned unchanged.
+func RedactedDBPath(dsn string) string {
+	if dsn == "" {
+		return ""
+	}
+	// Only URI-style DSNs carry credentials. Plain filesystem paths do not.
+	if !strings.Contains(dsn, "://") {
+		return dsn
+	}
+	parsed, err := url.Parse(dsn)
+	if err != nil {
+		// Unparseable: avoid echoing anything that might contain a secret.
+		return "<unparseable database DSN>"
+	}
+	if parsed.User != nil {
+		if _, hasPassword := parsed.User.Password(); hasPassword {
+			username := parsed.User.Username()
+			parsed.User = url.UserPassword(username, "xxxxx")
+		}
+	}
+	// Query strings can also carry credentials (e.g. password=).
+	if parsed.RawQuery != "" {
+		query := parsed.Query()
+		redacted := false
+		for _, key := range []string{"password", "passwd", "pwd"} {
+			if query.Has(key) {
+				query.Set(key, "xxxxx")
+				redacted = true
+			}
+		}
+		if redacted {
+			parsed.RawQuery = query.Encode()
+		}
+	}
+	return parsed.String()
 }

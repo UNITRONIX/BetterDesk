@@ -38,7 +38,9 @@ describe('keyService RustDesk config encoding', () => {
             publicKey: '',
         });
         expect(payload.host).toBe('desk.example.com');
-        expect(payload.relay).toBe('desk.example.com');
+        // Relay always carries an explicit port — a bare host makes RustDesk
+        // 1.4.8/1.4.9 request relay on the API port and never pair.
+        expect(payload.relay).toBe('desk.example.com:21117');
     });
 
     it('buildRustDeskConfigPayload accepts split endpoints object', () => {
@@ -48,8 +50,16 @@ describe('keyService RustDesk config encoding', () => {
             api: 'https://api.example.com',
         }, { publicKey: '' });
         expect(payload.host).toBe('remote.example.com');
-        expect(payload.relay).toBe('relay.example.com');
+        expect(payload.relay).toBe('relay.example.com:21117');
         expect(payload.api).toBe('https://api.example.com');
+    });
+
+    it('buildRustDeskConfigPayload keeps an explicit relay port', () => {
+        const payload = keyService.buildRustDeskConfigPayload({
+            host: 'remote.example.com',
+            relay: 'relay.example.com:21119',
+        }, { publicKey: '' });
+        expect(payload.relay).toBe('relay.example.com:21119');
     });
 });
 

@@ -24,6 +24,19 @@ Append this block at the end of the commit message body (after the summary / iss
 Thanks: <Honorary…>; <Individual…>; …
 ```
 
+## Issue reporter acknowledgment
+
+When a commit addresses a GitHub issue, inspect the issue author and include
+their GitHub handle in the commit body so the reporter is credited and
+mentionable:
+
+```text
+Reported-by: @<issue-author-login>
+```
+
+Place `Reported-by` before the final `Thanks:` line. Do not invent handles or
+use the maintainer's handle; read the issue's actual `author.login`.
+
 Format each entry:
 
 - Honorary: `Name (Honorary)` (e.g. `INSOLVE (Honorary)`)
@@ -46,5 +59,6 @@ Thanks: INSOLVE (Honorary); Marco Jakobs (@jacotec); MyNameisStitch (@MyNameisSt
 
 - [ ] Subject describes the change (why/what)
 - [ ] Body includes issue refs when relevant (`Refs #NNN` / `Fixes #NNN` only when closing is allowed)
+- [ ] Issue-related commits include `Reported-by: @<issue-author-login>` before the final `Thanks:` line
 - [ ] Body ends with a current `Thanks:` line listing every supporter from `supporters.json` / `SPONSORS.md`
 - [ ] After a new sponsor is added, the next commit’s `Thanks:` line includes them immediately

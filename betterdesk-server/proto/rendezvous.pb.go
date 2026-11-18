@@ -150,6 +150,8 @@ const (
 	ControlPermissions_recording      ControlPermissions_Permission = 9
 	ControlPermissions_block_input    ControlPermissions_Permission = 10
 	ControlPermissions_remote_modify  ControlPermissions_Permission = 11
+	ControlPermissions_privacy_mode   ControlPermissions_Permission = 12
+	ControlPermissions_usb            ControlPermissions_Permission = 13
 )
 
 // Enum value maps for ControlPermissions_Permission.
@@ -167,6 +169,8 @@ var (
 		9:  "recording",
 		10: "block_input",
 		11: "remote_modify",
+		12: "privacy_mode",
+		13: "usb",
 	}
 	ControlPermissions_Permission_value = map[string]int32{
 		"keyboard":       0,
@@ -181,6 +185,8 @@ var (
 		"recording":      9,
 		"block_input":    10,
 		"remote_modify":  11,
+		"privacy_mode":   12,
+		"usb":            13,
 	}
 )
 
@@ -221,6 +227,7 @@ const (
 	RegisterPkResponse_INVALID_ID_FORMAT RegisterPkResponse_Result = 5
 	RegisterPkResponse_NOT_SUPPORT       RegisterPkResponse_Result = 6
 	RegisterPkResponse_SERVER_ERROR      RegisterPkResponse_Result = 7
+	RegisterPkResponse_NOT_DEPLOYED      RegisterPkResponse_Result = 8
 )
 
 // Enum value maps for RegisterPkResponse_Result.
@@ -233,6 +240,7 @@ var (
 		5: "INVALID_ID_FORMAT",
 		6: "NOT_SUPPORT",
 		7: "SERVER_ERROR",
+		8: "NOT_DEPLOYED",
 	}
 	RegisterPkResponse_Result_value = map[string]int32{
 		"OK":                0,
@@ -242,6 +250,7 @@ var (
 		"INVALID_ID_FORMAT": 5,
 		"NOT_SUPPORT":       6,
 		"SERVER_ERROR":      7,
+		"NOT_DEPLOYED":      8,
 	}
 )
 
@@ -269,7 +278,7 @@ func (x RegisterPkResponse_Result) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use RegisterPkResponse_Result.Descriptor instead.
 func (RegisterPkResponse_Result) EnumDescriptor() ([]byte, []int) {
-	return file_rendezvous_proto_rawDescGZIP(), []int{9, 0}
+	return file_rendezvous_proto_rawDescGZIP(), []int{11, 0}
 }
 
 type PunchHoleResponse_Failure int32
@@ -321,7 +330,7 @@ func (x PunchHoleResponse_Failure) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use PunchHoleResponse_Failure.Descriptor instead.
 func (PunchHoleResponse_Failure) EnumDescriptor() ([]byte, []int) {
-	return file_rendezvous_proto_rawDescGZIP(), []int{10, 0}
+	return file_rendezvous_proto_rawDescGZIP(), []int{12, 0}
 }
 
 type RegisterPeer struct {
@@ -421,19 +430,24 @@ func (x *RegisterPeerResponse) GetRequestPk() bool {
 }
 
 type PunchHoleRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	NatType       NatType                `protobuf:"varint,2,opt,name=nat_type,json=natType,proto3,enum=hbb.NatType" json:"nat_type,omitempty"`
-	LicenceKey    string                 `protobuf:"bytes,3,opt,name=licence_key,json=licenceKey,proto3" json:"licence_key,omitempty"`
-	ConnType      ConnType               `protobuf:"varint,4,opt,name=conn_type,json=connType,proto3,enum=hbb.ConnType" json:"conn_type,omitempty"`
-	Token         string                 `protobuf:"bytes,5,opt,name=token,proto3" json:"token,omitempty"`
-	Version       string                 `protobuf:"bytes,6,opt,name=version,proto3" json:"version,omitempty"`
-	UdpPort       int32                  `protobuf:"varint,7,opt,name=udp_port,json=udpPort,proto3" json:"udp_port,omitempty"`
-	ForceRelay    bool                   `protobuf:"varint,8,opt,name=force_relay,json=forceRelay,proto3" json:"force_relay,omitempty"`
-	UpnpPort      int32                  `protobuf:"varint,9,opt,name=upnp_port,json=upnpPort,proto3" json:"upnp_port,omitempty"`
-	SocketAddrV6  []byte                 `protobuf:"bytes,10,opt,name=socket_addr_v6,json=socketAddrV6,proto3" json:"socket_addr_v6,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state        protoimpl.MessageState `protogen:"open.v1"`
+	Id           string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	NatType      NatType                `protobuf:"varint,2,opt,name=nat_type,json=natType,proto3,enum=hbb.NatType" json:"nat_type,omitempty"`
+	LicenceKey   string                 `protobuf:"bytes,3,opt,name=licence_key,json=licenceKey,proto3" json:"licence_key,omitempty"`
+	ConnType     ConnType               `protobuf:"varint,4,opt,name=conn_type,json=connType,proto3,enum=hbb.ConnType" json:"conn_type,omitempty"`
+	Token        string                 `protobuf:"bytes,5,opt,name=token,proto3" json:"token,omitempty"`
+	Version      string                 `protobuf:"bytes,6,opt,name=version,proto3" json:"version,omitempty"`
+	UdpPort      int32                  `protobuf:"varint,7,opt,name=udp_port,json=udpPort,proto3" json:"udp_port,omitempty"`
+	ForceRelay   bool                   `protobuf:"varint,8,opt,name=force_relay,json=forceRelay,proto3" json:"force_relay,omitempty"`
+	UpnpPort     int32                  `protobuf:"varint,9,opt,name=upnp_port,json=upnpPort,proto3" json:"upnp_port,omitempty"`
+	SocketAddrV6 []byte                 `protobuf:"bytes,10,opt,name=socket_addr_v6,json=socketAddrV6,proto3" json:"socket_addr_v6,omitempty"`
+	// Added upstream for recent clients: switch-code pairing and the WebRTC offer.
+	// Dropping these fields makes two new peers unable to negotiate a transport,
+	// even though a new peer can still reach an old one that never sends them.
+	SwitchCode     string `protobuf:"bytes,11,opt,name=switch_code,json=switchCode,proto3" json:"switch_code,omitempty"`
+	WebrtcSdpOffer string `protobuf:"bytes,12,opt,name=webrtc_sdp_offer,json=webrtcSdpOffer,proto3" json:"webrtc_sdp_offer,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *PunchHoleRequest) Reset() {
@@ -536,6 +550,20 @@ func (x *PunchHoleRequest) GetSocketAddrV6() []byte {
 	return nil
 }
 
+func (x *PunchHoleRequest) GetSwitchCode() string {
+	if x != nil {
+		return x.SwitchCode
+	}
+	return ""
+}
+
+func (x *PunchHoleRequest) GetWebrtcSdpOffer() string {
+	if x != nil {
+		return x.WebrtcSdpOffer
+	}
+	return ""
+}
+
 type ControlPermissions struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Permissions   uint64                 `protobuf:"varint,1,opt,name=permissions,proto3" json:"permissions,omitempty"`
@@ -590,6 +618,8 @@ type PunchHole struct {
 	UpnpPort           int32                  `protobuf:"varint,6,opt,name=upnp_port,json=upnpPort,proto3" json:"upnp_port,omitempty"`
 	SocketAddrV6       []byte                 `protobuf:"bytes,7,opt,name=socket_addr_v6,json=socketAddrV6,proto3" json:"socket_addr_v6,omitempty"`
 	ControlPermissions *ControlPermissions    `protobuf:"bytes,8,opt,name=control_permissions,json=controlPermissions,proto3" json:"control_permissions,omitempty"`
+	ControlledContext  *ControlledContext     `protobuf:"bytes,9,opt,name=controlled_context,json=controlledContext,proto3" json:"controlled_context,omitempty"`
+	WebrtcSdpOffer     string                 `protobuf:"bytes,10,opt,name=webrtc_sdp_offer,json=webrtcSdpOffer,proto3" json:"webrtc_sdp_offer,omitempty"`
 	unknownFields      protoimpl.UnknownFields
 	sizeCache          protoimpl.SizeCache
 }
@@ -680,6 +710,133 @@ func (x *PunchHole) GetControlPermissions() *ControlPermissions {
 	return nil
 }
 
+func (x *PunchHole) GetControlledContext() *ControlledContext {
+	if x != nil {
+		return x.ControlledContext
+	}
+	return nil
+}
+
+func (x *PunchHole) GetWebrtcSdpOffer() string {
+	if x != nil {
+		return x.WebrtcSdpOffer
+	}
+	return ""
+}
+
+// Forwarded verbatim between peers for WebRTC transport negotiation.
+type ControlledContext struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ConnAuditRef  string                 `protobuf:"bytes,1,opt,name=conn_audit_ref,json=connAuditRef,proto3" json:"conn_audit_ref,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ControlledContext) Reset() {
+	*x = ControlledContext{}
+	mi := &file_rendezvous_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ControlledContext) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ControlledContext) ProtoMessage() {}
+
+func (x *ControlledContext) ProtoReflect() protoreflect.Message {
+	mi := &file_rendezvous_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ControlledContext.ProtoReflect.Descriptor instead.
+func (*ControlledContext) Descriptor() ([]byte, []int) {
+	return file_rendezvous_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *ControlledContext) GetConnAuditRef() string {
+	if x != nil {
+		return x.ConnAuditRef
+	}
+	return ""
+}
+
+type IceCandidate struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	SocketAddr    []byte                 `protobuf:"bytes,2,opt,name=socket_addr,json=socketAddr,proto3" json:"socket_addr,omitempty"`
+	SessionKey    string                 `protobuf:"bytes,3,opt,name=session_key,json=sessionKey,proto3" json:"session_key,omitempty"`
+	Candidate     string                 `protobuf:"bytes,4,opt,name=candidate,proto3" json:"candidate,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *IceCandidate) Reset() {
+	*x = IceCandidate{}
+	mi := &file_rendezvous_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *IceCandidate) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*IceCandidate) ProtoMessage() {}
+
+func (x *IceCandidate) ProtoReflect() protoreflect.Message {
+	mi := &file_rendezvous_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use IceCandidate.ProtoReflect.Descriptor instead.
+func (*IceCandidate) Descriptor() ([]byte, []int) {
+	return file_rendezvous_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *IceCandidate) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *IceCandidate) GetSocketAddr() []byte {
+	if x != nil {
+		return x.SocketAddr
+	}
+	return nil
+}
+
+func (x *IceCandidate) GetSessionKey() string {
+	if x != nil {
+		return x.SessionKey
+	}
+	return ""
+}
+
+func (x *IceCandidate) GetCandidate() string {
+	if x != nil {
+		return x.Candidate
+	}
+	return ""
+}
+
 type TestNatRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Serial        int32                  `protobuf:"varint,1,opt,name=serial,proto3" json:"serial,omitempty"`
@@ -689,7 +846,7 @@ type TestNatRequest struct {
 
 func (x *TestNatRequest) Reset() {
 	*x = TestNatRequest{}
-	mi := &file_rendezvous_proto_msgTypes[5]
+	mi := &file_rendezvous_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -701,7 +858,7 @@ func (x *TestNatRequest) String() string {
 func (*TestNatRequest) ProtoMessage() {}
 
 func (x *TestNatRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rendezvous_proto_msgTypes[5]
+	mi := &file_rendezvous_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -714,7 +871,7 @@ func (x *TestNatRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TestNatRequest.ProtoReflect.Descriptor instead.
 func (*TestNatRequest) Descriptor() ([]byte, []int) {
-	return file_rendezvous_proto_rawDescGZIP(), []int{5}
+	return file_rendezvous_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *TestNatRequest) GetSerial() int32 {
@@ -734,7 +891,7 @@ type TestNatResponse struct {
 
 func (x *TestNatResponse) Reset() {
 	*x = TestNatResponse{}
-	mi := &file_rendezvous_proto_msgTypes[6]
+	mi := &file_rendezvous_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -746,7 +903,7 @@ func (x *TestNatResponse) String() string {
 func (*TestNatResponse) ProtoMessage() {}
 
 func (x *TestNatResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rendezvous_proto_msgTypes[6]
+	mi := &file_rendezvous_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -759,7 +916,7 @@ func (x *TestNatResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TestNatResponse.ProtoReflect.Descriptor instead.
 func (*TestNatResponse) Descriptor() ([]byte, []int) {
-	return file_rendezvous_proto_rawDescGZIP(), []int{6}
+	return file_rendezvous_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *TestNatResponse) GetPort() int32 {
@@ -777,21 +934,22 @@ func (x *TestNatResponse) GetCu() *ConfigUpdate {
 }
 
 type PunchHoleSent struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	SocketAddr    []byte                 `protobuf:"bytes,1,opt,name=socket_addr,json=socketAddr,proto3" json:"socket_addr,omitempty"`
-	Id            string                 `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`
-	RelayServer   string                 `protobuf:"bytes,3,opt,name=relay_server,json=relayServer,proto3" json:"relay_server,omitempty"`
-	NatType       NatType                `protobuf:"varint,4,opt,name=nat_type,json=natType,proto3,enum=hbb.NatType" json:"nat_type,omitempty"`
-	Version       string                 `protobuf:"bytes,5,opt,name=version,proto3" json:"version,omitempty"`
-	UpnpPort      int32                  `protobuf:"varint,6,opt,name=upnp_port,json=upnpPort,proto3" json:"upnp_port,omitempty"`
-	SocketAddrV6  []byte                 `protobuf:"bytes,7,opt,name=socket_addr_v6,json=socketAddrV6,proto3" json:"socket_addr_v6,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	SocketAddr      []byte                 `protobuf:"bytes,1,opt,name=socket_addr,json=socketAddr,proto3" json:"socket_addr,omitempty"`
+	Id              string                 `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`
+	RelayServer     string                 `protobuf:"bytes,3,opt,name=relay_server,json=relayServer,proto3" json:"relay_server,omitempty"`
+	NatType         NatType                `protobuf:"varint,4,opt,name=nat_type,json=natType,proto3,enum=hbb.NatType" json:"nat_type,omitempty"`
+	Version         string                 `protobuf:"bytes,5,opt,name=version,proto3" json:"version,omitempty"`
+	UpnpPort        int32                  `protobuf:"varint,6,opt,name=upnp_port,json=upnpPort,proto3" json:"upnp_port,omitempty"`
+	SocketAddrV6    []byte                 `protobuf:"bytes,7,opt,name=socket_addr_v6,json=socketAddrV6,proto3" json:"socket_addr_v6,omitempty"`
+	WebrtcSdpAnswer string                 `protobuf:"bytes,8,opt,name=webrtc_sdp_answer,json=webrtcSdpAnswer,proto3" json:"webrtc_sdp_answer,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *PunchHoleSent) Reset() {
 	*x = PunchHoleSent{}
-	mi := &file_rendezvous_proto_msgTypes[7]
+	mi := &file_rendezvous_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -803,7 +961,7 @@ func (x *PunchHoleSent) String() string {
 func (*PunchHoleSent) ProtoMessage() {}
 
 func (x *PunchHoleSent) ProtoReflect() protoreflect.Message {
-	mi := &file_rendezvous_proto_msgTypes[7]
+	mi := &file_rendezvous_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -816,7 +974,7 @@ func (x *PunchHoleSent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PunchHoleSent.ProtoReflect.Descriptor instead.
 func (*PunchHoleSent) Descriptor() ([]byte, []int) {
-	return file_rendezvous_proto_rawDescGZIP(), []int{7}
+	return file_rendezvous_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *PunchHoleSent) GetSocketAddr() []byte {
@@ -868,6 +1026,13 @@ func (x *PunchHoleSent) GetSocketAddrV6() []byte {
 	return nil
 }
 
+func (x *PunchHoleSent) GetWebrtcSdpAnswer() string {
+	if x != nil {
+		return x.WebrtcSdpAnswer
+	}
+	return ""
+}
+
 type RegisterPk struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
 	Id               string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -881,7 +1046,7 @@ type RegisterPk struct {
 
 func (x *RegisterPk) Reset() {
 	*x = RegisterPk{}
-	mi := &file_rendezvous_proto_msgTypes[8]
+	mi := &file_rendezvous_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -893,7 +1058,7 @@ func (x *RegisterPk) String() string {
 func (*RegisterPk) ProtoMessage() {}
 
 func (x *RegisterPk) ProtoReflect() protoreflect.Message {
-	mi := &file_rendezvous_proto_msgTypes[8]
+	mi := &file_rendezvous_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -906,7 +1071,7 @@ func (x *RegisterPk) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RegisterPk.ProtoReflect.Descriptor instead.
 func (*RegisterPk) Descriptor() ([]byte, []int) {
-	return file_rendezvous_proto_rawDescGZIP(), []int{8}
+	return file_rendezvous_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *RegisterPk) GetId() string {
@@ -954,7 +1119,7 @@ type RegisterPkResponse struct {
 
 func (x *RegisterPkResponse) Reset() {
 	*x = RegisterPkResponse{}
-	mi := &file_rendezvous_proto_msgTypes[9]
+	mi := &file_rendezvous_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -966,7 +1131,7 @@ func (x *RegisterPkResponse) String() string {
 func (*RegisterPkResponse) ProtoMessage() {}
 
 func (x *RegisterPkResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rendezvous_proto_msgTypes[9]
+	mi := &file_rendezvous_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -979,7 +1144,7 @@ func (x *RegisterPkResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RegisterPkResponse.ProtoReflect.Descriptor instead.
 func (*RegisterPkResponse) Descriptor() ([]byte, []int) {
-	return file_rendezvous_proto_rawDescGZIP(), []int{9}
+	return file_rendezvous_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *RegisterPkResponse) GetResult() RegisterPkResponse_Result {
@@ -1006,19 +1171,20 @@ type PunchHoleResponse struct {
 	//
 	//	*PunchHoleResponse_NatType
 	//	*PunchHoleResponse_IsLocal
-	Union         isPunchHoleResponse_Union `protobuf_oneof:"union"`
-	OtherFailure  string                    `protobuf:"bytes,7,opt,name=other_failure,json=otherFailure,proto3" json:"other_failure,omitempty"`
-	Feedback      int32                     `protobuf:"varint,8,opt,name=feedback,proto3" json:"feedback,omitempty"`
-	IsUdp         bool                      `protobuf:"varint,9,opt,name=is_udp,json=isUdp,proto3" json:"is_udp,omitempty"`
-	UpnpPort      int32                     `protobuf:"varint,10,opt,name=upnp_port,json=upnpPort,proto3" json:"upnp_port,omitempty"`
-	SocketAddrV6  []byte                    `protobuf:"bytes,11,opt,name=socket_addr_v6,json=socketAddrV6,proto3" json:"socket_addr_v6,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	Union           isPunchHoleResponse_Union `protobuf_oneof:"union"`
+	OtherFailure    string                    `protobuf:"bytes,7,opt,name=other_failure,json=otherFailure,proto3" json:"other_failure,omitempty"`
+	Feedback        int32                     `protobuf:"varint,8,opt,name=feedback,proto3" json:"feedback,omitempty"`
+	IsUdp           bool                      `protobuf:"varint,9,opt,name=is_udp,json=isUdp,proto3" json:"is_udp,omitempty"`
+	UpnpPort        int32                     `protobuf:"varint,10,opt,name=upnp_port,json=upnpPort,proto3" json:"upnp_port,omitempty"`
+	SocketAddrV6    []byte                    `protobuf:"bytes,11,opt,name=socket_addr_v6,json=socketAddrV6,proto3" json:"socket_addr_v6,omitempty"`
+	WebrtcSdpAnswer string                    `protobuf:"bytes,12,opt,name=webrtc_sdp_answer,json=webrtcSdpAnswer,proto3" json:"webrtc_sdp_answer,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *PunchHoleResponse) Reset() {
 	*x = PunchHoleResponse{}
-	mi := &file_rendezvous_proto_msgTypes[10]
+	mi := &file_rendezvous_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1030,7 +1196,7 @@ func (x *PunchHoleResponse) String() string {
 func (*PunchHoleResponse) ProtoMessage() {}
 
 func (x *PunchHoleResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rendezvous_proto_msgTypes[10]
+	mi := &file_rendezvous_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1043,7 +1209,7 @@ func (x *PunchHoleResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PunchHoleResponse.ProtoReflect.Descriptor instead.
 func (*PunchHoleResponse) Descriptor() ([]byte, []int) {
-	return file_rendezvous_proto_rawDescGZIP(), []int{10}
+	return file_rendezvous_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *PunchHoleResponse) GetSocketAddr() []byte {
@@ -1134,6 +1300,13 @@ func (x *PunchHoleResponse) GetSocketAddrV6() []byte {
 	return nil
 }
 
+func (x *PunchHoleResponse) GetWebrtcSdpAnswer() string {
+	if x != nil {
+		return x.WebrtcSdpAnswer
+	}
+	return ""
+}
+
 type isPunchHoleResponse_Union interface {
 	isPunchHoleResponse_Union()
 }
@@ -1160,7 +1333,7 @@ type ConfigUpdate struct {
 
 func (x *ConfigUpdate) Reset() {
 	*x = ConfigUpdate{}
-	mi := &file_rendezvous_proto_msgTypes[11]
+	mi := &file_rendezvous_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1172,7 +1345,7 @@ func (x *ConfigUpdate) String() string {
 func (*ConfigUpdate) ProtoMessage() {}
 
 func (x *ConfigUpdate) ProtoReflect() protoreflect.Message {
-	mi := &file_rendezvous_proto_msgTypes[11]
+	mi := &file_rendezvous_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1185,7 +1358,7 @@ func (x *ConfigUpdate) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConfigUpdate.ProtoReflect.Descriptor instead.
 func (*ConfigUpdate) Descriptor() ([]byte, []int) {
-	return file_rendezvous_proto_rawDescGZIP(), []int{11}
+	return file_rendezvous_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *ConfigUpdate) GetSerial() int32 {
@@ -1213,13 +1386,15 @@ type RequestRelay struct {
 	ConnType           ConnType               `protobuf:"varint,7,opt,name=conn_type,json=connType,proto3,enum=hbb.ConnType" json:"conn_type,omitempty"`
 	Token              string                 `protobuf:"bytes,8,opt,name=token,proto3" json:"token,omitempty"`
 	ControlPermissions *ControlPermissions    `protobuf:"bytes,9,opt,name=control_permissions,json=controlPermissions,proto3" json:"control_permissions,omitempty"`
+	ControlledContext  *ControlledContext     `protobuf:"bytes,10,opt,name=controlled_context,json=controlledContext,proto3" json:"controlled_context,omitempty"`
+	SwitchCode         string                 `protobuf:"bytes,11,opt,name=switch_code,json=switchCode,proto3" json:"switch_code,omitempty"`
 	unknownFields      protoimpl.UnknownFields
 	sizeCache          protoimpl.SizeCache
 }
 
 func (x *RequestRelay) Reset() {
 	*x = RequestRelay{}
-	mi := &file_rendezvous_proto_msgTypes[12]
+	mi := &file_rendezvous_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1231,7 +1406,7 @@ func (x *RequestRelay) String() string {
 func (*RequestRelay) ProtoMessage() {}
 
 func (x *RequestRelay) ProtoReflect() protoreflect.Message {
-	mi := &file_rendezvous_proto_msgTypes[12]
+	mi := &file_rendezvous_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1244,7 +1419,7 @@ func (x *RequestRelay) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RequestRelay.ProtoReflect.Descriptor instead.
 func (*RequestRelay) Descriptor() ([]byte, []int) {
-	return file_rendezvous_proto_rawDescGZIP(), []int{12}
+	return file_rendezvous_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *RequestRelay) GetId() string {
@@ -1310,6 +1485,20 @@ func (x *RequestRelay) GetControlPermissions() *ControlPermissions {
 	return nil
 }
 
+func (x *RequestRelay) GetControlledContext() *ControlledContext {
+	if x != nil {
+		return x.ControlledContext
+	}
+	return nil
+}
+
+func (x *RequestRelay) GetSwitchCode() string {
+	if x != nil {
+		return x.SwitchCode
+	}
+	return ""
+}
+
 type RelayResponse struct {
 	state       protoimpl.MessageState `protogen:"open.v1"`
 	SocketAddr  []byte                 `protobuf:"bytes,1,opt,name=socket_addr,json=socketAddr,proto3" json:"socket_addr,omitempty"`
@@ -1319,19 +1508,20 @@ type RelayResponse struct {
 	//
 	//	*RelayResponse_Id
 	//	*RelayResponse_Pk
-	Union         isRelayResponse_Union `protobuf_oneof:"union"`
-	RefuseReason  string                `protobuf:"bytes,6,opt,name=refuse_reason,json=refuseReason,proto3" json:"refuse_reason,omitempty"`
-	Version       string                `protobuf:"bytes,7,opt,name=version,proto3" json:"version,omitempty"`
-	Feedback      int32                 `protobuf:"varint,9,opt,name=feedback,proto3" json:"feedback,omitempty"`
-	SocketAddrV6  []byte                `protobuf:"bytes,10,opt,name=socket_addr_v6,json=socketAddrV6,proto3" json:"socket_addr_v6,omitempty"`
-	UpnpPort      int32                 `protobuf:"varint,11,opt,name=upnp_port,json=upnpPort,proto3" json:"upnp_port,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	Union           isRelayResponse_Union `protobuf_oneof:"union"`
+	RefuseReason    string                `protobuf:"bytes,6,opt,name=refuse_reason,json=refuseReason,proto3" json:"refuse_reason,omitempty"`
+	Version         string                `protobuf:"bytes,7,opt,name=version,proto3" json:"version,omitempty"`
+	Feedback        int32                 `protobuf:"varint,9,opt,name=feedback,proto3" json:"feedback,omitempty"`
+	SocketAddrV6    []byte                `protobuf:"bytes,10,opt,name=socket_addr_v6,json=socketAddrV6,proto3" json:"socket_addr_v6,omitempty"`
+	UpnpPort        int32                 `protobuf:"varint,11,opt,name=upnp_port,json=upnpPort,proto3" json:"upnp_port,omitempty"`
+	WebrtcSdpAnswer string                `protobuf:"bytes,12,opt,name=webrtc_sdp_answer,json=webrtcSdpAnswer,proto3" json:"webrtc_sdp_answer,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *RelayResponse) Reset() {
 	*x = RelayResponse{}
-	mi := &file_rendezvous_proto_msgTypes[13]
+	mi := &file_rendezvous_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1343,7 +1533,7 @@ func (x *RelayResponse) String() string {
 func (*RelayResponse) ProtoMessage() {}
 
 func (x *RelayResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rendezvous_proto_msgTypes[13]
+	mi := &file_rendezvous_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1356,7 +1546,7 @@ func (x *RelayResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RelayResponse.ProtoReflect.Descriptor instead.
 func (*RelayResponse) Descriptor() ([]byte, []int) {
-	return file_rendezvous_proto_rawDescGZIP(), []int{13}
+	return file_rendezvous_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *RelayResponse) GetSocketAddr() []byte {
@@ -1440,6 +1630,13 @@ func (x *RelayResponse) GetUpnpPort() int32 {
 	return 0
 }
 
+func (x *RelayResponse) GetWebrtcSdpAnswer() string {
+	if x != nil {
+		return x.WebrtcSdpAnswer
+	}
+	return ""
+}
+
 type isRelayResponse_Union interface {
 	isRelayResponse_Union()
 }
@@ -1465,7 +1662,7 @@ type SoftwareUpdate struct {
 
 func (x *SoftwareUpdate) Reset() {
 	*x = SoftwareUpdate{}
-	mi := &file_rendezvous_proto_msgTypes[14]
+	mi := &file_rendezvous_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1477,7 +1674,7 @@ func (x *SoftwareUpdate) String() string {
 func (*SoftwareUpdate) ProtoMessage() {}
 
 func (x *SoftwareUpdate) ProtoReflect() protoreflect.Message {
-	mi := &file_rendezvous_proto_msgTypes[14]
+	mi := &file_rendezvous_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1490,7 +1687,7 @@ func (x *SoftwareUpdate) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SoftwareUpdate.ProtoReflect.Descriptor instead.
 func (*SoftwareUpdate) Descriptor() ([]byte, []int) {
-	return file_rendezvous_proto_rawDescGZIP(), []int{14}
+	return file_rendezvous_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *SoftwareUpdate) GetUrl() string {
@@ -1506,13 +1703,14 @@ type FetchLocalAddr struct {
 	RelayServer        string                 `protobuf:"bytes,2,opt,name=relay_server,json=relayServer,proto3" json:"relay_server,omitempty"`
 	SocketAddrV6       []byte                 `protobuf:"bytes,3,opt,name=socket_addr_v6,json=socketAddrV6,proto3" json:"socket_addr_v6,omitempty"`
 	ControlPermissions *ControlPermissions    `protobuf:"bytes,4,opt,name=control_permissions,json=controlPermissions,proto3" json:"control_permissions,omitempty"`
+	ControlledContext  *ControlledContext     `protobuf:"bytes,5,opt,name=controlled_context,json=controlledContext,proto3" json:"controlled_context,omitempty"`
 	unknownFields      protoimpl.UnknownFields
 	sizeCache          protoimpl.SizeCache
 }
 
 func (x *FetchLocalAddr) Reset() {
 	*x = FetchLocalAddr{}
-	mi := &file_rendezvous_proto_msgTypes[15]
+	mi := &file_rendezvous_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1524,7 +1722,7 @@ func (x *FetchLocalAddr) String() string {
 func (*FetchLocalAddr) ProtoMessage() {}
 
 func (x *FetchLocalAddr) ProtoReflect() protoreflect.Message {
-	mi := &file_rendezvous_proto_msgTypes[15]
+	mi := &file_rendezvous_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1537,7 +1735,7 @@ func (x *FetchLocalAddr) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FetchLocalAddr.ProtoReflect.Descriptor instead.
 func (*FetchLocalAddr) Descriptor() ([]byte, []int) {
-	return file_rendezvous_proto_rawDescGZIP(), []int{15}
+	return file_rendezvous_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *FetchLocalAddr) GetSocketAddr() []byte {
@@ -1568,6 +1766,13 @@ func (x *FetchLocalAddr) GetControlPermissions() *ControlPermissions {
 	return nil
 }
 
+func (x *FetchLocalAddr) GetControlledContext() *ControlledContext {
+	if x != nil {
+		return x.ControlledContext
+	}
+	return nil
+}
+
 type LocalAddr struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	SocketAddr    []byte                 `protobuf:"bytes,1,opt,name=socket_addr,json=socketAddr,proto3" json:"socket_addr,omitempty"`
@@ -1582,7 +1787,7 @@ type LocalAddr struct {
 
 func (x *LocalAddr) Reset() {
 	*x = LocalAddr{}
-	mi := &file_rendezvous_proto_msgTypes[16]
+	mi := &file_rendezvous_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1594,7 +1799,7 @@ func (x *LocalAddr) String() string {
 func (*LocalAddr) ProtoMessage() {}
 
 func (x *LocalAddr) ProtoReflect() protoreflect.Message {
-	mi := &file_rendezvous_proto_msgTypes[16]
+	mi := &file_rendezvous_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1607,7 +1812,7 @@ func (x *LocalAddr) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LocalAddr.ProtoReflect.Descriptor instead.
 func (*LocalAddr) Descriptor() ([]byte, []int) {
-	return file_rendezvous_proto_rawDescGZIP(), []int{16}
+	return file_rendezvous_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *LocalAddr) GetSocketAddr() []byte {
@@ -1667,7 +1872,7 @@ type PeerDiscovery struct {
 
 func (x *PeerDiscovery) Reset() {
 	*x = PeerDiscovery{}
-	mi := &file_rendezvous_proto_msgTypes[17]
+	mi := &file_rendezvous_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1679,7 +1884,7 @@ func (x *PeerDiscovery) String() string {
 func (*PeerDiscovery) ProtoMessage() {}
 
 func (x *PeerDiscovery) ProtoReflect() protoreflect.Message {
-	mi := &file_rendezvous_proto_msgTypes[17]
+	mi := &file_rendezvous_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1692,7 +1897,7 @@ func (x *PeerDiscovery) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PeerDiscovery.ProtoReflect.Descriptor instead.
 func (*PeerDiscovery) Descriptor() ([]byte, []int) {
-	return file_rendezvous_proto_rawDescGZIP(), []int{17}
+	return file_rendezvous_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *PeerDiscovery) GetCmd() string {
@@ -1754,7 +1959,7 @@ type OnlineRequest struct {
 
 func (x *OnlineRequest) Reset() {
 	*x = OnlineRequest{}
-	mi := &file_rendezvous_proto_msgTypes[18]
+	mi := &file_rendezvous_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1766,7 +1971,7 @@ func (x *OnlineRequest) String() string {
 func (*OnlineRequest) ProtoMessage() {}
 
 func (x *OnlineRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rendezvous_proto_msgTypes[18]
+	mi := &file_rendezvous_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1779,7 +1984,7 @@ func (x *OnlineRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OnlineRequest.ProtoReflect.Descriptor instead.
 func (*OnlineRequest) Descriptor() ([]byte, []int) {
-	return file_rendezvous_proto_rawDescGZIP(), []int{18}
+	return file_rendezvous_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *OnlineRequest) GetId() string {
@@ -1805,7 +2010,7 @@ type OnlineResponse struct {
 
 func (x *OnlineResponse) Reset() {
 	*x = OnlineResponse{}
-	mi := &file_rendezvous_proto_msgTypes[19]
+	mi := &file_rendezvous_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1817,7 +2022,7 @@ func (x *OnlineResponse) String() string {
 func (*OnlineResponse) ProtoMessage() {}
 
 func (x *OnlineResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rendezvous_proto_msgTypes[19]
+	mi := &file_rendezvous_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1830,7 +2035,7 @@ func (x *OnlineResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OnlineResponse.ProtoReflect.Descriptor instead.
 func (*OnlineResponse) Descriptor() ([]byte, []int) {
-	return file_rendezvous_proto_rawDescGZIP(), []int{19}
+	return file_rendezvous_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *OnlineResponse) GetStates() []byte {
@@ -1841,15 +2046,26 @@ func (x *OnlineResponse) GetStates() []byte {
 }
 
 type KeyExchange struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Keys          [][]byte               `protobuf:"bytes,1,rep,name=keys,proto3" json:"keys,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Keys  [][]byte               `protobuf:"bytes,1,rep,name=keys,proto3" json:"keys,omitempty"`
+	// From the server: the newest key-exchange version it speaks. From the client:
+	// the version it picked. Absent (0) means the original scheme.
+	//
+	// Newer RustDesk clients negotiate against this field; a server that never
+	// sends it leaves them unable to complete the handshake, which shows up as
+	// repeated KeyExchange attempts with zero "secure established" (see the
+	// server-side signature in crypto/secure.go).
+	Version uint32 `protobuf:"varint,2,opt,name=version,proto3" json:"version,omitempty"`
+	// Server signature of KxParams. Bit 255 of the signed X25519 public key
+	// requires this field; legacy keys leave it clear.
+	SignedParams  []byte `protobuf:"bytes,3,opt,name=signed_params,json=signedParams,proto3" json:"signed_params,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *KeyExchange) Reset() {
 	*x = KeyExchange{}
-	mi := &file_rendezvous_proto_msgTypes[20]
+	mi := &file_rendezvous_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1861,7 +2077,7 @@ func (x *KeyExchange) String() string {
 func (*KeyExchange) ProtoMessage() {}
 
 func (x *KeyExchange) ProtoReflect() protoreflect.Message {
-	mi := &file_rendezvous_proto_msgTypes[20]
+	mi := &file_rendezvous_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1874,7 +2090,7 @@ func (x *KeyExchange) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use KeyExchange.ProtoReflect.Descriptor instead.
 func (*KeyExchange) Descriptor() ([]byte, []int) {
-	return file_rendezvous_proto_rawDescGZIP(), []int{20}
+	return file_rendezvous_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *KeyExchange) GetKeys() [][]byte {
@@ -1882,6 +2098,75 @@ func (x *KeyExchange) GetKeys() [][]byte {
 		return x.Keys
 	}
 	return nil
+}
+
+func (x *KeyExchange) GetVersion() uint32 {
+	if x != nil {
+		return x.Version
+	}
+	return 0
+}
+
+func (x *KeyExchange) GetSignedParams() []byte {
+	if x != nil {
+		return x.SignedParams
+	}
+	return nil
+}
+
+// Signed by the server beside its ephemeral public key: that key as it went out,
+// so the signature belongs to this exchange alone, plus the newest key-exchange
+// version the server speaks.
+type KxParams struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Pk            []byte                 `protobuf:"bytes,1,opt,name=pk,proto3" json:"pk,omitempty"`
+	Version       uint32                 `protobuf:"varint,2,opt,name=version,proto3" json:"version,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *KxParams) Reset() {
+	*x = KxParams{}
+	mi := &file_rendezvous_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *KxParams) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*KxParams) ProtoMessage() {}
+
+func (x *KxParams) ProtoReflect() protoreflect.Message {
+	mi := &file_rendezvous_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use KxParams.ProtoReflect.Descriptor instead.
+func (*KxParams) Descriptor() ([]byte, []int) {
+	return file_rendezvous_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *KxParams) GetPk() []byte {
+	if x != nil {
+		return x.Pk
+	}
+	return nil
+}
+
+func (x *KxParams) GetVersion() uint32 {
+	if x != nil {
+		return x.Version
+	}
+	return 0
 }
 
 type HealthCheck struct {
@@ -1893,7 +2178,7 @@ type HealthCheck struct {
 
 func (x *HealthCheck) Reset() {
 	*x = HealthCheck{}
-	mi := &file_rendezvous_proto_msgTypes[21]
+	mi := &file_rendezvous_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1905,7 +2190,7 @@ func (x *HealthCheck) String() string {
 func (*HealthCheck) ProtoMessage() {}
 
 func (x *HealthCheck) ProtoReflect() protoreflect.Message {
-	mi := &file_rendezvous_proto_msgTypes[21]
+	mi := &file_rendezvous_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1918,7 +2203,7 @@ func (x *HealthCheck) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HealthCheck.ProtoReflect.Descriptor instead.
 func (*HealthCheck) Descriptor() ([]byte, []int) {
-	return file_rendezvous_proto_rawDescGZIP(), []int{21}
+	return file_rendezvous_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *HealthCheck) GetToken() string {
@@ -1938,7 +2223,7 @@ type HeaderEntry struct {
 
 func (x *HeaderEntry) Reset() {
 	*x = HeaderEntry{}
-	mi := &file_rendezvous_proto_msgTypes[22]
+	mi := &file_rendezvous_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1950,7 +2235,7 @@ func (x *HeaderEntry) String() string {
 func (*HeaderEntry) ProtoMessage() {}
 
 func (x *HeaderEntry) ProtoReflect() protoreflect.Message {
-	mi := &file_rendezvous_proto_msgTypes[22]
+	mi := &file_rendezvous_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1963,7 +2248,7 @@ func (x *HeaderEntry) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HeaderEntry.ProtoReflect.Descriptor instead.
 func (*HeaderEntry) Descriptor() ([]byte, []int) {
-	return file_rendezvous_proto_rawDescGZIP(), []int{22}
+	return file_rendezvous_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *HeaderEntry) GetName() string {
@@ -1992,7 +2277,7 @@ type HttpProxyRequest struct {
 
 func (x *HttpProxyRequest) Reset() {
 	*x = HttpProxyRequest{}
-	mi := &file_rendezvous_proto_msgTypes[23]
+	mi := &file_rendezvous_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2004,7 +2289,7 @@ func (x *HttpProxyRequest) String() string {
 func (*HttpProxyRequest) ProtoMessage() {}
 
 func (x *HttpProxyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_rendezvous_proto_msgTypes[23]
+	mi := &file_rendezvous_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2017,7 +2302,7 @@ func (x *HttpProxyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HttpProxyRequest.ProtoReflect.Descriptor instead.
 func (*HttpProxyRequest) Descriptor() ([]byte, []int) {
-	return file_rendezvous_proto_rawDescGZIP(), []int{23}
+	return file_rendezvous_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *HttpProxyRequest) GetMethod() string {
@@ -2060,7 +2345,7 @@ type HttpProxyResponse struct {
 
 func (x *HttpProxyResponse) Reset() {
 	*x = HttpProxyResponse{}
-	mi := &file_rendezvous_proto_msgTypes[24]
+	mi := &file_rendezvous_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2072,7 +2357,7 @@ func (x *HttpProxyResponse) String() string {
 func (*HttpProxyResponse) ProtoMessage() {}
 
 func (x *HttpProxyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_rendezvous_proto_msgTypes[24]
+	mi := &file_rendezvous_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2085,7 +2370,7 @@ func (x *HttpProxyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HttpProxyResponse.ProtoReflect.Descriptor instead.
 func (*HttpProxyResponse) Descriptor() ([]byte, []int) {
-	return file_rendezvous_proto_rawDescGZIP(), []int{24}
+	return file_rendezvous_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *HttpProxyResponse) GetStatus() int32 {
@@ -2143,6 +2428,7 @@ type RendezvousMessage struct {
 	//	*RendezvousMessage_Hc
 	//	*RendezvousMessage_HttpProxyRequest
 	//	*RendezvousMessage_HttpProxyResponse
+	//	*RendezvousMessage_IceCandidate
 	Union         isRendezvousMessage_Union `protobuf_oneof:"union"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -2150,7 +2436,7 @@ type RendezvousMessage struct {
 
 func (x *RendezvousMessage) Reset() {
 	*x = RendezvousMessage{}
-	mi := &file_rendezvous_proto_msgTypes[25]
+	mi := &file_rendezvous_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2162,7 +2448,7 @@ func (x *RendezvousMessage) String() string {
 func (*RendezvousMessage) ProtoMessage() {}
 
 func (x *RendezvousMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_rendezvous_proto_msgTypes[25]
+	mi := &file_rendezvous_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2175,7 +2461,7 @@ func (x *RendezvousMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RendezvousMessage.ProtoReflect.Descriptor instead.
 func (*RendezvousMessage) Descriptor() ([]byte, []int) {
-	return file_rendezvous_proto_rawDescGZIP(), []int{25}
+	return file_rendezvous_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *RendezvousMessage) GetUnion() isRendezvousMessage_Union {
@@ -2392,6 +2678,15 @@ func (x *RendezvousMessage) GetHttpProxyResponse() *HttpProxyResponse {
 	return nil
 }
 
+func (x *RendezvousMessage) GetIceCandidate() *IceCandidate {
+	if x != nil {
+		if x, ok := x.Union.(*RendezvousMessage_IceCandidate); ok {
+			return x.IceCandidate
+		}
+	}
+	return nil
+}
+
 type isRendezvousMessage_Union interface {
 	isRendezvousMessage_Union()
 }
@@ -2488,6 +2783,11 @@ type RendezvousMessage_HttpProxyResponse struct {
 	HttpProxyResponse *HttpProxyResponse `protobuf:"bytes,28,opt,name=http_proxy_response,json=httpProxyResponse,proto3,oneof"`
 }
 
+type RendezvousMessage_IceCandidate struct {
+	// WebRTC trickle-ICE candidate relay between two new peers.
+	IceCandidate *IceCandidate `protobuf:"bytes,29,opt,name=ice_candidate,json=iceCandidate,proto3,oneof"`
+}
+
 func (*RendezvousMessage_RegisterPeer) isRendezvousMessage_Union() {}
 
 func (*RendezvousMessage_RegisterPeerResponse) isRendezvousMessage_Union() {}
@@ -2534,6 +2834,8 @@ func (*RendezvousMessage_HttpProxyRequest) isRendezvousMessage_Union() {}
 
 func (*RendezvousMessage_HttpProxyResponse) isRendezvousMessage_Union() {}
 
+func (*RendezvousMessage_IceCandidate) isRendezvousMessage_Union() {}
+
 var File_rendezvous_proto protoreflect.FileDescriptor
 
 const file_rendezvous_proto_rawDesc = "" +
@@ -2544,7 +2846,7 @@ const file_rendezvous_proto_rawDesc = "" +
 	"\x06serial\x18\x02 \x01(\x05R\x06serial\"5\n" +
 	"\x14RegisterPeerResponse\x12\x1d\n" +
 	"\n" +
-	"request_pk\x18\x02 \x01(\bR\trequestPk\"\xc7\x02\n" +
+	"request_pk\x18\x02 \x01(\bR\trequestPk\"\x92\x03\n" +
 	"\x10PunchHoleRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12'\n" +
 	"\bnat_type\x18\x02 \x01(\x0e2\f.hbb.NatTypeR\anatType\x12\x1f\n" +
@@ -2558,9 +2860,12 @@ const file_rendezvous_proto_rawDesc = "" +
 	"forceRelay\x12\x1b\n" +
 	"\tupnp_port\x18\t \x01(\x05R\bupnpPort\x12$\n" +
 	"\x0esocket_addr_v6\x18\n" +
-	" \x01(\fR\fsocketAddrV6\"\xf1\x01\n" +
+	" \x01(\fR\fsocketAddrV6\x12\x1f\n" +
+	"\vswitch_code\x18\v \x01(\tR\n" +
+	"switchCode\x12(\n" +
+	"\x10webrtc_sdp_offer\x18\f \x01(\tR\x0ewebrtcSdpOffer\"\x8c\x02\n" +
 	"\x12ControlPermissions\x12 \n" +
-	"\vpermissions\x18\x01 \x01(\x04R\vpermissions\"\xb8\x01\n" +
+	"\vpermissions\x18\x01 \x01(\x04R\vpermissions\"\xd3\x01\n" +
 	"\n" +
 	"Permission\x12\f\n" +
 	"\bkeyboard\x10\x00\x12\x12\n" +
@@ -2577,7 +2882,9 @@ const file_rendezvous_proto_rawDesc = "" +
 	"\trecording\x10\t\x12\x0f\n" +
 	"\vblock_input\x10\n" +
 	"\x12\x11\n" +
-	"\rremote_modify\x10\v\"\xc1\x02\n" +
+	"\rremote_modify\x10\v\x12\x10\n" +
+	"\fprivacy_mode\x10\f\x12\a\n" +
+	"\x03usb\x10\r\"\xb2\x03\n" +
 	"\tPunchHole\x12\x1f\n" +
 	"\vsocket_addr\x18\x01 \x01(\fR\n" +
 	"socketAddr\x12!\n" +
@@ -2588,12 +2895,24 @@ const file_rendezvous_proto_rawDesc = "" +
 	"forceRelay\x12\x1b\n" +
 	"\tupnp_port\x18\x06 \x01(\x05R\bupnpPort\x12$\n" +
 	"\x0esocket_addr_v6\x18\a \x01(\fR\fsocketAddrV6\x12H\n" +
-	"\x13control_permissions\x18\b \x01(\v2\x17.hbb.ControlPermissionsR\x12controlPermissions\"(\n" +
+	"\x13control_permissions\x18\b \x01(\v2\x17.hbb.ControlPermissionsR\x12controlPermissions\x12E\n" +
+	"\x12controlled_context\x18\t \x01(\v2\x16.hbb.ControlledContextR\x11controlledContext\x12(\n" +
+	"\x10webrtc_sdp_offer\x18\n" +
+	" \x01(\tR\x0ewebrtcSdpOffer\"9\n" +
+	"\x11ControlledContext\x12$\n" +
+	"\x0econn_audit_ref\x18\x01 \x01(\tR\fconnAuditRef\"~\n" +
+	"\fIceCandidate\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1f\n" +
+	"\vsocket_addr\x18\x02 \x01(\fR\n" +
+	"socketAddr\x12\x1f\n" +
+	"\vsession_key\x18\x03 \x01(\tR\n" +
+	"sessionKey\x12\x1c\n" +
+	"\tcandidate\x18\x04 \x01(\tR\tcandidate\"(\n" +
 	"\x0eTestNatRequest\x12\x16\n" +
 	"\x06serial\x18\x01 \x01(\x05R\x06serial\"H\n" +
 	"\x0fTestNatResponse\x12\x12\n" +
 	"\x04port\x18\x01 \x01(\x05R\x04port\x12!\n" +
-	"\x02cu\x18\x02 \x01(\v2\x11.hbb.ConfigUpdateR\x02cu\"\xe9\x01\n" +
+	"\x02cu\x18\x02 \x01(\v2\x11.hbb.ConfigUpdateR\x02cu\"\x95\x02\n" +
 	"\rPunchHoleSent\x12\x1f\n" +
 	"\vsocket_addr\x18\x01 \x01(\fR\n" +
 	"socketAddr\x12\x0e\n" +
@@ -2602,18 +2921,19 @@ const file_rendezvous_proto_rawDesc = "" +
 	"\bnat_type\x18\x04 \x01(\x0e2\f.hbb.NatTypeR\anatType\x12\x18\n" +
 	"\aversion\x18\x05 \x01(\tR\aversion\x12\x1b\n" +
 	"\tupnp_port\x18\x06 \x01(\x05R\bupnpPort\x12$\n" +
-	"\x0esocket_addr_v6\x18\a \x01(\fR\fsocketAddrV6\"\x85\x01\n" +
+	"\x0esocket_addr_v6\x18\a \x01(\fR\fsocketAddrV6\x12*\n" +
+	"\x11webrtc_sdp_answer\x18\b \x01(\tR\x0fwebrtcSdpAnswer\"\x85\x01\n" +
 	"\n" +
 	"RegisterPk\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04uuid\x18\x02 \x01(\fR\x04uuid\x12\x0e\n" +
 	"\x02pk\x18\x03 \x01(\fR\x02pk\x12\x15\n" +
 	"\x06old_id\x18\x04 \x01(\tR\x05oldId\x12,\n" +
-	"\x12no_register_device\x18\x05 \x01(\bR\x10noRegisterDevice\"\xeb\x01\n" +
+	"\x12no_register_device\x18\x05 \x01(\bR\x10noRegisterDevice\"\xfe\x01\n" +
 	"\x12RegisterPkResponse\x126\n" +
 	"\x06result\x18\x01 \x01(\x0e2\x1e.hbb.RegisterPkResponse.ResultR\x06result\x12\x1d\n" +
 	"\n" +
-	"keep_alive\x18\x02 \x01(\x05R\tkeepAlive\"~\n" +
+	"keep_alive\x18\x02 \x01(\x05R\tkeepAlive\"\x90\x01\n" +
 	"\x06Result\x12\x06\n" +
 	"\x02OK\x10\x00\x12\x11\n" +
 	"\rUUID_MISMATCH\x10\x02\x12\r\n" +
@@ -2621,7 +2941,8 @@ const file_rendezvous_proto_rawDesc = "" +
 	"\fTOO_FREQUENT\x10\x04\x12\x15\n" +
 	"\x11INVALID_ID_FORMAT\x10\x05\x12\x0f\n" +
 	"\vNOT_SUPPORT\x10\x06\x12\x10\n" +
-	"\fSERVER_ERROR\x10\a\"\xe2\x03\n" +
+	"\fSERVER_ERROR\x10\a\x12\x10\n" +
+	"\fNOT_DEPLOYED\x10\b\"\x8e\x04\n" +
 	"\x11PunchHoleResponse\x12\x1f\n" +
 	"\vsocket_addr\x18\x01 \x01(\fR\n" +
 	"socketAddr\x12\x0e\n" +
@@ -2635,7 +2956,8 @@ const file_rendezvous_proto_rawDesc = "" +
 	"\x06is_udp\x18\t \x01(\bR\x05isUdp\x12\x1b\n" +
 	"\tupnp_port\x18\n" +
 	" \x01(\x05R\bupnpPort\x12$\n" +
-	"\x0esocket_addr_v6\x18\v \x01(\fR\fsocketAddrV6\"S\n" +
+	"\x0esocket_addr_v6\x18\v \x01(\fR\fsocketAddrV6\x12*\n" +
+	"\x11webrtc_sdp_answer\x18\f \x01(\tR\x0fwebrtcSdpAnswer\"S\n" +
 	"\aFailure\x12\x10\n" +
 	"\fID_NOT_EXIST\x10\x00\x12\v\n" +
 	"\aOFFLINE\x10\x02\x12\x14\n" +
@@ -2644,7 +2966,7 @@ const file_rendezvous_proto_rawDesc = "" +
 	"\x05union\"U\n" +
 	"\fConfigUpdate\x12\x16\n" +
 	"\x06serial\x18\x01 \x01(\x05R\x06serial\x12-\n" +
-	"\x12rendezvous_servers\x18\x02 \x03(\tR\x11rendezvousServers\"\xbb\x02\n" +
+	"\x12rendezvous_servers\x18\x02 \x03(\tR\x11rendezvousServers\"\xa3\x03\n" +
 	"\fRequestRelay\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04uuid\x18\x02 \x01(\tR\x04uuid\x12\x1f\n" +
@@ -2656,7 +2978,11 @@ const file_rendezvous_proto_rawDesc = "" +
 	"licenceKey\x12*\n" +
 	"\tconn_type\x18\a \x01(\x0e2\r.hbb.ConnTypeR\bconnType\x12\x14\n" +
 	"\x05token\x18\b \x01(\tR\x05token\x12H\n" +
-	"\x13control_permissions\x18\t \x01(\v2\x17.hbb.ControlPermissionsR\x12controlPermissions\"\xb2\x02\n" +
+	"\x13control_permissions\x18\t \x01(\v2\x17.hbb.ControlPermissionsR\x12controlPermissions\x12E\n" +
+	"\x12controlled_context\x18\n" +
+	" \x01(\v2\x16.hbb.ControlledContextR\x11controlledContext\x12\x1f\n" +
+	"\vswitch_code\x18\v \x01(\tR\n" +
+	"switchCode\"\xde\x02\n" +
 	"\rRelayResponse\x12\x1f\n" +
 	"\vsocket_addr\x18\x01 \x01(\fR\n" +
 	"socketAddr\x12\x12\n" +
@@ -2669,16 +2995,18 @@ const file_rendezvous_proto_rawDesc = "" +
 	"\bfeedback\x18\t \x01(\x05R\bfeedback\x12$\n" +
 	"\x0esocket_addr_v6\x18\n" +
 	" \x01(\fR\fsocketAddrV6\x12\x1b\n" +
-	"\tupnp_port\x18\v \x01(\x05R\bupnpPortB\a\n" +
+	"\tupnp_port\x18\v \x01(\x05R\bupnpPort\x12*\n" +
+	"\x11webrtc_sdp_answer\x18\f \x01(\tR\x0fwebrtcSdpAnswerB\a\n" +
 	"\x05union\"\"\n" +
 	"\x0eSoftwareUpdate\x12\x10\n" +
-	"\x03url\x18\x01 \x01(\tR\x03url\"\xc4\x01\n" +
+	"\x03url\x18\x01 \x01(\tR\x03url\"\x8b\x02\n" +
 	"\x0eFetchLocalAddr\x12\x1f\n" +
 	"\vsocket_addr\x18\x01 \x01(\fR\n" +
 	"socketAddr\x12!\n" +
 	"\frelay_server\x18\x02 \x01(\tR\vrelayServer\x12$\n" +
 	"\x0esocket_addr_v6\x18\x03 \x01(\fR\fsocketAddrV6\x12H\n" +
-	"\x13control_permissions\x18\x04 \x01(\v2\x17.hbb.ControlPermissionsR\x12controlPermissions\"\xbe\x01\n" +
+	"\x13control_permissions\x18\x04 \x01(\v2\x17.hbb.ControlPermissionsR\x12controlPermissions\x12E\n" +
+	"\x12controlled_context\x18\x05 \x01(\v2\x16.hbb.ControlledContextR\x11controlledContext\"\xbe\x01\n" +
 	"\tLocalAddr\x12\x1f\n" +
 	"\vsocket_addr\x18\x01 \x01(\fR\n" +
 	"socketAddr\x12\x1d\n" +
@@ -2700,9 +3028,14 @@ const file_rendezvous_proto_rawDesc = "" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05peers\x18\x02 \x03(\tR\x05peers\"(\n" +
 	"\x0eOnlineResponse\x12\x16\n" +
-	"\x06states\x18\x01 \x01(\fR\x06states\"!\n" +
+	"\x06states\x18\x01 \x01(\fR\x06states\"`\n" +
 	"\vKeyExchange\x12\x12\n" +
-	"\x04keys\x18\x01 \x03(\fR\x04keys\"#\n" +
+	"\x04keys\x18\x01 \x03(\fR\x04keys\x12\x18\n" +
+	"\aversion\x18\x02 \x01(\rR\aversion\x12#\n" +
+	"\rsigned_params\x18\x03 \x01(\fR\fsignedParams\"4\n" +
+	"\bKxParams\x12\x0e\n" +
+	"\x02pk\x18\x01 \x01(\fR\x02pk\x12\x18\n" +
+	"\aversion\x18\x02 \x01(\rR\aversion\"#\n" +
 	"\vHealthCheck\x12\x14\n" +
 	"\x05token\x18\x01 \x01(\tR\x05token\"7\n" +
 	"\vHeaderEntry\x12\x12\n" +
@@ -2717,7 +3050,7 @@ const file_rendezvous_proto_rawDesc = "" +
 	"\x06status\x18\x01 \x01(\x05R\x06status\x12*\n" +
 	"\aheaders\x18\x02 \x03(\v2\x10.hbb.HeaderEntryR\aheaders\x12\x12\n" +
 	"\x04body\x18\x03 \x01(\fR\x04body\x12\x14\n" +
-	"\x05error\x18\x04 \x01(\tR\x05error\"\xbe\v\n" +
+	"\x05error\x18\x04 \x01(\tR\x05error\"\xf8\v\n" +
 	"\x11RendezvousMessage\x128\n" +
 	"\rregister_peer\x18\x06 \x01(\v2\x11.hbb.RegisterPeerH\x00R\fregisterPeer\x12Q\n" +
 	"\x16register_peer_response\x18\a \x01(\v2\x19.hbb.RegisterPeerResponseH\x00R\x14registerPeerResponse\x12E\n" +
@@ -2745,7 +3078,8 @@ const file_rendezvous_proto_rawDesc = "" +
 	"\fkey_exchange\x18\x19 \x01(\v2\x10.hbb.KeyExchangeH\x00R\vkeyExchange\x12\"\n" +
 	"\x02hc\x18\x1a \x01(\v2\x10.hbb.HealthCheckH\x00R\x02hc\x12E\n" +
 	"\x12http_proxy_request\x18\x1b \x01(\v2\x15.hbb.HttpProxyRequestH\x00R\x10httpProxyRequest\x12H\n" +
-	"\x13http_proxy_response\x18\x1c \x01(\v2\x16.hbb.HttpProxyResponseH\x00R\x11httpProxyResponseB\a\n" +
+	"\x13http_proxy_response\x18\x1c \x01(\v2\x16.hbb.HttpProxyResponseH\x00R\x11httpProxyResponse\x128\n" +
+	"\rice_candidate\x18\x1d \x01(\v2\x11.hbb.IceCandidateH\x00R\ficeCandidateB\a\n" +
 	"\x05union*i\n" +
 	"\bConnType\x12\x10\n" +
 	"\fDEFAULT_CONN\x10\x00\x12\x11\n" +
@@ -2773,7 +3107,7 @@ func file_rendezvous_proto_rawDescGZIP() []byte {
 }
 
 var file_rendezvous_proto_enumTypes = make([]protoimpl.EnumInfo, 5)
-var file_rendezvous_proto_msgTypes = make([]protoimpl.MessageInfo, 26)
+var file_rendezvous_proto_msgTypes = make([]protoimpl.MessageInfo, 29)
 var file_rendezvous_proto_goTypes = []any{
 	(ConnType)(0),                      // 0: hbb.ConnType
 	(NatType)(0),                       // 1: hbb.NatType
@@ -2785,71 +3119,78 @@ var file_rendezvous_proto_goTypes = []any{
 	(*PunchHoleRequest)(nil),           // 7: hbb.PunchHoleRequest
 	(*ControlPermissions)(nil),         // 8: hbb.ControlPermissions
 	(*PunchHole)(nil),                  // 9: hbb.PunchHole
-	(*TestNatRequest)(nil),             // 10: hbb.TestNatRequest
-	(*TestNatResponse)(nil),            // 11: hbb.TestNatResponse
-	(*PunchHoleSent)(nil),              // 12: hbb.PunchHoleSent
-	(*RegisterPk)(nil),                 // 13: hbb.RegisterPk
-	(*RegisterPkResponse)(nil),         // 14: hbb.RegisterPkResponse
-	(*PunchHoleResponse)(nil),          // 15: hbb.PunchHoleResponse
-	(*ConfigUpdate)(nil),               // 16: hbb.ConfigUpdate
-	(*RequestRelay)(nil),               // 17: hbb.RequestRelay
-	(*RelayResponse)(nil),              // 18: hbb.RelayResponse
-	(*SoftwareUpdate)(nil),             // 19: hbb.SoftwareUpdate
-	(*FetchLocalAddr)(nil),             // 20: hbb.FetchLocalAddr
-	(*LocalAddr)(nil),                  // 21: hbb.LocalAddr
-	(*PeerDiscovery)(nil),              // 22: hbb.PeerDiscovery
-	(*OnlineRequest)(nil),              // 23: hbb.OnlineRequest
-	(*OnlineResponse)(nil),             // 24: hbb.OnlineResponse
-	(*KeyExchange)(nil),                // 25: hbb.KeyExchange
-	(*HealthCheck)(nil),                // 26: hbb.HealthCheck
-	(*HeaderEntry)(nil),                // 27: hbb.HeaderEntry
-	(*HttpProxyRequest)(nil),           // 28: hbb.HttpProxyRequest
-	(*HttpProxyResponse)(nil),          // 29: hbb.HttpProxyResponse
-	(*RendezvousMessage)(nil),          // 30: hbb.RendezvousMessage
+	(*ControlledContext)(nil),          // 10: hbb.ControlledContext
+	(*IceCandidate)(nil),               // 11: hbb.IceCandidate
+	(*TestNatRequest)(nil),             // 12: hbb.TestNatRequest
+	(*TestNatResponse)(nil),            // 13: hbb.TestNatResponse
+	(*PunchHoleSent)(nil),              // 14: hbb.PunchHoleSent
+	(*RegisterPk)(nil),                 // 15: hbb.RegisterPk
+	(*RegisterPkResponse)(nil),         // 16: hbb.RegisterPkResponse
+	(*PunchHoleResponse)(nil),          // 17: hbb.PunchHoleResponse
+	(*ConfigUpdate)(nil),               // 18: hbb.ConfigUpdate
+	(*RequestRelay)(nil),               // 19: hbb.RequestRelay
+	(*RelayResponse)(nil),              // 20: hbb.RelayResponse
+	(*SoftwareUpdate)(nil),             // 21: hbb.SoftwareUpdate
+	(*FetchLocalAddr)(nil),             // 22: hbb.FetchLocalAddr
+	(*LocalAddr)(nil),                  // 23: hbb.LocalAddr
+	(*PeerDiscovery)(nil),              // 24: hbb.PeerDiscovery
+	(*OnlineRequest)(nil),              // 25: hbb.OnlineRequest
+	(*OnlineResponse)(nil),             // 26: hbb.OnlineResponse
+	(*KeyExchange)(nil),                // 27: hbb.KeyExchange
+	(*KxParams)(nil),                   // 28: hbb.KxParams
+	(*HealthCheck)(nil),                // 29: hbb.HealthCheck
+	(*HeaderEntry)(nil),                // 30: hbb.HeaderEntry
+	(*HttpProxyRequest)(nil),           // 31: hbb.HttpProxyRequest
+	(*HttpProxyResponse)(nil),          // 32: hbb.HttpProxyResponse
+	(*RendezvousMessage)(nil),          // 33: hbb.RendezvousMessage
 }
 var file_rendezvous_proto_depIdxs = []int32{
 	1,  // 0: hbb.PunchHoleRequest.nat_type:type_name -> hbb.NatType
 	0,  // 1: hbb.PunchHoleRequest.conn_type:type_name -> hbb.ConnType
 	1,  // 2: hbb.PunchHole.nat_type:type_name -> hbb.NatType
 	8,  // 3: hbb.PunchHole.control_permissions:type_name -> hbb.ControlPermissions
-	16, // 4: hbb.TestNatResponse.cu:type_name -> hbb.ConfigUpdate
-	1,  // 5: hbb.PunchHoleSent.nat_type:type_name -> hbb.NatType
-	3,  // 6: hbb.RegisterPkResponse.result:type_name -> hbb.RegisterPkResponse.Result
-	4,  // 7: hbb.PunchHoleResponse.failure:type_name -> hbb.PunchHoleResponse.Failure
-	1,  // 8: hbb.PunchHoleResponse.nat_type:type_name -> hbb.NatType
-	0,  // 9: hbb.RequestRelay.conn_type:type_name -> hbb.ConnType
-	8,  // 10: hbb.RequestRelay.control_permissions:type_name -> hbb.ControlPermissions
-	8,  // 11: hbb.FetchLocalAddr.control_permissions:type_name -> hbb.ControlPermissions
-	27, // 12: hbb.HttpProxyRequest.headers:type_name -> hbb.HeaderEntry
-	27, // 13: hbb.HttpProxyResponse.headers:type_name -> hbb.HeaderEntry
-	5,  // 14: hbb.RendezvousMessage.register_peer:type_name -> hbb.RegisterPeer
-	6,  // 15: hbb.RendezvousMessage.register_peer_response:type_name -> hbb.RegisterPeerResponse
-	7,  // 16: hbb.RendezvousMessage.punch_hole_request:type_name -> hbb.PunchHoleRequest
-	9,  // 17: hbb.RendezvousMessage.punch_hole:type_name -> hbb.PunchHole
-	12, // 18: hbb.RendezvousMessage.punch_hole_sent:type_name -> hbb.PunchHoleSent
-	15, // 19: hbb.RendezvousMessage.punch_hole_response:type_name -> hbb.PunchHoleResponse
-	20, // 20: hbb.RendezvousMessage.fetch_local_addr:type_name -> hbb.FetchLocalAddr
-	21, // 21: hbb.RendezvousMessage.local_addr:type_name -> hbb.LocalAddr
-	16, // 22: hbb.RendezvousMessage.configure_update:type_name -> hbb.ConfigUpdate
-	13, // 23: hbb.RendezvousMessage.register_pk:type_name -> hbb.RegisterPk
-	14, // 24: hbb.RendezvousMessage.register_pk_response:type_name -> hbb.RegisterPkResponse
-	19, // 25: hbb.RendezvousMessage.software_update:type_name -> hbb.SoftwareUpdate
-	17, // 26: hbb.RendezvousMessage.request_relay:type_name -> hbb.RequestRelay
-	18, // 27: hbb.RendezvousMessage.relay_response:type_name -> hbb.RelayResponse
-	10, // 28: hbb.RendezvousMessage.test_nat_request:type_name -> hbb.TestNatRequest
-	11, // 29: hbb.RendezvousMessage.test_nat_response:type_name -> hbb.TestNatResponse
-	22, // 30: hbb.RendezvousMessage.peer_discovery:type_name -> hbb.PeerDiscovery
-	23, // 31: hbb.RendezvousMessage.online_request:type_name -> hbb.OnlineRequest
-	24, // 32: hbb.RendezvousMessage.online_response:type_name -> hbb.OnlineResponse
-	25, // 33: hbb.RendezvousMessage.key_exchange:type_name -> hbb.KeyExchange
-	26, // 34: hbb.RendezvousMessage.hc:type_name -> hbb.HealthCheck
-	28, // 35: hbb.RendezvousMessage.http_proxy_request:type_name -> hbb.HttpProxyRequest
-	29, // 36: hbb.RendezvousMessage.http_proxy_response:type_name -> hbb.HttpProxyResponse
-	37, // [37:37] is the sub-list for method output_type
-	37, // [37:37] is the sub-list for method input_type
-	37, // [37:37] is the sub-list for extension type_name
-	37, // [37:37] is the sub-list for extension extendee
-	0,  // [0:37] is the sub-list for field type_name
+	10, // 4: hbb.PunchHole.controlled_context:type_name -> hbb.ControlledContext
+	18, // 5: hbb.TestNatResponse.cu:type_name -> hbb.ConfigUpdate
+	1,  // 6: hbb.PunchHoleSent.nat_type:type_name -> hbb.NatType
+	3,  // 7: hbb.RegisterPkResponse.result:type_name -> hbb.RegisterPkResponse.Result
+	4,  // 8: hbb.PunchHoleResponse.failure:type_name -> hbb.PunchHoleResponse.Failure
+	1,  // 9: hbb.PunchHoleResponse.nat_type:type_name -> hbb.NatType
+	0,  // 10: hbb.RequestRelay.conn_type:type_name -> hbb.ConnType
+	8,  // 11: hbb.RequestRelay.control_permissions:type_name -> hbb.ControlPermissions
+	10, // 12: hbb.RequestRelay.controlled_context:type_name -> hbb.ControlledContext
+	8,  // 13: hbb.FetchLocalAddr.control_permissions:type_name -> hbb.ControlPermissions
+	10, // 14: hbb.FetchLocalAddr.controlled_context:type_name -> hbb.ControlledContext
+	30, // 15: hbb.HttpProxyRequest.headers:type_name -> hbb.HeaderEntry
+	30, // 16: hbb.HttpProxyResponse.headers:type_name -> hbb.HeaderEntry
+	5,  // 17: hbb.RendezvousMessage.register_peer:type_name -> hbb.RegisterPeer
+	6,  // 18: hbb.RendezvousMessage.register_peer_response:type_name -> hbb.RegisterPeerResponse
+	7,  // 19: hbb.RendezvousMessage.punch_hole_request:type_name -> hbb.PunchHoleRequest
+	9,  // 20: hbb.RendezvousMessage.punch_hole:type_name -> hbb.PunchHole
+	14, // 21: hbb.RendezvousMessage.punch_hole_sent:type_name -> hbb.PunchHoleSent
+	17, // 22: hbb.RendezvousMessage.punch_hole_response:type_name -> hbb.PunchHoleResponse
+	22, // 23: hbb.RendezvousMessage.fetch_local_addr:type_name -> hbb.FetchLocalAddr
+	23, // 24: hbb.RendezvousMessage.local_addr:type_name -> hbb.LocalAddr
+	18, // 25: hbb.RendezvousMessage.configure_update:type_name -> hbb.ConfigUpdate
+	15, // 26: hbb.RendezvousMessage.register_pk:type_name -> hbb.RegisterPk
+	16, // 27: hbb.RendezvousMessage.register_pk_response:type_name -> hbb.RegisterPkResponse
+	21, // 28: hbb.RendezvousMessage.software_update:type_name -> hbb.SoftwareUpdate
+	19, // 29: hbb.RendezvousMessage.request_relay:type_name -> hbb.RequestRelay
+	20, // 30: hbb.RendezvousMessage.relay_response:type_name -> hbb.RelayResponse
+	12, // 31: hbb.RendezvousMessage.test_nat_request:type_name -> hbb.TestNatRequest
+	13, // 32: hbb.RendezvousMessage.test_nat_response:type_name -> hbb.TestNatResponse
+	24, // 33: hbb.RendezvousMessage.peer_discovery:type_name -> hbb.PeerDiscovery
+	25, // 34: hbb.RendezvousMessage.online_request:type_name -> hbb.OnlineRequest
+	26, // 35: hbb.RendezvousMessage.online_response:type_name -> hbb.OnlineResponse
+	27, // 36: hbb.RendezvousMessage.key_exchange:type_name -> hbb.KeyExchange
+	29, // 37: hbb.RendezvousMessage.hc:type_name -> hbb.HealthCheck
+	31, // 38: hbb.RendezvousMessage.http_proxy_request:type_name -> hbb.HttpProxyRequest
+	32, // 39: hbb.RendezvousMessage.http_proxy_response:type_name -> hbb.HttpProxyResponse
+	11, // 40: hbb.RendezvousMessage.ice_candidate:type_name -> hbb.IceCandidate
+	41, // [41:41] is the sub-list for method output_type
+	41, // [41:41] is the sub-list for method input_type
+	41, // [41:41] is the sub-list for extension type_name
+	41, // [41:41] is the sub-list for extension extendee
+	0,  // [0:41] is the sub-list for field type_name
 }
 
 func init() { file_rendezvous_proto_init() }
@@ -2857,15 +3198,15 @@ func file_rendezvous_proto_init() {
 	if File_rendezvous_proto != nil {
 		return
 	}
-	file_rendezvous_proto_msgTypes[10].OneofWrappers = []any{
+	file_rendezvous_proto_msgTypes[12].OneofWrappers = []any{
 		(*PunchHoleResponse_NatType)(nil),
 		(*PunchHoleResponse_IsLocal)(nil),
 	}
-	file_rendezvous_proto_msgTypes[13].OneofWrappers = []any{
+	file_rendezvous_proto_msgTypes[15].OneofWrappers = []any{
 		(*RelayResponse_Id)(nil),
 		(*RelayResponse_Pk)(nil),
 	}
-	file_rendezvous_proto_msgTypes[25].OneofWrappers = []any{
+	file_rendezvous_proto_msgTypes[28].OneofWrappers = []any{
 		(*RendezvousMessage_RegisterPeer)(nil),
 		(*RendezvousMessage_RegisterPeerResponse)(nil),
 		(*RendezvousMessage_PunchHoleRequest)(nil),
@@ -2889,6 +3230,7 @@ func file_rendezvous_proto_init() {
 		(*RendezvousMessage_Hc)(nil),
 		(*RendezvousMessage_HttpProxyRequest)(nil),
 		(*RendezvousMessage_HttpProxyResponse)(nil),
+		(*RendezvousMessage_IceCandidate)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -2896,7 +3238,7 @@ func file_rendezvous_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_rendezvous_proto_rawDesc), len(file_rendezvous_proto_rawDesc)),
 			NumEnums:      5,
-			NumMessages:   26,
+			NumMessages:   29,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

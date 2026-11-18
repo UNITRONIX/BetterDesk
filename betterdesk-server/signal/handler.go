@@ -423,6 +423,10 @@ func (s *Server) handleMessage(msg *pb.RendezvousMessage, raddr net.Addr) *pb.Re
 			s.handleLocalAddr(msg.GetLocalAddr(), udpAddr)
 		}
 		return nil
+	case msg.GetIceCandidate() != nil:
+		// WebRTC trickle ICE between two new peers; forward and stay silent.
+		s.handleIceCandidate(msg.GetIceCandidate())
+		return nil
 	case msg.GetHc() != nil:
 		return &pb.RendezvousMessage{
 			Union: &pb.RendezvousMessage_Hc{
@@ -685,7 +689,7 @@ func (s *Server) processRegisterPk(msg *pb.RegisterPk, addrStr string) *pb.Rende
 
 	// Check for ID change request
 	if msg.OldId != "" {
-		return s.processIDChange(msg)
+		return s.processIDChange(msg, addrStr)
 	}
 
 	// Panel rename: map stale client IDs to the successor row before enrollment/DB checks.
@@ -735,7 +739,7 @@ func (s *Server) processRegisterPk(msg *pb.RegisterPk, addrStr string) *pb.Rende
 		if !s.isPendingEnrollment(id) || s.peers.Get(id) == nil {
 			s.peers.Remove(id)
 		}
-		return registerPkResponse(pb.RegisterPkResponse_NOT_SUPPORT)
+		return registerPkResponse(pb.RegisterPkResponse_NOT_DEPLOYED)
 	}
 
 	// Check ban status
@@ -832,7 +836,18 @@ func (s *Server) processRegisterPk(msg *pb.RegisterPk, addrStr string) *pb.Rende
 }
 
 // processIDChange handles old_id → new id change requests.
-func (s *Server) processIDChange(msg *pb.RegisterPk) *pb.RendezvousMessage {
+//
+// SECURITY (audit C2, 2026-11-13): the change was applied for anyone who knew
+// an existing peer id. `RegisterPk` with `old_id=<victim>`, no `pk`, and no
+// matching UUID moved (and deleted) the victim row, which under open
+// enrollment let a second registration claim the freed id.
+//
+// Stock RustDesk change-ID sends `old_id` + `id` + machine UUID and *no* pk
+// (see `change_id_shared` in the client), so an empty pk must stay valid — but
+// only when the caller proves the identity another way. This now mirrors hbbs:
+// accept a change when the supplied pk matches the stored pk, or when the
+// supplied UUID matches the stored UUID. Everything else is rejected.
+func (s *Server) processIDChange(msg *pb.RegisterPk, addrStr string) *pb.RendezvousMessage {
 	oldID := msg.OldId
 	newID := msg.Id
 
@@ -855,7 +870,8 @@ func (s *Server) processIDChange(msg *pb.RegisterPk) *pb.RendezvousMessage {
 	}
 
 	// RustDesk 1.4.x change-ID sends RegisterPk without pk (see change_id_shared).
-	// When pk is omitted, use the stored key; when present, enforce a match (#213).
+	// A supplied pk must match; an omitted pk is only acceptable together with a
+	// matching UUID below (#213 + audit C2).
 	effectivePK := msg.Pk
 	if len(effectivePK) == 0 {
 		effectivePK = oldPeer.PK
@@ -864,12 +880,32 @@ func (s *Server) processIDChange(msg *pb.RegisterPk) *pb.RendezvousMessage {
 		return registerPkResponse(pb.RegisterPkResponse_NOT_SUPPORT)
 	}
 
-	// UUID: stock clients send machine_uid bytes on ID change (not 16-byte get_uuid()).
-	// Enforce match only for wire-format 16-byte UUIDs.
-	if len(msg.Uuid) == 16 && oldPeer.UUID != "" {
-		if !peerUUIDEqual(peerUUIDFromDB(oldPeer.UUID), msg.Uuid) {
-			log.Printf("[signal] Rejected ID change %s → %s: UUID mismatch", oldID, newID)
-			return registerPkResponse(pb.RegisterPkResponse_UUID_MISMATCH)
+	// Proof of identity: matching PK, or matching UUID (machine uid bytes).
+	// The UUID comparison used to be limited to 16-byte wire values, which let
+	// any caller skip the check by sending a different length.
+	storedUUID := peerUUIDFromDB(oldPeer.UUID)
+	pkProven := len(msg.Pk) > 0 && len(oldPeer.PK) > 0 && bytes.Equal(oldPeer.PK, msg.Pk)
+	uuidProven := len(msg.Uuid) > 0 && len(storedUUID) > 0 && peerUUIDEqual(storedUUID, msg.Uuid)
+	// A row with no stored identity has nothing to steal; keep legacy rows working.
+	noStoredIdentity := len(oldPeer.PK) == 0 && len(storedUUID) == 0
+	if !pkProven && !uuidProven && !noStoredIdentity {
+		log.Printf("[signal] Rejected ID change %s → %s: no matching PK or UUID", oldID, newID)
+		if s.auditLog != nil {
+			s.auditLog.Log(audit.ActionPeerRegistrationRejected, hostFromAddrString(addrStr), oldID, map[string]string{
+				"reason": "id_change_without_identity_proof",
+				"stage":  "id_change",
+				"new_id": newID,
+			})
+		}
+		return registerPkResponse(pb.RegisterPkResponse_NOT_SUPPORT)
+	}
+
+	// A TCP session already bound to a different peer must not change somebody
+	// else's identity, even with a leaked UUID.
+	if addrStr != "" {
+		if bound := s.peerIDBySessionAddr(addrStr); bound != "" && bound != oldID {
+			log.Printf("[signal] Rejected ID change %s → %s: address bound to %s", oldID, newID, bound)
+			return registerPkResponse(pb.RegisterPkResponse_NOT_SUPPORT)
 		}
 	}
 
@@ -1018,6 +1054,25 @@ func (s *Server) handlePunchHoleRequest(msg *pb.PunchHoleRequest, raddr *net.UDP
 		return
 	}
 
+	// Native peers on the same LAN must exchange their actual listener
+	// endpoint before the initiator receives a PunchHoleResponse. A public
+	// registration endpoint marked is_local is not a valid LAN candidate.
+	if sameNetwork && target.ConnType != peer.ConnWS {
+		pending, started := s.beginLANExchange(
+			targetID, target, initiatorID, raddr, peer.ConnUDP,
+			relayServer, msg.SocketAddrV6,
+		)
+		if started {
+			return
+		}
+		if pending != nil {
+			s.sendUDP(pending.fallback, raddr)
+		} else {
+			s.sendUDP(s.lanFallbackResponse(targetID, target, relayServer, nil), raddr)
+		}
+		return
+	}
+
 	// Send PunchHole to the TARGET peer (tell it the initiator's address)
 	punchHole := &pb.RendezvousMessage{
 		Union: &pb.RendezvousMessage_PunchHole{
@@ -1029,6 +1084,9 @@ func (s *Server) handlePunchHoleRequest(msg *pb.PunchHoleRequest, raddr *net.UDP
 				ForceRelay:   msg.ForceRelay,
 				UpnpPort:     msg.UpnpPort,
 				SocketAddrV6: msg.SocketAddrV6,
+				// Recent clients negotiate a WebRTC transport; the offer must reach
+				// the peer verbatim or two new peers cannot establish a session.
+				WebrtcSdpOffer: msg.WebrtcSdpOffer,
 			},
 		},
 	}
@@ -1102,10 +1160,9 @@ func (s *Server) handlePunchHoleRequest(msg *pb.PunchHoleRequest, raddr *net.UDP
 
 // handlePunchHoleRequestTCP handles punch hole over TCP/WS.
 //
-// Matching the UDP handler behavior: always send an immediate PunchHoleResponse
-// to the TCP initiator with the target's signed PK, socket address, relay server,
-// and NAT type.  This ensures the initiator can proceed with the connection
-// (direct P2P or relay fallback) without waiting for the target to respond.
+// Matching the UDP handler behavior for WAN peers: send a PunchHoleResponse
+// with the target's signed PK, socket address, relay server, and NAT type.
+// Genuine native LAN peers use the asynchronous FetchLocalAddr exchange below.
 //
 // Previous behavior (returning nil and waiting for the target's PunchHoleSent)
 // caused "Failed to secure tcp: deadline has elapsed" timeouts when:
@@ -1208,6 +1265,17 @@ func (s *Server) handlePunchHoleRequestTCPWithHint(msg *pb.PunchHoleRequest, rad
 		s.requiresRelayOnlyCompatibility(targetID) {
 		log.Printf("[signal] PunchHole (TCP): force relay for %s (returning SYMMETRIC to let client drive relay UUID)", targetID)
 
+		// Do NOT punch the target here.
+		//
+		// Production proved a punch changes the target's role: with one present it
+		// treats itself as relay initiator and answers RelayResponse with its own
+		// uuid and id (10:07: uuid=5d0f61e5, id=275129227). Without it the answer
+		// carries an empty uuid (09:11: uuid=, id=), which is the shape
+		// handleRelayResponseForward recovers from the pending store.
+		//
+		// The target still receives RequestRelay carrying the initiator address,
+		// which is all it needs to answer, and the initiator still gets its prompt
+		// RelayResponse below.
 		var signedPk []byte
 		targetPK := s.peerPublicKey(targetID, target)
 		if len(targetPK) > 0 {
@@ -1235,6 +1303,20 @@ func (s *Server) handlePunchHoleRequestTCPWithHint(msg *pb.PunchHoleRequest, rad
 		}
 	}
 
+	if sameNetwork && initiatorHint != peer.ConnWS && target.ConnType != peer.ConnWS {
+		pending, started := s.beginLANExchange(
+			targetID, target, initiatorID, raddr, peer.ConnTCP,
+			relayServer, msg.SocketAddrV6,
+		)
+		if started {
+			return nil
+		}
+		if pending != nil {
+			return pending.fallback
+		}
+		return s.lanFallbackResponse(targetID, target, relayServer, nil)
+	}
+
 	// Forward PunchHole to the TARGET peer (supports UDP, TCP, and WebSocket targets).
 	advertisedAddr := relayAdvertisedAddr(s, raddr, initiatorID, initiatorHint)
 	if advertisedAddr == nil {
@@ -1243,13 +1325,14 @@ func (s *Server) handlePunchHoleRequestTCPWithHint(msg *pb.PunchHoleRequest, rad
 	punchHole := &pb.RendezvousMessage{
 		Union: &pb.RendezvousMessage_PunchHole{
 			PunchHole: &pb.PunchHole{
-				SocketAddr:   crypto.EncodeAddr(advertisedAddr),
-				RelayServer:  relayServer,
-				NatType:      msg.NatType,
-				UdpPort:      msg.UdpPort,
-				ForceRelay:   msg.ForceRelay,
-				UpnpPort:     msg.UpnpPort,
-				SocketAddrV6: msg.SocketAddrV6,
+				SocketAddr:     crypto.EncodeAddr(advertisedAddr),
+				RelayServer:    relayServer,
+				NatType:        msg.NatType,
+				UdpPort:        msg.UdpPort,
+				ForceRelay:     msg.ForceRelay,
+				UpnpPort:       msg.UpnpPort,
+				SocketAddrV6:   msg.SocketAddrV6,
+				WebrtcSdpOffer: msg.WebrtcSdpOffer,
 			},
 		},
 	}
@@ -1385,10 +1468,7 @@ func (s *Server) handlePunchHoleSent(phs *pb.PunchHoleSent, senderAddr *net.UDPA
 	// socket_addr = target's (sender's) address, pk = SIGNED target's public key.
 	// LAN detection: set is_local only for genuine LAN cases. Shared public IP
 	// peers keep the public relay to avoid NAT hairpin failures (#121).
-	relayServer := phs.RelayServer
-	if relayServer == "" {
-		relayServer = s.getRelayServer()
-	}
+	relayServer := s.sanitizeClientRelayAddress(phs.RelayServer)
 	relayServer, sameNetwork, hairpin := s.selectPeerRelayServer(relayServer, senderAddr, initiatorAddr)
 	if sameNetwork {
 		log.Printf("[signal] PunchHoleSent LAN detected: %s and %s on same network, relay=%s", senderAddr.IP, initiatorAddr.IP, relayServer)
@@ -1397,10 +1477,22 @@ func (s *Server) handlePunchHoleSent(phs *pb.PunchHoleSent, senderAddr *net.UDPA
 		log.Printf("[signal] PunchHoleSent shared public IP %s detected (issue #121 hairpin) → keeping public relay=%s", senderAddr.IP, relayServer)
 	}
 
+	// Remember the relay the peer itself advertised, verbatim.
+	//
+	// The peer validates an incoming relay request against this value, so it must
+	// not be rewritten: check_port() normalises a portless host to RELAY_PORT, so
+	// storing what the peer sent is always the best match for its own config.
+	if targetID != "" && phs.RelayServer != "" {
+		s.peers.SetRelayServer(targetID, phs.RelayServer)
+	}
+
 	phr := &pb.PunchHoleResponse{
 		SocketAddr:  crypto.EncodeAddr(senderAddr),
 		Pk:          signedPk,
 		RelayServer: relayServer,
+		// WebRTC answer from the target; without it two new peers cannot finish
+		// transport negotiation and fall back to a relay path that never pairs.
+		WebrtcSdpAnswer: phs.WebrtcSdpAnswer,
 	}
 	if sameNetwork {
 		phr.Union = &pb.PunchHoleResponse_IsLocal{IsLocal: true}
@@ -1464,10 +1556,7 @@ func (s *Server) handleRequestRelay(msg *pb.RequestRelay, raddr *net.UDPAddr) {
 
 	log.Printf("[signal] RequestRelay from %s for target %s (uuid=%s, secure=%v, connType=%v)", raddr, targetID, relayUUID, msg.Secure, msg.ConnType)
 
-	relayServer := s.getRelayServer()
-	if msg.RelayServer != "" {
-		relayServer = msg.RelayServer
-	}
+	relayServer := s.sanitizeClientRelayAddress(msg.RelayServer)
 
 	initiatorID, ok := s.requireAuthorizedInitiator(raddr, targetID, msg.GetToken(), 0)
 	if !ok {
@@ -1559,10 +1648,18 @@ func (s *Server) handleRequestRelay(msg *pb.RequestRelay, raddr *net.UDPAddr) {
 	relayReq := &pb.RendezvousMessage{
 		Union: &pb.RendezvousMessage_RequestRelay{
 			RequestRelay: &pb.RequestRelay{
-				SocketAddr:  crypto.EncodeAddr(raddr),
-				Uuid:        relayUUID,
-				Id:          msg.Id,
-				RelayServer: relayServer,
+				SocketAddr: crypto.EncodeAddr(raddr),
+				Uuid:       relayUUID,
+				Id:         msg.Id,
+				// Target validates this against its own relay (see
+				// relayAdvertisedToTarget); prefer what it reported.
+				RelayServer:        relayAdvertisedToTarget(target, relayServer),
+				ControlledContext:  msg.ControlledContext,
+				SwitchCode:         msg.SwitchCode,
+				Secure:             msg.Secure,
+				ConnType:           msg.ConnType,
+				Token:              msg.Token,
+				ControlPermissions: msg.ControlPermissions,
 			},
 		},
 	}
@@ -1629,10 +1726,7 @@ func (s *Server) handleRequestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr,
 
 	log.Printf("[signal] RequestRelay (TCP) from %s for target %s (uuid=%s, secure=%v, connType=%v)", raddr, targetID, relayUUID, msg.Secure, msg.ConnType)
 
-	relayServer := s.getRelayServer()
-	if msg.RelayServer != "" {
-		relayServer = msg.RelayServer
-	}
+	relayServer := s.sanitizeClientRelayAddress(msg.RelayServer)
 
 	initiatorID, ok := s.requireAuthorizedInitiator(raddr, targetID, msg.GetToken(), 0)
 	if !ok {
@@ -1717,10 +1811,15 @@ func (s *Server) handleRequestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr,
 	reqRelay := &pb.RendezvousMessage{
 		Union: &pb.RendezvousMessage_RequestRelay{
 			RequestRelay: &pb.RequestRelay{
-				SocketAddr:         crypto.EncodeAddr(advertisedAddr),
-				Uuid:               relayUUID,
-				Id:                 msg.Id,
-				RelayServer:        relayServer,
+				SocketAddr: crypto.EncodeAddr(advertisedAddr),
+				Uuid:       relayUUID,
+				Id:         msg.Id,
+				// The target validates this against the relay it configured and
+				// silently drops a mismatch, so prefer the endpoint the target
+				// itself reported before falling back to the server's value.
+				RelayServer:        relayAdvertisedToTarget(target, relayServer),
+				ControlledContext:  msg.ControlledContext,
+				SwitchCode:         msg.SwitchCode,
 				Secure:             msg.Secure,
 				ConnType:           msg.ConnType,
 				Token:              msg.Token,
@@ -1731,7 +1830,8 @@ func (s *Server) handleRequestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr,
 	// Store the UUID so we can recover it if target responds with empty UUID.
 	s.storePendingRelay(targetID, raddr, advertisedAddr, relayUUID, initiatorID)
 	if s.sendToPeer(targetID, reqRelay) {
-		log.Printf("[signal] RequestRelay (TCP): forwarded to %s (connType=%s) secure=%v", targetID, target.ConnType, msg.Secure)
+		log.Printf("[signal] RequestRelay (TCP): forwarded to %s (connType=%s) secure=%v relay_to_target=%s",
+			targetID, target.ConnType, msg.Secure, reqRelay.GetRequestRelay().GetRelayServer())
 	}
 
 	// Sign the target's PK for E2E encryption verification
@@ -1747,7 +1847,16 @@ func (s *Server) handleRequestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr,
 		}
 	}
 
-	// Immediate RelayResponse to TCP initiator — matching the UDP handler's behavior.
+	// Immediate RelayResponse to the initiator.
+	//
+	// Upstream hbbs relies on the target's RelayResponse instead, but this code
+	// path is relied on by working peers in production (188.137.83.41 pairs
+	// repeatedly) and by the whole existing test suite, so the initiator keeps
+	// its prompt answer.
+	//
+	// The UUID divergence is handled where it actually matters: a target that
+	// answers with a different UUID is correlated through the pending entry
+	// stored above, so both sides still reach hbbr and pair.
 	log.Printf("[signal] RequestRelay (TCP): returning RelayResponse to initiator %s (uuid=%s, relay=%s)", raddr, relayUUID[:8], relayServer)
 	return &pb.RendezvousMessage{
 		Union: &pb.RendezvousMessage_RelayResponse{
@@ -2033,47 +2142,94 @@ func (s *Server) relayResponseSourceMatchesTarget(targetID string, senderAddr *n
 // We decode the socket_addr to identify the requester's origin, then forward.
 func (s *Server) handleFetchLocalAddr(msg *pb.FetchLocalAddr, raddr *net.UDPAddr) {
 	// FetchLocalAddr contains the target's socket_addr from a previous PunchHole.
-	// We forward the request to the peer at that address, including the requester's addr.
+	// Resolve the registered target first so TCP-only native peers are not
+	// forced through a decoded UDP endpoint.
 	targetAddr, err := crypto.DecodeAddr(msg.SocketAddr)
 	if err != nil || targetAddr == nil {
 		return
 	}
 
-	// Forward to target with requester's address
+	// Forward to target with requester's address.
 	fetch := &pb.RendezvousMessage{
 		Union: &pb.RendezvousMessage_FetchLocalAddr{
 			FetchLocalAddr: &pb.FetchLocalAddr{
-				SocketAddr: crypto.EncodeAddr(raddr),
+				SocketAddr:        crypto.EncodeAddr(raddr),
+				RelayServer:       msg.RelayServer,
+				SocketAddrV6:      copyBytes(msg.SocketAddrV6),
+				ControlledContext: msg.ControlledContext,
 			},
 		},
+	}
+	if target := s.peers.FindByAddr(targetAddr); target != nil &&
+		target.ConnType != peer.ConnWS &&
+		s.sendToPeer(target.ID, fetch) {
+		return
 	}
 	s.sendUDP(fetch, targetAddr)
 }
 
-// handleLocalAddr forwards a LocalAddr response from the target peer back to the
-// requester. This completes the FetchLocalAddr→LocalAddr exchange needed for LAN
-// direct connections.
+// handleLocalAddr completes the FetchLocalAddr→LocalAddr exchange and returns
+// the target's actual LAN listener inside a PunchHoleResponse.
 func (s *Server) handleLocalAddr(msg *pb.LocalAddr, raddr *net.UDPAddr) {
-	// socket_addr identifies the original requester that initiated FetchLocalAddr.
-	requesterAddr, err := crypto.DecodeAddr(msg.SocketAddr)
-	if err != nil || requesterAddr == nil {
+	s.completeLANAddr(msg, raddr)
+}
+
+// relayAdvertisedToTarget returns the relay endpoint to put in a RequestRelay
+// sent to target.
+//
+// A RustDesk peer validates the incoming relay against its own configured value
+// with check_port(addr, RELAY_PORT) and silently drops any mismatch ("relay
+// server ... was not offered by this peer").
+//
+// So the peer's own value wins when we know it. When we do not, send the bare
+// host without a port: check_port() normalises both sides to RELAY_PORT, so a
+// portless value matches a client configured as either `host` or `host:21117`.
+// Production confirms this shape pairs — the peer that repeatedly established
+// sessions reported `85.14.70.12` with no port, while the one we sent
+// `85.14.70.12:21117` to never answered.
+func relayAdvertisedToTarget(target *peer.Entry, fallback string) string {
+	if target != nil {
+		if reported := strings.TrimSpace(target.RelayServer); reported != "" {
+			return reported
+		}
+	}
+	// Drop the port so the peer's own check_port() decides, which is what a
+	// portless `relay-server` in its config produces.
+	if host, _, err := net.SplitHostPort(fallback); err == nil && host != "" {
+		return host
+	}
+	return fallback
+}
+
+// handleIceCandidate relays a WebRTC trickle-ICE candidate from one peer to
+// another. Recent RustDesk clients exchange candidates through the rendezvous
+// server while negotiating a WebRTC transport; dropping them (the union member
+// did not exist before) leaves two new peers unable to complete negotiation.
+//
+// IceCandidate carries the destination peer id in `id` and the sender's
+// session key, so no additional routing state is required. Unknown or offline
+// targets are ignored: candidates are advisory and trickle may continue.
+func (s *Server) handleIceCandidate(msg *pb.IceCandidate) {
+	if msg == nil {
 		return
 	}
-
-	// Forward the LocalAddr (with the responder's local address) to the requester.
-	resp := &pb.RendezvousMessage{
-		Union: &pb.RendezvousMessage_LocalAddr{
-			LocalAddr: &pb.LocalAddr{
-				SocketAddr:   crypto.EncodeAddr(raddr),
-				LocalAddr:    msg.LocalAddr,
-				RelayServer:  msg.RelayServer,
-				Id:           msg.Id,
-				Version:      msg.Version,
-				SocketAddrV6: msg.SocketAddrV6,
-			},
+	targetID := strings.TrimSpace(msg.Id)
+	if targetID == "" {
+		log.Printf("[signal] IceCandidate without target id ignored")
+		return
+	}
+	target := s.peers.Get(targetID)
+	if target == nil || target.IsExpired(config.RegTimeout) {
+		return
+	}
+	fwd := &pb.RendezvousMessage{
+		Union: &pb.RendezvousMessage_IceCandidate{
+			IceCandidate: msg,
 		},
 	}
-	s.sendUDP(resp, requesterAddr)
+	if !s.sendToPeer(targetID, fwd) && target.UDPAddr != nil {
+		s.sendUDP(fwd, target.UDPAddr)
+	}
 }
 
 // handleTestNat handles NAT type detection (TCP port 21115).
@@ -2089,14 +2245,15 @@ func (s *Server) handleTestNat(msg *pb.TestNatRequest, raddr net.Addr) *pb.Rende
 		Port: int32(tcpAddr.Port),
 	}
 
-	// M8: Include ConfigUpdate so clients ≥1.3.x learn about relay/rendezvous
-	// servers. This allows dynamic server reconfiguration without client-side changes.
-	rendezvousServers := s.cfg.GetRelayServers()
-	if s.cfg.RendezvousServers != "" {
-		for _, srv := range splitAndTrim(s.cfg.RendezvousServers) {
-			rendezvousServers = append(rendezvousServers, srv)
-		}
-	}
+	// M8: advertise the rendezvous (ID) servers so clients ≥1.3.x can learn
+	// about dynamic reconfiguration.
+	//
+	// SECURITY/CORRECTNESS: this list must never contain relay addresses.
+	// ConfigUpdate.rendezvous_servers tells the client which ID server to use;
+	// filling it from GetRelayServers() made newer clients reconnect their
+	// signal socket to the relay port, stop answering punch/relay requests and
+	// fail every session with a relay pair timeout.
+	rendezvousServers := s.cfg.GetRendezvousServers()
 	if len(rendezvousServers) > 0 {
 		resp.Cu = &pb.ConfigUpdate{
 			Serial:            msg.Serial + 1,
@@ -2156,6 +2313,12 @@ func (s *Server) sendRelayResponse(target *peer.Entry, raddr *net.UDPAddr, msg *
 		s.sendUDP(s.relayTicketRejectedResponse(relay), raddr)
 		return
 	}
+	// RustDesk 1.5.3 validates the relay in the target-bound RequestRelay
+	// against the relay address that target previously reported (#16858).
+	// Keep the initiator's reachable server-selected relay separate from the
+	// target's peer-offered value; sending the former to the target can make
+	// newer clients silently drop the request and leave a relay timeout.
+	targetRelay := relayAdvertisedToTarget(target, relay)
 
 	// Sign the target's PK with server's Ed25519 key for E2E verification.
 	// Format: [64-byte Ed25519 signature][serialized IdPk protobuf] — NaCl combined mode.
@@ -2194,7 +2357,7 @@ func (s *Server) sendRelayResponse(target *peer.Entry, raddr *net.UDPAddr, msg *
 				Id:          msg.Id,
 				Uuid:        relayUUID,
 				SocketAddr:  crypto.EncodeAddr(raddr),
-				RelayServer: relay,
+				RelayServer: targetRelay,
 				Secure:      false,
 				ConnType:    msg.ConnType,
 			},
@@ -2204,7 +2367,8 @@ func (s *Server) sendRelayResponse(target *peer.Entry, raddr *net.UDPAddr, msg *
 		// Store the UUID so we can recover it if target responds with empty UUID.
 		s.storePendingUUID(target.ID, raddr, relayUUID, initiatorID)
 		s.sendUDP(reqRelay, target.UDPAddr)
-		log.Printf("[signal] sendRelayResponse: forwarded RequestRelay to target %s at %s (uuid=%s)", target.ID, target.UDPAddr, relayUUID[:8])
+		log.Printf("[signal] sendRelayResponse: forwarded RequestRelay to target %s at %s (uuid=%s relay_to_initiator=%s relay_to_target=%s)",
+			target.ID, target.UDPAddr, relayUUID[:8], relay, targetRelay)
 	}
 }
 
@@ -2456,12 +2620,24 @@ func (s *Server) tcpSessionPeerID(raddr *net.UDPAddr) string {
 	if raddr == nil {
 		return ""
 	}
-	key := normalizeAddrKey(raddr.String())
+	return s.peerIDBySessionAddr(raddr.String())
+}
+
+// peerIDBySessionAddr returns the peer ID bound to an address-keyed TCP punch
+// session, or "" when the address has no bound identity.
+func (s *Server) peerIDBySessionAddr(addrStr string) string {
+	if addrStr == "" {
+		return ""
+	}
+	key := normalizeAddrKey(addrStr)
 	val, ok := s.tcpPunchConns.Load(key)
 	if !ok {
 		return ""
 	}
-	pc := val.(*tcpPunchConn)
+	pc, ok := val.(*tcpPunchConn)
+	if !ok || pc == nil {
+		return ""
+	}
 	return pc.peerID
 }
 
@@ -2750,6 +2926,60 @@ func (s *Server) getRelayServer() string {
 	// Should not happen — detectLocalIP always detects LAN IP
 	log.Printf("[signal] WARN: No relay address available — remote connections will fail")
 	return fmt.Sprintf(":%d", s.cfg.RelayPort)
+}
+
+// sanitizeClientRelayAddress validates a relay endpoint supplied by a client
+// (RequestRelay.RelayServer, PunchHoleSent.RelayServer) before it is echoed
+// back to either peer.
+//
+// RustDesk 1.4.8/1.4.9 clients that are configured with a bare `relay-server`
+// (no port) can send the *API* port instead — observed on production as
+// `relay=85.14.70.12:21114`. Advertising that back makes both peers dial the
+// HTTP API socket, which speaks no relay protocol: the first connection is
+// accepted by the API listener and the relay never pairs, so every session
+// ends in `[relay] Pair timeout`. Reject those endpoints and fall back to the
+// server-configured relay so old and new clients behave the same.
+func (s *Server) sanitizeClientRelayAddress(clientRelay string) string {
+	configured := s.getRelayServer()
+	clientRelay = strings.TrimSpace(clientRelay)
+	if clientRelay == "" {
+		return configured
+	}
+
+	host, portStr, err := net.SplitHostPort(clientRelay)
+	if err != nil {
+		// Host without a port — keep the host, add the relay port.
+		hostOnly := strings.Trim(clientRelay, "[]")
+		if hostOnly == "" {
+			return configured
+		}
+		return net.JoinHostPort(hostOnly, strconv.Itoa(s.cfg.RelayPort))
+	}
+
+	port, convErr := strconv.Atoi(portStr)
+	if convErr != nil || port <= 0 || port > 65535 {
+		return configured
+	}
+
+	// The configured relay host is authoritative: keep its advertised port even
+	// when the client reports a different one for the same host.
+	if cfgHost, _, splitErr := net.SplitHostPort(configured); splitErr == nil {
+		if strings.EqualFold(strings.Trim(cfgHost, "[]"), strings.Trim(host, "[]")) {
+			return configured
+		}
+	}
+
+	// Ports that belong to other listeners on this host are never a relay.
+	switch port {
+	case s.cfg.RelayPort:
+		return clientRelay
+	case s.cfg.APIPort, s.cfg.SignalPort, s.cfg.WSRelayPort():
+		log.Printf("[signal] Ignoring client relay endpoint %s (port %d is not the relay); using %s",
+			clientRelay, port, net.JoinHostPort(host, strconv.Itoa(s.cfg.RelayPort)))
+		return net.JoinHostPort(host, strconv.Itoa(s.cfg.RelayPort))
+	}
+
+	return clientRelay
 }
 
 // getLANRelayServer returns the relay server address suitable for LAN peers.

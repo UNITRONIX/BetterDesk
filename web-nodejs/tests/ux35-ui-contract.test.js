@@ -78,6 +78,7 @@ describe('UX 3.5 mobile and accessibility contracts', () => {
     it('defers console scripts without changing their document order', () => {
         assert.match(layout, /<script defer src="\/js\/utils\.js/);
         assert.match(layout, /<script defer src="\/js\/ux35-shell\.js/);
+        assert.match(layout, /<script defer src="\/js\/ux36-shell\.js/);
         assert.match(layout, /<script defer src="\/js\/<%= script %>\.js/);
     });
 
@@ -107,11 +108,18 @@ describe('UX 3.5 mobile and accessibility contracts', () => {
         assert.match(registrationRoutes, /type: 'registration_changed'/);
     });
 
-    it('uses UX 3.5 as the only shell without beta or classic switch controls', () => {
-        assert.match(layout, /const shell = 'ux35'/);
-        assert.match(uiShell, /return 'ux35'/);
+    it('resolves the console shell in one place with UX 3.5 as the safe default', () => {
+        const uiShellLib = read('lib', 'uiShell.js');
+        const server = read('server.js');
+        // Layout defers to the server-resolved shell instead of hard-coding one.
+        assert.match(layout, /uiShell === 'ux36'\) \? 'ux36' : 'ux35'/);
+        assert.match(server, /res\.locals\.uiShell = resolveShell\(req\)/);
+        assert.match(uiShellLib, /const DEFAULT_SHELL = SHELL_UX35/);
+        assert.match(uiShellLib, /SUPPORTED_SHELLS/);
+        // The client bridge mirrors the server resolver.
+        assert.match(uiShell, /var SUPPORTED = \['ux35', 'ux36'\]/);
+        assert.match(uiShell, /return normalize\(fromSsr\) \|\| DEFAULT_SHELL/);
         assert.doesNotMatch(topbar, /ux35-beta-chip|data-ui-shell-switch/);
-        assert.doesNotMatch(topbar, /beta_tooltip|beta_badge/);
         assert.doesNotMatch(classicNavbar, /navbar-btn--shell-beta|ui-shell-beta-badge|data-ui-shell-switch/);
     });
 

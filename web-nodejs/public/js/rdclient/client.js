@@ -13,7 +13,7 @@
  *   client.disconnect();
  */
 
-/* global RDConnection, RDProtocol, RDCrypto, RDVideo, RDAudio, RDRenderer, RDInput, RDFileConnection, RDClipboard, RDCliprdr, RDPunchHoleResponse, RDConnectionParams */
+/* global RDConnection, RDProtocol, RDCrypto, RDVideo, RDAudio, RDRenderer, RDInput, RDFileConnection, RDClipboard, RDCliprdr, RDClipboardHub, RDPunchHoleResponse, RDConnectionParams, RDKeyboardEncoder */
 
 // eslint-disable-next-line no-unused-vars
 class RDClient {
@@ -1228,13 +1228,21 @@ class RDClient {
 
         const decoded = await RDClipboard.decodeEntries(list);
         const text = RDClipboard.pickBestText(decoded);
+        const entry = {
+            text,
+            html: (decoded.find((e) => e.format === 'html' && e.html) || {}).html || '',
+            pngBlob: (decoded.find((e) => e.pngBlob) || {}).pngBlob || null
+        };
+        const hub = typeof window !== 'undefined' && window.rdClipboardHub;
+        if (hub) hub.setFromRemote(entry, this.deviceId);
         if (text) {
             this._emit('clipboard', text);
         }
 
-        await RDClipboard.applyToLocal(decoded, {
-            enabled: this._clipboardToLocalEnabled
-        });
+        if (this._clipboardToLocalEnabled) {
+            const status = await RDClipboard.writeLocalRich(entry);
+            this._emit('clipboard_status', status, entry);
+        }
     }
 
     _handleClipboard(clipboard) {
@@ -1661,18 +1669,76 @@ class RDClient {
     // ---- Public Utility Methods ----
 
     /**
-     * Send clipboard text to remote
-     * @param {string} text
+     * Send clipboard text or a rich clipboard entry to remote
+     * @param {string|Object} value
      */
-    sendClipboard(text) {
+    sendClipboard(value) {
         if (this._state !== 'streaming') return;
         if (this._viewOnly) return;
-        void this._sendClipboard(text);
+        void this._sendClipboard(value);
     }
 
-    async _sendClipboard(text) {
-        const msg = await this.proto.buildClipboard(text);
-        this._sendPeerMessage(msg);
+    async _sendClipboard(value) {
+        const entry = typeof value === 'string' ? { text: value } : (value || {});
+        try {
+            const msg = (entry.html || entry.pngBlob)
+                ? await this.proto.buildMultiClipboards(entry)
+                : await this.proto.buildClipboard(entry.text || '');
+            this._sendPeerMessage(msg);
+        } catch (err) {
+            this._emit('clipboard_status', {
+                ok: false,
+                reason: err && err.message ? err.message : 'clipboard_send_failed'
+            }, entry);
+        }
+    }
+
+    /**
+     * Type text on the remote as keystrokes (KeyEvent.seq).
+     * Works on Winlogon / password fields where clipboard paste does not.
+     * @param {string} text
+     * @returns {boolean} false when not streaming / view-only / empty
+     */
+    sendText(text) {
+        if (this._state !== 'streaming') return false;
+        if (this._viewOnly) return false;
+        const str = text == null ? '' : String(text);
+        if (!str) return false;
+        void this._sendTextSeq(str);
+        return true;
+    }
+
+    /**
+     * @param {string} text
+     * @returns {Promise<void>}
+     */
+    async _sendTextSeq(text) {
+        if (typeof this.resetKeyboard === 'function') {
+            this.resetKeyboard();
+        }
+        const CHUNK = 64;
+        const DELAY_MS = 12;
+        const encode = (typeof RDKeyboardEncoder !== 'undefined' && RDKeyboardEncoder.encodeTextSeq)
+            ? (chunk) => RDKeyboardEncoder.encodeTextSeq(chunk)
+            : (chunk) => ({
+                seq: chunk,
+                down: true,
+                press: true,
+                modifiers: [],
+                mode: 'Legacy',
+            });
+
+        for (let i = 0; i < text.length; i += CHUNK) {
+            if (this._state !== 'streaming' || this._viewOnly) return;
+            const chunk = text.slice(i, i + CHUNK);
+            const keyEvent = encode(chunk);
+            if (keyEvent) {
+                this._sendPeerMessage({ keyEvent });
+            }
+            if (i + CHUNK < text.length) {
+                await new Promise((resolve) => setTimeout(resolve, DELAY_MS));
+            }
+        }
     }
 
     /**
@@ -1849,7 +1915,8 @@ class RDClient {
         return this._peerInfo.displays.map(function (d, i) {
             return {
                 idx: i,
-                name: d.name || ('Monitor ' + (i + 1)),
+                name: 'Monitor ' + i,
+                osName: d.name || '',
                 width: d.width || 0,
                 height: d.height || 0,
                 // A display positioned at the origin is the primary one.

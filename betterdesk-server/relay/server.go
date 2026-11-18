@@ -330,6 +330,14 @@ func (s *Server) serveTCP() {
 	}
 }
 
+// ServeConn handles a relay connection that arrived on a foreign listener
+// (the API-port compatibility fallback). It runs the same gating and framing as
+// a connection accepted on the relay port, so per-IP limits and authorization
+// still apply. Callers should invoke it in a goroutine.
+func (s *Server) ServeConn(conn net.Conn) {
+	s.handleConn(conn)
+}
+
 // handleConn handles a single relay connection.
 // Relay is a "dumb pipe" — no NaCl secure TCP on relay port.
 // E2E encryption is between RustDesk clients at the application layer.

@@ -1,3 +1,10 @@
+<%# Audit M11 (2026-11-13): data embedded in inline script blocks must not be
+    able to close the block. Uses the server helper when present, with an
+    equivalent fallback for standalone template rendering (tests/previews). %>
+<% var bdJson = (typeof safeJsonScript === 'function') ? safeJsonScript : function (v) {
+    return JSON.stringify(v === undefined ? null : v)
+        .replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
+}; %>
 <%- include('layouts/viewer', {
     title: (device && device.hostname) ? device.hostname : deviceId,
     pageScripts: [],
@@ -111,8 +118,8 @@
     'use strict';
 
     // ---- Config ----
-    const DEVICE_ID  = ${JSON.stringify(deviceId)};
-    const HOSTNAME   = ${JSON.stringify(device && device.hostname ? device.hostname : '')};
+    const DEVICE_ID  = ${bdJson(deviceId)};
+    const HOSTNAME   = ${bdJson(device && device.hostname ? device.hostname : '')};
     const WS_BASE    = (location.protocol === 'https:' ? 'wss' : 'ws') + '://' + location.host;
     const REMOTE_URL = WS_BASE + '/ws/remote-viewer/' + encodeURIComponent(DEVICE_ID);
     const CHAT_URL   = WS_BASE + '/ws/chat-operator/' + encodeURIComponent(DEVICE_ID);

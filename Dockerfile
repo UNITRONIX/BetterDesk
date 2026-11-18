@@ -17,7 +17,7 @@
 #   5000  - Web Console (Node.js admin panel)
 
 # ============= Stage 1: Build Go server =============
-FROM golang:1.26.10-alpine AS go-builder
+FROM golang:1.26.11-alpine AS go-builder
 ARG TARGETARCH
 
 # Retry apk in case of transient DNS failures (common on AlmaLinux/CentOS Docker)
@@ -59,7 +59,7 @@ FROM node:22.23.2-alpine3.24
 
 LABEL maintainer="UNITRONIX"
 LABEL description="BetterDesk — All-in-One (Go Server + Node.js Console)"
-LABEL version="3.5.200"
+LABEL version="3.5.262"
 
 # Install runtime packages (retry for transient DNS failures)
 RUN apk add --no-cache \

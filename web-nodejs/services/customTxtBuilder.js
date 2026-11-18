@@ -8,6 +8,7 @@
 'use strict';
 
 const nacl = require('tweetnacl');
+const conn = require('./agentBundleConnection');
 
 /**
  * @param {{
@@ -29,7 +30,9 @@ function buildSupportCustomTxt({
     disableSettings = true,
 } = {}) {
     const rendezvous = String(host || '').trim();
-    const relayHost = String(relay || host || '').trim();
+    // RustDesk clients given a bare relay host fall back to the API port and
+    // request relay there, so pairing never completes. Always emit host:port.
+    const relayHost = conn.relayEndpointForHost(String(relay || host || '').trim());
     const apiServer = String(api || '').trim();
     const pubKey = String(key || '').trim();
     const disable = disableSettings === true || disableSettings === 'Y' || disableSettings === 'y'

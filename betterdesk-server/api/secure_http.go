@@ -5,10 +5,15 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
 )
 
 const secureHTTPEnvelopeHeader = "X-BetterDesk-Envelope"
+
+type secureHTTPEnvelopeRequest struct {
+	BetterDeskEnvelope json.RawMessage `json:"betterdesk_envelope"`
+}
 
 type secureHTTPResponseWriter struct {
 	header http.Header
@@ -50,8 +55,21 @@ func (s *Server) secureEnvelopeMiddleware(next http.Handler) http.Handler {
 			writeJSON(w, http.StatusRequestEntityTooLarge, map[string]string{"error": "secure_payload_too_large"})
 			return
 		}
-		opened, err := s.openTelemetryEnvelope(deviceID, raw)
-		if err != nil || opened.ResponsePublicKey == nil {
+		envelopeRaw := raw
+		var wrapped secureHTTPEnvelopeRequest
+		if json.Unmarshal(raw, &wrapped) == nil && len(wrapped.BetterDeskEnvelope) > 0 {
+			// BetterDesk Client wraps secure HTTP requests in the same
+			// betterdesk_envelope object used by heartbeat responses.
+			envelopeRaw = wrapped.BetterDeskEnvelope
+		}
+		opened, err := s.openTelemetryEnvelope(deviceID, envelopeRaw)
+		if err != nil {
+			log.Printf("[api] secure HTTP envelope rejected for %s: %v", deviceID, err)
+			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "secure_envelope_rejected"})
+			return
+		}
+		if opened == nil || opened.ResponsePublicKey == nil {
+			log.Printf("[api] secure HTTP envelope rejected for %s: response key missing", deviceID)
 			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "secure_envelope_rejected"})
 			return
 		}

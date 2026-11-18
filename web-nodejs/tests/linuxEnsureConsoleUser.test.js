@@ -65,7 +65,7 @@ describe('linux-ensure-console-user helpers', () => {
             { bin: 'chown', args: [`root:${SVC_USER}`, path.join(rustdeskPath, 'ssl')] },
             { bin: 'chmod', args: [SHARED_GO_SSL_DIR_MODE, path.join(rustdeskPath, 'ssl')] },
         ]));
-        expect(SHARED_GO_DATA_DIR_MODE).toBe('2775');
+        expect(SHARED_GO_DATA_DIR_MODE).toBe('2750');
         expect(SHARED_GO_SSL_DIR_MODE).toBe('2750');
     });
 

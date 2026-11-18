@@ -7,6 +7,11 @@ const {
     getEffectivePermissions,
     loadEffectivePermissions,
 } = require('../services/rolePermissionService');
+const {
+    ACCESS_LEVEL_RANK,
+    PANEL_ACCESS_CATALOG,
+    normalizeAccessLevel,
+} = require('../lib/panelAccessCatalog');
 
 // Default role-permission map (mirrors Go auth/permissions.go — Phase 52+)
 //
@@ -119,11 +124,34 @@ function requestHasPermission(req, permission) {
     const role = req?.session?.user?.role;
     if (proRoleBlocksPermission(role, permission)) return false;
     if (isSuperAdminRole(role)) return true;
+
+    // SECURITY (audit H7, 2026-11-13): the panel section policy may only
+    // *narrow* access. The role/permission set loaded from Go is authoritative:
+    // if the role does not hold the permission, a section override must not
+    // manufacture it. Check the authoritative set first, then let the section
+    // policy veto a permission the role does hold.
+    let roleAllows = null;
     if (req?.effectivePermissions instanceof Set) {
-        return req.effectivePermissions.has(permission);
+        roleAllows = req.effectivePermissions.has(permission);
+    } else if (req?.permissionContextLoaded && req.permissionLoadError) {
+        return false;
+    } else {
+        roleAllows = roleHasPermission(role, permission);
     }
-    if (req?.permissionContextLoaded && req.permissionLoadError) return false;
-    return roleHasPermission(role, permission);
+    if (!roleAllows) return false;
+
+    const policySection = req?.panelAccessPolicy?.sections?.[req.panelAccessSection];
+    const catalogEntry = PANEL_ACCESS_CATALOG.find((entry) => entry.key === req.panelAccessSection);
+    if (policySection && catalogEntry) {
+        const required = catalogEntry.writePermission === permission
+            ? 'write'
+            : catalogEntry.readPermission === permission ? 'read' : null;
+        if (required) {
+            return ACCESS_LEVEL_RANK[normalizeAccessLevel(policySection.access)]
+                >= ACCESS_LEVEL_RANK[required];
+        }
+    }
+    return true;
 }
 
 /**

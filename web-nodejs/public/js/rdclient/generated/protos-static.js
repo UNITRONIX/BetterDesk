@@ -106,7 +106,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         RegisterPeer.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -127,7 +127,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.RegisterPeer();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.RegisterPeer();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -145,6 +155,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -368,7 +383,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         RegisterPeerResponse.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -389,7 +404,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.RegisterPeerResponse();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.RegisterPeerResponse();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -403,6 +428,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -536,6 +566,8 @@ $root.hbb = (function() {
          * @property {boolean|null} [forceRelay] PunchHoleRequest forceRelay
          * @property {number|null} [upnpPort] PunchHoleRequest upnpPort
          * @property {Uint8Array|null} [socketAddrV6] PunchHoleRequest socketAddrV6
+         * @property {string|null} [switchCode] PunchHoleRequest switchCode
+         * @property {string|null} [webrtcSdpOffer] PunchHoleRequest webrtcSdpOffer
          */
 
         /**
@@ -634,6 +666,22 @@ $root.hbb = (function() {
         PunchHoleRequest.prototype.socketAddrV6 = $util.newBuffer([]);
 
         /**
+         * PunchHoleRequest switchCode.
+         * @member {string} switchCode
+         * @memberof hbb.PunchHoleRequest
+         * @instance
+         */
+        PunchHoleRequest.prototype.switchCode = "";
+
+        /**
+         * PunchHoleRequest webrtcSdpOffer.
+         * @member {string} webrtcSdpOffer
+         * @memberof hbb.PunchHoleRequest
+         * @instance
+         */
+        PunchHoleRequest.prototype.webrtcSdpOffer = "";
+
+        /**
          * Creates a new PunchHoleRequest instance using the specified properties.
          * @function create
          * @memberof hbb.PunchHoleRequest
@@ -681,6 +729,10 @@ $root.hbb = (function() {
                 writer.uint32(/* id 9, wireType 0 =*/72).int32(message.upnpPort);
             if (message.socketAddrV6 != null && Object.hasOwnProperty.call(message, "socketAddrV6"))
                 writer.uint32(/* id 10, wireType 2 =*/82).bytes(message.socketAddrV6);
+            if (message.switchCode != null && Object.hasOwnProperty.call(message, "switchCode"))
+                writer.uint32(/* id 11, wireType 2 =*/90).string(message.switchCode);
+            if (message.webrtcSdpOffer != null && Object.hasOwnProperty.call(message, "webrtcSdpOffer"))
+                writer.uint32(/* id 12, wireType 2 =*/98).string(message.webrtcSdpOffer);
             return writer;
         };
 
@@ -694,7 +746,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         PunchHoleRequest.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -715,7 +767,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.PunchHoleRequest();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.PunchHoleRequest();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -761,10 +823,23 @@ $root.hbb = (function() {
                         message.socketAddrV6 = reader.bytes();
                         break;
                     }
+                case 11: {
+                        message.switchCode = reader.string();
+                        break;
+                    }
+                case 12: {
+                        message.webrtcSdpOffer = reader.string();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -845,6 +920,12 @@ $root.hbb = (function() {
             if (message.socketAddrV6 != null && Object.hasOwnProperty.call(message, "socketAddrV6"))
                 if (!(message.socketAddrV6 && typeof message.socketAddrV6.length === "number" || $util.isString(message.socketAddrV6)))
                     return "socketAddrV6: buffer expected";
+            if (message.switchCode != null && Object.hasOwnProperty.call(message, "switchCode"))
+                if (!$util.isString(message.switchCode))
+                    return "switchCode: string expected";
+            if (message.webrtcSdpOffer != null && Object.hasOwnProperty.call(message, "webrtcSdpOffer"))
+                if (!$util.isString(message.webrtcSdpOffer))
+                    return "webrtcSdpOffer: string expected";
             return null;
         };
 
@@ -937,6 +1018,10 @@ $root.hbb = (function() {
                     $util.base64.decode(object.socketAddrV6, message.socketAddrV6 = $util.newBuffer($util.base64.length(object.socketAddrV6)), 0);
                 else if (object.socketAddrV6.length >= 0)
                     message.socketAddrV6 = object.socketAddrV6;
+            if (object.switchCode != null)
+                message.switchCode = String(object.switchCode);
+            if (object.webrtcSdpOffer != null)
+                message.webrtcSdpOffer = String(object.webrtcSdpOffer);
             return message;
         };
 
@@ -974,6 +1059,8 @@ $root.hbb = (function() {
                     if (options.bytes !== Array)
                         object.socketAddrV6 = $util.newBuffer(object.socketAddrV6);
                 }
+                object.switchCode = "";
+                object.webrtcSdpOffer = "";
             }
             if (message.id != null && Object.hasOwnProperty.call(message, "id"))
                 object.id = message.id;
@@ -995,6 +1082,10 @@ $root.hbb = (function() {
                 object.upnpPort = message.upnpPort;
             if (message.socketAddrV6 != null && Object.hasOwnProperty.call(message, "socketAddrV6"))
                 object.socketAddrV6 = options.bytes === String ? $util.base64.encode(message.socketAddrV6, 0, message.socketAddrV6.length) : options.bytes === Array ? Array.prototype.slice.call(message.socketAddrV6) : message.socketAddrV6;
+            if (message.switchCode != null && Object.hasOwnProperty.call(message, "switchCode"))
+                object.switchCode = message.switchCode;
+            if (message.webrtcSdpOffer != null && Object.hasOwnProperty.call(message, "webrtcSdpOffer"))
+                object.webrtcSdpOffer = message.webrtcSdpOffer;
             return object;
         };
 
@@ -1102,7 +1193,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         ControlPermissions.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -1123,7 +1214,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.ControlPermissions();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.ControlPermissions();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -1137,6 +1238,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -1283,6 +1389,8 @@ $root.hbb = (function() {
          * @property {number} recording=9 recording value
          * @property {number} block_input=10 block_input value
          * @property {number} remote_modify=11 remote_modify value
+         * @property {number} privacy_mode=12 privacy_mode value
+         * @property {number} usb=13 usb value
          */
         ControlPermissions.Permission = (function() {
             var valuesById = {}, values = Object.create(valuesById);
@@ -1298,6 +1406,8 @@ $root.hbb = (function() {
             values[valuesById[9] = "recording"] = 9;
             values[valuesById[10] = "block_input"] = 10;
             values[valuesById[11] = "remote_modify"] = 11;
+            values[valuesById[12] = "privacy_mode"] = 12;
+            values[valuesById[13] = "usb"] = 13;
             return values;
         })();
 
@@ -1318,6 +1428,8 @@ $root.hbb = (function() {
          * @property {number|null} [upnpPort] PunchHole upnpPort
          * @property {Uint8Array|null} [socketAddrV6] PunchHole socketAddrV6
          * @property {hbb.IControlPermissions|null} [controlPermissions] PunchHole controlPermissions
+         * @property {hbb.IControlledContext|null} [controlledContext] PunchHole controlledContext
+         * @property {string|null} [webrtcSdpOffer] PunchHole webrtcSdpOffer
          */
 
         /**
@@ -1400,6 +1512,22 @@ $root.hbb = (function() {
         PunchHole.prototype.controlPermissions = null;
 
         /**
+         * PunchHole controlledContext.
+         * @member {hbb.IControlledContext|null|undefined} controlledContext
+         * @memberof hbb.PunchHole
+         * @instance
+         */
+        PunchHole.prototype.controlledContext = null;
+
+        /**
+         * PunchHole webrtcSdpOffer.
+         * @member {string} webrtcSdpOffer
+         * @memberof hbb.PunchHole
+         * @instance
+         */
+        PunchHole.prototype.webrtcSdpOffer = "";
+
+        /**
          * Creates a new PunchHole instance using the specified properties.
          * @function create
          * @memberof hbb.PunchHole
@@ -1443,6 +1571,10 @@ $root.hbb = (function() {
                 writer.uint32(/* id 7, wireType 2 =*/58).bytes(message.socketAddrV6);
             if (message.controlPermissions != null && Object.hasOwnProperty.call(message, "controlPermissions"))
                 $root.hbb.ControlPermissions.encode(message.controlPermissions, writer.uint32(/* id 8, wireType 2 =*/66).fork(), q + 1).ldelim();
+            if (message.controlledContext != null && Object.hasOwnProperty.call(message, "controlledContext"))
+                $root.hbb.ControlledContext.encode(message.controlledContext, writer.uint32(/* id 9, wireType 2 =*/74).fork(), q + 1).ldelim();
+            if (message.webrtcSdpOffer != null && Object.hasOwnProperty.call(message, "webrtcSdpOffer"))
+                writer.uint32(/* id 10, wireType 2 =*/82).string(message.webrtcSdpOffer);
             return writer;
         };
 
@@ -1456,7 +1588,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         PunchHole.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -1477,7 +1609,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.PunchHole();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.PunchHole();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -1515,10 +1657,23 @@ $root.hbb = (function() {
                         message.controlPermissions = $root.hbb.ControlPermissions.decode(reader, reader.uint32(), undefined, long + 1);
                         break;
                     }
+                case 9: {
+                        message.controlledContext = $root.hbb.ControlledContext.decode(reader, reader.uint32(), undefined, long + 1);
+                        break;
+                    }
+                case 10: {
+                        message.webrtcSdpOffer = reader.string();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -1586,6 +1741,14 @@ $root.hbb = (function() {
                 if (error)
                     return "controlPermissions." + error;
             }
+            if (message.controlledContext != null && Object.hasOwnProperty.call(message, "controlledContext")) {
+                var error = $root.hbb.ControlledContext.verify(message.controlledContext, long + 1);
+                if (error)
+                    return "controlledContext." + error;
+            }
+            if (message.webrtcSdpOffer != null && Object.hasOwnProperty.call(message, "webrtcSdpOffer"))
+                if (!$util.isString(message.webrtcSdpOffer))
+                    return "webrtcSdpOffer: string expected";
             return null;
         };
 
@@ -1650,6 +1813,13 @@ $root.hbb = (function() {
                     throw TypeError(".hbb.PunchHole.controlPermissions: object expected");
                 message.controlPermissions = $root.hbb.ControlPermissions.fromObject(object.controlPermissions, long + 1);
             }
+            if (object.controlledContext != null) {
+                if (!$util.isObject(object.controlledContext))
+                    throw TypeError(".hbb.PunchHole.controlledContext: object expected");
+                message.controlledContext = $root.hbb.ControlledContext.fromObject(object.controlledContext, long + 1);
+            }
+            if (object.webrtcSdpOffer != null)
+                message.webrtcSdpOffer = String(object.webrtcSdpOffer);
             return message;
         };
 
@@ -1691,6 +1861,8 @@ $root.hbb = (function() {
                         object.socketAddrV6 = $util.newBuffer(object.socketAddrV6);
                 }
                 object.controlPermissions = null;
+                object.controlledContext = null;
+                object.webrtcSdpOffer = "";
             }
             if (message.socketAddr != null && Object.hasOwnProperty.call(message, "socketAddr"))
                 object.socketAddr = options.bytes === String ? $util.base64.encode(message.socketAddr, 0, message.socketAddr.length) : options.bytes === Array ? Array.prototype.slice.call(message.socketAddr) : message.socketAddr;
@@ -1708,6 +1880,10 @@ $root.hbb = (function() {
                 object.socketAddrV6 = options.bytes === String ? $util.base64.encode(message.socketAddrV6, 0, message.socketAddrV6.length) : options.bytes === Array ? Array.prototype.slice.call(message.socketAddrV6) : message.socketAddrV6;
             if (message.controlPermissions != null && Object.hasOwnProperty.call(message, "controlPermissions"))
                 object.controlPermissions = $root.hbb.ControlPermissions.toObject(message.controlPermissions, options, q + 1);
+            if (message.controlledContext != null && Object.hasOwnProperty.call(message, "controlledContext"))
+                object.controlledContext = $root.hbb.ControlledContext.toObject(message.controlledContext, options, q + 1);
+            if (message.webrtcSdpOffer != null && Object.hasOwnProperty.call(message, "webrtcSdpOffer"))
+                object.webrtcSdpOffer = message.webrtcSdpOffer;
             return object;
         };
 
@@ -1738,6 +1914,569 @@ $root.hbb = (function() {
         };
 
         return PunchHole;
+    })();
+
+    hbb.ControlledContext = (function() {
+
+        /**
+         * Properties of a ControlledContext.
+         * @memberof hbb
+         * @interface IControlledContext
+         * @property {string|null} [connAuditRef] ControlledContext connAuditRef
+         */
+
+        /**
+         * Constructs a new ControlledContext.
+         * @memberof hbb
+         * @classdesc Represents a ControlledContext.
+         * @implements IControlledContext
+         * @constructor
+         * @param {hbb.IControlledContext=} [properties] Properties to set
+         */
+        function ControlledContext(properties) {
+            if (properties)
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null && keys[i] !== "__proto__")
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * ControlledContext connAuditRef.
+         * @member {string} connAuditRef
+         * @memberof hbb.ControlledContext
+         * @instance
+         */
+        ControlledContext.prototype.connAuditRef = "";
+
+        /**
+         * Creates a new ControlledContext instance using the specified properties.
+         * @function create
+         * @memberof hbb.ControlledContext
+         * @static
+         * @param {hbb.IControlledContext=} [properties] Properties to set
+         * @returns {hbb.ControlledContext} ControlledContext instance
+         */
+        ControlledContext.create = function create(properties) {
+            return new ControlledContext(properties);
+        };
+
+        /**
+         * Encodes the specified ControlledContext message. Does not implicitly {@link hbb.ControlledContext.verify|verify} messages.
+         * @function encode
+         * @memberof hbb.ControlledContext
+         * @static
+         * @param {hbb.IControlledContext} message ControlledContext message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        ControlledContext.encode = function encode(message, writer, q) {
+            if (!writer)
+                writer = $Writer.create();
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
+            if (message.connAuditRef != null && Object.hasOwnProperty.call(message, "connAuditRef"))
+                writer.uint32(/* id 1, wireType 2 =*/10).string(message.connAuditRef);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified ControlledContext message, length delimited. Does not implicitly {@link hbb.ControlledContext.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof hbb.ControlledContext
+         * @static
+         * @param {hbb.IControlledContext} message ControlledContext message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        ControlledContext.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
+        };
+
+        /**
+         * Decodes a ControlledContext message from the specified reader or buffer.
+         * @function decode
+         * @memberof hbb.ControlledContext
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {hbb.ControlledContext} ControlledContext
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        ControlledContext.decode = function decode(reader, length, error, long) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            if (long === undefined)
+                long = 0;
+            if (long > $Reader.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.ControlledContext();
+            while (reader.pos < end) {
+                var tag = reader.uint32();
+                if (tag === error)
+                    break;
+                switch (tag >>> 3) {
+                case 1: {
+                        message.connAuditRef = reader.string();
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7, long);
+                    break;
+                }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a ControlledContext message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof hbb.ControlledContext
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {hbb.ControlledContext} ControlledContext
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        ControlledContext.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a ControlledContext message.
+         * @function verify
+         * @memberof hbb.ControlledContext
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        ControlledContext.verify = function verify(message, long) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                return "maximum nesting depth exceeded";
+            if (message.connAuditRef != null && Object.hasOwnProperty.call(message, "connAuditRef"))
+                if (!$util.isString(message.connAuditRef))
+                    return "connAuditRef: string expected";
+            return null;
+        };
+
+        /**
+         * Creates a ControlledContext message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof hbb.ControlledContext
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {hbb.ControlledContext} ControlledContext
+         */
+        ControlledContext.fromObject = function fromObject(object, long) {
+            if (object instanceof $root.hbb.ControlledContext)
+                return object;
+            if (!$util.isObject(object))
+                throw TypeError(".hbb.ControlledContext: object expected");
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
+            var message = new $root.hbb.ControlledContext();
+            if (object.connAuditRef != null)
+                message.connAuditRef = String(object.connAuditRef);
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a ControlledContext message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof hbb.ControlledContext
+         * @static
+         * @param {hbb.ControlledContext} message ControlledContext
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        ControlledContext.toObject = function toObject(message, options, q) {
+            if (!options)
+                options = {};
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
+            var object = {};
+            if (options.defaults)
+                object.connAuditRef = "";
+            if (message.connAuditRef != null && Object.hasOwnProperty.call(message, "connAuditRef"))
+                object.connAuditRef = message.connAuditRef;
+            return object;
+        };
+
+        /**
+         * Converts this ControlledContext to JSON.
+         * @function toJSON
+         * @memberof hbb.ControlledContext
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        ControlledContext.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for ControlledContext
+         * @function getTypeUrl
+         * @memberof hbb.ControlledContext
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        ControlledContext.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/hbb.ControlledContext";
+        };
+
+        return ControlledContext;
+    })();
+
+    hbb.IceCandidate = (function() {
+
+        /**
+         * Properties of an IceCandidate.
+         * @memberof hbb
+         * @interface IIceCandidate
+         * @property {string|null} [id] IceCandidate id
+         * @property {Uint8Array|null} [socketAddr] IceCandidate socketAddr
+         * @property {string|null} [sessionKey] IceCandidate sessionKey
+         * @property {string|null} [candidate] IceCandidate candidate
+         */
+
+        /**
+         * Constructs a new IceCandidate.
+         * @memberof hbb
+         * @classdesc Represents an IceCandidate.
+         * @implements IIceCandidate
+         * @constructor
+         * @param {hbb.IIceCandidate=} [properties] Properties to set
+         */
+        function IceCandidate(properties) {
+            if (properties)
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null && keys[i] !== "__proto__")
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * IceCandidate id.
+         * @member {string} id
+         * @memberof hbb.IceCandidate
+         * @instance
+         */
+        IceCandidate.prototype.id = "";
+
+        /**
+         * IceCandidate socketAddr.
+         * @member {Uint8Array} socketAddr
+         * @memberof hbb.IceCandidate
+         * @instance
+         */
+        IceCandidate.prototype.socketAddr = $util.newBuffer([]);
+
+        /**
+         * IceCandidate sessionKey.
+         * @member {string} sessionKey
+         * @memberof hbb.IceCandidate
+         * @instance
+         */
+        IceCandidate.prototype.sessionKey = "";
+
+        /**
+         * IceCandidate candidate.
+         * @member {string} candidate
+         * @memberof hbb.IceCandidate
+         * @instance
+         */
+        IceCandidate.prototype.candidate = "";
+
+        /**
+         * Creates a new IceCandidate instance using the specified properties.
+         * @function create
+         * @memberof hbb.IceCandidate
+         * @static
+         * @param {hbb.IIceCandidate=} [properties] Properties to set
+         * @returns {hbb.IceCandidate} IceCandidate instance
+         */
+        IceCandidate.create = function create(properties) {
+            return new IceCandidate(properties);
+        };
+
+        /**
+         * Encodes the specified IceCandidate message. Does not implicitly {@link hbb.IceCandidate.verify|verify} messages.
+         * @function encode
+         * @memberof hbb.IceCandidate
+         * @static
+         * @param {hbb.IIceCandidate} message IceCandidate message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        IceCandidate.encode = function encode(message, writer, q) {
+            if (!writer)
+                writer = $Writer.create();
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
+            if (message.id != null && Object.hasOwnProperty.call(message, "id"))
+                writer.uint32(/* id 1, wireType 2 =*/10).string(message.id);
+            if (message.socketAddr != null && Object.hasOwnProperty.call(message, "socketAddr"))
+                writer.uint32(/* id 2, wireType 2 =*/18).bytes(message.socketAddr);
+            if (message.sessionKey != null && Object.hasOwnProperty.call(message, "sessionKey"))
+                writer.uint32(/* id 3, wireType 2 =*/26).string(message.sessionKey);
+            if (message.candidate != null && Object.hasOwnProperty.call(message, "candidate"))
+                writer.uint32(/* id 4, wireType 2 =*/34).string(message.candidate);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified IceCandidate message, length delimited. Does not implicitly {@link hbb.IceCandidate.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof hbb.IceCandidate
+         * @static
+         * @param {hbb.IIceCandidate} message IceCandidate message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        IceCandidate.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
+        };
+
+        /**
+         * Decodes an IceCandidate message from the specified reader or buffer.
+         * @function decode
+         * @memberof hbb.IceCandidate
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {hbb.IceCandidate} IceCandidate
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        IceCandidate.decode = function decode(reader, length, error, long) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            if (long === undefined)
+                long = 0;
+            if (long > $Reader.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.IceCandidate();
+            while (reader.pos < end) {
+                var tag = reader.uint32();
+                if (tag === error)
+                    break;
+                switch (tag >>> 3) {
+                case 1: {
+                        message.id = reader.string();
+                        break;
+                    }
+                case 2: {
+                        message.socketAddr = reader.bytes();
+                        break;
+                    }
+                case 3: {
+                        message.sessionKey = reader.string();
+                        break;
+                    }
+                case 4: {
+                        message.candidate = reader.string();
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7, long);
+                    break;
+                }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
+            }
+            return message;
+        };
+
+        /**
+         * Decodes an IceCandidate message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof hbb.IceCandidate
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {hbb.IceCandidate} IceCandidate
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        IceCandidate.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies an IceCandidate message.
+         * @function verify
+         * @memberof hbb.IceCandidate
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        IceCandidate.verify = function verify(message, long) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                return "maximum nesting depth exceeded";
+            if (message.id != null && Object.hasOwnProperty.call(message, "id"))
+                if (!$util.isString(message.id))
+                    return "id: string expected";
+            if (message.socketAddr != null && Object.hasOwnProperty.call(message, "socketAddr"))
+                if (!(message.socketAddr && typeof message.socketAddr.length === "number" || $util.isString(message.socketAddr)))
+                    return "socketAddr: buffer expected";
+            if (message.sessionKey != null && Object.hasOwnProperty.call(message, "sessionKey"))
+                if (!$util.isString(message.sessionKey))
+                    return "sessionKey: string expected";
+            if (message.candidate != null && Object.hasOwnProperty.call(message, "candidate"))
+                if (!$util.isString(message.candidate))
+                    return "candidate: string expected";
+            return null;
+        };
+
+        /**
+         * Creates an IceCandidate message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof hbb.IceCandidate
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {hbb.IceCandidate} IceCandidate
+         */
+        IceCandidate.fromObject = function fromObject(object, long) {
+            if (object instanceof $root.hbb.IceCandidate)
+                return object;
+            if (!$util.isObject(object))
+                throw TypeError(".hbb.IceCandidate: object expected");
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
+            var message = new $root.hbb.IceCandidate();
+            if (object.id != null)
+                message.id = String(object.id);
+            if (object.socketAddr != null)
+                if (typeof object.socketAddr === "string")
+                    $util.base64.decode(object.socketAddr, message.socketAddr = $util.newBuffer($util.base64.length(object.socketAddr)), 0);
+                else if (object.socketAddr.length >= 0)
+                    message.socketAddr = object.socketAddr;
+            if (object.sessionKey != null)
+                message.sessionKey = String(object.sessionKey);
+            if (object.candidate != null)
+                message.candidate = String(object.candidate);
+            return message;
+        };
+
+        /**
+         * Creates a plain object from an IceCandidate message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof hbb.IceCandidate
+         * @static
+         * @param {hbb.IceCandidate} message IceCandidate
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        IceCandidate.toObject = function toObject(message, options, q) {
+            if (!options)
+                options = {};
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
+            var object = {};
+            if (options.defaults) {
+                object.id = "";
+                if (options.bytes === String)
+                    object.socketAddr = "";
+                else {
+                    object.socketAddr = [];
+                    if (options.bytes !== Array)
+                        object.socketAddr = $util.newBuffer(object.socketAddr);
+                }
+                object.sessionKey = "";
+                object.candidate = "";
+            }
+            if (message.id != null && Object.hasOwnProperty.call(message, "id"))
+                object.id = message.id;
+            if (message.socketAddr != null && Object.hasOwnProperty.call(message, "socketAddr"))
+                object.socketAddr = options.bytes === String ? $util.base64.encode(message.socketAddr, 0, message.socketAddr.length) : options.bytes === Array ? Array.prototype.slice.call(message.socketAddr) : message.socketAddr;
+            if (message.sessionKey != null && Object.hasOwnProperty.call(message, "sessionKey"))
+                object.sessionKey = message.sessionKey;
+            if (message.candidate != null && Object.hasOwnProperty.call(message, "candidate"))
+                object.candidate = message.candidate;
+            return object;
+        };
+
+        /**
+         * Converts this IceCandidate to JSON.
+         * @function toJSON
+         * @memberof hbb.IceCandidate
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        IceCandidate.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for IceCandidate
+         * @function getTypeUrl
+         * @memberof hbb.IceCandidate
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        IceCandidate.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/hbb.IceCandidate";
+        };
+
+        return IceCandidate;
     })();
 
     hbb.TestNatRequest = (function() {
@@ -1815,7 +2554,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         TestNatRequest.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -1836,7 +2575,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.TestNatRequest();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.TestNatRequest();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -1850,6 +2599,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -2053,7 +2807,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         TestNatResponse.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -2074,7 +2828,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.TestNatResponse();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.TestNatResponse();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -2092,6 +2856,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -2252,6 +3021,7 @@ $root.hbb = (function() {
          * @property {string|null} [version] PunchHoleSent version
          * @property {number|null} [upnpPort] PunchHoleSent upnpPort
          * @property {Uint8Array|null} [socketAddrV6] PunchHoleSent socketAddrV6
+         * @property {string|null} [webrtcSdpAnswer] PunchHoleSent webrtcSdpAnswer
          */
 
         /**
@@ -2326,6 +3096,14 @@ $root.hbb = (function() {
         PunchHoleSent.prototype.socketAddrV6 = $util.newBuffer([]);
 
         /**
+         * PunchHoleSent webrtcSdpAnswer.
+         * @member {string} webrtcSdpAnswer
+         * @memberof hbb.PunchHoleSent
+         * @instance
+         */
+        PunchHoleSent.prototype.webrtcSdpAnswer = "";
+
+        /**
          * Creates a new PunchHoleSent instance using the specified properties.
          * @function create
          * @memberof hbb.PunchHoleSent
@@ -2367,6 +3145,8 @@ $root.hbb = (function() {
                 writer.uint32(/* id 6, wireType 0 =*/48).int32(message.upnpPort);
             if (message.socketAddrV6 != null && Object.hasOwnProperty.call(message, "socketAddrV6"))
                 writer.uint32(/* id 7, wireType 2 =*/58).bytes(message.socketAddrV6);
+            if (message.webrtcSdpAnswer != null && Object.hasOwnProperty.call(message, "webrtcSdpAnswer"))
+                writer.uint32(/* id 8, wireType 2 =*/66).string(message.webrtcSdpAnswer);
             return writer;
         };
 
@@ -2380,7 +3160,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         PunchHoleSent.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -2401,7 +3181,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.PunchHoleSent();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.PunchHoleSent();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -2435,10 +3225,19 @@ $root.hbb = (function() {
                         message.socketAddrV6 = reader.bytes();
                         break;
                     }
+                case 8: {
+                        message.webrtcSdpAnswer = reader.string();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -2501,6 +3300,9 @@ $root.hbb = (function() {
             if (message.socketAddrV6 != null && Object.hasOwnProperty.call(message, "socketAddrV6"))
                 if (!(message.socketAddrV6 && typeof message.socketAddrV6.length === "number" || $util.isString(message.socketAddrV6)))
                     return "socketAddrV6: buffer expected";
+            if (message.webrtcSdpAnswer != null && Object.hasOwnProperty.call(message, "webrtcSdpAnswer"))
+                if (!$util.isString(message.webrtcSdpAnswer))
+                    return "webrtcSdpAnswer: string expected";
             return null;
         };
 
@@ -2560,6 +3362,8 @@ $root.hbb = (function() {
                     $util.base64.decode(object.socketAddrV6, message.socketAddrV6 = $util.newBuffer($util.base64.length(object.socketAddrV6)), 0);
                 else if (object.socketAddrV6.length >= 0)
                     message.socketAddrV6 = object.socketAddrV6;
+            if (object.webrtcSdpAnswer != null)
+                message.webrtcSdpAnswer = String(object.webrtcSdpAnswer);
             return message;
         };
 
@@ -2600,6 +3404,7 @@ $root.hbb = (function() {
                     if (options.bytes !== Array)
                         object.socketAddrV6 = $util.newBuffer(object.socketAddrV6);
                 }
+                object.webrtcSdpAnswer = "";
             }
             if (message.socketAddr != null && Object.hasOwnProperty.call(message, "socketAddr"))
                 object.socketAddr = options.bytes === String ? $util.base64.encode(message.socketAddr, 0, message.socketAddr.length) : options.bytes === Array ? Array.prototype.slice.call(message.socketAddr) : message.socketAddr;
@@ -2615,6 +3420,8 @@ $root.hbb = (function() {
                 object.upnpPort = message.upnpPort;
             if (message.socketAddrV6 != null && Object.hasOwnProperty.call(message, "socketAddrV6"))
                 object.socketAddrV6 = options.bytes === String ? $util.base64.encode(message.socketAddrV6, 0, message.socketAddrV6.length) : options.bytes === Array ? Array.prototype.slice.call(message.socketAddrV6) : message.socketAddrV6;
+            if (message.webrtcSdpAnswer != null && Object.hasOwnProperty.call(message, "webrtcSdpAnswer"))
+                object.webrtcSdpAnswer = message.webrtcSdpAnswer;
             return object;
         };
 
@@ -2766,7 +3573,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         RegisterPk.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -2787,7 +3594,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.RegisterPk();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.RegisterPk();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -2817,6 +3634,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -3071,7 +3893,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         RegisterPkResponse.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -3092,7 +3914,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.RegisterPkResponse();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.RegisterPkResponse();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -3110,6 +3942,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -3156,6 +3993,7 @@ $root.hbb = (function() {
                 case 5:
                 case 6:
                 case 7:
+                case 8:
                     break;
                 }
             if (message.keepAlive != null && Object.hasOwnProperty.call(message, "keepAlive"))
@@ -3216,6 +4054,10 @@ $root.hbb = (function() {
             case "SERVER_ERROR":
             case 7:
                 message.result = 7;
+                break;
+            case "NOT_DEPLOYED":
+            case 8:
+                message.result = 8;
                 break;
             }
             if (object.keepAlive != null)
@@ -3288,6 +4130,7 @@ $root.hbb = (function() {
          * @property {number} INVALID_ID_FORMAT=5 INVALID_ID_FORMAT value
          * @property {number} NOT_SUPPORT=6 NOT_SUPPORT value
          * @property {number} SERVER_ERROR=7 SERVER_ERROR value
+         * @property {number} NOT_DEPLOYED=8 NOT_DEPLOYED value
          */
         RegisterPkResponse.Result = (function() {
             var valuesById = {}, values = Object.create(valuesById);
@@ -3298,6 +4141,7 @@ $root.hbb = (function() {
             values[valuesById[5] = "INVALID_ID_FORMAT"] = 5;
             values[valuesById[6] = "NOT_SUPPORT"] = 6;
             values[valuesById[7] = "SERVER_ERROR"] = 7;
+            values[valuesById[8] = "NOT_DEPLOYED"] = 8;
             return values;
         })();
 
@@ -3321,6 +4165,7 @@ $root.hbb = (function() {
          * @property {boolean|null} [isUdp] PunchHoleResponse isUdp
          * @property {number|null} [upnpPort] PunchHoleResponse upnpPort
          * @property {Uint8Array|null} [socketAddrV6] PunchHoleResponse socketAddrV6
+         * @property {string|null} [webrtcSdpAnswer] PunchHoleResponse webrtcSdpAnswer
          */
 
         /**
@@ -3426,6 +4271,14 @@ $root.hbb = (function() {
          */
         PunchHoleResponse.prototype.socketAddrV6 = $util.newBuffer([]);
 
+        /**
+         * PunchHoleResponse webrtcSdpAnswer.
+         * @member {string} webrtcSdpAnswer
+         * @memberof hbb.PunchHoleResponse
+         * @instance
+         */
+        PunchHoleResponse.prototype.webrtcSdpAnswer = "";
+
         // OneOf field names bound to virtual getters and setters
         var $oneOfFields;
 
@@ -3490,6 +4343,8 @@ $root.hbb = (function() {
                 writer.uint32(/* id 10, wireType 0 =*/80).int32(message.upnpPort);
             if (message.socketAddrV6 != null && Object.hasOwnProperty.call(message, "socketAddrV6"))
                 writer.uint32(/* id 11, wireType 2 =*/90).bytes(message.socketAddrV6);
+            if (message.webrtcSdpAnswer != null && Object.hasOwnProperty.call(message, "webrtcSdpAnswer"))
+                writer.uint32(/* id 12, wireType 2 =*/98).string(message.webrtcSdpAnswer);
             return writer;
         };
 
@@ -3503,7 +4358,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         PunchHoleResponse.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -3524,7 +4379,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.PunchHoleResponse();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.PunchHoleResponse();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -3574,10 +4439,19 @@ $root.hbb = (function() {
                         message.socketAddrV6 = reader.bytes();
                         break;
                     }
+                case 12: {
+                        message.webrtcSdpAnswer = reader.string();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -3666,6 +4540,9 @@ $root.hbb = (function() {
             if (message.socketAddrV6 != null && Object.hasOwnProperty.call(message, "socketAddrV6"))
                 if (!(message.socketAddrV6 && typeof message.socketAddrV6.length === "number" || $util.isString(message.socketAddrV6)))
                     return "socketAddrV6: buffer expected";
+            if (message.webrtcSdpAnswer != null && Object.hasOwnProperty.call(message, "webrtcSdpAnswer"))
+                if (!$util.isString(message.webrtcSdpAnswer))
+                    return "webrtcSdpAnswer: string expected";
             return null;
         };
 
@@ -3758,6 +4635,8 @@ $root.hbb = (function() {
                     $util.base64.decode(object.socketAddrV6, message.socketAddrV6 = $util.newBuffer($util.base64.length(object.socketAddrV6)), 0);
                 else if (object.socketAddrV6.length >= 0)
                     message.socketAddrV6 = object.socketAddrV6;
+            if (object.webrtcSdpAnswer != null)
+                message.webrtcSdpAnswer = String(object.webrtcSdpAnswer);
             return message;
         };
 
@@ -3806,6 +4685,7 @@ $root.hbb = (function() {
                     if (options.bytes !== Array)
                         object.socketAddrV6 = $util.newBuffer(object.socketAddrV6);
                 }
+                object.webrtcSdpAnswer = "";
             }
             if (message.socketAddr != null && Object.hasOwnProperty.call(message, "socketAddr"))
                 object.socketAddr = options.bytes === String ? $util.base64.encode(message.socketAddr, 0, message.socketAddr.length) : options.bytes === Array ? Array.prototype.slice.call(message.socketAddr) : message.socketAddr;
@@ -3835,6 +4715,8 @@ $root.hbb = (function() {
                 object.upnpPort = message.upnpPort;
             if (message.socketAddrV6 != null && Object.hasOwnProperty.call(message, "socketAddrV6"))
                 object.socketAddrV6 = options.bytes === String ? $util.base64.encode(message.socketAddrV6, 0, message.socketAddrV6.length) : options.bytes === Array ? Array.prototype.slice.call(message.socketAddrV6) : message.socketAddrV6;
+            if (message.webrtcSdpAnswer != null && Object.hasOwnProperty.call(message, "webrtcSdpAnswer"))
+                object.webrtcSdpAnswer = message.webrtcSdpAnswer;
             return object;
         };
 
@@ -3973,7 +4855,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         ConfigUpdate.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -3994,7 +4876,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.ConfigUpdate();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.ConfigUpdate();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -4014,6 +4906,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -4167,6 +5064,8 @@ $root.hbb = (function() {
          * @property {hbb.ConnType|null} [connType] RequestRelay connType
          * @property {string|null} [token] RequestRelay token
          * @property {hbb.IControlPermissions|null} [controlPermissions] RequestRelay controlPermissions
+         * @property {hbb.IControlledContext|null} [controlledContext] RequestRelay controlledContext
+         * @property {string|null} [switchCode] RequestRelay switchCode
          */
 
         /**
@@ -4257,6 +5156,22 @@ $root.hbb = (function() {
         RequestRelay.prototype.controlPermissions = null;
 
         /**
+         * RequestRelay controlledContext.
+         * @member {hbb.IControlledContext|null|undefined} controlledContext
+         * @memberof hbb.RequestRelay
+         * @instance
+         */
+        RequestRelay.prototype.controlledContext = null;
+
+        /**
+         * RequestRelay switchCode.
+         * @member {string} switchCode
+         * @memberof hbb.RequestRelay
+         * @instance
+         */
+        RequestRelay.prototype.switchCode = "";
+
+        /**
          * Creates a new RequestRelay instance using the specified properties.
          * @function create
          * @memberof hbb.RequestRelay
@@ -4302,6 +5217,10 @@ $root.hbb = (function() {
                 writer.uint32(/* id 8, wireType 2 =*/66).string(message.token);
             if (message.controlPermissions != null && Object.hasOwnProperty.call(message, "controlPermissions"))
                 $root.hbb.ControlPermissions.encode(message.controlPermissions, writer.uint32(/* id 9, wireType 2 =*/74).fork(), q + 1).ldelim();
+            if (message.controlledContext != null && Object.hasOwnProperty.call(message, "controlledContext"))
+                $root.hbb.ControlledContext.encode(message.controlledContext, writer.uint32(/* id 10, wireType 2 =*/82).fork(), q + 1).ldelim();
+            if (message.switchCode != null && Object.hasOwnProperty.call(message, "switchCode"))
+                writer.uint32(/* id 11, wireType 2 =*/90).string(message.switchCode);
             return writer;
         };
 
@@ -4315,7 +5234,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         RequestRelay.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -4336,7 +5255,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.RequestRelay();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.RequestRelay();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -4378,10 +5307,23 @@ $root.hbb = (function() {
                         message.controlPermissions = $root.hbb.ControlPermissions.decode(reader, reader.uint32(), undefined, long + 1);
                         break;
                     }
+                case 10: {
+                        message.controlledContext = $root.hbb.ControlledContext.decode(reader, reader.uint32(), undefined, long + 1);
+                        break;
+                    }
+                case 11: {
+                        message.switchCode = reader.string();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -4455,6 +5397,14 @@ $root.hbb = (function() {
                 if (error)
                     return "controlPermissions." + error;
             }
+            if (message.controlledContext != null && Object.hasOwnProperty.call(message, "controlledContext")) {
+                var error = $root.hbb.ControlledContext.verify(message.controlledContext, long + 1);
+                if (error)
+                    return "controlledContext." + error;
+            }
+            if (message.switchCode != null && Object.hasOwnProperty.call(message, "switchCode"))
+                if (!$util.isString(message.switchCode))
+                    return "switchCode: string expected";
             return null;
         };
 
@@ -4530,6 +5480,13 @@ $root.hbb = (function() {
                     throw TypeError(".hbb.RequestRelay.controlPermissions: object expected");
                 message.controlPermissions = $root.hbb.ControlPermissions.fromObject(object.controlPermissions, long + 1);
             }
+            if (object.controlledContext != null) {
+                if (!$util.isObject(object.controlledContext))
+                    throw TypeError(".hbb.RequestRelay.controlledContext: object expected");
+                message.controlledContext = $root.hbb.ControlledContext.fromObject(object.controlledContext, long + 1);
+            }
+            if (object.switchCode != null)
+                message.switchCode = String(object.switchCode);
             return message;
         };
 
@@ -4566,6 +5523,8 @@ $root.hbb = (function() {
                 object.connType = options.enums === String ? "DEFAULT_CONN" : 0;
                 object.token = "";
                 object.controlPermissions = null;
+                object.controlledContext = null;
+                object.switchCode = "";
             }
             if (message.id != null && Object.hasOwnProperty.call(message, "id"))
                 object.id = message.id;
@@ -4585,6 +5544,10 @@ $root.hbb = (function() {
                 object.token = message.token;
             if (message.controlPermissions != null && Object.hasOwnProperty.call(message, "controlPermissions"))
                 object.controlPermissions = $root.hbb.ControlPermissions.toObject(message.controlPermissions, options, q + 1);
+            if (message.controlledContext != null && Object.hasOwnProperty.call(message, "controlledContext"))
+                object.controlledContext = $root.hbb.ControlledContext.toObject(message.controlledContext, options, q + 1);
+            if (message.switchCode != null && Object.hasOwnProperty.call(message, "switchCode"))
+                object.switchCode = message.switchCode;
             return object;
         };
 
@@ -4633,6 +5596,7 @@ $root.hbb = (function() {
          * @property {number|null} [feedback] RelayResponse feedback
          * @property {Uint8Array|null} [socketAddrV6] RelayResponse socketAddrV6
          * @property {number|null} [upnpPort] RelayResponse upnpPort
+         * @property {string|null} [webrtcSdpAnswer] RelayResponse webrtcSdpAnswer
          */
 
         /**
@@ -4730,6 +5694,14 @@ $root.hbb = (function() {
          */
         RelayResponse.prototype.upnpPort = 0;
 
+        /**
+         * RelayResponse webrtcSdpAnswer.
+         * @member {string} webrtcSdpAnswer
+         * @memberof hbb.RelayResponse
+         * @instance
+         */
+        RelayResponse.prototype.webrtcSdpAnswer = "";
+
         // OneOf field names bound to virtual getters and setters
         var $oneOfFields;
 
@@ -4792,6 +5764,8 @@ $root.hbb = (function() {
                 writer.uint32(/* id 10, wireType 2 =*/82).bytes(message.socketAddrV6);
             if (message.upnpPort != null && Object.hasOwnProperty.call(message, "upnpPort"))
                 writer.uint32(/* id 11, wireType 0 =*/88).int32(message.upnpPort);
+            if (message.webrtcSdpAnswer != null && Object.hasOwnProperty.call(message, "webrtcSdpAnswer"))
+                writer.uint32(/* id 12, wireType 2 =*/98).string(message.webrtcSdpAnswer);
             return writer;
         };
 
@@ -4805,7 +5779,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         RelayResponse.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -4826,7 +5800,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.RelayResponse();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.RelayResponse();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -4872,10 +5856,19 @@ $root.hbb = (function() {
                         message.upnpPort = reader.int32();
                         break;
                     }
+                case 12: {
+                        message.webrtcSdpAnswer = reader.string();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -4948,6 +5941,9 @@ $root.hbb = (function() {
             if (message.upnpPort != null && Object.hasOwnProperty.call(message, "upnpPort"))
                 if (!$util.isInteger(message.upnpPort))
                     return "upnpPort: integer expected";
+            if (message.webrtcSdpAnswer != null && Object.hasOwnProperty.call(message, "webrtcSdpAnswer"))
+                if (!$util.isString(message.webrtcSdpAnswer))
+                    return "webrtcSdpAnswer: string expected";
             return null;
         };
 
@@ -4998,6 +5994,8 @@ $root.hbb = (function() {
                     message.socketAddrV6 = object.socketAddrV6;
             if (object.upnpPort != null)
                 message.upnpPort = object.upnpPort | 0;
+            if (object.webrtcSdpAnswer != null)
+                message.webrtcSdpAnswer = String(object.webrtcSdpAnswer);
             return message;
         };
 
@@ -5039,6 +6037,7 @@ $root.hbb = (function() {
                         object.socketAddrV6 = $util.newBuffer(object.socketAddrV6);
                 }
                 object.upnpPort = 0;
+                object.webrtcSdpAnswer = "";
             }
             if (message.socketAddr != null && Object.hasOwnProperty.call(message, "socketAddr"))
                 object.socketAddr = options.bytes === String ? $util.base64.encode(message.socketAddr, 0, message.socketAddr.length) : options.bytes === Array ? Array.prototype.slice.call(message.socketAddr) : message.socketAddr;
@@ -5066,6 +6065,8 @@ $root.hbb = (function() {
                 object.socketAddrV6 = options.bytes === String ? $util.base64.encode(message.socketAddrV6, 0, message.socketAddrV6.length) : options.bytes === Array ? Array.prototype.slice.call(message.socketAddrV6) : message.socketAddrV6;
             if (message.upnpPort != null && Object.hasOwnProperty.call(message, "upnpPort"))
                 object.upnpPort = message.upnpPort;
+            if (message.webrtcSdpAnswer != null && Object.hasOwnProperty.call(message, "webrtcSdpAnswer"))
+                object.webrtcSdpAnswer = message.webrtcSdpAnswer;
             return object;
         };
 
@@ -5173,7 +6174,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         SoftwareUpdate.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -5194,7 +6195,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.SoftwareUpdate();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.SoftwareUpdate();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -5208,6 +6219,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -5335,6 +6351,7 @@ $root.hbb = (function() {
          * @property {string|null} [relayServer] FetchLocalAddr relayServer
          * @property {Uint8Array|null} [socketAddrV6] FetchLocalAddr socketAddrV6
          * @property {hbb.IControlPermissions|null} [controlPermissions] FetchLocalAddr controlPermissions
+         * @property {hbb.IControlledContext|null} [controlledContext] FetchLocalAddr controlledContext
          */
 
         /**
@@ -5385,6 +6402,14 @@ $root.hbb = (function() {
         FetchLocalAddr.prototype.controlPermissions = null;
 
         /**
+         * FetchLocalAddr controlledContext.
+         * @member {hbb.IControlledContext|null|undefined} controlledContext
+         * @memberof hbb.FetchLocalAddr
+         * @instance
+         */
+        FetchLocalAddr.prototype.controlledContext = null;
+
+        /**
          * Creates a new FetchLocalAddr instance using the specified properties.
          * @function create
          * @memberof hbb.FetchLocalAddr
@@ -5420,6 +6445,8 @@ $root.hbb = (function() {
                 writer.uint32(/* id 3, wireType 2 =*/26).bytes(message.socketAddrV6);
             if (message.controlPermissions != null && Object.hasOwnProperty.call(message, "controlPermissions"))
                 $root.hbb.ControlPermissions.encode(message.controlPermissions, writer.uint32(/* id 4, wireType 2 =*/34).fork(), q + 1).ldelim();
+            if (message.controlledContext != null && Object.hasOwnProperty.call(message, "controlledContext"))
+                $root.hbb.ControlledContext.encode(message.controlledContext, writer.uint32(/* id 5, wireType 2 =*/42).fork(), q + 1).ldelim();
             return writer;
         };
 
@@ -5433,7 +6460,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         FetchLocalAddr.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -5454,7 +6481,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.FetchLocalAddr();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.FetchLocalAddr();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -5476,10 +6513,19 @@ $root.hbb = (function() {
                         message.controlPermissions = $root.hbb.ControlPermissions.decode(reader, reader.uint32(), undefined, long + 1);
                         break;
                     }
+                case 5: {
+                        message.controlledContext = $root.hbb.ControlledContext.decode(reader, reader.uint32(), undefined, long + 1);
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -5529,6 +6575,11 @@ $root.hbb = (function() {
                 if (error)
                     return "controlPermissions." + error;
             }
+            if (message.controlledContext != null && Object.hasOwnProperty.call(message, "controlledContext")) {
+                var error = $root.hbb.ControlledContext.verify(message.controlledContext, long + 1);
+                if (error)
+                    return "controlledContext." + error;
+            }
             return null;
         };
 
@@ -5567,6 +6618,11 @@ $root.hbb = (function() {
                     throw TypeError(".hbb.FetchLocalAddr.controlPermissions: object expected");
                 message.controlPermissions = $root.hbb.ControlPermissions.fromObject(object.controlPermissions, long + 1);
             }
+            if (object.controlledContext != null) {
+                if (!$util.isObject(object.controlledContext))
+                    throw TypeError(".hbb.FetchLocalAddr.controlledContext: object expected");
+                message.controlledContext = $root.hbb.ControlledContext.fromObject(object.controlledContext, long + 1);
+            }
             return message;
         };
 
@@ -5604,6 +6660,7 @@ $root.hbb = (function() {
                         object.socketAddrV6 = $util.newBuffer(object.socketAddrV6);
                 }
                 object.controlPermissions = null;
+                object.controlledContext = null;
             }
             if (message.socketAddr != null && Object.hasOwnProperty.call(message, "socketAddr"))
                 object.socketAddr = options.bytes === String ? $util.base64.encode(message.socketAddr, 0, message.socketAddr.length) : options.bytes === Array ? Array.prototype.slice.call(message.socketAddr) : message.socketAddr;
@@ -5613,6 +6670,8 @@ $root.hbb = (function() {
                 object.socketAddrV6 = options.bytes === String ? $util.base64.encode(message.socketAddrV6, 0, message.socketAddrV6.length) : options.bytes === Array ? Array.prototype.slice.call(message.socketAddrV6) : message.socketAddrV6;
             if (message.controlPermissions != null && Object.hasOwnProperty.call(message, "controlPermissions"))
                 object.controlPermissions = $root.hbb.ControlPermissions.toObject(message.controlPermissions, options, q + 1);
+            if (message.controlledContext != null && Object.hasOwnProperty.call(message, "controlledContext"))
+                object.controlledContext = $root.hbb.ControlledContext.toObject(message.controlledContext, options, q + 1);
             return object;
         };
 
@@ -5775,7 +6834,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         LocalAddr.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -5796,7 +6855,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.LocalAddr();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.LocalAddr();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -5830,6 +6899,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -6156,7 +7230,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         PeerDiscovery.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -6177,7 +7251,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.PeerDiscovery();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.PeerDiscovery();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -6215,6 +7299,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -6469,7 +7558,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         OnlineRequest.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -6490,7 +7579,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.OnlineRequest();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.OnlineRequest();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -6510,6 +7609,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -6723,7 +7827,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         OnlineResponse.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -6744,7 +7848,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.OnlineResponse();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.OnlineResponse();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -6758,6 +7872,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -6891,6 +8010,8 @@ $root.hbb = (function() {
          * @memberof hbb
          * @interface IKeyExchange
          * @property {Array.<Uint8Array>|null} [keys] KeyExchange keys
+         * @property {number|null} [version] KeyExchange version
+         * @property {Uint8Array|null} [signedParams] KeyExchange signedParams
          */
 
         /**
@@ -6916,6 +8037,22 @@ $root.hbb = (function() {
          * @instance
          */
         KeyExchange.prototype.keys = $util.emptyArray;
+
+        /**
+         * KeyExchange version.
+         * @member {number} version
+         * @memberof hbb.KeyExchange
+         * @instance
+         */
+        KeyExchange.prototype.version = 0;
+
+        /**
+         * KeyExchange signedParams.
+         * @member {Uint8Array} signedParams
+         * @memberof hbb.KeyExchange
+         * @instance
+         */
+        KeyExchange.prototype.signedParams = $util.newBuffer([]);
 
         /**
          * Creates a new KeyExchange instance using the specified properties.
@@ -6948,6 +8085,10 @@ $root.hbb = (function() {
             if (message.keys != null && message.keys.length)
                 for (var i = 0; i < message.keys.length; ++i)
                     writer.uint32(/* id 1, wireType 2 =*/10).bytes(message.keys[i]);
+            if (message.version != null && Object.hasOwnProperty.call(message, "version"))
+                writer.uint32(/* id 2, wireType 0 =*/16).uint32(message.version);
+            if (message.signedParams != null && Object.hasOwnProperty.call(message, "signedParams"))
+                writer.uint32(/* id 3, wireType 2 =*/26).bytes(message.signedParams);
             return writer;
         };
 
@@ -6961,7 +8102,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         KeyExchange.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -6982,7 +8123,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.KeyExchange();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.KeyExchange();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -6994,10 +8145,23 @@ $root.hbb = (function() {
                         message.keys.push(reader.bytes());
                         break;
                     }
+                case 2: {
+                        message.version = reader.uint32();
+                        break;
+                    }
+                case 3: {
+                        message.signedParams = reader.bytes();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -7040,6 +8204,12 @@ $root.hbb = (function() {
                     if (!(message.keys[i] && typeof message.keys[i].length === "number" || $util.isString(message.keys[i])))
                         return "keys: buffer[] expected";
             }
+            if (message.version != null && Object.hasOwnProperty.call(message, "version"))
+                if (!$util.isInteger(message.version))
+                    return "version: integer expected";
+            if (message.signedParams != null && Object.hasOwnProperty.call(message, "signedParams"))
+                if (!(message.signedParams && typeof message.signedParams.length === "number" || $util.isString(message.signedParams)))
+                    return "signedParams: buffer expected";
             return null;
         };
 
@@ -7071,6 +8241,13 @@ $root.hbb = (function() {
                     else if (object.keys[i].length >= 0)
                         message.keys[i] = object.keys[i];
             }
+            if (object.version != null)
+                message.version = object.version >>> 0;
+            if (object.signedParams != null)
+                if (typeof object.signedParams === "string")
+                    $util.base64.decode(object.signedParams, message.signedParams = $util.newBuffer($util.base64.length(object.signedParams)), 0);
+                else if (object.signedParams.length >= 0)
+                    message.signedParams = object.signedParams;
             return message;
         };
 
@@ -7093,11 +8270,25 @@ $root.hbb = (function() {
             var object = {};
             if (options.arrays || options.defaults)
                 object.keys = [];
+            if (options.defaults) {
+                object.version = 0;
+                if (options.bytes === String)
+                    object.signedParams = "";
+                else {
+                    object.signedParams = [];
+                    if (options.bytes !== Array)
+                        object.signedParams = $util.newBuffer(object.signedParams);
+                }
+            }
             if (message.keys && message.keys.length) {
                 object.keys = [];
                 for (var j = 0; j < message.keys.length; ++j)
                     object.keys[j] = options.bytes === String ? $util.base64.encode(message.keys[j], 0, message.keys[j].length) : options.bytes === Array ? Array.prototype.slice.call(message.keys[j]) : message.keys[j];
             }
+            if (message.version != null && Object.hasOwnProperty.call(message, "version"))
+                object.version = message.version;
+            if (message.signedParams != null && Object.hasOwnProperty.call(message, "signedParams"))
+                object.signedParams = options.bytes === String ? $util.base64.encode(message.signedParams, 0, message.signedParams.length) : options.bytes === Array ? Array.prototype.slice.call(message.signedParams) : message.signedParams;
             return object;
         };
 
@@ -7128,6 +8319,281 @@ $root.hbb = (function() {
         };
 
         return KeyExchange;
+    })();
+
+    hbb.KxParams = (function() {
+
+        /**
+         * Properties of a KxParams.
+         * @memberof hbb
+         * @interface IKxParams
+         * @property {Uint8Array|null} [pk] KxParams pk
+         * @property {number|null} [version] KxParams version
+         */
+
+        /**
+         * Constructs a new KxParams.
+         * @memberof hbb
+         * @classdesc Represents a KxParams.
+         * @implements IKxParams
+         * @constructor
+         * @param {hbb.IKxParams=} [properties] Properties to set
+         */
+        function KxParams(properties) {
+            if (properties)
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null && keys[i] !== "__proto__")
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * KxParams pk.
+         * @member {Uint8Array} pk
+         * @memberof hbb.KxParams
+         * @instance
+         */
+        KxParams.prototype.pk = $util.newBuffer([]);
+
+        /**
+         * KxParams version.
+         * @member {number} version
+         * @memberof hbb.KxParams
+         * @instance
+         */
+        KxParams.prototype.version = 0;
+
+        /**
+         * Creates a new KxParams instance using the specified properties.
+         * @function create
+         * @memberof hbb.KxParams
+         * @static
+         * @param {hbb.IKxParams=} [properties] Properties to set
+         * @returns {hbb.KxParams} KxParams instance
+         */
+        KxParams.create = function create(properties) {
+            return new KxParams(properties);
+        };
+
+        /**
+         * Encodes the specified KxParams message. Does not implicitly {@link hbb.KxParams.verify|verify} messages.
+         * @function encode
+         * @memberof hbb.KxParams
+         * @static
+         * @param {hbb.IKxParams} message KxParams message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        KxParams.encode = function encode(message, writer, q) {
+            if (!writer)
+                writer = $Writer.create();
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
+            if (message.pk != null && Object.hasOwnProperty.call(message, "pk"))
+                writer.uint32(/* id 1, wireType 2 =*/10).bytes(message.pk);
+            if (message.version != null && Object.hasOwnProperty.call(message, "version"))
+                writer.uint32(/* id 2, wireType 0 =*/16).uint32(message.version);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified KxParams message, length delimited. Does not implicitly {@link hbb.KxParams.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof hbb.KxParams
+         * @static
+         * @param {hbb.IKxParams} message KxParams message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        KxParams.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
+        };
+
+        /**
+         * Decodes a KxParams message from the specified reader or buffer.
+         * @function decode
+         * @memberof hbb.KxParams
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {hbb.KxParams} KxParams
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        KxParams.decode = function decode(reader, length, error, long) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            if (long === undefined)
+                long = 0;
+            if (long > $Reader.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.KxParams();
+            while (reader.pos < end) {
+                var tag = reader.uint32();
+                if (tag === error)
+                    break;
+                switch (tag >>> 3) {
+                case 1: {
+                        message.pk = reader.bytes();
+                        break;
+                    }
+                case 2: {
+                        message.version = reader.uint32();
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7, long);
+                    break;
+                }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a KxParams message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof hbb.KxParams
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {hbb.KxParams} KxParams
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        KxParams.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a KxParams message.
+         * @function verify
+         * @memberof hbb.KxParams
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        KxParams.verify = function verify(message, long) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                return "maximum nesting depth exceeded";
+            if (message.pk != null && Object.hasOwnProperty.call(message, "pk"))
+                if (!(message.pk && typeof message.pk.length === "number" || $util.isString(message.pk)))
+                    return "pk: buffer expected";
+            if (message.version != null && Object.hasOwnProperty.call(message, "version"))
+                if (!$util.isInteger(message.version))
+                    return "version: integer expected";
+            return null;
+        };
+
+        /**
+         * Creates a KxParams message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof hbb.KxParams
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {hbb.KxParams} KxParams
+         */
+        KxParams.fromObject = function fromObject(object, long) {
+            if (object instanceof $root.hbb.KxParams)
+                return object;
+            if (!$util.isObject(object))
+                throw TypeError(".hbb.KxParams: object expected");
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
+            var message = new $root.hbb.KxParams();
+            if (object.pk != null)
+                if (typeof object.pk === "string")
+                    $util.base64.decode(object.pk, message.pk = $util.newBuffer($util.base64.length(object.pk)), 0);
+                else if (object.pk.length >= 0)
+                    message.pk = object.pk;
+            if (object.version != null)
+                message.version = object.version >>> 0;
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a KxParams message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof hbb.KxParams
+         * @static
+         * @param {hbb.KxParams} message KxParams
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        KxParams.toObject = function toObject(message, options, q) {
+            if (!options)
+                options = {};
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
+            var object = {};
+            if (options.defaults) {
+                if (options.bytes === String)
+                    object.pk = "";
+                else {
+                    object.pk = [];
+                    if (options.bytes !== Array)
+                        object.pk = $util.newBuffer(object.pk);
+                }
+                object.version = 0;
+            }
+            if (message.pk != null && Object.hasOwnProperty.call(message, "pk"))
+                object.pk = options.bytes === String ? $util.base64.encode(message.pk, 0, message.pk.length) : options.bytes === Array ? Array.prototype.slice.call(message.pk) : message.pk;
+            if (message.version != null && Object.hasOwnProperty.call(message, "version"))
+                object.version = message.version;
+            return object;
+        };
+
+        /**
+         * Converts this KxParams to JSON.
+         * @function toJSON
+         * @memberof hbb.KxParams
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        KxParams.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for KxParams
+         * @function getTypeUrl
+         * @memberof hbb.KxParams
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        KxParams.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/hbb.KxParams";
+        };
+
+        return KxParams;
     })();
 
     hbb.HealthCheck = (function() {
@@ -7205,7 +8671,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         HealthCheck.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -7226,7 +8692,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.HealthCheck();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.HealthCheck();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -7240,6 +8716,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -7443,7 +8924,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         HeaderEntry.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -7464,7 +8945,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.HeaderEntry();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.HeaderEntry();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -7482,6 +8973,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -7718,7 +9214,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         HttpProxyRequest.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -7739,7 +9235,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.HttpProxyRequest();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.HttpProxyRequest();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -7767,6 +9273,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -8046,7 +9557,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         HttpProxyResponse.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -8067,7 +9578,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.HttpProxyResponse();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.HttpProxyResponse();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -8095,6 +9616,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -8293,6 +9819,7 @@ $root.hbb = (function() {
          * @property {hbb.IHealthCheck|null} [hc] RendezvousMessage hc
          * @property {hbb.IHttpProxyRequest|null} [httpProxyRequest] RendezvousMessage httpProxyRequest
          * @property {hbb.IHttpProxyResponse|null} [httpProxyResponse] RendezvousMessage httpProxyResponse
+         * @property {hbb.IIceCandidate|null} [iceCandidate] RendezvousMessage iceCandidate
          */
 
         /**
@@ -8494,17 +10021,25 @@ $root.hbb = (function() {
          */
         RendezvousMessage.prototype.httpProxyResponse = null;
 
+        /**
+         * RendezvousMessage iceCandidate.
+         * @member {hbb.IIceCandidate|null|undefined} iceCandidate
+         * @memberof hbb.RendezvousMessage
+         * @instance
+         */
+        RendezvousMessage.prototype.iceCandidate = null;
+
         // OneOf field names bound to virtual getters and setters
         var $oneOfFields;
 
         /**
          * RendezvousMessage union.
-         * @member {"registerPeer"|"registerPeerResponse"|"punchHoleRequest"|"punchHole"|"punchHoleSent"|"punchHoleResponse"|"fetchLocalAddr"|"localAddr"|"configureUpdate"|"registerPk"|"registerPkResponse"|"softwareUpdate"|"requestRelay"|"relayResponse"|"testNatRequest"|"testNatResponse"|"peerDiscovery"|"onlineRequest"|"onlineResponse"|"keyExchange"|"hc"|"httpProxyRequest"|"httpProxyResponse"|undefined} union
+         * @member {"registerPeer"|"registerPeerResponse"|"punchHoleRequest"|"punchHole"|"punchHoleSent"|"punchHoleResponse"|"fetchLocalAddr"|"localAddr"|"configureUpdate"|"registerPk"|"registerPkResponse"|"softwareUpdate"|"requestRelay"|"relayResponse"|"testNatRequest"|"testNatResponse"|"peerDiscovery"|"onlineRequest"|"onlineResponse"|"keyExchange"|"hc"|"httpProxyRequest"|"httpProxyResponse"|"iceCandidate"|undefined} union
          * @memberof hbb.RendezvousMessage
          * @instance
          */
         Object.defineProperty(RendezvousMessage.prototype, "union", {
-            get: $util.oneOfGetter($oneOfFields = ["registerPeer", "registerPeerResponse", "punchHoleRequest", "punchHole", "punchHoleSent", "punchHoleResponse", "fetchLocalAddr", "localAddr", "configureUpdate", "registerPk", "registerPkResponse", "softwareUpdate", "requestRelay", "relayResponse", "testNatRequest", "testNatResponse", "peerDiscovery", "onlineRequest", "onlineResponse", "keyExchange", "hc", "httpProxyRequest", "httpProxyResponse"]),
+            get: $util.oneOfGetter($oneOfFields = ["registerPeer", "registerPeerResponse", "punchHoleRequest", "punchHole", "punchHoleSent", "punchHoleResponse", "fetchLocalAddr", "localAddr", "configureUpdate", "registerPk", "registerPkResponse", "softwareUpdate", "requestRelay", "relayResponse", "testNatRequest", "testNatResponse", "peerDiscovery", "onlineRequest", "onlineResponse", "keyExchange", "hc", "httpProxyRequest", "httpProxyResponse", "iceCandidate"]),
             set: $util.oneOfSetter($oneOfFields)
         });
 
@@ -8582,6 +10117,8 @@ $root.hbb = (function() {
                 $root.hbb.HttpProxyRequest.encode(message.httpProxyRequest, writer.uint32(/* id 27, wireType 2 =*/218).fork(), q + 1).ldelim();
             if (message.httpProxyResponse != null && Object.hasOwnProperty.call(message, "httpProxyResponse"))
                 $root.hbb.HttpProxyResponse.encode(message.httpProxyResponse, writer.uint32(/* id 28, wireType 2 =*/226).fork(), q + 1).ldelim();
+            if (message.iceCandidate != null && Object.hasOwnProperty.call(message, "iceCandidate"))
+                $root.hbb.IceCandidate.encode(message.iceCandidate, writer.uint32(/* id 29, wireType 2 =*/234).fork(), q + 1).ldelim();
             return writer;
         };
 
@@ -8595,7 +10132,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         RendezvousMessage.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -8616,7 +10153,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.RendezvousMessage();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.RendezvousMessage();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -8714,10 +10261,19 @@ $root.hbb = (function() {
                         message.httpProxyResponse = $root.hbb.HttpProxyResponse.decode(reader, reader.uint32(), undefined, long + 1);
                         break;
                     }
+                case 29: {
+                        message.iceCandidate = $root.hbb.IceCandidate.decode(reader, reader.uint32(), undefined, long + 1);
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -8982,6 +10538,16 @@ $root.hbb = (function() {
                         return "httpProxyResponse." + error;
                 }
             }
+            if (message.iceCandidate != null && Object.hasOwnProperty.call(message, "iceCandidate")) {
+                if (properties.union === 1)
+                    return "union: multiple values";
+                properties.union = 1;
+                {
+                    var error = $root.hbb.IceCandidate.verify(message.iceCandidate, long + 1);
+                    if (error)
+                        return "iceCandidate." + error;
+                }
+            }
             return null;
         };
 
@@ -9118,6 +10684,11 @@ $root.hbb = (function() {
                     throw TypeError(".hbb.RendezvousMessage.httpProxyResponse: object expected");
                 message.httpProxyResponse = $root.hbb.HttpProxyResponse.fromObject(object.httpProxyResponse, long + 1);
             }
+            if (object.iceCandidate != null) {
+                if (!$util.isObject(object.iceCandidate))
+                    throw TypeError(".hbb.RendezvousMessage.iceCandidate: object expected");
+                message.iceCandidate = $root.hbb.IceCandidate.fromObject(object.iceCandidate, long + 1);
+            }
             return message;
         };
 
@@ -9253,6 +10824,11 @@ $root.hbb = (function() {
                 if (options.oneofs)
                     object.union = "httpProxyResponse";
             }
+            if (message.iceCandidate != null && Object.hasOwnProperty.call(message, "iceCandidate")) {
+                object.iceCandidate = $root.hbb.IceCandidate.toObject(message.iceCandidate, options, q + 1);
+                if (options.oneofs)
+                    object.union = "iceCandidate";
+            }
             return object;
         };
 
@@ -9382,7 +10958,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         EncodedVideoFrame.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -9403,7 +10979,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.EncodedVideoFrame();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.EncodedVideoFrame();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -9425,6 +11011,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -9661,7 +11252,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         EncodedVideoFrames.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -9682,7 +11273,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.EncodedVideoFrames();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.EncodedVideoFrames();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -9698,6 +11299,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -9907,7 +11513,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         RGB.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -9928,7 +11534,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.RGB();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.RGB();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -9942,6 +11558,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -10145,7 +11766,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         YUV.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -10166,7 +11787,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.YUV();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.YUV();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -10184,6 +11815,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -10490,7 +12126,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         VideoFrame.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -10511,7 +12147,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.VideoFrame();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.VideoFrame();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -10553,6 +12199,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -10817,6 +12468,8 @@ $root.hbb = (function() {
          * @interface IIdPk
          * @property {string|null} [id] IdPk id
          * @property {Uint8Array|null} [pk] IdPk pk
+         * @property {string|null} [dtlsFingerprint] IdPk dtlsFingerprint
+         * @property {number|null} [kxVersion] IdPk kxVersion
          */
 
         /**
@@ -10851,6 +12504,22 @@ $root.hbb = (function() {
         IdPk.prototype.pk = $util.newBuffer([]);
 
         /**
+         * IdPk dtlsFingerprint.
+         * @member {string} dtlsFingerprint
+         * @memberof hbb.IdPk
+         * @instance
+         */
+        IdPk.prototype.dtlsFingerprint = "";
+
+        /**
+         * IdPk kxVersion.
+         * @member {number} kxVersion
+         * @memberof hbb.IdPk
+         * @instance
+         */
+        IdPk.prototype.kxVersion = 0;
+
+        /**
          * Creates a new IdPk instance using the specified properties.
          * @function create
          * @memberof hbb.IdPk
@@ -10882,6 +12551,10 @@ $root.hbb = (function() {
                 writer.uint32(/* id 1, wireType 2 =*/10).string(message.id);
             if (message.pk != null && Object.hasOwnProperty.call(message, "pk"))
                 writer.uint32(/* id 2, wireType 2 =*/18).bytes(message.pk);
+            if (message.dtlsFingerprint != null && Object.hasOwnProperty.call(message, "dtlsFingerprint"))
+                writer.uint32(/* id 3, wireType 2 =*/26).string(message.dtlsFingerprint);
+            if (message.kxVersion != null && Object.hasOwnProperty.call(message, "kxVersion"))
+                writer.uint32(/* id 4, wireType 0 =*/32).uint32(message.kxVersion);
             return writer;
         };
 
@@ -10895,7 +12568,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         IdPk.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -10916,7 +12589,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.IdPk();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.IdPk();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -10930,10 +12613,23 @@ $root.hbb = (function() {
                         message.pk = reader.bytes();
                         break;
                     }
+                case 3: {
+                        message.dtlsFingerprint = reader.string();
+                        break;
+                    }
+                case 4: {
+                        message.kxVersion = reader.uint32();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -10975,6 +12671,12 @@ $root.hbb = (function() {
             if (message.pk != null && Object.hasOwnProperty.call(message, "pk"))
                 if (!(message.pk && typeof message.pk.length === "number" || $util.isString(message.pk)))
                     return "pk: buffer expected";
+            if (message.dtlsFingerprint != null && Object.hasOwnProperty.call(message, "dtlsFingerprint"))
+                if (!$util.isString(message.dtlsFingerprint))
+                    return "dtlsFingerprint: string expected";
+            if (message.kxVersion != null && Object.hasOwnProperty.call(message, "kxVersion"))
+                if (!$util.isInteger(message.kxVersion))
+                    return "kxVersion: integer expected";
             return null;
         };
 
@@ -11003,6 +12705,10 @@ $root.hbb = (function() {
                     $util.base64.decode(object.pk, message.pk = $util.newBuffer($util.base64.length(object.pk)), 0);
                 else if (object.pk.length >= 0)
                     message.pk = object.pk;
+            if (object.dtlsFingerprint != null)
+                message.dtlsFingerprint = String(object.dtlsFingerprint);
+            if (object.kxVersion != null)
+                message.kxVersion = object.kxVersion >>> 0;
             return message;
         };
 
@@ -11032,11 +12738,17 @@ $root.hbb = (function() {
                     if (options.bytes !== Array)
                         object.pk = $util.newBuffer(object.pk);
                 }
+                object.dtlsFingerprint = "";
+                object.kxVersion = 0;
             }
             if (message.id != null && Object.hasOwnProperty.call(message, "id"))
                 object.id = message.id;
             if (message.pk != null && Object.hasOwnProperty.call(message, "pk"))
                 object.pk = options.bytes === String ? $util.base64.encode(message.pk, 0, message.pk.length) : options.bytes === Array ? Array.prototype.slice.call(message.pk) : message.pk;
+            if (message.dtlsFingerprint != null && Object.hasOwnProperty.call(message, "dtlsFingerprint"))
+                object.dtlsFingerprint = message.dtlsFingerprint;
+            if (message.kxVersion != null && Object.hasOwnProperty.call(message, "kxVersion"))
+                object.kxVersion = message.kxVersion;
             return object;
         };
 
@@ -11232,7 +12944,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         DisplayInfo.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -11253,7 +12965,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.DisplayInfo();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.DisplayInfo();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -11299,6 +13021,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -11572,7 +13299,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         PortForward.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -11593,7 +13320,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.PortForward();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.PortForward();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -11611,6 +13348,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -11823,7 +13565,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         FileTransfer.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -11844,7 +13586,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.FileTransfer();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.FileTransfer();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -11862,6 +13614,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -12052,7 +13809,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         ViewCamera.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -12073,7 +13830,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.ViewCamera();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.ViewCamera();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -12083,6 +13850,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -12263,7 +14035,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         OSLogin.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -12284,7 +14056,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.OSLogin();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.OSLogin();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -12302,6 +14084,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -12671,7 +14458,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         LoginRequest.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -12692,7 +14479,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.LoginRequest();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.LoginRequest();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -12762,6 +14559,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -13158,7 +14960,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         Terminal.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -13179,7 +14981,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.Terminal();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.Terminal();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -13193,6 +15005,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -13396,7 +15213,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         Auth2FA.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -13417,7 +15234,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.Auth2FA();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.Auth2FA();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -13435,6 +15262,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -13645,7 +15477,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         ChatMessage.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -13666,7 +15498,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.ChatMessage();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.ChatMessage();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -13680,6 +15522,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -13883,7 +15730,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         Features.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -13904,7 +15751,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.Features();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.Features();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -13922,6 +15779,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -14167,7 +16029,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         CodecAbility.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -14188,7 +16050,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.CodecAbility();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.CodecAbility();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -14218,6 +16090,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -14487,7 +16364,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         SupportedEncoding.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -14508,7 +16385,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.SupportedEncoding();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.SupportedEncoding();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -14538,6 +16425,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -14891,7 +16783,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         PeerInfo.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -14912,7 +16804,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.PeerInfo();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.PeerInfo();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -14972,6 +16874,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -15302,7 +17209,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         WindowsSession.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -15323,7 +17230,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.WindowsSession();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.WindowsSession();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -15341,6 +17258,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -15578,7 +17500,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         LoginResponse.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -15599,7 +17521,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.LoginResponse();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.LoginResponse();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -15621,6 +17553,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -15846,7 +17783,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         TouchScaleUpdate.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -15867,7 +17804,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.TouchScaleUpdate();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.TouchScaleUpdate();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -15881,6 +17828,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -16084,7 +18036,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         TouchPanStart.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -16105,7 +18057,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.TouchPanStart();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.TouchPanStart();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -16123,6 +18085,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -16335,7 +18302,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         TouchPanUpdate.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -16356,7 +18323,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.TouchPanUpdate();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.TouchPanUpdate();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -16374,6 +18351,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -16586,7 +18568,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         TouchPanEnd.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -16607,7 +18589,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.TouchPanEnd();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.TouchPanEnd();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -16625,6 +18617,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -16873,7 +18870,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         TouchEvent.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -16894,7 +18891,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.TouchEvent();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.TouchEvent();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -16920,6 +18927,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -17212,7 +19224,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         PointerDeviceEvent.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -17233,7 +19245,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.PointerDeviceEvent();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.PointerDeviceEvent();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -17248,8 +19270,14 @@ $root.hbb = (function() {
                             message.modifiers = [];
                         if ((tag & 7) === 2) {
                             var end2 = reader.uint32() + reader.pos;
+                            if (end2 > reader.len)
+                                throw RangeError("index out of range");
+                            reader.len = end2;
                             while (reader.pos < end2)
                                 message.modifiers.push(reader.int32());
+                            if (reader.pos !== end2)
+                                throw RangeError("index out of range");
+                            reader.len = end;
                         } else
                             message.modifiers.push(reader.int32());
                         break;
@@ -17258,6 +19286,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -17938,7 +19971,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         MouseEvent.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -17959,7 +19992,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.MouseEvent();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.MouseEvent();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -17982,8 +20025,14 @@ $root.hbb = (function() {
                             message.modifiers = [];
                         if ((tag & 7) === 2) {
                             var end2 = reader.uint32() + reader.pos;
+                            if (end2 > reader.len)
+                                throw RangeError("index out of range");
+                            reader.len = end2;
                             while (reader.pos < end2)
                                 message.modifiers.push(reader.int32());
+                            if (reader.pos !== end2)
+                                throw RangeError("index out of range");
+                            reader.len = end;
                         } else
                             message.modifiers.push(reader.int32());
                         break;
@@ -17992,6 +20041,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -18940,7 +20994,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         KeyEvent.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -18961,7 +21015,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.KeyEvent();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.KeyEvent();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -19000,8 +21064,14 @@ $root.hbb = (function() {
                             message.modifiers = [];
                         if ((tag & 7) === 2) {
                             var end2 = reader.uint32() + reader.pos;
+                            if (end2 > reader.len)
+                                throw RangeError("index out of range");
+                            reader.len = end2;
                             while (reader.pos < end2)
                                 message.modifiers.push(reader.int32());
+                            if (reader.pos !== end2)
+                                throw RangeError("index out of range");
+                            reader.len = end;
                         } else
                             message.modifiers.push(reader.int32());
                         break;
@@ -19014,6 +21084,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -20235,7 +22310,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         CursorData.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -20256,7 +22331,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.CursorData();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.CursorData();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -20290,6 +22375,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -20559,7 +22649,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         CursorPosition.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -20580,7 +22670,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.CursorPosition();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.CursorPosition();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -20598,6 +22698,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -20810,7 +22915,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         Hash.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -20831,7 +22936,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.Hash();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.Hash();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -20849,6 +22964,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -21129,7 +23249,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         Clipboard.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -21150,7 +23270,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.Clipboard();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.Clipboard();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -21184,6 +23314,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -21472,7 +23607,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         MultiClipboards.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -21493,7 +23628,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.MultiClipboards();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.MultiClipboards();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -21509,6 +23654,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -21782,7 +23932,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         FileEntry.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -21803,7 +23953,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.FileEntry();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.FileEntry();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -21833,6 +23993,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -22148,7 +24313,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         FileDirectory.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -22169,7 +24334,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.FileDirectory();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.FileDirectory();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -22193,6 +24368,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -22431,7 +24611,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         ReadDir.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -22452,7 +24632,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.ReadDir();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.ReadDir();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -22470,6 +24660,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -22693,7 +24888,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         ReadAllFiles.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -22714,7 +24909,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.ReadAllFiles();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.ReadAllFiles();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -22736,6 +24941,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -22967,7 +25177,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         FileRename.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -22988,7 +25198,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.FileRename();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.FileRename();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -23010,6 +25230,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -23332,7 +25557,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         FileAction.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -23353,7 +25578,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.FileAction();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.FileAction();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -23403,6 +25638,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -23785,7 +26025,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         FileTransferCancel.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -23806,7 +26046,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.FileTransferCancel();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.FileTransferCancel();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -23820,6 +26070,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -24070,7 +26325,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         FileResponse.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -24091,7 +26346,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.FileResponse();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.FileResponse();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -24121,6 +26386,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -24480,7 +26750,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         FileTransferDigest.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -24501,7 +26771,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.FileTransferDigest();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.FileTransferDigest();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -24543,6 +26823,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -24884,7 +27169,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         FileTransferBlock.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -24905,7 +27190,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.FileTransferBlock();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.FileTransferBlock();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -24935,6 +27230,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -25191,7 +27491,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         FileTransferError.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -25212,7 +27512,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.FileTransferError();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.FileTransferError();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -25234,6 +27544,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -25476,7 +27791,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         FileTransferSendRequest.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -25497,7 +27812,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.FileTransferSendRequest();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.FileTransferSendRequest();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -25523,6 +27848,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -25787,7 +28117,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         FileTransferSendConfirmRequest.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -25808,7 +28138,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.FileTransferSendConfirmRequest();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.FileTransferSendConfirmRequest();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -25834,6 +28174,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -26073,7 +28418,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         FileTransferDone.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -26094,7 +28439,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.FileTransferDone();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.FileTransferDone();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -26112,6 +28467,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -26359,7 +28719,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         FileTransferReceiveRequest.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -26380,7 +28740,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.FileTransferReceiveRequest();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.FileTransferReceiveRequest();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -26412,6 +28782,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -26693,7 +29068,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         FileRemoveDir.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -26714,7 +29089,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.FileRemoveDir();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.FileRemoveDir();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -26736,6 +29121,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -26967,7 +29357,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         FileRemoveFile.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -26988,7 +29378,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.FileRemoveFile();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.FileRemoveFile();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -27010,6 +29410,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -27230,7 +29635,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         FileDirCreate.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -27251,7 +29656,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.FileDirCreate();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.FileDirCreate();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -27269,6 +29684,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -27481,7 +29901,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         Resolution.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -27502,7 +29922,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.Resolution();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.Resolution();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -27520,6 +29950,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -27732,7 +30167,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         DisplayResolution.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -27753,7 +30188,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.DisplayResolution();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.DisplayResolution();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -27771,6 +30216,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -27979,7 +30429,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         SupportedResolutions.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -28000,7 +30450,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.SupportedResolutions();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.SupportedResolutions();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -28016,6 +30476,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -28302,7 +30767,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         SwitchDisplay.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -28323,7 +30788,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.SwitchDisplay();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.SwitchDisplay();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -28365,6 +30840,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -28661,7 +31141,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         CaptureDisplays.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -28682,7 +31162,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.CaptureDisplays();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.CaptureDisplays();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -28693,8 +31183,14 @@ $root.hbb = (function() {
                             message.add = [];
                         if ((tag & 7) === 2) {
                             var end2 = reader.uint32() + reader.pos;
+                            if (end2 > reader.len)
+                                throw RangeError("index out of range");
+                            reader.len = end2;
                             while (reader.pos < end2)
                                 message.add.push(reader.int32());
+                            if (reader.pos !== end2)
+                                throw RangeError("index out of range");
+                            reader.len = end;
                         } else
                             message.add.push(reader.int32());
                         break;
@@ -28704,8 +31200,14 @@ $root.hbb = (function() {
                             message.sub = [];
                         if ((tag & 7) === 2) {
                             var end2 = reader.uint32() + reader.pos;
+                            if (end2 > reader.len)
+                                throw RangeError("index out of range");
+                            reader.len = end2;
                             while (reader.pos < end2)
                                 message.sub.push(reader.int32());
+                            if (reader.pos !== end2)
+                                throw RangeError("index out of range");
+                            reader.len = end;
                         } else
                             message.sub.push(reader.int32());
                         break;
@@ -28715,8 +31217,14 @@ $root.hbb = (function() {
                             message.set = [];
                         if ((tag & 7) === 2) {
                             var end2 = reader.uint32() + reader.pos;
+                            if (end2 > reader.len)
+                                throw RangeError("index out of range");
+                            reader.len = end2;
                             while (reader.pos < end2)
                                 message.set.push(reader.int32());
+                            if (reader.pos !== end2)
+                                throw RangeError("index out of range");
+                            reader.len = end;
                         } else
                             message.set.push(reader.int32());
                         break;
@@ -28725,6 +31233,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -28981,7 +31494,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         ToggleVirtualDisplay.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -29002,7 +31515,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.ToggleVirtualDisplay();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.ToggleVirtualDisplay();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -29020,6 +31543,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -29232,7 +31760,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         TogglePrivacyMode.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -29253,7 +31781,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.TogglePrivacyMode();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.TogglePrivacyMode();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -29271,6 +31809,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -29483,7 +32026,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         PermissionInfo.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -29504,7 +32047,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.PermissionInfo();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.PermissionInfo();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -29522,6 +32075,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -29886,7 +32444,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         SupportedDecoding.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -29907,7 +32465,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.SupportedDecoding();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.SupportedDecoding();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -29949,6 +32517,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -30459,7 +33032,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         OptionMessage.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -30480,7 +33053,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.OptionMessage();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.OptionMessage();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -30558,6 +33141,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -31274,7 +33862,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         TestDelay.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -31295,7 +33883,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.TestDelay();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.TestDelay();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -31321,6 +33919,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -31565,7 +34168,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         PublicKey.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -31586,7 +34189,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.PublicKey();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.PublicKey();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -31604,6 +34217,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -31823,7 +34441,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         SignedId.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -31844,7 +34462,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.SignedId();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.SignedId();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -31858,6 +34486,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -32070,7 +34703,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         AudioFormat.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -32091,7 +34724,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.AudioFormat();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.AudioFormat();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -32109,6 +34752,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -32310,7 +34958,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         AudioFrame.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -32331,7 +34979,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.AudioFrame();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.AudioFrame();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -32345,6 +35003,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -32579,7 +35242,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         MessageBox.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -32600,7 +35263,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.MessageBox();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.MessageBox();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -32626,6 +35299,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -32890,7 +35568,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         BackNotification.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -32911,7 +35589,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.BackNotification();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.BackNotification();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -32937,6 +35625,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -33326,7 +36019,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         ElevationRequestWithLogon.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -33347,7 +36040,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.ElevationRequestWithLogon();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.ElevationRequestWithLogon();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -33365,6 +36068,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -33591,7 +36299,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         ElevationRequest.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -33612,7 +36320,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.ElevationRequest();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.ElevationRequest();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -33630,6 +36348,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -33846,7 +36569,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         SwitchSidesRequest.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -33867,7 +36590,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.SwitchSidesRequest();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.SwitchSidesRequest();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -33881,6 +36614,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -34093,7 +36831,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         SwitchSidesResponse.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -34114,7 +36852,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.SwitchSidesResponse();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.SwitchSidesResponse();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -34132,6 +36880,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -34336,7 +37089,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         SwitchBack.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -34357,7 +37110,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.SwitchBack();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.SwitchBack();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -34367,6 +37130,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -34549,7 +37317,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         WindowsSessions.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -34570,7 +37338,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.WindowsSessions();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.WindowsSessions();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -34590,6 +37368,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -34808,7 +37591,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         MessageQuery.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -34829,7 +37612,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.MessageQuery();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.MessageQuery();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -34843,6 +37636,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -35046,7 +37844,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         VoiceCallRequest.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -35067,7 +37865,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.VoiceCallRequest();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.VoiceCallRequest();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -35085,6 +37893,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -35324,7 +38137,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         VoiceCallResponse.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -35345,7 +38158,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.VoiceCallResponse();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.VoiceCallResponse();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -35367,6 +38190,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -35619,7 +38447,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         ScreenshotRequest.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -35640,7 +38468,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.ScreenshotRequest();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.ScreenshotRequest();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -35658,6 +38496,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -35881,7 +38724,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         ScreenshotResponse.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -35902,7 +38745,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.ScreenshotResponse();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.ScreenshotResponse();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -35924,6 +38777,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -36486,7 +39344,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         Misc.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -36507,7 +39365,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.Misc();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.Misc();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -36641,6 +39509,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -37664,7 +40537,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         Message.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -37685,7 +40558,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.Message();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.Message();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -37807,6 +40690,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -38657,7 +41545,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         Cliprdr.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -38678,7 +41566,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.Cliprdr();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.Cliprdr();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -38724,6 +41622,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -39075,7 +41978,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         CliprdrMonitorReady.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -39096,7 +41999,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.CliprdrMonitorReady();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.CliprdrMonitorReady();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -39106,6 +42019,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -39286,7 +42204,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         CliprdrFormat.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -39307,7 +42225,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.CliprdrFormat();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.CliprdrFormat();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -39325,6 +42253,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -39528,7 +42461,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         CliprdrServerFormatList.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -39549,7 +42482,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.CliprdrServerFormatList();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.CliprdrServerFormatList();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -39565,6 +42508,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -39774,7 +42722,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         CliprdrServerFormatListResponse.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -39795,7 +42743,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.CliprdrServerFormatListResponse();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.CliprdrServerFormatListResponse();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -39809,6 +42767,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -40001,7 +42964,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         CliprdrServerFormatDataRequest.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -40022,7 +42985,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.CliprdrServerFormatDataRequest();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.CliprdrServerFormatDataRequest();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -40036,6 +43009,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -40239,7 +43217,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         CliprdrServerFormatDataResponse.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -40260,7 +43238,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.CliprdrServerFormatDataResponse();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.CliprdrServerFormatDataResponse();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -40278,6 +43266,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -40565,7 +43558,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         CliprdrFileContentsRequest.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -40586,7 +43579,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.CliprdrFileContentsRequest();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.CliprdrFileContentsRequest();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -40628,6 +43631,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -40899,7 +43907,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         CliprdrFileContentsResponse.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -40920,7 +43928,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.CliprdrFileContentsResponse();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.CliprdrFileContentsResponse();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -40942,6 +43960,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -41149,7 +44172,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         CliprdrTryEmpty.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -41170,7 +44193,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.CliprdrTryEmpty();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.CliprdrTryEmpty();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -41180,6 +44213,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -41360,7 +44398,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         CliprdrFile.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -41381,7 +44419,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.CliprdrFile();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.CliprdrFile();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -41399,6 +44447,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };
@@ -41618,7 +44671,7 @@ $root.hbb = (function() {
          * @returns {$protobuf.Writer} Writer
          */
         CliprdrFiles.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -41639,7 +44692,17 @@ $root.hbb = (function() {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.hbb.CliprdrFiles();
+            var end, message;
+            if (length === undefined)
+                end = reader.len;
+            else {
+                end = reader.pos + length;
+                if (end > reader.len)
+                    throw RangeError("index out of range");
+                length = reader.len;
+                reader.len = end;
+            }
+            message = new $root.hbb.CliprdrFiles();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
@@ -41655,6 +44718,11 @@ $root.hbb = (function() {
                     reader.skipType(tag & 7, long);
                     break;
                 }
+            }
+            if (length !== undefined) {
+                if (reader.pos !== end)
+                    throw RangeError("index out of range");
+                reader.len = length;
             }
             return message;
         };

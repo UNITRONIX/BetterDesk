@@ -8,6 +8,12 @@ Symptoms such as wrong characters after some time, broken Shift/Caps Lock, or Hy
 2. On the remote desktop, tap **Ctrl**, **Alt**, and **Shift** once each (no hold).
 3. Check **keyboard layout** (PL/EN) and **Caps Lock** on the remote machine.
 
+## Shift + symbol / dead keys (e.g. `^` via Shift+6)
+
+- **US layout:** Shift+digit uses Map scancodes (same as native RustDesk). If you get a bare digit (`6` instead of `^`), Shift was likely missing on the wire — rdclient re-asserts Shift when the browser reports `shiftKey` but no Shift keydown was tracked, or use **Reset Keyboard State**.
+- **PL / dead-key layouts:** Shift+6 may report `key: Dead`. Rdclient suppresses the Digit Map event and waits for `compositionend`, then sends the composed character (e.g. `^`) as Legacy `chr`.
+- **Windows login / passwords:** **Paste from Clipboard** does not work on Winlogon (secure desktop). Use the toolbar **Type Text** control — it injects `KeyEvent.seq` keystrokes (or CDAP `input_type: text`).
+
 ## Verify sticky-modifier hypothesis (rdclient web)
 
 1. Connect via **Settings → Remote** (rdclient web).
@@ -43,6 +49,7 @@ Symptoms such as wrong characters after some time, broken Shift/Caps Lock, or Hy
 - **Legacy:** printable keys → `chr` + `modifiers` (Shift/Ctrl/Alt as needed); navigation/modifiers → `controlKey`.
 - **Caps Lock / Num Lock / Scroll Lock keys:** no wire event (state synced via `modifiers` on following letter/numpad keys).
 - **Toolbar specials** (`CtrlAltDel`, `LockScreen`): always Legacy `controlKey`.
+- **Type Text:** `KeyEvent.seq` (Legacy) chunks — not clipboard sync.
 
 ## Hyper-V / nested remote
 

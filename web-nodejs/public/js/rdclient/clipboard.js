@@ -152,7 +152,12 @@ class RDClipboard {
 
         const needsDecompress = !!clipboard.compress || RDCompress.isZstdMagic(bytes);
         if (needsDecompress) {
-            bytes = await RDCompress.decompressZstd(bytes, { force: true });
+            try {
+                bytes = await RDCompress.decompressZstd(bytes, { force: true });
+            } catch (err) {
+                RDCompress.reportZstdUnavailable(err);
+                return null;
+            }
         }
 
         const fmt = RDClipboard.formatId(clipboard.format);
@@ -218,45 +223,86 @@ class RDClipboard {
     static async applyToLocal(decodedEntries, opts) {
         const options = opts || {};
         if (!options.enabled) return;
-        if (!navigator.clipboard) return;
-
         const entries = (decodedEntries || []).filter(Boolean);
         if (!entries.length) return;
+        await RDClipboard.writeLocalRich({
+            text: RDClipboard.pickBestText(entries),
+            html: (entries.find((e) => e.format === 'html' && e.html) || {}).html || '',
+            pngBlob: (entries.find((e) => e.pngBlob) || {}).pngBlob || null
+        });
+    }
 
-        const text = RDClipboard.pickBestText(entries);
-        const htmlEntry = entries.find((e) => e.format === 'html' && e.html);
-        const pngEntry = entries.find((e) => e.pngBlob);
-        const svgEntry = entries.find((e) => e.format === 'image/svg+xml' && e.svgText);
+    /**
+     * Read the richest clipboard representation supported by this browser.
+     * @returns {Promise<Object>}
+     */
+    static async readLocalRich() {
+        if (!navigator.clipboard) throw new Error('clipboard_unavailable');
+        if (navigator.clipboard.read) {
+            const items = await navigator.clipboard.read();
+            const entry = {};
+            for (const item of items || []) {
+                if (item.types.includes('text/plain')) {
+                    entry.text = await (await item.getType('text/plain')).text();
+                }
+                if (item.types.includes('text/html')) {
+                    entry.html = await (await item.getType('text/html')).text();
+                }
+                const imageType = item.types.find((type) => type === 'image/png');
+                if (imageType) entry.pngBlob = await item.getType(imageType);
+            }
+            if (entry.text || entry.html || entry.pngBlob) return entry;
+        }
+        if (navigator.clipboard.readText) {
+            const text = await navigator.clipboard.readText();
+            if (text) return { text };
+        }
+        return {};
+    }
+
+    /**
+     * Write a rich clipboard entry. The return value lets the UI distinguish
+     * browser permission failures from an empty clipboard.
+     * @param {Object} entry
+     * @returns {Promise<{ok: boolean, reason?: string}>}
+     */
+    static async writeLocalRich(entry) {
+        if (!navigator.clipboard) return { ok: false, reason: 'clipboard_unavailable' };
+
+        const value = entry || {};
+        const text = value.text || '';
 
         try {
-            if (pngEntry && navigator.clipboard.write && typeof ClipboardItem !== 'undefined') {
-                await navigator.clipboard.write([new ClipboardItem({ 'image/png': pngEntry.pngBlob })]);
-                return;
-            }
-            if (svgEntry && navigator.clipboard.write && typeof ClipboardItem !== 'undefined') {
-                const blob = new Blob([svgEntry.svgText], { type: 'image/svg+xml' });
-                await navigator.clipboard.write([new ClipboardItem({ 'image/svg+xml': blob })]);
-                return;
-            }
-            if (htmlEntry && navigator.clipboard.write && typeof ClipboardItem !== 'undefined') {
-                const plain = htmlEntry.text || RDClipboard.stripHtml(htmlEntry.html);
-                await navigator.clipboard.write([new ClipboardItem({
-                    'text/html': new Blob([htmlEntry.html], { type: 'text/html' }),
-                    'text/plain': new Blob([plain], { type: 'text/plain' })
-                })]);
-                return;
+            if (navigator.clipboard.write && typeof ClipboardItem !== 'undefined' &&
+                (value.pngBlob || value.html)) {
+                const data = {};
+                if (value.pngBlob) data['image/png'] = value.pngBlob;
+                if (value.html) {
+                    data['text/html'] = new Blob([value.html], { type: 'text/html' });
+                    data['text/plain'] = new Blob([text || RDClipboard.stripHtml(value.html)], {
+                        type: 'text/plain'
+                    });
+                } else if (text) {
+                    data['text/plain'] = new Blob([text], { type: 'text/plain' });
+                }
+                await navigator.clipboard.write([new ClipboardItem(data)]);
+                return { ok: true };
             }
             if (text && navigator.clipboard.writeText) {
                 await navigator.clipboard.writeText(text);
+                return { ok: true };
             }
+            return { ok: false, reason: 'clipboard_write_unsupported' };
         } catch (err) {
             if (text && navigator.clipboard.writeText) {
                 try {
                     await navigator.clipboard.writeText(text);
+                    return { ok: true, reason: 'rich_write_fallback' };
                 } catch (_) {
-                    // permission denied — ignore
+                    return { ok: false, reason: 'clipboard_permission_denied' };
                 }
             }
+            return { ok: false, reason: 'clipboard_permission_denied' };
         }
     }
 

@@ -69,16 +69,19 @@ env:
 jobs:
   read-version:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: read
     outputs:
       version: ${{ steps.ver.outputs.version }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Validate manual publish tag
-        if: github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && github.ref != 'refs/heads/main'
+        # Tags are checked out as `refs/tags/vX.Y.Z`; a stable release dispatch
+        # from version-bump-main.yml must be allowed to publish `latest`.
+        if: github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && github.ref != 'refs/heads/main' && !startsWith(github.ref, 'refs/tags/')
         run: |
-          echo "::error::The latest tag may only be published from main. Use tag=dev or a custom test tag such as dev-arm."
+          echo "::error::The latest tag may only be published from main or a release tag. Use tag=dev or a custom test tag such as dev-arm."
           exit 1
       - id: ver
         run: |
@@ -88,8 +91,56 @@ jobs:
             echo "version=dev" >> "$GITHUB_OUTPUT"
           fi
 
-  build-server:
+  # Guard against GHCR authorization outages. On 2026-11-18 a publish failed with
+  # "permission_denied ... circuit breaker is open" from GitHub's authzd service —
+  # infrastructure, not our code. Checking the registry up front keeps that
+  # distinguishable from a real build failure and avoids burning a 330-minute
+  # build before the push is rejected. A bounded retry absorbs short blips.
+  ghcr-preflight:
     needs: read-version
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'release' ||
+      (github.event_name == 'push' &&
+        (startsWith(github.event.head_commit.message, 'chore: bump version') ||
+         startsWith(github.event.head_commit.message, 'chore: release version')) &&
+        contains(github.event.head_commit.message, '[version-bump]'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Verify GHCR accepts our credentials
+        env:
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -uo pipefail
+          attempt=1
+          max=3
+          while [ "$attempt" -le "$max" ]; do
+            echo "GHCR auth probe attempt $attempt/$max"
+            if token=$(curl -fsS -m 20 \
+                 -u "${GHCR_USER}:${GHCR_TOKEN}" \
+                 "https://${REGISTRY}/token?scope=repository%3Aunitronix%2Fbetterdesk-server%3Apush&service=${REGISTRY}" \
+                 | sed -n 's/.*"token"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p'); then
+              if [ -n "$token" ]; then
+                echo "GHCR preflight OK — registry issued a push token."
+                exit 0
+              fi
+              echo "Registry responded without a token; retrying."
+            else
+              echo "Registry auth request failed (possibly a GitHub incident); retrying."
+            fi
+            attempt=$((attempt + 1))
+            [ "$attempt" -le "$max" ] && sleep $((attempt * 15))
+          done
+          echo "::error::GHCR did not issue push credentials after ${max} attempts. This is a GitHub Container Registry availability/authorization problem, not a build error. Re-run this workflow once the incident clears."
+          exit 1
+
+  build-server:
+    needs: [read-version, ghcr-preflight]
     # Release/dispatch always; branch pushes only on CI version-bump subjects (#401).
     # Match subject markers (chore: bump/release … [version-bump]), not incidental
     # mentions of [version-bump] in a feature commit body.
@@ -110,11 +161,11 @@ jobs:
       json: ${{ steps.meta.outputs.json }}
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: docker/setup-buildx-action@v4
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
 
-      - uses: docker/login-action@v4
+      - uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -122,14 +173,14 @@ jobs:
 
       - name: Extract metadata
         id: meta
-        uses: docker/metadata-action@v6
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6
         with:
           images: ${{ env.IMAGE_PREFIX }}/betterdesk-server
           # Prefer product VERSION over tag name (dispatch with tag=latest must not label as "latest")
           labels: |
             org.opencontainers.image.version=${{ needs.read-version.outputs.version }}
           tags: |
-            type=raw,value=latest,enable=${{ (github.ref == 'refs/heads/main' && github.event_name == 'push') || (github.event_name == 'release' && github.event.release.prerelease == false) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && github.ref == 'refs/heads/main') }}
+            type=raw,value=latest,enable=${{ (github.ref == 'refs/heads/main' && github.event_name == 'push') || (github.event_name == 'release' && github.event.release.prerelease == false) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))) }}
             type=raw,value=dev,enable=${{ (github.ref == 'refs/heads/dev' && github.event_name == 'push') || (github.event_name == 'workflow_dispatch' && github.event.inputs.tag == 'dev') }}
             type=ref,event=tag
             type=semver,pattern={{version}}
@@ -140,7 +191,7 @@ jobs:
             type=sha,prefix=sha-,enable=${{ (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')) || (github.event_name == 'workflow_dispatch' && github.event.inputs.tag == 'dev') }}
 
       - id: build
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
         with:
           context: .
           file: ./Dockerfile.server
@@ -163,14 +214,14 @@ jobs:
           touch "/tmp/digests/betterdesk-server/${digest#sha256:}"
 
       - name: Upload image digest
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: digests-server-amd64
           path: /tmp/digests/betterdesk-server
           if-no-files-found: error
 
   build-console:
-    needs: read-version
+    needs: [read-version, ghcr-preflight]
     # Release/dispatch always; branch pushes only on CI version-bump subjects (#401).
     if: |
       github.event_name == 'workflow_dispatch' ||
@@ -188,11 +239,11 @@ jobs:
       tags: ${{ steps.meta.outputs.tags }}
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: docker/setup-buildx-action@v4
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
 
-      - uses: docker/login-action@v4
+      - uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -200,13 +251,13 @@ jobs:
 
       - name: Extract metadata
         id: meta
-        uses: docker/metadata-action@v6
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6
         with:
           images: ${{ env.IMAGE_PREFIX }}/betterdesk-console
           labels: |
             org.opencontainers.image.version=${{ needs.read-version.outputs.version }}
           tags: |
-            type=raw,value=latest,enable=${{ (github.ref == 'refs/heads/main' && github.event_name == 'push') || (github.event_name == 'release' && github.event.release.prerelease == false) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && github.ref == 'refs/heads/main') }}
+            type=raw,value=latest,enable=${{ (github.ref == 'refs/heads/main' && github.event_name == 'push') || (github.event_name == 'release' && github.event.release.prerelease == false) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))) }}
             type=raw,value=dev,enable=${{ (github.ref == 'refs/heads/dev' && github.event_name == 'push') || (github.event_name == 'workflow_dispatch' && github.event.inputs.tag == 'dev') }}
             type=ref,event=tag
             type=semver,pattern={{version}}
@@ -217,7 +268,7 @@ jobs:
             type=sha,prefix=sha-,enable=${{ (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')) || (github.event_name == 'workflow_dispatch' && github.event.inputs.tag == 'dev') }}
 
       - id: build
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
         with:
           context: .
           file: ./Dockerfile.console
@@ -239,14 +290,14 @@ jobs:
           touch "/tmp/digests/betterdesk-console/${digest#sha256:}"
 
       - name: Upload image digest
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: digests-console-amd64
           path: /tmp/digests/betterdesk-console
           if-no-files-found: error
 
   build-allinone:
-    needs: read-version
+    needs: [read-version, ghcr-preflight]
     # Release/dispatch always; branch pushes only on CI version-bump subjects (#401).
     if: |
       github.event_name == 'workflow_dispatch' ||
@@ -264,11 +315,11 @@ jobs:
       tags: ${{ steps.meta.outputs.tags }}
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: docker/setup-buildx-action@v4
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
 
-      - uses: docker/login-action@v4
+      - uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -283,13 +334,13 @@ jobs:
 
       - name: Extract metadata
         id: meta
-        uses: docker/metadata-action@v6
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6
         with:
           images: ${{ env.IMAGE_PREFIX }}/betterdesk
           labels: |
             org.opencontainers.image.version=${{ needs.read-version.outputs.version }}
           tags: |
-            type=raw,value=latest,enable=${{ (github.ref == 'refs/heads/main' && github.event_name == 'push') || (github.event_name == 'release' && github.event.release.prerelease == false) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && github.ref == 'refs/heads/main') }}
+            type=raw,value=latest,enable=${{ (github.ref == 'refs/heads/main' && github.event_name == 'push') || (github.event_name == 'release' && github.event.release.prerelease == false) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))) }}
             type=raw,value=dev,enable=${{ (github.ref == 'refs/heads/dev' && github.event_name == 'push') || (github.event_name == 'workflow_dispatch' && github.event.inputs.tag == 'dev') }}
             type=ref,event=tag
             type=semver,pattern={{version}}
@@ -300,7 +351,7 @@ jobs:
             type=sha,prefix=sha-,enable=${{ (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')) || (github.event_name == 'workflow_dispatch' && github.event.inputs.tag == 'dev') }}
 
       - id: build
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
         with:
           context: .
           file: ./Dockerfile
@@ -326,7 +377,7 @@ jobs:
           touch "/tmp/digests/betterdesk/${digest#sha256:}"
 
       - name: Upload image digest
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: digests-aio-amd64
           path: /tmp/digests/betterdesk
@@ -335,7 +386,7 @@ jobs:
   # Phase 2: ARM64 on native runners (after amd64). Soft-merge still
   # publishes amd64 tags if this job fails (#476).
   build-arm64:
-    needs: [read-version, build-server, build-console]
+    needs: [read-version, ghcr-preflight, build-server, build-console]
     if: |
       always() &&
       needs.read-version.result == 'success' &&
@@ -363,18 +414,18 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: docker/setup-buildx-action@v4
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
 
-      - uses: docker/login-action@v4
+      - uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - id: build
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
         with:
           context: .
           file: ./${{ matrix.file }}
@@ -399,7 +450,7 @@ jobs:
           touch "/tmp/digests/${{ matrix.image }}/${digest#sha256:}"
 
       - name: Upload image digest
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: digests-${{ matrix.name }}-arm64
           path: /tmp/digests/${{ matrix.image }}
@@ -407,7 +458,7 @@ jobs:
 
   # Last ARM job: AIO after server/console ARM (warm GHA cache) and amd64 AIO.
   build-aio-arm64:
-    needs: [read-version, build-allinone, build-arm64]
+    needs: [read-version, ghcr-preflight, build-allinone, build-arm64]
     if: |
       always() &&
       needs.read-version.result == 'success' &&
@@ -425,18 +476,18 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: docker/setup-buildx-action@v4
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
 
-      - uses: docker/login-action@v4
+      - uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - id: build
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
         with:
           context: .
           file: ./Dockerfile
@@ -464,7 +515,7 @@ jobs:
           touch "/tmp/digests/betterdesk/${digest#sha256:}"
 
       - name: Upload image digest
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: digests-aio-arm64
           path: /tmp/digests/betterdesk
@@ -473,7 +524,7 @@ jobs:
   # Soft-merge (#476): require amd64 success; include ARM digests when present.
   # ARM failure still publishes amd64-only (or partial) tags so the channel stays live.
   merge-images:
-    needs: [read-version, build-server, build-console, build-allinone, build-arm64, build-aio-arm64]
+    needs: [read-version, ghcr-preflight, build-server, build-console, build-allinone, build-arm64, build-aio-arm64]
     if: |
       always() &&
       needs.read-version.result == 'success' &&
@@ -496,9 +547,9 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: docker/setup-buildx-action@v4
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
 
-      - uses: docker/login-action@v4
+      - uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -510,7 +561,7 @@ jobs:
           echo "::warning::ARM64 build did not fully succeed (build-arm64=${{ needs.build-arm64.result }}, build-aio-arm64=${{ needs.build-aio-arm64.result }}). Publishing manifests from available digests (may be amd64-only until the next green ARM run)."
 
       - name: Download platform digests
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           pattern: digests-${{ matrix.name }}-*
           path: /tmp/digests
@@ -518,13 +569,13 @@ jobs:
 
       - name: Extract final image metadata
         id: meta
-        uses: docker/metadata-action@v6
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6
         with:
           images: ${{ env.IMAGE_PREFIX }}/${{ matrix.image }}
           labels: |
             org.opencontainers.image.version=${{ needs.read-version.outputs.version }}
           tags: |
-            type=raw,value=latest,enable=${{ (github.ref == 'refs/heads/main' && github.event_name == 'push') || (github.event_name == 'release' && github.event.release.prerelease == false) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && github.ref == 'refs/heads/main') }}
+            type=raw,value=latest,enable=${{ (github.ref == 'refs/heads/main' && github.event_name == 'push') || (github.event_name == 'release' && github.event.release.prerelease == false) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))) }}
             type=raw,value=dev,enable=${{ (github.ref == 'refs/heads/dev' && github.event_name == 'push') || (github.event_name == 'workflow_dispatch' && github.event.inputs.tag == 'dev') }}
             type=ref,event=tag
             type=semver,pattern={{version}}
@@ -572,7 +623,7 @@ jobs:
       - name: Generate server SBOM
         if: matrix.name == 'server'
         continue-on-error: true
-        uses: anchore/sbom-action@v0
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0
         env:
           SYFT_REGISTRY_AUTH_USERNAME: ${{ github.actor }}
           SYFT_REGISTRY_AUTH_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
@@ -597,6 +648,7 @@ jobs:
   update-description:
     needs: merge-images
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     if: |
       always() &&
       needs.merge-images.result == 'success'
@@ -604,7 +656,7 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Summary
         env:

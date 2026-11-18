@@ -178,6 +178,11 @@ module.exports = {
     // Device visibility for non-admin roles: open (legacy overlay ACL) or restricted (default-deny).
     deviceScopeDefault: (process.env.DEVICE_SCOPE_DEFAULT || 'open').toLowerCase(),
 
+    // Panel grouping owner (docs/important/console-backend-strangler.md, stage P2).
+    // 'go' — the Go server owns device groups, ACL, folders and per-user grants;
+    // 'node' — the console keeps its own writer (rollback switch).
+    backendPanelGrouping: (process.env.BACKEND_PANEL_GROUPING || 'go').toLowerCase(),
+
     // HTTPS / SSL
     httpsEnabled: (process.env.HTTPS_ENABLED || 'false').toLowerCase() === 'true',
     httpsPort: parseInt(process.env.HTTPS_PORT, 10) || 5443,

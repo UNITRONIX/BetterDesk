@@ -4,7 +4,7 @@
  * Supports multiple concurrent RDClient sessions
  */
 
-/* global RDClient, RDVideo, CDAPSession, RemoteTargetSession */
+/* global RDClient, RDVideo, CDAPSession, RemoteTargetSession, RDClipboard */
 
 (function () {
     'use strict';
@@ -124,6 +124,28 @@
     // ---- Session storage ----
     const sessions = new Map(); // deviceId → SessionInfo
     let activeSessionId = null;
+    const clipboardHub = window.rdClipboardHub || null;
+    let clipboardBridgeEnabled = window.localStorage.getItem('betterdesk.clipboardBridge') !== '0';
+
+    // File transfer uses the same authenticated sessions as the viewer. Keep
+    // this read-only bridge private to the current page so the modal can offer
+    // every open connection without creating another transport.
+    window.__rdGetTransferSessions = function () {
+        return Array.from(sessions.values()).filter(function (session) {
+            return !!(session && session.client && session.client.fileTransfer
+                && session.state === 'streaming');
+        }).map(function (session) {
+            return {
+                id: session.deviceId,
+                name: session.deviceName || session.deviceId,
+                deviceId: session.deviceId,
+                deviceName: session.deviceName || '',
+                client: session.client,
+                session: session,
+                ready: session.state === 'streaming'
+            };
+        });
+    };
 
     const Prefs = window.RemoteViewerPrefs || {};
     const globalViewerPrefs = typeof Prefs.loadRemoteViewerPrefs === 'function'
@@ -506,30 +528,91 @@
         window.location.href = '/devices';
     }
 
-    // ---- Automatic clipboard sync (local -> remote) ----
-    // Native RustDesk pushes the controlling side's clipboard to the peer
-    // automatically, so a plain Ctrl+V on the remote pastes local content.
-    // The browser cannot observe clipboard changes, but it can read the
-    // clipboard once the tab regains focus (with transient activation), so we
-    // push the current local clipboard to the active streaming session then.
-    let _lastSyncedClipboard = '';
+    // ---- Shared clipboard bridge (local <-> all remote sessions) ----
+    function clipboardStatus(message, type) {
+        const el = document.getElementById('clipboard-sync-status');
+        if (el) el.textContent = message;
+        if (message && type) showToast(message, type);
+    }
+
+    function sendClipboardEntry(session, entry) {
+        if (!session || !session.client || session.state !== 'streaming') return false;
+        if (session.client.viewOnly || typeof session.client.sendClipboard !== 'function') return false;
+        const supportsRichClipboard = session.client.proto &&
+            typeof session.client.proto.buildMultiClipboards === 'function';
+        const value = supportsRichClipboard && entry && (entry.html || entry.pngBlob)
+            ? entry
+            : (entry && entry.text) || '';
+        try {
+            session.client.sendClipboard(value);
+            if (clipboardHub && entry.sequence) clipboardHub.markSent(session.deviceId, entry.sequence);
+            return true;
+        } catch (_) {
+            return false;
+        }
+    }
+
+    function sendLatestClipboardToSession(session, force) {
+        if ((!clipboardBridgeEnabled && !force) || !clipboardHub || !session) return;
+        const latest = clipboardHub.getLatest();
+        if (latest && (force || clipboardHub.shouldSendTo(session.deviceId))) {
+            if (sendClipboardEntry(session, latest)) {
+                clipboardStatus(t('remote.clipboard_sent', 'Clipboard sent'));
+            }
+        }
+    }
+
+    function fanoutClipboard(entry) {
+        if (!clipboardBridgeEnabled || !entry) return;
+        let sent = 0;
+        sessions.forEach((session) => {
+            if (!clipboardHub || clipboardHub.shouldSendTo(session.deviceId)) {
+                if (sendClipboardEntry(session, entry)) sent++;
+            }
+        });
+        if (sent) clipboardStatus(t('remote.clipboard_sent', 'Clipboard sent'), 'success');
+    }
+
+    function renderClipboardPreview(entry) {
+        const preview = document.getElementById('clipboard-preview');
+        const image = document.getElementById('clipboard-image-indicator');
+        if (preview) {
+            const text = entry && (entry.text || entry.html);
+            preview.textContent = text
+                ? String(text).replace(/\s+/g, ' ').slice(0, 120)
+                : (entry && entry.pngBlob ? t('remote.clipboard_image', 'Image') : t('remote.clipboard_empty', 'Clipboard is empty'));
+        }
+        if (image) image.hidden = !(entry && entry.pngBlob);
+    }
+
+    if (clipboardHub) {
+        clipboardHub.subscribe((entry) => {
+            renderClipboardPreview(entry);
+            fanoutClipboard(entry);
+        });
+        renderClipboardPreview(clipboardHub.getLatest());
+    }
+
     async function syncLocalClipboardToRemote() {
+        if (!clipboardBridgeEnabled || !clipboardHub) return;
         const session = getActiveSession();
         if (!session || !session.client || session.state !== 'streaming') return;
-        if (session.client.viewOnly) return;
-        if (!navigator.clipboard || !navigator.clipboard.readText) return;
+        if (session.client.viewOnly || typeof RDClipboard === 'undefined') return;
         try {
-            const text = await navigator.clipboard.readText();
-            if (text && text !== _lastSyncedClipboard) {
-                _lastSyncedClipboard = text;
-                session.client.sendClipboard(text);
+            const entry = await RDClipboard.readLocalRich();
+            if (entry && (entry.text || entry.html || entry.pngBlob)) {
+                clipboardHub.setFromLocal(entry);
             }
         } catch {
-            // Permission denied or not focused — ignore, the manual paste
-            // button remains available as a fallback.
+            // Browser permission errors are expected outside a user gesture.
         }
     }
     window.addEventListener('focus', syncLocalClipboardToRemote);
+    window.setInterval(() => {
+        if (document.visibilityState === 'visible' && document.hasFocus()) {
+            syncLocalClipboardToRemote();
+        }
+    }, 2500);
     if (viewerContainer) {
         viewerContainer.addEventListener('mousedown', syncLocalClipboardToRemote);
     }
@@ -756,6 +839,7 @@
 
         if (session.state === 'streaming' && session.client) {
             session.client.setAudioMuted(session.audioMuted);
+            sendLatestClipboardToSession(session);
         }
         syncMobileTouchForActive();
 
@@ -843,6 +927,7 @@
             if (isActive(session)) {
                 if (state !== 'streaming') hideToolbarChromeForSession(session);
                 syncToolbarToSession(session);
+                if (state === 'streaming') sendLatestClipboardToSession(session);
             }
             handleSessionState(session, state);
         });
@@ -858,6 +943,16 @@
             showSessionActions(session);
             if (meta && meta.cdapFallback) showCdapFallback(session);
             if (isActive(session)) setToolbarChromeVisible(false);
+        });
+
+        c.on('clipboard_status', (status) => {
+            if (status && status.ok) {
+                clipboardStatus(t('remote.clipboard_received', 'Clipboard received'));
+            } else if (status && status.reason === 'clipboard_permission_denied') {
+                clipboardStatus(t('remote.clipboard_copy_to_pc', 'Click Copy to my PC to copy it'), 'warning');
+            } else if (status && status.reason === 'clipboard_image_too_large') {
+                clipboardStatus(t('remote.clipboard_image_too_large', 'Image is too large for clipboard sync'), 'error');
+            }
         });
 
         c.on('cdap_fallback_available', () => {
@@ -1404,9 +1499,14 @@
             return;
         }
         try {
-            const text = await navigator.clipboard.readText();
-            if (text) {
-                session.client.sendClipboard(text);
+            const entry = await RDClipboard.readLocalRich();
+            if (entry && (entry.text || entry.html || entry.pngBlob)) {
+                if (clipboardHub) {
+                    clipboardHub.setFromLocal(entry);
+                    sendLatestClipboardToSession(session, true);
+                } else {
+                    sendClipboardEntry(session, entry);
+                }
             } else {
                 showToast(_('remote.clipboard_empty') || 'Clipboard is empty', 'warning');
             }
@@ -1415,6 +1515,114 @@
             showToast(_('remote.clipboard_denied') || 'Clipboard access denied. HTTPS required or permission not granted.', 'error');
         }
         closeAllDropdowns();
+    });
+
+    document.getElementById('btn-clipboard-send')?.addEventListener('click', async () => {
+        const session = getActiveSession();
+        if (!session || !session.client) return;
+        try {
+            const entry = clipboardHub?.getLatest() || await RDClipboard.readLocalRich();
+            if (!entry || (!entry.text && !entry.html && !entry.pngBlob)) {
+                clipboardStatus(t('remote.clipboard_empty', 'Clipboard is empty'), 'warning');
+            } else if (clipboardHub) {
+                clipboardHub.setFromLocal(entry);
+                sendLatestClipboardToSession(session, true);
+            } else if (sendClipboardEntry(session, entry)) {
+                clipboardStatus(t('remote.clipboard_sent', 'Clipboard sent'), 'success');
+            }
+        } catch {
+            clipboardStatus(t('remote.clipboard_denied', 'Clipboard access denied'), 'error');
+        }
+    });
+
+    document.getElementById('btn-clipboard-copy-local')?.addEventListener('click', async () => {
+        const entry = clipboardHub?.getLatest();
+        if (!entry) {
+            clipboardStatus(t('remote.clipboard_empty', 'Clipboard is empty'), 'warning');
+            return;
+        }
+        const status = await RDClipboard.writeLocalRich(entry);
+        if (status.ok) {
+            clipboardStatus(t('remote.clipboard_copied_local', 'Copied to local clipboard'), 'success');
+        } else {
+            clipboardStatus(t('remote.clipboard_denied', 'Clipboard access denied'), 'error');
+        }
+    });
+
+    const clipboardToggle = document.getElementById('clipboard-bridge-toggle');
+    if (clipboardToggle) {
+        clipboardToggle.checked = clipboardBridgeEnabled;
+        clipboardToggle.addEventListener('change', () => {
+            clipboardBridgeEnabled = clipboardToggle.checked;
+            window.localStorage.setItem('betterdesk.clipboardBridge', clipboardBridgeEnabled ? '1' : '0');
+            clipboardStatus(clipboardBridgeEnabled
+                ? t('remote.clipboard_bridge_on', 'Clipboard bridge enabled')
+                : t('remote.clipboard_bridge_off', 'Clipboard bridge disabled'));
+        });
+    }
+
+    // Type text as remote keystrokes (Winlogon / password fields)
+    function sendTypeTextFromPanel() {
+        const session = getActiveSession();
+        const input = document.getElementById('type-text-input');
+        const text = input?.value || '';
+        if (!session || !session.client) return;
+        if (session.client.viewOnly) {
+            showToast(_('remote.view_only') || 'View only mode', 'warning');
+            return;
+        }
+        if (!text) {
+            showToast(_('remote.type_text_empty') || 'Enter text to type on the remote', 'warning');
+            return;
+        }
+        if (typeof session.client.sendText !== 'function') {
+            showToast(_('remote.type_text_unavailable') || 'Type text is not available on this transport', 'warning');
+            return;
+        }
+        const ok = session.client.sendText(text);
+        if (ok === false) {
+            showToast(_('remote.type_text_unavailable') || 'Type text is not available on this transport', 'warning');
+            return;
+        }
+        if (input) input.value = '';
+        showToast(_('remote.type_text_done') || 'Text sent to remote keyboard', 'success');
+        closeAllDropdowns();
+    }
+
+    document.getElementById('btn-type-text')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeAllDropdowns('type-text-menu');
+        const menu = document.getElementById('type-text-menu');
+        const btn = document.getElementById('btn-type-text');
+        menu?.classList.toggle('open');
+        const open = menu?.classList.contains('open');
+        if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        if (open) {
+            setTimeout(() => document.getElementById('type-text-input')?.focus(), 0);
+        }
+    });
+
+    document.getElementById('btn-type-text-send')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        sendTypeTextFromPanel();
+    });
+
+    document.getElementById('type-text-input')?.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            e.stopPropagation();
+            closeAllDropdowns();
+            return;
+        }
+        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault();
+            e.stopPropagation();
+            sendTypeTextFromPanel();
+        }
+    });
+
+    document.getElementById('type-text-menu')?.addEventListener('click', (e) => {
+        e.stopPropagation();
     });
 
     // Block Input toggle
@@ -1558,8 +1766,11 @@
             const item = document.createElement('button');
             item.type = 'button';
             item.className = 'toolbar-monitor-btn' + (m.current ? ' active' : '');
-            item.title = m.name || ('Monitor ' + (i + 1));
-            item.textContent = String(i + 1);
+            const monitorIndex = typeof m.idx === 'number' ? m.idx : i;
+            const monitorLabel = t('remote.monitor_n', 'Monitor {{n}}')
+                .replace('{{n}}', String(monitorIndex));
+            item.title = monitorLabel;
+            item.textContent = monitorLabel;
             item.addEventListener('click', function (e) {
                 e.stopPropagation();
                 session.client.switchMonitor(m.idx);
@@ -1641,17 +1852,20 @@
         listWrap.className = 'monitors-menu-list';
 
         // Physical monitors
-        monitors.forEach(m => {
+        monitors.forEach((m, i) => {
             const item = document.createElement('button');
             item.className = 'dropdown-item monitor-item' + (m.current ? ' active' : '');
             item.dataset.idx = m.idx;
+            const monitorIndex = typeof m.idx === 'number' ? m.idx : i;
+            const monitorLabel = t('remote.monitor_n', 'Monitor {{n}}')
+                .replace('{{n}}', String(monitorIndex));
             const res = (m.width && m.height)
                 ? '<span class="monitor-item-meta">' + m.width + '\u00d7' + m.height + '</span>'
                 : '';
             item.innerHTML = '<span class="material-icons">' +
                 (m.primary ? 'desktop_windows' : 'monitor') +
                 '</span><span class="monitor-item-text">' +
-                '<span class="monitor-item-name">' + escapeHtml(m.name) + '</span>' +
+                '<span class="monitor-item-name">' + escapeHtml(monitorLabel) + '</span>' +
                 res +
                 '</span>';
             item.addEventListener('click', () => {
@@ -1841,6 +2055,11 @@
         document.querySelectorAll('.toolbar-dropdown-menu.open').forEach(m => {
             if (m.id !== exceptId) m.classList.remove('open');
         });
+        const typeBtn = document.getElementById('btn-type-text');
+        const typeMenu = document.getElementById('type-text-menu');
+        if (typeBtn && typeMenu && !typeMenu.classList.contains('open')) {
+            typeBtn.setAttribute('aria-expanded', 'false');
+        }
     }
 
     function setupToggle(btnId, onChange) {
@@ -2168,6 +2387,26 @@
     var viewerInitialized = false;
     var mobileBindingsDone = false;
 
+    function consumePendingViewerSessions() {
+        if (isGuestAccessMode()) return [];
+        try {
+            const operatorKey = window.BetterDesk && window.BetterDesk.user
+                ? (window.BetterDesk.user.id || window.BetterDesk.user.username || 'current')
+                : 'current';
+            const key = 'betterdesk.remote.pendingSessions.' +
+                encodeURIComponent(String(operatorKey));
+            const pending = JSON.parse(window.localStorage.getItem(key) || '[]');
+            window.localStorage.removeItem(key);
+            if (!Array.isArray(pending)) return [];
+            return pending.filter(function (item) {
+                return item && /^[A-Za-z0-9_-]+$/.test(String(item.deviceId || ''))
+                    && Date.now() - Number(item.queuedAt || 0) < 300000;
+            });
+        } catch (_) {
+            return [];
+        }
+    }
+
     function startViewerInit() {
         if (viewerInitialized) return;
         viewerInitialized = true;
@@ -2196,6 +2435,10 @@
             }
         }
 
+        consumePendingViewerSessions().forEach(function (item) {
+            createSession(String(item.deviceId), item.deviceName || '');
+        });
+
         // ---- BroadcastChannel for cross-tab session adding ----
         // Devices page can send {type:'add-session', deviceId, deviceName}
         // to add a new tab here without opening a new browser tab.
@@ -2204,7 +2447,18 @@
             bc.onmessage = (ev) => {
                 const msg = ev.data;
                 if (!msg || typeof msg !== 'object') return;
-                if (msg.type === 'add-session' && msg.deviceId) {
+                if (msg.type === 'add-sessions' && Array.isArray(msg.sessions)) {
+                    const accepted = [];
+                    msg.sessions.forEach(function (item) {
+                        if (!item || !item.deviceId) return;
+                        const id = String(item.deviceId);
+                        if (!/^[A-Za-z0-9_-]+$/.test(id) || !isPeerAllowedForGuest(id)) return;
+                        createSession(id, item.deviceName || '');
+                        accepted.push(id);
+                    });
+                    bc.postMessage({ type: 'session-added', deviceIds: accepted });
+                    if (accepted.length) window.focus();
+                } else if (msg.type === 'add-session' && msg.deviceId) {
                     // Validate deviceId format (alphanumeric, hyphens, underscores)
                     if (!/^[A-Za-z0-9_-]+$/.test(msg.deviceId)) return;
                     if (!isPeerAllowedForGuest(msg.deviceId)) return;

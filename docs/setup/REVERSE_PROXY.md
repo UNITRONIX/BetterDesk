@@ -4,7 +4,24 @@ Use this guide when **Caddy, Nginx, Nginx Proxy Manager, or Traefik** already te
 
 > **Quick answer for Caddy users:** TLS belongs on Caddy. BetterDesk panel stays **HTTP on `127.0.0.1:5000`**. Set `HTTPS_ENABLED=false`, `TRUST_PROXY=Y`, and `HOST=127.0.0.1`. Do **not** run the installer's Let's Encrypt for the panel when Caddy owns certificates.
 
-See also: [HTTPS Setup](HTTPS_SETUP.md) (native panel TLS vs proxy), [Configuration](../wiki/Configuration.md) (env reference).
+See also: [HTTPS Setup](HTTPS_SETUP.md) (native panel TLS vs proxy), [Configuration](../wiki/Configuration.md) (env reference), and **[CONNECTION_PORTS.md](../CONNECTION_PORTS.md)** for the port table, firewall profiles and what short-code pairing needs.
+
+---
+
+## Short-code pairing over a proxy
+
+Pairing needs the Client API reachable on one URL. With this guide's layout that means `/api`
+(the Client API allowlist) must go to Go `:21114`, not to the panel catch-all. The client
+probes `https://host`, so no port has to be typed; the code itself must never travel over
+plaintext. Checklist:
+
+- `PUBLIC_SERVER_ID` (or `RENDEZVOUS_SERVERS`) set to the public hostname, or the server
+  reports the internal host it sees in the request and the client rejects the mismatch.
+- `21116/tcp+udp` and `21117/tcp` open: pairing succeeds without them, but the session then
+  fails.
+- `POST /api/pairing/redeem` must not be blocked by a proxy rule that only allows `GET`.
+- Verify: `curl -s -o /dev/null -w '%{http_code}\n' -X POST https://host/api/pairing/redeem -H 'Content-Type: application/json' -d '{"code":"ABC234","device_id":"1"}'`
+  must print `401` (unknown code), not `404` or `405`.
 
 ---
 

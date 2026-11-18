@@ -36,6 +36,59 @@ function defaultCdapPort() {
     return 21122;
 }
 
+/**
+ * Relay (hbbr) port advertised to RustDesk clients.
+ *
+ * Always explicit: RustDesk 1.4.8/1.4.9 clients given a bare `relay-server`
+ * (no port) fall back to the API port and then request relay on that socket.
+ * The Go server used to echo it back, so both peers dialled the HTTP API and
+ * every session died with `[relay] Pair timeout`.
+ */
+function defaultRelayPort() {
+    const fromEnv = parseInt(
+        process.env.RELAY_PORT || process.env.WS_HBBR_PORT || process.env.HBBR_PORT,
+        10
+    );
+    if (Number.isFinite(fromEnv) && fromEnv > 0) return fromEnv;
+    return 21117;
+}
+
+/**
+ * Build the `host:port` relay endpoint clients must dial.
+ * Keeps an explicit port already present in `hostPort`, otherwise appends the
+ * relay port. Returns '' for empty input.
+ *
+ * @param {string} hostPort - hostname, IPv4, bracketed IPv6, optionally with port
+ * @param {number|string} [port] - relay port override (defaults to config/env)
+ * @returns {string}
+ */
+function relayEndpointForHost(hostPort, port) {
+    const raw = clip(hostPort, 300);
+    if (!raw) return '';
+    const relayPort = String(port || defaultRelayPort());
+
+    // Already host:port (IPv4/hostname).
+    const plain = raw.match(/^([^:/\s]+):(\d{1,5})$/);
+    if (plain) {
+        const n = parseInt(plain[2], 10);
+        if (Number.isFinite(n) && n > 0 && n <= 65535) return `${plain[1]}:${n}`;
+    }
+
+    // Bracketed IPv6, with or without port.
+    const v6 = raw.match(/^\[([0-9a-fA-F:]+)\](?::(\d{1,5}))?$/);
+    if (v6) {
+        const n = parseInt(v6[2] || '', 10);
+        const usePort = Number.isFinite(n) && n > 0 && n <= 65535 ? n : relayPort;
+        return `[${v6[1]}]:${usePort}`;
+    }
+
+    // Bare IPv6 without brackets.
+    if ((raw.match(/:/g) || []).length > 1) return `[${raw}]:${relayPort}`;
+
+    const host = raw.replace(/^https?:\/\//i, '').split('/')[0];
+    return `${host}:${relayPort}`;
+}
+
 function formatOrigin(scheme, hostPart, port) {
     const omitPort = (scheme === 'https' && port === 443) || (scheme === 'http' && port === 80);
     return omitPort ? `${scheme}://${hostPart}` : `${scheme}://${hostPart}:${port}`;
@@ -137,6 +190,8 @@ function connectionFingerprint(branding) {
 module.exports = {
     defaultApiPort,
     defaultCdapPort,
+    defaultRelayPort,
+    relayEndpointForHost,
     defaultServerHost,
     defaultUseHttps,
     normalizeServerHost,

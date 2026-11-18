@@ -14,6 +14,7 @@ Longer runbooks in this tree:
 
 | Topic | Doc |
 |-------|-----|
+| **Ports & firewall (start here)** | **[CONNECTION_PORTS.md](CONNECTION_PORTS.md)** — port table, 4 profiles, client-field map, pairing requirements |
 | Installation detail | [setup/INSTALLATION_V1.4.0.md](setup/INSTALLATION_V1.4.0.md) |
 | Updates | [setup/UPDATE_GUIDE.md](setup/UPDATE_GUIDE.md) |
 | HTTPS (panel) | [setup/HTTPS_SETUP.md](setup/HTTPS_SETUP.md) |
@@ -36,7 +37,7 @@ Longer runbooks in this tree:
 | CDAP | [cdap/](cdap/), [architecture/CDAP_PROTOCOL.md](architecture/CDAP_PROTOCOL.md) |
 | SDKs | [sdk/](sdk/) |
 | Threat model / encryption | [security/THREAT_MODEL.md](security/THREAT_MODEL.md), [security/ENCRYPTION_SPEC.md](security/ENCRYPTION_SPEC.md) |
-| Port notes | [architecture/PORT_SECURITY.md](architecture/PORT_SECURITY.md) |
+| Port notes | ~~[architecture/PORT_SECURITY.md](architecture/PORT_SECURITY.md)~~ **historical** — use [CONNECTION_PORTS.md](CONNECTION_PORTS.md) |
 
 Wiki mirrors for common topics: [API](https://github.com/UNITRONIX/BetterDesk/wiki/API-Reference), [CDAP](https://github.com/UNITRONIX/BetterDesk/wiki/CDAP), [SDK](https://github.com/UNITRONIX/BetterDesk/wiki/SDK).
 

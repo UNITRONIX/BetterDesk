@@ -1,0 +1,26 @@
+<%- include('layouts/main', {
+    title: _('devices.strategies_title'),
+    pageStyles: ['strategies'],
+    pageScripts: ['strategies'],
+    currentPage: 'strategies',
+    breadcrumb: [{ label: _('nav.group_rules') }, { label: _('devices.strategies_title') }],
+    body: `
+        <div class="strategies-page">
+            <div class="page-header">
+                <h1 class="page-title">${_('devices.strategies_title')}</h1>
+                <p class="page-subtitle">${_('devices.strategies_hint')}</p>
+            </div>
+
+            <div class="strategies-toolbar">
+                <button type="button" class="btn btn-primary btn-sm" id="add-strategy-btn">
+                    <span class="material-icons" aria-hidden="true">policy</span>
+                    ${_('devices.create_strategy')}
+                </button>
+            </div>
+
+            <div class="strategies-list" id="devices-strategies-list">
+                <div class="empty-state-inline">${_('devices.loading_strategies')}</div>
+            </div>
+        </div>
+    `
+}) %>

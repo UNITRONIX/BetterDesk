@@ -18,73 +18,65 @@
                 </button>
             </div>
         </div>
-        
-        <!-- Security Tips Card -->
-        <div class="security-tips-card">
-            <div class="security-tips-header">
-                <span class="material-icons">security</span>
-                <h3>${_('users.security_tips_title')}</h3>
+
+        <div class="users-layout">
+            <!-- User Groups Manager (left rail) -->
+            <aside class="users-layout-sidebar">
+                <div class="user-groups-card" id="user-groups">
+                    <div class="user-groups-card-header">
+                        <div>
+                            <h3>${_('users.user_groups')}</h3>
+                            <p>${_('users.user_groups_hint')}</p>
+                        </div>
+                    </div>
+                    <button class="btn btn-secondary user-groups-create-btn" id="add-user-group-btn">
+                        <span class="material-icons">group_add</span>
+                        ${_('users.create_user_group')}
+                    </button>
+                    <div class="user-groups-manager-list" id="user-groups-manager-list">
+                        <div class="empty-state-inline">${_('users.loading_user_groups')}</div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Users Table (main pane) -->
+            <div class="users-layout-main">
+                <div class="users-table-container">
+                    <div class="table-wrapper">
+                        <table class="users-table table" id="users-table">
+                            <thead>
+                                <tr>
+                                    <th>${_('users.username')}</th>
+                                    <th>${_('users.email')}</th>
+                                    <th>${_('users.role')}</th>
+                                    <th>${_('users.column_scope')}</th>
+                                    <th>${_('users.provider')}</th>
+                                    <th>${_('users.column_organizations')}</th>
+                                    <th>${_('users.created')}</th>
+                                    <th>${_('users.last_login')}</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-tbody">
+                                <tr class="loading-row">
+                                    <td colspan="8" style="text-align: center; padding: 40px;">
+                                        <span class="skeleton skeleton-text" style="width: 200px;"></span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Empty state -->
+                <div class="users-empty hidden" id="users-empty">
+                    <span class="material-icons users-empty-icon">group</span>
+                    <h3 class="users-empty-title">${_('users.empty_title')}</h3>
+                    <p class="users-empty-text">${_('users.empty_text')}</p>
+                </div>
             </div>
-            <ul class="security-tips-list">
-                <li><span class="material-icons">check_circle</span> ${_('users.tip_strong_passwords')}</li>
-                <li><span class="material-icons">check_circle</span> ${_('users.tip_unique_accounts')}</li>
-                <li><span class="material-icons">check_circle</span> ${_('users.tip_operator_role')}</li>
-                <li><span class="material-icons">check_circle</span> ${_('users.tip_viewer_role')}</li>
-                <li><span class="material-icons">check_circle</span> ${_('users.tip_audit_logs')}</li>
-            </ul>
         </div>
 
-        <!-- User Groups Manager -->
-        <div class="user-groups-card" id="user-groups">
-            <div class="user-groups-card-header">
-                <div>
-                    <h3>${_('users.user_groups')}</h3>
-                    <p>${_('users.user_groups_hint')}</p>
-                </div>
-                <button class="btn btn-secondary" id="add-user-group-btn">
-                    <span class="material-icons">group_add</span>
-                    ${_('users.create_user_group')}
-                </button>
-            </div>
-            <div class="user-groups-manager-list" id="user-groups-manager-list">
-                <div class="empty-state-inline">${_('users.loading_user_groups')}</div>
-            </div>
-        </div>
-        
-        <!-- Users Table -->
-        <div class="users-table-container">
-            <div class="table-wrapper">
-                <table class="users-table table" id="users-table">
-                    <thead>
-                        <tr>
-                            <th>${_('users.username')}</th>
-                            <th>${_('users.email')}</th>
-                            <th>${_('users.role')}</th>
-                            <th>${_('users.column_scope')}</th>
-                            <th>${_('users.provider')}</th>
-                            <th>${_('users.column_organizations')}</th>
-                            <th>${_('users.created')}</th>
-                            <th>${_('users.last_login')}</th>
-                            <th>${_('users.actions')}</th>
-                        </tr>
-                    </thead>
-                    <tbody id="users-tbody">
-                        <tr class="loading-row">
-                            <td colspan="8" style="text-align: center; padding: 40px;">
-                                <span class="skeleton skeleton-text" style="width: 200px;"></span>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        
-        <!-- Empty state -->
-        <div class="users-empty hidden" id="users-empty">
-            <span class="material-icons users-empty-icon">group</span>
-            <h3 class="users-empty-title">${_('users.empty_title')}</h3>
-            <p class="users-empty-text">${_('users.empty_text')}</p>
-        </div>
+        <div class="users-context-menu" id="users-context-menu" role="menu" hidden></div>
         
         <!-- Add/Edit User Modal Template -->
         <template id="user-form-template">
@@ -161,6 +153,14 @@
                         <option value="">${_('users.pro_strategy_none')}</option>
                     </select>
                     <span class="form-hint">${_('users.pro_strategy_hint')}</span>
+                </div>
+
+                <div class="form-group user-access-policy-group">
+                    <label>${_('users.access_policy_title') || 'Panel access and client features'}</label>
+                    <p class="form-hint">${_('users.access_policy_hint') || 'Choose no access, read-only access, or read and write access. These restrictions are enforced by the server.'}</p>
+                    <div id="user-access-policy-editor" class="user-access-policy-editor">
+                        <div class="empty-state-inline">${_('users.loading_access_policy') || 'Loading access policy...'}</div>
+                    </div>
                 </div>
 
                 <p class="form-hint scope-hint">${_('users.scope_hint')}</p>

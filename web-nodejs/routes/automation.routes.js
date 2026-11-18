@@ -215,7 +215,8 @@ router.get('/alerts', requireAuth, async (req, res) => {
         if (req.query.device_id) filters.device_id = req.query.device_id;
         if (req.query.severity) filters.severity = req.query.severity;
         if (req.query.acknowledged !== undefined) filters.acknowledged = req.query.acknowledged === 'true';
-        if (req.query.limit) filters.limit = parseInt(req.query.limit, 10);
+        // SECURITY (audit M5, 2026-11-13): clamp caller-supplied row counts.
+        if (req.query.limit) filters.limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 100, 1), 500);
 
         const alerts = await adapter.getAlertHistory(filters);
         res.json({ alerts, total: alerts.length });
@@ -292,7 +293,7 @@ router.get('/commands', requireAuth, async (req, res) => {
         const filters = {};
         if (req.query.device_id) filters.device_id = req.query.device_id;
         if (req.query.status) filters.status = req.query.status;
-        if (req.query.limit) filters.limit = parseInt(req.query.limit, 10);
+        if (req.query.limit) filters.limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 100, 1), 500);
 
         const commands = await adapter.getRemoteCommands(filters);
         res.json({ commands, total: commands.length });

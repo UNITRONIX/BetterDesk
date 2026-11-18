@@ -50,6 +50,8 @@ message VideoFrame {
 message IdPk {
   string id = 1;
   bytes pk = 2;
+  string dtls_fingerprint = 3;
+  uint32 kx_version = 4;
 }
 
 message DisplayInfo {

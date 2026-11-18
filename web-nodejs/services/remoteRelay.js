@@ -31,6 +31,7 @@
 const WebSocket = require('ws');
 const crypto = require('crypto');
 const db = require('./database');
+const deviceGroupService = require('./deviceGroupService');
 const { verifyDeviceWsAuth } = require('../lib/deviceTokenAuth');
 const { roleHasEffectivePermission } = require('../middleware/auth');
 
@@ -213,6 +214,32 @@ function handleAgentConnection(ws, deviceId) {
 //  Viewer connection handler (/ws/remote-viewer/:device_id)
 // ---------------------------------------------------------------------------
 
+/**
+ * Decide whether a logged-in operator may open a viewer on this device.
+ *
+ * GHSA-22mg-g52q-x75c: the upgrade handler previously verified only
+ * `device.connect`, which proves the user may connect to *some* device. An
+ * operator whose device scope or group ACL excluded a device could still watch
+ * its screen and inject input by naming it in the URL. This mirrors
+ * remoteTargetGateway.js, which already calls userCanAccessDevice.
+ *
+ * A device that does not exist and a device that is out of scope both answer
+ * 404, so the response cannot be used to enumerate devices.
+ *
+ * @returns {Promise<{allowed: boolean, statusCode?: number, statusText?: string, reason?: string}>}
+ */
+async function authorizeViewerDevice(user, deviceId) {
+    const device = await db.getPeerById(deviceId);
+    if (!device) {
+        return { allowed: false, statusCode: 404, statusText: 'Not Found', reason: 'unknown-device' };
+    }
+    const visible = await deviceGroupService.userCanAccessDevice(db, user, device);
+    if (!visible) {
+        return { allowed: false, statusCode: 404, statusText: 'Not Found', reason: 'out-of-scope' };
+    }
+    return { allowed: true };
+}
+
 function handleViewerConnection(ws, deviceId, operatorName) {
     const session = getSession(deviceId);
 
@@ -347,9 +374,29 @@ function initRemoteRelay(server, sessionMiddleware) {
                         socket.destroy();
                         return;
                     }
+                    // GHSA-22mg-g52q-x75c: the role check above only proves the
+                    // user may connect to *some* device. Without this, an operator
+                    // whose device scope excludes a device could still watch its
+                    // screen and send input by putting that ID in the URL. Mirror
+                    // remoteTargetGateway.js and answer 404 so a scope miss is
+                    // indistinguishable from a device that does not exist.
+                    const deviceId = viewerMatch[1];
+                    try {
+                        const scopeResult = await authorizeViewerDevice(req.session.user, deviceId);
+                        if (!scopeResult.allowed) {
+                            socket.write(`HTTP/1.1 ${scopeResult.statusCode} ${scopeResult.statusText}\r\n\r\n`);
+                            socket.destroy();
+                            return;
+                        }
+                    } catch (err) {
+                        log.warn(`remote-viewer scope check failed for ${deviceId}: ${err.message}`);
+                        socket.write('HTTP/1.1 403 Forbidden\r\n\r\n');
+                        socket.destroy();
+                        return;
+                    }
                     wss.handleUpgrade(req, socket, head, (ws) => {
                         const opName = req.session.username || 'operator';
-                        handleViewerConnection(ws, viewerMatch[1], opName);
+                        handleViewerConnection(ws, deviceId, opName);
                     });
                 });
             }
@@ -367,6 +414,7 @@ function initRemoteRelay(server, sessionMiddleware) {
 module.exports = {
     initRemoteRelay,
     issueRemoteAgentToken,
+    authorizeViewerDevice,
     /** Get session state (for admin REST API) */
     getSessionState(deviceId) {
         const s = sessions.get(deviceId);

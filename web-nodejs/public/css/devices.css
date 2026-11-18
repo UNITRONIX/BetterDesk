@@ -2176,39 +2176,9 @@ td.column-hidden {
     margin-top: 2px;
 }
 
-/* Access control strategies (RustDesk Pro) */
-.devices-strategies-card {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-lg);
-    padding: var(--space-md) var(--space-lg);
-    margin: var(--space-md) 0;
-}
-
-.devices-strategies-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: var(--space-md);
-    margin-bottom: var(--space-md);
-}
-
-.devices-strategies-header h3 {
-    margin: 0 0 var(--space-xs) 0;
-    font-size: var(--font-size-lg);
-}
-
-.devices-strategies-header p {
-    margin: 0;
-    color: var(--text-secondary);
-    font-size: var(--font-size-sm);
-}
-
-.devices-strategies-list {
-    display: grid;
-    gap: var(--space-sm);
-}
-
+/* Access control strategies (RustDesk Pro) — rows used by /strategies.
+   The card that framed them lived on the Devices page and is gone; the page
+   itself is styled in strategies.css. */
 .strategy-manager-item {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto auto;

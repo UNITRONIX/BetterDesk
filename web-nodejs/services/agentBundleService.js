@@ -135,7 +135,10 @@ function validateBranding(input = {}) {
     if (!out.app_name) {
         out.app_name = out.company_name;
     }
-    out.relay_host = clip(input.relay_host || input.relayHost || input.relay_server || '', 253);
+    // Relay must be stored as host:port. A bare host makes RustDesk 1.4.8/1.4.9
+    // clients request relay on the API port, so pairing never completes.
+    const rawRelayHost = clip(input.relay_host || input.relayHost || input.relay_server || '', 253);
+    out.relay_host = rawRelayHost ? conn.relayEndpointForHost(rawRelayHost) : '';
     out.api_server = clip(input.api_server || input.apiServer || '', MAX_CONTACT);
     out.api_port = clip(String(input.api_port || input.apiPort || ''), 8);
     out.disable_settings = input.disable_settings !== false && input.disableSettings !== false;

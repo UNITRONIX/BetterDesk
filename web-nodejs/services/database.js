@@ -40,6 +40,9 @@ const facade = {
     getDeviceById: (id) => adapter.getPeerById(id),
     getDevice:     (id) => adapter.getPeerById(id),
     upsertPeer:    (data) => adapter.upsertPeer(data),
+    getPeerRegistrationState: (id) => (adapter.getPeerRegistrationState
+        ? adapter.getPeerRegistrationState(id)
+        : Promise.resolve(null)),
     updatePeer:    (id, data) => adapter.updatePeer(id, data),
     updateDevice:  (id, data) => adapter.updatePeer(id, data),
     softDeletePeer: (id) => adapter.softDeletePeer(id),
@@ -92,6 +95,9 @@ const facade = {
         ? adapter.updateUserLanguage(id, lang)
         : Promise.resolve(),
     deleteUser:       (id) => adapter.deleteUser(id),
+    renameUser:       (id, newUsername) => (adapter.renameUser
+        ? adapter.renameUser(id, newUsername)
+        : Promise.resolve({ ok: false, code: 'invalid' })),
     updateUserProfile: (id, fields) => adapter.updateUserProfile(id, fields),
     getUsersEmailsByUsernames: (usernames) => adapter.getUsersEmailsByUsernames(usernames),
     getUsernamesByUserGroupGuid: (guid) => adapter.getUsernamesByUserGroupGuid(guid),
@@ -213,6 +219,12 @@ const facade = {
 
     // ---- Agent installer bundles (Generator) ----
     listAgentBundles:           (opts) => adapter.listAgentBundles(opts),
+    // ---- Agent enrollment templates (Registrations / Support Agent) ----
+    // Previously unreachable from the facade, which broke the template tab and
+    // `POST /api/bd/enroll` for every token (audit follow-up, 2026-11-13).
+    listAgentTemplates:         () => adapter.listAgentTemplates(),
+    getAgentTemplateByToken:    (token) => adapter.getAgentTemplateByToken(token),
+    createAgentTemplate:        (data) => adapter.createAgentTemplate(data),
     getAgentBundle:             (bundleId) => adapter.getAgentBundle(bundleId),
     getAgentBundleByPublicId:   (publicId) => adapter.getAgentBundleByPublicId(publicId),
     isAgentBundleSlugTaken:     (slug, excludeBundleId) => adapter.isAgentBundleSlugTaken(slug, excludeBundleId),
@@ -237,6 +249,14 @@ const facade = {
     deleteUserGroup:    (guid) => adapter.deleteUserGroup(guid),
     getUserGroupsForUser: (userId) => adapter.getUserGroupsForUser(userId),
     setUserGroupMemberships: (userId, groupGuids) => adapter.setUserGroupMemberships(userId, groupGuids),
+    getPanelAccessPolicies: (subjectType, subjectId) =>
+        adapter.getPanelAccessPolicies(subjectType, subjectId),
+    setPanelAccessPolicies: (subjectType, subjectId, policies) =>
+        adapter.setPanelAccessPolicies(subjectType, subjectId, policies),
+    getClientFeaturePolicies: (subjectType, subjectId) =>
+        adapter.getClientFeaturePolicies(subjectType, subjectId),
+    setClientFeaturePolicies: (subjectType, subjectId, policies) =>
+        adapter.setClientFeaturePolicies(subjectType, subjectId, policies),
 
     // ---- Device Groups ----
     getAllDeviceGroups:    () => adapter.getAllDeviceGroups(),

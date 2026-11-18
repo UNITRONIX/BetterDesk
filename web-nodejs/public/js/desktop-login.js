@@ -15,6 +15,7 @@
         bindLockScreen();
         bindLoginForm();
         bindTotpForm();
+        wireUserLookup();
         renderUserChips();
         checkSessionExpired();
     }
@@ -390,14 +391,20 @@
 
     // ============ Multi-user Selector ============
 
-    function renderUserChips() {
+    // SECURITY (audit H6, 2026-11-13): the SSR payload no longer contains the
+    // account list. Chips are filled from a rate-limited lookup once the visitor
+    // types at least two characters of a username.
+    function renderUserChips(users) {
         var container = document.getElementById('dl-users');
         if (!container) return;
-        var users = (window.BetterDesk && window.BetterDesk.users) || [];
-        if (!users.length) return;
+        var list = users || (window.BetterDesk && window.BetterDesk.users) || [];
+        if (!list.length) {
+            container.innerHTML = '';
+            return;
+        }
 
         var html = '';
-        users.forEach(function (user) {
+        list.forEach(function (user) {
             var initials = (user.username || '?').substring(0, 2).toUpperCase();
             html += '<div class="dl-user-chip" data-username="' + _esc(user.username) + '">' +
                 '<div class="dl-user-chip-avatar">' + _esc(initials) + '</div>' +
@@ -438,6 +445,33 @@
                     if (loginLayer) loginLayer.classList.add('active');
                 }
             });
+        });
+    }
+
+    /**
+     * Ask the server for matching usernames (rate limited, max 8 results).
+     * Failures are silent: the field stays usable even when the lookup fails.
+     */
+    function lookupUsers(prefix) {
+        var query = String(prefix || '').trim();
+        if (query.length < 2) {
+            renderUserChips([]);
+            return;
+        }
+        var url = '/login/lookup?q=' + encodeURIComponent(query);
+        fetch(url, { credentials: 'same-origin', headers: { Accept: 'application/json' } })
+            .then(function (res) { return res.ok ? res.json() : { matches: [] }; })
+            .then(function (data) { renderUserChips(data && data.matches); })
+            .catch(function () { /* keep the previous list */ });
+    }
+
+    function wireUserLookup() {
+        var input = document.getElementById('dl-username');
+        if (!input) return;
+        var timer = null;
+        input.addEventListener('input', function () {
+            if (timer) clearTimeout(timer);
+            timer = setTimeout(function () { lookupUsers(input.value); }, 250);
         });
     }
 

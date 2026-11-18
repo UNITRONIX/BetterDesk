@@ -411,6 +411,10 @@ func TestManagedApprovalPreservesEnrollmentMetadata(t *testing.T) {
 	cfg.EnrollmentMode = config.EnrollmentModeManaged
 	srv := New(cfg, database, peer.NewMap(), nil, "test")
 
+	if err := database.SetConfig(telemetrySequenceConfigPrefix+"BD-META1", "100"); err != nil {
+		t.Fatal(err)
+	}
+
 	body, _ := json.Marshal(map[string]any{
 		"device_id":   "BD-META1",
 		"uuid":        "machine-uuid-metadata",
@@ -458,6 +462,9 @@ func TestManagedApprovalPreservesEnrollmentMetadata(t *testing.T) {
 	}
 	if approved.UUID != "machine-uuid-metadata" || approved.DeviceType != "os_agent" || approved.Tags != "support,linux" {
 		t.Fatalf("approved peer metadata = %+v", approved)
+	}
+	if sequence, err := database.GetConfig(telemetrySequenceConfigPrefix + "BD-META1"); err != nil || sequence != "" {
+		t.Fatalf("approved enrollment retained orphaned telemetry sequence %q (err=%v)", sequence, err)
 	}
 	if bundleID, err := database.GetConfig(deviceBundleIDPrefix + "BD-META1"); err != nil || bundleID != "support-bundle-a" {
 		t.Fatalf("bundle ID = %q, err=%v", bundleID, err)

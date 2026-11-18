@@ -26,11 +26,12 @@ client loads branding at runtime from the Console **Client Branding API**.
    BetterDesk-Client releases).
 4. Share the public download / portal links with end users.
 5. After install, the generic agent asks for the BetterDesk HTTPS address
-   (local IP or public), downloads the server public key, and shows a
+   (local IP or public), downloads the server public key, and can show a
    pairing QR (`type: betterdesk-agent-pairing`).
-6. In **Główne → Aktywuj agenta** an operator with `enrollment.approve`
-   scans that QR, sets device name/folder, and activates the pending
-   enrollment.
+6. In **Główne → Pair agent** an operator with `enrollment.approve` enters the
+   short one-time code (10 minutes, single use) and the server address. The QR
+   scanner is still reachable from that dialog (**Scan agent QR**) for agents
+   that display one.
 
 The outbound HTTPS connection completes enrollment; no inbound port or
 password is required on the agent side.

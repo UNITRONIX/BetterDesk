@@ -155,9 +155,7 @@ router.get('/api/bd/operator-info', async (req, res) => {
 router.get('/api/agent-templates', requireAuth, requirePermission('enrollment.manage'), async (req, res) => {
     try {
         ensureTemplatesTable();
-        const rows = await db.query
-            ? await db.query('SELECT id, name, description, enrollment_token, created_at, updated_at FROM agent_templates ORDER BY id DESC')
-            : [];
+        const rows = await db.listAgentTemplates();
         res.json({ success: true, templates: rows });
     } catch (e) {
         res.status(500).json({ success: false, error: e.message, templates: [] });
@@ -177,14 +175,13 @@ router.post('/api/agent-templates', requireAuth, requirePermission('enrollment.m
         const config = req.body?.config && typeof req.body.config === 'object' ? req.body.config : {};
         const token = crypto.randomBytes(24).toString('hex');
 
-        if (!db.run) {
-            return res.status(501).json({ success: false, error: 'db_backend_missing_run' });
-        }
-        await db.run(
-            `INSERT INTO agent_templates (name, description, config_json, enrollment_token, created_by)
-             VALUES (?, ?, ?, ?, ?)`,
-            [name, description, JSON.stringify(config), token, req.session.userId || null]
-        );
+        await db.createAgentTemplate({
+            name,
+            description,
+            configJson: JSON.stringify(config),
+            enrollmentToken: token,
+            createdBy: req.session.userId || null,
+        });
         try { await db.logAction(req.session.userId, 'template_created', `Created agent template: ${name}`, req.ip); } catch (_) {}
         res.status(201).json({ success: true, enrollment_token: token });
     } catch (e) {
@@ -315,9 +312,7 @@ router.post('/api/bd/enroll', async (req, res) => {
         if (!token || !deviceId) {
             return res.status(400).json({ success: false, error: 'missing_fields' });
         }
-        const row = db.get
-            ? await db.get('SELECT id, name, config_json FROM agent_templates WHERE enrollment_token = ?', [token])
-            : null;
+        const row = await db.getAgentTemplateByToken(token);
         if (!row) return res.status(401).json({ success: false, error: 'invalid_token' });
 
         let config = {};
@@ -353,11 +348,26 @@ router.get('/portal', (req, res) => {
  * GET /api/portal/installers — list available installers (JSON).
  * The actual binaries are served from /downloads/ (static). This endpoint
  * just enumerates metadata.
+ *
+ * `reason` explains an empty list so the page never shows a bare "nothing
+ * here": a fresh install has imported no release yet, while a missing cache
+ * directory means the import never completed (#439 / #475).
  */
-router.get('/api/portal/installers', async (req, res) => {
+router.get('/api/portal/installers', fileAccessLimiter, async (req, res) => {
     const base = req.protocol + '://' + req.get('host');
-    const cached = await genericAgentReleases.listCached();
+    let cached = [];
+    let reason = null;
+    let cacheMissing = false;
+    try {
+        cached = await genericAgentReleases.listCached();
+        cacheMissing = !require('fs').existsSync(genericAgentReleases.root());
+    } catch (e) {
+        reason = 'cache_unreadable';
+    }
     const latest = cached[0];
+    if (!latest && !reason) {
+        reason = cacheMissing ? 'no_release_imported' : 'release_cache_incomplete';
+    }
     const installers = latest
         ? latest.manifest.assets.map((asset) => ({
             platform: asset.platform,
@@ -370,6 +380,7 @@ router.get('/api/portal/installers', async (req, res) => {
     res.json({
         success: true,
         release: latest?.tag || null,
+        reason,
         installers,
     });
 });

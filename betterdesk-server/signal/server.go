@@ -148,6 +148,10 @@ type Server struct {
 	// (issue #157). Key=normalizeAddrKey(initiatorAddr), Value=*pendingPunch.
 	pendingPunches sync.Map // map[string]*pendingPunch
 
+	// pendingLANs tracks native LAN address exchanges independently from relay
+	// correlation and WAN P2P-first fallbacks. Key=target ID + initiator endpoint.
+	pendingLANs sync.Map // map[string]*pendingLAN
+
 	// lastSharedNATWarnUnixNano rate-limits SAME_NAT_RELAY=false warnings (#399).
 	lastSharedNATWarnUnixNano atomic.Int64
 
@@ -745,6 +749,13 @@ func (s *Server) logAndCheckKeepAlive(msg *pb.RendezvousMessage, addrKey string,
 	case msg.GetHttpProxyRequest() != nil:
 		req := msg.GetHttpProxyRequest()
 		log.Printf("[signal] TCP msg from %s%s: HttpProxyRequest (method=%s path=%s)", addrKey, tag, req.GetMethod(), req.GetPath())
+	case msg.GetIceCandidate() != nil:
+		log.Printf("[signal] TCP msg from %s%s: IceCandidate (target=%s)", addrKey, tag, msg.GetIceCandidate().GetId())
+	case msg.GetPunchHoleRequest() != nil:
+		phr := msg.GetPunchHoleRequest()
+		if phr.GetWebrtcSdpOffer() != "" {
+			log.Printf("[signal] TCP msg from %s%s: PunchHoleRequest with WebRTC offer (%d bytes)", addrKey, tag, len(phr.GetWebrtcSdpOffer()))
+		}
 	default:
 		log.Printf("[signal] TCP msg from %s%s: unhandled type %T", addrKey, tag, msg.Union)
 	}

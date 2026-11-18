@@ -1,5 +1,5 @@
 <%- include('layouts/main', {
-    title: (typeof activateAgentNav !== 'undefined' && activateAgentNav) ? _('nav.activate_agent') : _('nav.dashboard'),
+    title: (typeof activateAgentNav !== 'undefined' && activateAgentNav) ? _('nav.pair_agent') : _('nav.dashboard'),
     pageStyles: ['dashboard'],
     pageScripts: ['dashboard'],
     currentPage: 'dashboard',
@@ -123,9 +123,9 @@
                                     <span class="material-icons" aria-hidden="true">qr_code_2</span>
                                     ${_('dashboard.show_config_qr')}
                                 </button>
-                                ${typeof hasPermission === 'function' && hasPermission('enrollment.approve') ? '<button type="button" class="btn btn-primary btn-sm" id="activate-agent-qr-btn">' : ''}
-                                    ${typeof hasPermission === 'function' && hasPermission('enrollment.approve') ? '<span class="material-icons" aria-hidden="true">qr_code_2</span>' : ''}
-                                    ${typeof hasPermission === 'function' && hasPermission('enrollment.approve') ? _('dashboard.activate_agent_qr') : ''}
+                                ${typeof hasPermission === 'function' && hasPermission('enrollment.approve') ? '<button type="button" class="btn btn-primary btn-sm" id="activate-agent-code-btn">' : ''}
+                                    ${typeof hasPermission === 'function' && hasPermission('enrollment.approve') ? '<span class="material-icons" aria-hidden="true">pin</span>' : ''}
+                                    ${typeof hasPermission === 'function' && hasPermission('enrollment.approve') ? _('dashboard.pair_with_code') : ''}
                                 ${typeof hasPermission === 'function' && hasPermission('enrollment.approve') ? '</button>' : ''}
                             </div>
                         </div>
@@ -353,11 +353,61 @@
                 </aside>
             </div>
 
+            <div class="modal-overlay dashboard-pair-code-modal" id="dashboard-pair-code-modal"
+                 role="dialog" aria-modal="true" aria-labelledby="dashboard-pair-code-title" hidden>
+                <div class="modal dashboard-pair-code-dialog">
+                    <div class="modal-header">
+                        <h2 id="dashboard-pair-code-title">${_('pairing.title')}</h2>
+                        <button type="button" class="btn-icon" id="dashboard-pair-code-close"
+                                aria-label="${_('actions.close')}">
+                            <span class="material-icons" aria-hidden="true">close</span>
+                        </button>
+                    </div>
+                    <div class="modal-body dashboard-pair-code-body">
+                        <p class="form-hint">${_('pairing.subtitle')}</p>
+                        <label class="form-label" for="dashboard-pair-code-host">${_('pairing.host_field')}</label>
+                        <input class="form-input" id="dashboard-pair-code-host" autocomplete="off"
+                               placeholder="desk.example.com">
+                        <small class="settings-row-hint">${_('pairing.host_hint')}</small>
+                        <label class="form-label" for="dashboard-pair-code-label">${_('pairing.label_field')}</label>
+                        <input class="form-input" id="dashboard-pair-code-label" maxlength="64" autocomplete="off"
+                               placeholder="${_('pairing.label_placeholder')}">
+                        <div class="dashboard-pair-code-actions">
+                            <button type="button" class="btn btn-primary" id="dashboard-pair-code-generate">
+                                <span class="material-icons" aria-hidden="true">vpn_key</span>
+                                ${_('pairing.generate_button')}
+                            </button>
+                            <button type="button" class="btn btn-secondary btn-sm" id="dashboard-pair-code-scan">
+                                <span class="material-icons" aria-hidden="true">qr_code_scanner</span>
+                                ${_('pairing.scan_qr_agent')}
+                            </button>
+                            <a class="btn btn-secondary btn-sm" href="/pairing">
+                                <span class="material-icons" aria-hidden="true">open_in_new</span>
+                                ${_('nav.pairing')}
+                            </a>
+                        </div>
+                        <div class="dashboard-pair-code-result" id="dashboard-pair-code-result" hidden>
+                            <p class="form-hint">${_('pairing.code_hint')}</p>
+                            <div class="dashboard-pair-code-value" id="dashboard-pair-code-value" aria-live="polite"></div>
+                            <div class="dashboard-pair-code-meta">
+                                <span>${_('pairing.host_field')}: <strong id="dashboard-pair-code-host-out"></strong></span>
+                                <span>${_('pairing.expires_in')}: <strong id="dashboard-pair-code-ttl"></strong></span>
+                            </div>
+                            <button type="button" class="btn btn-secondary btn-sm" id="dashboard-pair-code-copy">
+                                <span class="material-icons" aria-hidden="true">content_copy</span>
+                                ${_('pairing.copy')}
+                            </button>
+                        </div>
+                        <p class="dashboard-pair-code-status" id="dashboard-pair-code-status" aria-live="polite"></p>
+                    </div>
+                </div>
+            </div>
+
             <div class="modal-overlay dashboard-agent-activation-modal" id="dashboard-agent-activation-modal"
                  role="dialog" aria-modal="true" aria-labelledby="dashboard-agent-activation-title" hidden>
                 <div class="modal dashboard-agent-activation-dialog">
                     <div class="modal-header">
-                        <h2 id="dashboard-agent-activation-title">${_('dashboard.activate_agent_qr')}</h2>
+                        <h2 id="dashboard-agent-activation-title">${_('pairing.scan_qr_agent')}</h2>
                         <button type="button" class="btn-icon" id="dashboard-agent-activation-close"
                                 aria-label="${_('actions.close')}">
                             <span class="material-icons" aria-hidden="true">close</span>

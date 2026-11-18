@@ -1,3 +1,10 @@
+<%# Audit M11 (2026-11-13): data embedded in inline script blocks must not be
+    able to close the block. Uses the server helper when present, with an
+    equivalent fallback for standalone template rendering (tests/previews). %>
+<% var bdJson = (typeof safeJsonScript === 'function') ? safeJsonScript : function (v) {
+    return JSON.stringify(v === undefined ? null : v)
+        .replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
+}; %>
 <%- include('layouts/viewer', {
     title: escapeHtml(deviceId),
     pageScripts: ['cdap-desktop', 'cdap-audio'],
@@ -95,7 +102,7 @@
 
 <script nonce="${cspNonce}">
 (function () {
-  const deviceId = ${JSON.stringify(deviceId)};
+  const deviceId = ${bdJson(deviceId)};
   const widgetId = 'remote-full';
 
   function openDesktopSession() {

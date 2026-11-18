@@ -1,0 +1,113 @@
+/*
+ * BetterDesk Console — UX 3.6 (beta) palette.
+ *
+ * The redesign by @rathlinus (issue #493 / PR #495) uses its own colour
+ * system: neutral greys instead of blue-black, a softer accent set and a
+ * light theme built on white rather than off-white. These are his values,
+ * applied only while the beta shell is active, so UX 3.5 keeps the palette
+ * operators already tuned.
+ *
+ * Skipped for `themeMode: custom` — the layout does not load this sheet then,
+ * because the operator's own colours must win.
+ */
+
+html[data-ui-shell="ux36"] {
+    /* Dark — his neutral scale, not GitHub blue-black */
+    --bg-primary: #141616;
+    --bg-secondary: #1b1e1e;
+    --bg-tertiary: #262a2a;
+    --bg-elevated: #1f2323;
+    --bg-hover: rgba(255, 255, 255, 0.06);
+
+    --text-primary: #e4e7e7;
+    --text-secondary: #a3abad;
+    --text-tertiary: #7d8789;
+
+    --accent-blue: #58a6ff;
+    --accent-blue-hover: #79b8ff;
+    --accent-blue-muted: rgba(88, 166, 255, 0.15);
+
+    --accent-green: #72c98c;
+    --accent-green-hover: #8fd6a4;
+    --accent-green-muted: rgba(114, 201, 140, 0.15);
+
+    --accent-red: #ff8f80;
+    --accent-red-hover: #ffaba0;
+    --accent-red-muted: rgba(255, 143, 128, 0.15);
+
+    --accent-yellow: #e3b85a;
+    --accent-yellow-hover: #ecc97c;
+    --accent-yellow-muted: rgba(227, 184, 90, 0.15);
+
+    --accent-purple: #a9bcc4;
+    --accent-purple-hover: #c2d1d7;
+    --accent-purple-muted: rgba(169, 188, 196, 0.15);
+
+    --border-primary: #6a7474;
+    --border-secondary: #2c3131;
+    --border-color: #6a7474;
+    --border-hover: #8b9595;
+
+    --status-online: #72c98c;
+    --status-offline: #7d8789;
+    --status-banned: #ff8f80;
+    --status-warning: #e3b85a;
+
+    --card-bg: #1b1e1e;
+    --surface-glass-bg-secondary: #1b1e1e;
+    --surface-glass-bg-tertiary: #262a2a;
+    --surface-glass-bg-elevated: #1f2323;
+    --surface-glass-border: #2c3131;
+    --surface-glass-blur: 0px;
+    --surface-glass-saturate: 1;
+}
+
+html[data-ui-shell="ux36"][data-theme="light"] {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f3f4f4;
+    --bg-tertiary: #e8ebeb;
+    --bg-elevated: #ffffff;
+    --bg-hover: rgba(0, 0, 0, 0.05);
+
+    --text-primary: #1b1e1f;
+    --text-secondary: #566064;
+    --text-tertiary: #6f7a7d;
+
+    --accent-blue: #1b62cf;
+    --accent-blue-hover: #1854b3;
+    --accent-blue-muted: rgba(27, 98, 207, 0.15);
+
+    --accent-green: #1c7a3b;
+    --accent-green-hover: #135c2b;
+    --accent-green-muted: rgba(28, 122, 59, 0.15);
+
+    --accent-red: #b3261e;
+    --accent-red-hover: #8c1d17;
+    --accent-red-muted: rgba(179, 38, 30, 0.15);
+
+    --accent-yellow: #875b00;
+    --accent-yellow-hover: #6a4700;
+    --accent-yellow-muted: rgba(135, 91, 0, 0.15);
+
+    --accent-purple: #4a5a62;
+    --accent-purple-hover: #36444a;
+    --accent-purple-muted: rgba(74, 90, 98, 0.15);
+
+    --border-primary: #7e888b;
+    --border-secondary: #dde1e2;
+    --border-color: #7e888b;
+    --border-hover: #5c6669;
+
+    --status-online: #1c7a3b;
+    --status-offline: #566064;
+    --status-banned: #b3261e;
+    --status-warning: #875b00;
+
+    --card-bg: #ffffff;
+    --surface-glass-bg-secondary: #ffffff;
+    --surface-glass-bg-tertiary: #f3f4f4;
+    --surface-glass-bg-elevated: #ffffff;
+    --surface-glass-border: #dde1e2;
+    --surface-glass-blur: 0px;
+    --surface-glass-saturate: 1;
+}

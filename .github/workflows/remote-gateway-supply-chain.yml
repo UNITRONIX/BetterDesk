@@ -13,12 +13,17 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: remote-gateway-supply-chain-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   verify-pinned-source:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Verify pinned upstream source, checksums and licenses
         env:
@@ -32,12 +37,13 @@ jobs:
 
   go-tests:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
         with:
           go-version-file: betterdesk-server/go.mod
           cache-dependency-path: betterdesk-server/go.sum

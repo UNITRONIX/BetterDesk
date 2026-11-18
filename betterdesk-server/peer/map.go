@@ -66,6 +66,13 @@ type Entry struct {
 	LocalAddr string       // Peer's self-reported local address
 	Version   string       // Client version string
 
+	// RelayServer is the relay endpoint this peer itself advertised (from
+	// PunchHoleSent). Recent RustDesk clients validate an incoming relay
+	// request against their own configured relay with check_port(..., RELAY_PORT)
+	// and silently drop a mismatch, so forwarding the peer's own spelling is
+	// what makes a relay pair complete.
+	RelayServer string
+
 	// Enhanced status tracking
 	FirstSeen       time.Time // When the peer was first registered in this session
 	HeartbeatCount  int64     // Total heartbeats received in this session
@@ -250,6 +257,23 @@ func (m *Map) SetPKIfEmpty(id string, pk []byte) bool {
 		return true
 	}
 	e.PK = append([]byte(nil), pk...)
+	return true
+}
+
+// SetRelayServer records the relay endpoint a peer itself advertised.
+// Must be called under the map lock: Entry is shared, so writing through a
+// pointer returned by Get() would race with readers.
+func (m *Map) SetRelayServer(id, relay string) bool {
+	if m == nil || id == "" {
+		return false
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	e, ok := m.entries[id]
+	if !ok {
+		return false
+	}
+	e.RelayServer = relay
 	return true
 }
 

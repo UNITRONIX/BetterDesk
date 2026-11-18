@@ -39,6 +39,11 @@ message PunchHoleRequest {
   bool force_relay = 8;
   int32 upnp_port = 9;
   bytes socket_addr_v6 = 10;
+  // Added upstream for recent clients: switch-code pairing and the WebRTC offer.
+  // Dropping these fields makes two new peers unable to negotiate a transport,
+  // even though a new peer can still reach an old one that never sends them.
+  string switch_code = 11;
+  string webrtc_sdp_offer = 12;
 }
 
 message ControlPermissions {
@@ -55,6 +60,8 @@ message ControlPermissions {
     recording = 9;
     block_input = 10;
     remote_modify = 11;
+    privacy_mode = 12;
+    usb = 13;
   }
   uint64 permissions = 1;
 }
@@ -68,6 +75,20 @@ message PunchHole {
   int32 upnp_port = 6;
   bytes socket_addr_v6 = 7;
   ControlPermissions control_permissions = 8;
+  ControlledContext controlled_context = 9;
+  string webrtc_sdp_offer = 10;
+}
+
+// Forwarded verbatim between peers for WebRTC transport negotiation.
+message ControlledContext {
+  string conn_audit_ref = 1;
+}
+
+message IceCandidate {
+  string id = 1;
+  bytes socket_addr = 2;
+  string session_key = 3;
+  string candidate = 4;
 }
 
 message TestNatRequest {
@@ -93,6 +114,7 @@ message PunchHoleSent {
   string version = 5;
   int32 upnp_port = 6;
   bytes socket_addr_v6 = 7;
+  string webrtc_sdp_answer = 8;
 }
 
 message RegisterPk {
@@ -112,6 +134,7 @@ message RegisterPkResponse {
     INVALID_ID_FORMAT = 5;
     NOT_SUPPORT = 6;
     SERVER_ERROR = 7;
+    NOT_DEPLOYED = 8;
   }
   Result result = 1;
   int32 keep_alive = 2;
@@ -137,6 +160,7 @@ message PunchHoleResponse {
   bool is_udp = 9;
   int32 upnp_port = 10;
   bytes socket_addr_v6 = 11;
+  string webrtc_sdp_answer = 12;
 }
 
 message ConfigUpdate {
@@ -154,6 +178,8 @@ message RequestRelay {
   ConnType conn_type = 7;
   string token = 8;
   ControlPermissions control_permissions = 9;
+  ControlledContext controlled_context = 10;
+  string switch_code = 11;
 }
 
 message RelayResponse {
@@ -169,6 +195,7 @@ message RelayResponse {
   int32 feedback = 9;
   bytes socket_addr_v6 = 10;
   int32 upnp_port = 11;
+  string webrtc_sdp_answer = 12;
 }
 
 message SoftwareUpdate {
@@ -180,6 +207,7 @@ message FetchLocalAddr {
   string relay_server = 2;
   bytes socket_addr_v6 = 3;
   ControlPermissions control_permissions = 4;
+  ControlledContext controlled_context = 5;
 }
 
 message LocalAddr {
@@ -212,6 +240,25 @@ message OnlineResponse {
 
 message KeyExchange {
   repeated bytes keys = 1;
+  // From the server: the newest key-exchange version it speaks. From the client:
+  // the version it picked. Absent (0) means the original scheme.
+  //
+  // Newer RustDesk clients negotiate against this field; a server that never
+  // sends it leaves them unable to complete the handshake, which shows up as
+  // repeated KeyExchange attempts with zero "secure established" (see the
+  // server-side signature in crypto/secure.go).
+  uint32 version = 2;
+  // Server signature of KxParams. Bit 255 of the signed X25519 public key
+  // requires this field; legacy keys leave it clear.
+  bytes signed_params = 3;
+}
+
+// Signed by the server beside its ephemeral public key: that key as it went out,
+// so the signature belongs to this exchange alone, plus the newest key-exchange
+// version the server speaks.
+message KxParams {
+  bytes pk = 1;
+  uint32 version = 2;
 }
 
 message HealthCheck {
@@ -262,5 +309,7 @@ message RendezvousMessage {
     HealthCheck hc = 26;
     HttpProxyRequest http_proxy_request = 27;
     HttpProxyResponse http_proxy_response = 28;
+    // WebRTC trickle-ICE candidate relay between two new peers.
+    IceCandidate ice_candidate = 29;
   }
 }

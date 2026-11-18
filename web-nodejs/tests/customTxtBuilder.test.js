@@ -23,7 +23,7 @@ describe('customTxtBuilder', () => {
         expect(json['conn-type']).toBe('incoming');
         expect(json['disable-settings']).toBe('Y');
         expect(json['override-settings']['custom-rendezvous-server']).toBe('desk.example.com');
-        expect(json['override-settings']['relay-server']).toBe('relay.example.com');
+        expect(json['override-settings']['relay-server']).toBe('relay.example.com:21117');
         expect(json['override-settings'].key).toBe('PUBKEY');
     });
 

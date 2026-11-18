@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -217,6 +218,32 @@ func (s *Server) requireOrgMembership(paramName string, handler http.HandlerFunc
 
 		writeJSON(w, http.StatusForbidden, map[string]string{"error": "Not a member of this organization"})
 	}
+}
+
+// canReadDeviceOrg reports whether the caller may read data for a device that
+// belongs to orgID.
+//
+// Devices without an organisation are server-level and visible to any caller
+// that already passed the route's permission check. For org-bound devices only
+// server admins, global admins and members of that organisation may read.
+// (audit M8, 2026-11-13)
+func (s *Server) canReadDeviceOrg(r *http.Request, orgID string) bool {
+	if orgID == "" {
+		return true
+	}
+	userRole := getRoleFromCtx(r)
+	if auth.IsSuperAdminRole(userRole) || userRole == auth.RoleGlobalAdmin {
+		return true
+	}
+	if userOrgID := getOrgIDFromCtx(r); userOrgID != "" && userOrgID == orgID {
+		return true
+	}
+	username := getUsernameFromCtx(r)
+	if username == "" {
+		return false
+	}
+	orgUser, err := s.db.GetOrgUserByUsername(orgID, username)
+	return err == nil && orgUser != nil
 }
 
 // --- Login Handlers ---
@@ -684,12 +711,52 @@ func (s *Server) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var body struct {
+		Username string `json:"username,omitempty"`
 		Password string `json:"password,omitempty"`
 		Role     string `json:"role,omitempty"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid JSON"})
 		return
+	}
+
+	// Username change (issue #498, 2026-11-13). Provider-managed accounts keep
+	// the name the IdP/Directory issues, otherwise the next login would recreate
+	// the old identity. The rename cascades to address books, org membership and
+	// strategy assignments in one transaction.
+	if newUsername := strings.TrimSpace(body.Username); newUsername != "" && newUsername != user.Username {
+		provider := user.AuthProvider
+		if provider == "" {
+			provider = db.AuthProviderLocal
+		}
+		if provider != db.AuthProviderLocal {
+			writeJSON(w, http.StatusBadRequest, map[string]string{
+				"error": "Username is managed by the identity provider for LDAP/OIDC accounts",
+			})
+			return
+		}
+		if !db.ValidUsername(newUsername) {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid username"})
+			return
+		}
+		if err := s.db.RenameUser(id, newUsername); err != nil {
+			switch {
+			case errors.Is(err, db.ErrUsernameTaken):
+				writeJSON(w, http.StatusConflict, map[string]string{"error": "Username already exists"})
+			case errors.Is(err, db.ErrInvalidUsername):
+				writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid username"})
+			default:
+				log.Printf("api: rename user %d failed: %v", id, err)
+				writeInternalError(w, err, "RenameUser")
+			}
+			return
+		}
+		if s.auditLog != nil {
+			s.auditLog.Log(audit.ActionUserUpdated, s.remoteIP(r), newUsername, map[string]string{
+				"renamed_from": user.Username,
+			})
+		}
+		user.Username = newUsername
 	}
 
 	if body.Password != "" {
@@ -1094,6 +1161,24 @@ func hashAPIKey(key string) string {
 // Returns (username, role, ok). If ok is false, an error response has been written.
 // Auth order: Bearer JWT → X-API-Key (scoped DB lookup).
 func (s *Server) authenticateRequest(r *http.Request) (username, role string, ok bool) {
+	// 0. Panel trust bridge — a statement signed by the Node console for a
+	//    signed-in operator. Only accepted on the loopback hop (unless the
+	//    operator explicitly allows remote panel hosts) and only when the
+	//    bridge has a secret; the role still comes from the database when the
+	//    account exists, so a stale or forged claim cannot raise privileges.
+	if r.Header.Get(PanelTrustHeader) != "" && s.panelTrustEnabled() && s.panelTrustPeerAllowed(r) {
+		claim, err := s.verifyPanelTrust(r)
+		if err != nil {
+			log.Printf("[panel-trust] rejected %s %s: %v", r.Method, redactPathSegment(r.URL.Path), err)
+			return "", "", false
+		}
+		role := s.resolvePanelRole(claim)
+		if role == "" {
+			return "", "", false
+		}
+		return claim.Subject, role, true
+	}
+
 	// 1. Bearer token — opaque client session (RustDesk desktop) or JWT (panel/API)
 	if bearer := r.Header.Get("Authorization"); len(bearer) > 7 && strings.EqualFold(bearer[:7], "Bearer ") {
 		token := strings.TrimSpace(bearer[7:])
@@ -1198,10 +1283,17 @@ func (s *Server) authMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		// Public endpoints — no auth required
-		if path == "/api/health" || path == "/metrics" ||
+		// Public endpoints — no auth required.
+		//
+		// SECURITY (audit H1/H5, 2026-11-13):
+		//   - `/metrics` is NOT public. It is served by metricsGuard, which
+		//     enforces METRICS_IP_ALLOWLIST or a valid API key. Listing it here
+		//     bypassed that guard entirely, so anyone on the Internet could read
+		//     fleet size, relay sessions, goroutines and memory.
+		//   - `/api/auth/ldap/verify` is NOT public either: it is a credential
+		//     oracle for the customer's directory. Panel-trust/loopback only.
+		if path == "/api/health" ||
 			path == "/api/auth/login" || path == "/api/auth/login/2fa" ||
-			path == "/api/auth/ldap/verify" ||
 			path == "/api/server/pubkey" ||
 			path == "/api/login" || path == "/api/login-options" || path == "/api/logout" ||
 			path == "/api/oidc/auth" || path == "/api/oidc/auth-query" || path == "/api/oidc/callback" ||

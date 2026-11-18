@@ -987,6 +987,10 @@ func (s *Server) handleGetPolicyAudit(w http.ResponseWriter, r *http.Request) {
 }
 
 // GET /api/peers/{id}/policy — effective org policy for a device (agent-facing).
+//
+// SECURITY (audit M8, 2026-11-13): the org is derived from the device, not the
+// URL, so `requireOrgMembership` cannot be used directly. An org-scoped caller
+// must only see policies for devices in its own organisation.
 func (s *Server) handleGetPeerPolicy(w http.ResponseWriter, r *http.Request) {
 	deviceID := r.PathValue("id")
 	if deviceID == "" {
@@ -995,6 +999,10 @@ func (s *Server) handleGetPeerPolicy(w http.ResponseWriter, r *http.Request) {
 	}
 
 	orgID, _ := s.db.GetDeviceOrgID(deviceID)
+	if !s.canReadDeviceOrg(r, orgID) {
+		writeJSON(w, http.StatusForbidden, map[string]string{"error": "device is outside your organization"})
+		return
+	}
 	orgPolicies := make(map[string]interface{})
 	if orgID != "" {
 		for _, category := range policyCategories {

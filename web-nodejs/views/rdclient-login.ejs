@@ -1,3 +1,10 @@
+<%# Audit M11 (2026-11-13): data embedded in inline script blocks must not be
+    able to close the block. Uses the server helper when present, with an
+    equivalent fallback for standalone template rendering (tests/previews). %>
+<% var bdJson = (typeof safeJsonScript === 'function') ? safeJsonScript : function (v) {
+    return JSON.stringify(v === undefined ? null : v)
+        .replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
+}; %>
 <!DOCTYPE html>
 <html lang="<%= lang || 'en' %>">
 <head>
@@ -119,11 +126,11 @@
         window.BetterDesk = {
             csrfToken: '<%= csrfToken || "" %>',
             lang: '<%= lang || "en" %>',
-            translations: <%- JSON.stringify(translations || {}) %>,
-            branding: <%- JSON.stringify(branding || {}) %>,
-            returnUrl: <%- JSON.stringify(typeof returnUrl !== 'undefined' ? returnUrl : '/remote') %>,
+            translations: <%- bdJson(translations || {}) %>,
+            branding: <%- bdJson(branding || {}) %>,
+            returnUrl: <%- bdJson(typeof returnUrl !== 'undefined' ? returnUrl : '/remote') %>,
             sessionExpired: <%= sessionExpired ? 'true' : 'false' %>,
-            availableLanguages: <%- JSON.stringify(availableLanguageList || []) %>
+            availableLanguages: <%- bdJson(availableLanguageList || []) %>
         };
     </script>
     <script src="/js/i18n-client.js?v=<%= cacheVersion %>"></script>

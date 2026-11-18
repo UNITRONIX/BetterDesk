@@ -63,6 +63,7 @@ class RDProtocol {
         this.types.OptionMessage = type('OptionMessage');
         this.types.SupportedDecoding = type('SupportedDecoding');
         this.types.Clipboard = type('Clipboard');
+        this.types.MultiClipboards = type('MultiClipboards');
         this.types.PeerInfo = type('PeerInfo');
         this.types.IdPk = type('IdPk');
         this.types.Resolution = type('Resolution');
@@ -417,6 +418,50 @@ class RDProtocol {
                 format: this.enums.ClipboardFormat.values.Text
             }
         };
+    }
+
+    /**
+     * Build a multi-format clipboard message.
+     *
+     * Entries use the decoded RDClipboard shape:
+     * { text, html, pngBlob } (at least one value is required).
+     * @param {Object} entry
+     * @returns {Promise<Object>}
+     */
+    async buildMultiClipboards(entry) {
+        const value = entry || {};
+        const entries = [];
+        const addBytes = async (content, format) => {
+            if (!content || !content.length) return;
+            const packed = (typeof RDCompress !== 'undefined')
+                ? await RDCompress.compressZstd(content)
+                : { content, compress: false };
+            entries.push({
+                compress: packed.compress,
+                content: packed.content,
+                format
+            });
+        };
+        const formats = this.enums.ClipboardFormat.values;
+        if (value.text) {
+            await addBytes(new TextEncoder().encode(String(value.text)), formats.Text);
+        }
+        if (value.html) {
+            await addBytes(new TextEncoder().encode(String(value.html)), formats.Html);
+        }
+        if (value.pngBlob) {
+            const blob = value.pngBlob instanceof Blob
+                ? value.pngBlob
+                : new Blob([value.pngBlob], { type: 'image/png' });
+            if (blob.size > RDProtocol.MAX_CLIPBOARD_IMAGE_BYTES) {
+                throw new Error('clipboard_image_too_large');
+            }
+            await addBytes(new Uint8Array(await blob.arrayBuffer()), formats.ImagePng);
+        }
+        if (!entries.length) {
+            throw new Error('clipboard_empty');
+        }
+        return { multiClipboards: { clipboards: entries } };
     }
 
     /**
@@ -1099,5 +1144,7 @@ class RDProtocol {
         };
     }
 }
+
+RDProtocol.MAX_CLIPBOARD_IMAGE_BYTES = 8 * 1024 * 1024;
 
 window.RDProtocol = RDProtocol;

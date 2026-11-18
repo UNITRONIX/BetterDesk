@@ -40,8 +40,17 @@ const PRIVILEGED_MANIFEST_SOURCE = path.join(
     'config',
     'management-capabilities.json',
 );
-/** setgid + group rwx — new Go-server files inherit group betterdesk (#206) */
-const SHARED_GO_DATA_DIR_MODE = '2775';
+/**
+ * setgid + group rx on the shared Go data dir.
+ *
+ * SECURITY (audit C3, 2026-11-13): this used to be 2775. Group write on the
+ * directory lets the console service user add or replace entries there, which
+ * includes the root-run server binary — that made any panel compromise a host
+ * root compromise. The console still writes the individual files it owns
+ * (`blocklist.txt`, `audit.jsonl`, `.env`), which keep group write below, but
+ * it can no longer rename anything into place.
+ */
+const SHARED_GO_DATA_DIR_MODE = '2750';
 /** setgid + group rx — console reads TLS material written by root */
 const SHARED_GO_SSL_DIR_MODE = '2750';
 

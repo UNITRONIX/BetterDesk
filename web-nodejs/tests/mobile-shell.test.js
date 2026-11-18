@@ -109,6 +109,37 @@ describe('DeviceCapabilities', () => {
     });
 });
 
+describe('Devices row drag input detection', () => {
+    const code = fs.readFileSync(path.join(__dirname, '../public/js/devices.js'), 'utf8');
+    const detection = code.slice(
+        code.indexOf('    function shouldDisableRowDrag()'),
+        code.indexOf('    /** Floating hscroll')
+    );
+
+    it.each([
+        ['touchscreen laptop with mouse', true, true, false, false, false],
+        ['touchscreen laptop with narrow window', true, true, false, true, false],
+        ['desktop with mouse', false, true, false, false, false],
+        ['touch-only phone', true, false, true, true, true],
+        ['touch-only tablet in desktop mode', true, false, true, false, true],
+        ['coarse pointer without capability helper', null, false, true, false, true],
+        ['desktop without media query support', false, null, false, false, false],
+    ])('%s', (_name, touch, fine, coarse, mobile, disabled) => {
+        const sandbox = {
+            window: {
+                DeviceCapabilities: touch === null ? undefined : { isTouch: () => touch },
+                matchMedia: fine === null ? undefined : query => ({
+                    matches: query === '(hover: hover) and (pointer: fine)' ? fine : coarse
+                })
+            },
+            document: { body: { classList: { contains: () => mobile } } }
+        };
+        vm.runInNewContext(detection, sandbox);
+        expect(sandbox.shouldDisableRowDrag()).toBe(disabled);
+        expect(sandbox.preferSingleTapDetail()).toBe(disabled);
+    });
+});
+
 describe('RDTouch tablet input', () => {
     function loadTouch() {
         const sandbox = {

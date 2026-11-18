@@ -8,6 +8,7 @@
     let pending = null;
     let pollTimer = null;
     let attempts = 0;
+    let completionInFlight = false;
 
     function t(key, fallback) {
         const value = typeof _ === 'function' ? _('settings.' + key) : '';
@@ -27,6 +28,49 @@
     function statusText(value) {
         const el = document.getElementById('bd-restart-status');
         if (el) el.textContent = value;
+    }
+
+    function isExpectedCompletionError(error) {
+        return error?.status === 401
+            || error?.status === 404
+            || error?.status === 502
+            || error?.status === 503
+            || error?.status === 504
+            || error?.name === 'AbortError'
+            || error?.name === 'TypeError';
+    }
+
+    async function completeAndLogin(id) {
+        if (completionInFlight) return false;
+        completionInFlight = true;
+        let timer = null;
+        try {
+            if (id) {
+                const controller = typeof AbortController === 'function'
+                    ? new AbortController()
+                    : null;
+                if (controller) {
+                    timer = window.setTimeout(() => controller.abort(), 3000);
+                }
+                await Utils.api('/api/settings/restart/complete', {
+                    method: 'POST',
+                    body: { id },
+                    ...(controller ? { signal: controller.signal } : {})
+                });
+            }
+        } catch (error) {
+            if (!isExpectedCompletionError(error)) {
+                completionInFlight = false;
+                if (window.Notifications) {
+                    Notifications.error(error.message || t('restart_failed_status', 'Restart failed.'));
+                }
+                return false;
+            }
+        } finally {
+            if (timer) window.clearTimeout(timer);
+        }
+        window.location.href = '/login';
+        return true;
     }
 
     function showPrompt(item) {
@@ -205,15 +249,7 @@
     }
 
     async function complete() {
-        try {
-            if (pending?.id) {
-                await Utils.api('/api/settings/restart/complete', {
-                    method: 'POST',
-                    body: { id: pending.id }
-                });
-            }
-        } catch (_) {}
-        window.location.href = '/login';
+        await completeAndLogin(pending?.id);
     }
 
     async function resume() {
@@ -238,6 +274,7 @@
         resume,
         cancel,
         confirm,
+        completeAndLogin,
     };
 
     document.addEventListener('DOMContentLoaded', resume);

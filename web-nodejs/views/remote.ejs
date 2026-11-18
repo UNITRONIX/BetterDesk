@@ -1,3 +1,10 @@
+<%# Audit M11 (2026-11-13): data embedded in inline script blocks must not be
+    able to close the block. Uses the server helper when present, with an
+    equivalent fallback for standalone template rendering (tests/previews). %>
+<% var bdJson = (typeof safeJsonScript === 'function') ? safeJsonScript : function (v) {
+    return JSON.stringify(v === undefined ? null : v)
+        .replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
+}; %>
 <%- include('layouts/viewer', {
     title: title || _('remote.title'),
     pageScripts: ['billing-report', 'remote'],
@@ -58,9 +65,29 @@
                             <button class="dropdown-item" id="btn-refresh-screen">
                                 <span class="material-icons">refresh</span> ${_('remote.refresh_screen')}
                             </button>
-                            <button class="dropdown-item" id="btn-clipboard-paste">
+                            <button class="dropdown-item" id="btn-clipboard-paste" title="${_('remote.clipboard_paste_hint')}">
                                 <span class="material-icons">content_paste</span> ${_('remote.clipboard_paste')}
                             </button>
+                            <div class="clipboard-bridge-panel" id="clipboard-bridge-panel">
+                                <div class="dropdown-label">${_('remote.clipboard_bridge')}</div>
+                                <div class="clipboard-preview-row">
+                                    <span class="clipboard-preview" id="clipboard-preview">${_('remote.clipboard_empty')}</span>
+                                    <span class="material-icons clipboard-image-indicator" id="clipboard-image-indicator" hidden>image</span>
+                                </div>
+                                <div class="clipboard-bridge-actions">
+                                    <button type="button" class="clipboard-bridge-btn" id="btn-clipboard-send">
+                                        <span class="material-icons">send</span> ${_('remote.clipboard_send')}
+                                    </button>
+                                    <button type="button" class="clipboard-bridge-btn" id="btn-clipboard-copy-local">
+                                        <span class="material-icons">content_copy</span> ${_('remote.clipboard_copy_local')}
+                                    </button>
+                                </div>
+                                <label class="clipboard-bridge-toggle">
+                                    <input type="checkbox" id="clipboard-bridge-toggle" checked>
+                                    <span>${_('remote.clipboard_bridge_toggle')}</span>
+                                </label>
+                                <div class="clipboard-sync-status" id="clipboard-sync-status">${_('remote.clipboard_ready')}</div>
+                            </div>
                             <button class="dropdown-item" id="btn-reset-keyboard">
                                 <span class="material-icons">keyboard</span> ${_('remote.reset_keyboard')}
                             </button>
@@ -68,6 +95,20 @@
                             <button class="dropdown-item toggle-item" id="btn-block-input" data-active="false">
                                 <span class="material-icons">block</span> ${_('remote.block_input')}
                             </button>
+                        </div>
+                    </div>
+                    <div class="toolbar-dropdown">
+                        <button class="toolbar-btn" id="btn-type-text" title="${_('remote.type_text')}" aria-expanded="false" aria-controls="type-text-menu">
+                            <span class="material-icons">password</span>
+                        </button>
+                        <div class="toolbar-dropdown-menu toolbar-type-text-menu" id="type-text-menu">
+                            <div class="type-text-panel">
+                                <label class="dropdown-label" for="type-text-input">${_('remote.type_text')}</label>
+                                <textarea id="type-text-input" class="type-text-input" rows="3" autocomplete="off" spellcheck="false" placeholder="${_('remote.type_text_placeholder')}"></textarea>
+                                <button type="button" class="type-text-send" id="btn-type-text-send">
+                                    <span class="material-icons">send</span> ${_('remote.type_text_send')}
+                                </button>
+                            </div>
                         </div>
                     </div>
                     <div class="toolbar-dropdown">
@@ -463,10 +504,10 @@
 
 <!-- Initial session data (from server route) -->
 <script nonce="${cspNonce}">
-    window.__initialDeviceId = ` + JSON.stringify(deviceId) + `;
-    window.__initialDeviceName = ` + JSON.stringify(device && device.hostname ? device.hostname : '') + `;
-    window.__capabilities = ` + JSON.stringify(capabilities || { transport: 'rd' }) + `;
-    window.__guestToken = ` + JSON.stringify((typeof guestToken !== 'undefined' && guestToken) ? guestToken : '') + `;
+    window.__initialDeviceId = ` + bdJson(deviceId) + `;
+    window.__initialDeviceName = ` + bdJson(device && device.hostname ? device.hostname : '') + `;
+    window.__capabilities = ` + bdJson(capabilities || { transport: 'rd' }) + `;
+    window.__guestToken = ` + bdJson((typeof guestToken !== 'undefined' && guestToken) ? guestToken : '') + `;
 </script>
 
 `

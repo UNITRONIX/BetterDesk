@@ -590,6 +590,64 @@ func (s *SQLiteDB) Migrate() error {
 			tag_filter TEXT DEFAULT '',
 			created_at TEXT DEFAULT (datetime('now'))
 		)`,
+		// Group membership and ACL. These tables used to be created only by the
+		// Node console (services/dbAdapter.js); Go now owns the writes for
+		// device groups, folders and ACL, so it creates them as well. Columns
+		// match the Node schema so an existing database keeps working.
+		`CREATE TABLE IF NOT EXISTS device_group_members (
+			device_group_id INTEGER NOT NULL,
+			peer_id TEXT NOT NULL,
+			created_at TEXT DEFAULT (datetime('now')),
+			PRIMARY KEY (device_group_id, peer_id),
+			FOREIGN KEY (device_group_id) REFERENCES device_groups(id) ON DELETE CASCADE
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_device_group_members_peer ON device_group_members (peer_id)`,
+		`CREATE TABLE IF NOT EXISTS user_group_members (
+			user_group_id INTEGER NOT NULL,
+			user_id INTEGER NOT NULL,
+			created_at TEXT DEFAULT (datetime('now')),
+			PRIMARY KEY (user_group_id, user_id),
+			FOREIGN KEY (user_group_id) REFERENCES user_groups(id) ON DELETE CASCADE,
+			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+		)`,
+		`CREATE TABLE IF NOT EXISTS device_group_user_access (
+			device_group_id INTEGER NOT NULL,
+			user_id INTEGER NOT NULL,
+			created_at TEXT DEFAULT (datetime('now')),
+			PRIMARY KEY (device_group_id, user_id),
+			FOREIGN KEY (device_group_id) REFERENCES device_groups(id) ON DELETE CASCADE,
+			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+		)`,
+		`CREATE TABLE IF NOT EXISTS device_group_user_group_access (
+			device_group_id INTEGER NOT NULL,
+			user_group_id INTEGER NOT NULL,
+			created_at TEXT DEFAULT (datetime('now')),
+			PRIMARY KEY (device_group_id, user_group_id),
+			FOREIGN KEY (device_group_id) REFERENCES device_groups(id) ON DELETE CASCADE,
+			FOREIGN KEY (user_group_id) REFERENCES user_groups(id) ON DELETE CASCADE
+		)`,
+		`CREATE TABLE IF NOT EXISTS folders (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			name TEXT NOT NULL,
+			color TEXT DEFAULT '#6366f1',
+			icon TEXT DEFAULT 'folder',
+			sort_order INTEGER DEFAULT 0,
+			created_at TEXT DEFAULT (datetime('now'))
+		)`,
+		`CREATE TABLE IF NOT EXISTS device_folder_assignments (
+			device_id TEXT PRIMARY KEY NOT NULL,
+			folder_id INTEGER NOT NULL,
+			assigned_at TEXT DEFAULT (datetime('now')),
+			FOREIGN KEY (folder_id) REFERENCES folders(id) ON DELETE CASCADE
+		)`,
+		`CREATE TABLE IF NOT EXISTS user_peer_grants (
+			user_id INTEGER NOT NULL,
+			peer_id TEXT NOT NULL,
+			granted_at TEXT DEFAULT (datetime('now')),
+			PRIMARY KEY (user_id, peer_id),
+			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_user_peer_grants_user ON user_peer_grants (user_id)`,
 		`CREATE TABLE IF NOT EXISTS strategies (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			guid TEXT UNIQUE NOT NULL,
@@ -1071,6 +1129,10 @@ func (s *SQLiteDB) HardDeletePeer(id string) error {
 	}
 	if _, err := tx.Exec(
 		`DELETE FROM id_change_history WHERE old_id = ? OR new_id = ?`, id, id); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(
+		`DELETE FROM server_config WHERE key = ?`, "telemetry_seq_"+id); err != nil {
 		return err
 	}
 	return tx.Commit()
@@ -2126,6 +2188,86 @@ func (s *SQLiteDB) UpdateUser(u *User) error {
 		totp_secret=?, totp_enabled=?, totp_recovery_codes=? WHERE id=?`,
 		u.PasswordHash, u.Role, u.IsServerAdmin, u.AuthProvider, u.TOTPSecret, u.TOTPEnabled, u.TOTPRecoveryCodes, u.ID)
 	return err
+}
+
+// RenameUser changes a username and cascades to the tables that key on it.
+//
+// Issue #498 (2026-11-13): the panel could not change an administrator's login
+// name. `username` is the primary key of `address_books` and a lookup key in
+// `org_users` and `strategy_assignments.target_key`, so the rename has to be one
+// transaction; a partial rename would orphan an address book or silently detach
+// org membership and strategy assignments.
+func (s *SQLiteDB) RenameUser(id int64, newUsername string) error {
+	newUsername = strings.TrimSpace(newUsername)
+	if !ValidUsername(newUsername) {
+		return ErrInvalidUsername
+	}
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	tx, err := s.db.Begin()
+	if err != nil {
+		return fmt.Errorf("db: RenameUser begin: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	var oldUsername string
+	err = tx.QueryRow(`SELECT username FROM users WHERE id = ?`, id).Scan(&oldUsername)
+	if err == sql.ErrNoRows {
+		return ErrPeerNotFound
+	}
+	if err != nil {
+		return fmt.Errorf("db: RenameUser load: %w", err)
+	}
+	if oldUsername == newUsername {
+		return nil
+	}
+
+	var taken int
+	if err := tx.QueryRow(`SELECT COUNT(*) FROM users WHERE username = ? AND id <> ?`, newUsername, id).Scan(&taken); err != nil {
+		return fmt.Errorf("db: RenameUser collision check: %w", err)
+	}
+	if taken > 0 {
+		return ErrUsernameTaken
+	}
+
+	if _, err := tx.Exec(`UPDATE users SET username = ? WHERE id = ?`, newUsername, id); err != nil {
+		if isUniqueViolation(err) {
+			return ErrUsernameTaken
+		}
+		return fmt.Errorf("db: RenameUser users: %w", err)
+	}
+
+	// Address books are keyed by (username, ab_type): rename in place, and drop
+	// any book already stored under the new name to avoid a PK conflict.
+	_, _ = tx.Exec(`DELETE FROM address_books WHERE username = ?`, newUsername)
+	if _, err := tx.Exec(`UPDATE address_books SET username = ? WHERE username = ?`, newUsername, oldUsername); err != nil {
+		if !isMissingTable(err) {
+			return fmt.Errorf("db: RenameUser address books: %w", err)
+		}
+	}
+
+	// Organisation membership and strategy assignments reference the name, not
+	// the id, so they must follow the rename.
+	_, _ = tx.Exec(`UPDATE org_users SET username = ? WHERE username = ?`, newUsername, oldUsername)
+	_, _ = tx.Exec(
+		`UPDATE strategy_assignments SET target_key = ? WHERE target_key = ? AND target_type = 'user'`,
+		newUsername, oldUsername,
+	)
+
+	// Stale lockout history must not lock the fresh name.
+	_, _ = tx.Exec(`DELETE FROM account_lockouts WHERE username = ?`, newUsername)
+	if _, err := tx.Exec(`UPDATE login_attempts SET username = ? WHERE username = ?`, newUsername, oldUsername); err != nil {
+		if !isMissingTable(err) {
+			return fmt.Errorf("db: RenameUser attempts: %w", err)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("db: RenameUser commit: %w", err)
+	}
+	return nil
 }
 
 // DeleteUser removes a user by ID and clears org membership links (Issue #292).

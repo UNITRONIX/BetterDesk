@@ -1,0 +1,10 @@
+# RustDesk upstream compatibility reviews
+
+When a GitHub Issue is labeled **`Next Updates`** + **`compatibility`**, or its body contains `rustdesk-upstream-watch:`:
+
+1. Follow [`docs/important/rustdesk-compat-checklist.md`](docs/important/rustdesk-compat-checklist.md).
+2. Record findings in [`docs/RDCLIENT_VS_RUSTDESK_AUDIT.md`](docs/RDCLIENT_VS_RUSTDESK_AUDIT.md).
+3. After review, update `last_reviewed_tag` in [`config/rustdesk-upstream-watch.json`](config/rustdesk-upstream-watch.json) for the reviewed component(s).
+4. Land code/docs fixes on **`dev`** unless the operator explicitly requests a stable hotfix.
+5. **Do not** close the tracking Issue unless the operator explicitly asks.
+6. **Do not** vendor AGPL `rustdesk` / `rustdesk-server` sources into this product tree — clean-room parity only.

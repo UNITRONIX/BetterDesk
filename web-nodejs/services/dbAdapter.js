@@ -520,6 +520,26 @@ function createSqliteAdapter(config) {
                 team_id TEXT DEFAULT '',
                 created_at TEXT DEFAULT (datetime('now'))
             );
+            CREATE TABLE IF NOT EXISTS panel_access_policies (
+                subject_type TEXT NOT NULL,
+                subject_id TEXT NOT NULL,
+                resource_key TEXT NOT NULL,
+                access_level TEXT NOT NULL DEFAULT 'none',
+                updated_at TEXT DEFAULT (datetime('now')),
+                PRIMARY KEY (subject_type, subject_id, resource_key)
+            );
+            CREATE INDEX IF NOT EXISTS idx_panel_access_policies_subject
+                ON panel_access_policies (subject_type, subject_id);
+            CREATE TABLE IF NOT EXISTS client_feature_policies (
+                subject_type TEXT NOT NULL,
+                subject_id TEXT NOT NULL,
+                feature_key TEXT NOT NULL,
+                enabled INTEGER NOT NULL DEFAULT 0,
+                updated_at TEXT DEFAULT (datetime('now')),
+                PRIMARY KEY (subject_type, subject_id, feature_key)
+            );
+            CREATE INDEX IF NOT EXISTS idx_client_feature_policies_subject
+                ON client_feature_policies (subject_type, subject_id);
             CREATE TABLE IF NOT EXISTS user_group_members (
                 user_group_id INTEGER NOT NULL,
                 user_id INTEGER NOT NULL,
@@ -1042,6 +1062,20 @@ function createSqliteAdapter(config) {
             CREATE INDEX IF NOT EXISTS idx_agent_bundles_bundle_id ON agent_bundles (bundle_id);
             CREATE INDEX IF NOT EXISTS idx_agent_bundles_hash ON agent_bundles (branding_hash);
 
+            CREATE TABLE IF NOT EXISTS agent_templates (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL UNIQUE,
+                description TEXT NOT NULL DEFAULT '',
+                config_json TEXT NOT NULL DEFAULT '{}',
+                enrollment_token TEXT NOT NULL UNIQUE,
+                enrolled_device_id TEXT DEFAULT NULL,
+                enrolled_at TEXT DEFAULT NULL,
+                created_by INTEGER DEFAULT NULL,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+            CREATE INDEX IF NOT EXISTS idx_agent_templates_token ON agent_templates (enrollment_token);
+
             CREATE TABLE IF NOT EXISTS agent_bundle_builds (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 branding_hash TEXT NOT NULL,
@@ -1499,6 +1533,34 @@ function createSqliteAdapter(config) {
             return parsePeer(row);
         },
 
+        /**
+         * Registration-time view of a peer, including soft-deleted rows.
+         *
+         * `/api/bd/register` must know whether an id is banned or soft-deleted
+         * BEFORE it upserts, otherwise a public register call resurrects rows
+         * that an operator deliberately removed (C1, 2026-11-13 audit).
+         *
+         * @returns {Promise<null | { id: string, uuid: string, pk: string|null,
+         *   banned: boolean, deleted: boolean, banReason: string }>}
+         */
+        async getPeerRegistrationState(id) {
+            const peerId = String(id || '').trim();
+            if (!peerId) return null;
+            const db = openMain();
+            const row = db.prepare(
+                'SELECT id, uuid, pk, is_banned, is_deleted, banned_reason FROM peer WHERE id = ?'
+            ).get(peerId);
+            if (!row) return null;
+            return {
+                id: String(row.id),
+                uuid: row.uuid || '',
+                pk: row.pk || null,
+                banned: row.is_banned === 1 || row.is_banned === true,
+                deleted: row.is_deleted === 1 || row.is_deleted === true,
+                banReason: row.banned_reason || '',
+            };
+        },
+
         async upsertPeer({ id, uuid, pk, info, ip }) {
             openMain().prepare(`
                 INSERT INTO peer (id, uuid, pk, info, ip, status_online, created_at)
@@ -1639,6 +1701,44 @@ function createSqliteAdapter(config) {
         },
         async updateUserLanguage(id, lang) {
             openAuth().prepare('UPDATE users SET preferred_language = ? WHERE id = ?').run(lang, id);
+        },
+        /**
+         * Rename a user and cascade to the tables keyed by username.
+         *
+         * Issue #498 (2026-11-13): `username` is the PK of `address_books` and a
+         * lookup key in `org_users` / `strategy_assignments`, so a partial rename
+         * would orphan data. One transaction, `ErrUsernameTaken`-style error on
+         * collision.
+         *
+         * @returns {Promise<{ ok: true } | { ok: false, code: 'taken'|'invalid'|'missing' }>}
+         */
+        async renameUser(id, newUsername) {
+            const { renameUserCascade } = require('../lib/renameUserCascade');
+            const db = openAuth();
+            const tx = db.transaction(() => {
+                const row = db.prepare('SELECT username FROM users WHERE id = ?').get(id);
+                if (!row) return { ok: false, code: 'missing' };
+                if (row.username === newUsername) return { ok: true };
+                const taken = db.prepare('SELECT COUNT(*) AS c FROM users WHERE username = ? AND id <> ?')
+                    .get(newUsername, id);
+                if (taken && taken.c > 0) return { ok: false, code: 'taken' };
+
+                db.prepare('UPDATE users SET username = ? WHERE id = ?').run(newUsername, id);
+                renameUserCascade({
+                    exec: (sql, params) => db.prepare(sql).run(...(params || [])),
+                    run: (sql, params) => db.prepare(sql).run(...(params || [])),
+                    dialect: 'sqlite',
+                }, row.username, newUsername);
+                return { ok: true };
+            });
+            try {
+                return tx();
+            } catch (err) {
+                if (/unique|constraint/i.test(String(err.message || ''))) {
+                    return { ok: false, code: 'taken' };
+                }
+                throw err;
+            }
         },
         // Phase 4: update operator identity profile (first_name, last_name, email, phone, role_display, avatar_url)
         async updateUserProfile(id, fields) {
@@ -3122,6 +3222,75 @@ function createSqliteAdapter(config) {
             return this.getUserGroupsForUser(user.id);
         },
 
+        async getPanelAccessPolicies(subjectType, subjectId) {
+            return openAuth().prepare(`
+                SELECT resource_key, access_level
+                FROM panel_access_policies
+                WHERE subject_type = ? AND subject_id = ?
+                ORDER BY resource_key ASC
+            `).all(String(subjectType), String(subjectId));
+        },
+
+        async setPanelAccessPolicies(subjectType, subjectId, policies = []) {
+            const db = openAuth();
+            const normalized = Array.isArray(policies) ? policies : [];
+            const tx = db.transaction(() => {
+                db.prepare('DELETE FROM panel_access_policies WHERE subject_type = ? AND subject_id = ?')
+                    .run(String(subjectType), String(subjectId));
+                const insert = db.prepare(`
+                    INSERT INTO panel_access_policies
+                        (subject_type, subject_id, resource_key, access_level, updated_at)
+                    VALUES (?, ?, ?, ?, datetime('now'))
+                `);
+                for (const policy of normalized) {
+                    insert.run(
+                        String(subjectType),
+                        String(subjectId),
+                        String(policy.resource_key),
+                        String(policy.access_level)
+                    );
+                }
+            });
+            tx();
+            return this.getPanelAccessPolicies(subjectType, subjectId);
+        },
+
+        async getClientFeaturePolicies(subjectType, subjectId) {
+            return openAuth().prepare(`
+                SELECT feature_key, enabled
+                FROM client_feature_policies
+                WHERE subject_type = ? AND subject_id = ?
+                ORDER BY feature_key ASC
+            `).all(String(subjectType), String(subjectId)).map((row) => ({
+                feature_key: row.feature_key,
+                enabled: !!row.enabled,
+            }));
+        },
+
+        async setClientFeaturePolicies(subjectType, subjectId, policies = []) {
+            const db = openAuth();
+            const normalized = Array.isArray(policies) ? policies : [];
+            const tx = db.transaction(() => {
+                db.prepare('DELETE FROM client_feature_policies WHERE subject_type = ? AND subject_id = ?')
+                    .run(String(subjectType), String(subjectId));
+                const insert = db.prepare(`
+                    INSERT INTO client_feature_policies
+                        (subject_type, subject_id, feature_key, enabled, updated_at)
+                    VALUES (?, ?, ?, ?, datetime('now'))
+                `);
+                for (const policy of normalized) {
+                    insert.run(
+                        String(subjectType),
+                        String(subjectId),
+                        String(policy.feature_key),
+                        policy.enabled ? 1 : 0
+                    );
+                }
+            });
+            tx();
+            return this.getClientFeaturePolicies(subjectType, subjectId);
+        },
+
         // ---- Device Groups ----
 
         async getAllDeviceGroups() {
@@ -3649,6 +3818,71 @@ function createSqliteAdapter(config) {
 
         async getAgentBundle(bundleId) {
             return openMain().prepare('SELECT * FROM agent_bundles WHERE bundle_id = ?').get(bundleId) || null;
+        },
+
+        /**
+         * Agent enrollment templates (`agent_templates`, auth database).
+         *
+         * These live in auth.db next to users/groups, not in the main peer
+         * database. The routes used to call `db.query` / `db.run`, which the
+         * database facade never exposed, so the template tab and
+         * `POST /api/bd/enroll` silently failed for every token.
+         */
+        async listAgentTemplates() {
+            return openAuth().prepare(`
+                SELECT id, name, description, enrollment_token, created_at, updated_at
+                FROM agent_templates ORDER BY id DESC
+            `).all();
+        },
+
+        async getAgentTemplateByToken(token) {
+            const clean = String(token || '').trim();
+            if (!clean) return null;
+            try {
+                return openAuth().prepare(
+                    'SELECT * FROM agent_templates WHERE enrollment_token = ?'
+                ).get(clean) || null;
+            } catch (err) {
+                if (!/no such table|no such column/i.test(String(err.message || ''))) throw err;
+                try {
+                    return openAuth().prepare(
+                        'SELECT id, name, config_json, enrollment_token FROM agent_templates WHERE enrollment_token = ?'
+                    ).get(clean) || null;
+                } catch (_) {
+                    return null;
+                }
+            }
+        },
+
+        async bindAgentTemplateDevice(token, deviceId) {
+            const clean = String(token || '').trim();
+            const device = String(deviceId || '').trim();
+            if (!clean || !device) return false;
+            try {
+                openAuth().prepare(`
+                    UPDATE agent_templates SET enrolled_device_id = ?, enrolled_at = datetime('now')
+                    WHERE enrollment_token = ? AND (enrolled_device_id IS NULL OR enrolled_device_id = '')
+                `).run(device, clean);
+                return true;
+            } catch (err) {
+                if (!/no such column/i.test(String(err.message || ''))) throw err;
+                // Pre-binding schema: no way to enforce single use here.
+                return false;
+            }
+        },
+
+        async createAgentTemplate({ name, description, configJson, enrollmentToken, createdBy }) {
+            const info = openAuth().prepare(`
+                INSERT INTO agent_templates (name, description, config_json, enrollment_token, created_by)
+                VALUES (?, ?, ?, ?, ?)
+            `).run(
+                String(name || '').slice(0, 100),
+                String(description || '').slice(0, 500),
+                String(configJson || '{}'),
+                String(enrollmentToken || ''),
+                createdBy == null ? null : Number(createdBy)
+            );
+            return { id: info.lastInsertRowid, enrollmentToken };
         },
 
         async getAgentBundleByPublicId(publicId) {
@@ -4375,6 +4609,28 @@ function createPostgresAdapter() {
         await q('CREATE INDEX IF NOT EXISTS idx_pending_reg_status ON pending_registrations (status)');
         await q('CREATE INDEX IF NOT EXISTS idx_pending_reg_device ON pending_registrations (device_id)');
 
+        // -- Agent enrollment templates (Registrations → Support Agent token).
+        // The SQLite path creates this in auth.db; PostgreSQL keeps everything in
+        // one database, so the table must exist here too or the template tab and
+        // POST /api/bd/enroll fail on every Postgres install.
+        await q(`
+            CREATE TABLE IF NOT EXISTS agent_templates (
+                id SERIAL PRIMARY KEY,
+                name TEXT NOT NULL UNIQUE,
+                description TEXT NOT NULL DEFAULT '',
+                config_json TEXT NOT NULL DEFAULT '{}',
+                enrollment_token TEXT NOT NULL UNIQUE,
+                enrolled_device_id TEXT DEFAULT NULL,
+                enrolled_at TIMESTAMPTZ DEFAULT NULL,
+                created_by INTEGER DEFAULT NULL,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            )
+        `);
+        await q('ALTER TABLE agent_templates ADD COLUMN IF NOT EXISTS enrolled_device_id TEXT DEFAULT NULL');
+        await q('ALTER TABLE agent_templates ADD COLUMN IF NOT EXISTS enrolled_at TIMESTAMPTZ DEFAULT NULL');
+        await q('CREATE INDEX IF NOT EXISTS idx_agent_templates_token ON agent_templates (enrollment_token)');
+
         // -- Agent installer bundles (Generator Agenta)
         await q(`
             CREATE TABLE IF NOT EXISTS agent_bundles (
@@ -4591,6 +4847,28 @@ function createPostgresAdapter() {
                 created_at TIMESTAMPTZ DEFAULT NOW()
             )
         `);
+        await q(`
+            CREATE TABLE IF NOT EXISTS panel_access_policies (
+                subject_type TEXT NOT NULL,
+                subject_id TEXT NOT NULL,
+                resource_key TEXT NOT NULL,
+                access_level TEXT NOT NULL DEFAULT 'none',
+                updated_at TIMESTAMPTZ DEFAULT NOW(),
+                PRIMARY KEY (subject_type, subject_id, resource_key)
+            )
+        `);
+        await q('CREATE INDEX IF NOT EXISTS idx_panel_access_policies_subject ON panel_access_policies (subject_type, subject_id)');
+        await q(`
+            CREATE TABLE IF NOT EXISTS client_feature_policies (
+                subject_type TEXT NOT NULL,
+                subject_id TEXT NOT NULL,
+                feature_key TEXT NOT NULL,
+                enabled BOOLEAN NOT NULL DEFAULT FALSE,
+                updated_at TIMESTAMPTZ DEFAULT NOW(),
+                PRIMARY KEY (subject_type, subject_id, feature_key)
+            )
+        `);
+        await q('CREATE INDEX IF NOT EXISTS idx_client_feature_policies_subject ON client_feature_policies (subject_type, subject_id)');
 
         await q(`
             CREATE TABLE IF NOT EXISTS user_group_members (
@@ -5048,6 +5326,25 @@ function createPostgresAdapter() {
             return parsePeer(row);
         },
 
+        /** Registration-time peer view including soft-deleted rows (see SQLite adapter). */
+        async getPeerRegistrationState(id) {
+            const peerId = String(id || '').trim();
+            if (!peerId) return null;
+            const row = await one(
+                'SELECT id, uuid, pk, is_banned, is_deleted, banned_reason FROM peer WHERE id = $1',
+                [peerId]
+            );
+            if (!row) return null;
+            return {
+                id: String(row.id),
+                uuid: row.uuid || '',
+                pk: row.pk || null,
+                banned: row.is_banned === true || row.is_banned === 1,
+                deleted: row.is_deleted === true || row.is_deleted === 1,
+                banReason: row.banned_reason || '',
+            };
+        },
+
         async upsertPeer({ id, uuid, pk, info, ip }) {
             await q(`
                 INSERT INTO peer (id, uuid, pk, info, ip, status_online, created_at)
@@ -5137,6 +5434,56 @@ function createPostgresAdapter() {
 
         async getUserByUsername(username) { return one('SELECT * FROM users WHERE username = $1', [username]); },
         async getUserById(id) { return one('SELECT * FROM users WHERE id = $1', [id]); },
+        /**
+         * Rename a user with the dependent-table cascade (issue #498).
+         * See the SQLite adapter for the rationale.
+         *
+         * @returns {Promise<{ ok: true } | { ok: false, code: 'taken'|'invalid'|'missing' }>}
+         */
+        async renameUser(id, newUsername) {
+            const { renameUserCascade } = require('../lib/renameUserCascade');
+            const client = await getPool().connect();
+            try {
+                await client.query('BEGIN');
+                const existing = await client.query('SELECT username FROM users WHERE id = $1', [id]);
+                if (existing.rowCount === 0) {
+                    await client.query('ROLLBACK');
+                    return { ok: false, code: 'missing' };
+                }
+                const oldUsername = existing.rows[0].username;
+                if (oldUsername === newUsername) {
+                    await client.query('COMMIT');
+                    return { ok: true };
+                }
+                const taken = await client.query(
+                    'SELECT COUNT(*)::INTEGER AS c FROM users WHERE username = $1 AND id <> $2',
+                    [newUsername, id]
+                );
+                if (taken.rows[0].c > 0) {
+                    await client.query('ROLLBACK');
+                    return { ok: false, code: 'taken' };
+                }
+                await client.query('UPDATE users SET username = $1 WHERE id = $2', [newUsername, id]);
+                // The cascade helper emits `?` placeholders; rewrite them for pg.
+                let paramIndex = 0;
+                const runPg = (sql, params) => client.query(
+                    String(sql).replace(/\?/g, () => `$${++paramIndex}`),
+                    params || []
+                );
+                paramIndex = 0;
+                await renameUserCascade({ run: runPg, dialect: 'postgres' }, oldUsername, newUsername);
+                await client.query('COMMIT');
+                return { ok: true };
+            } catch (err) {
+                try { await client.query('ROLLBACK'); } catch (_) { /* already rolled back */ }
+                if (/unique|duplicate key/i.test(String(err.message || ''))) {
+                    return { ok: false, code: 'taken' };
+                }
+                throw err;
+            } finally {
+                client.release();
+            }
+        },
         async createUser(username, passwordHash, role = 'admin', authProvider = 'local') {
             const provider = authProvider || 'local';
             const r = await one(
@@ -6598,6 +6945,82 @@ function createPostgresAdapter() {
             return this.getUserGroupsForUser(user.id);
         },
 
+        async getPanelAccessPolicies(subjectType, subjectId) {
+            return all(`
+                SELECT resource_key, access_level
+                FROM panel_access_policies
+                WHERE subject_type = $1 AND subject_id = $2
+                ORDER BY resource_key ASC
+            `, [String(subjectType), String(subjectId)]);
+        },
+
+        async setPanelAccessPolicies(subjectType, subjectId, policies = []) {
+            const client = await getPool().connect();
+            const type = String(subjectType);
+            const id = String(subjectId);
+            try {
+                await client.query('BEGIN');
+                await client.query(
+                    'DELETE FROM panel_access_policies WHERE subject_type = $1 AND subject_id = $2',
+                    [type, id]
+                );
+                for (const policy of (Array.isArray(policies) ? policies : [])) {
+                    await client.query(`
+                        INSERT INTO panel_access_policies
+                            (subject_type, subject_id, resource_key, access_level, updated_at)
+                        VALUES ($1, $2, $3, $4, NOW())
+                    `, [type, id, String(policy.resource_key), String(policy.access_level)]);
+                }
+                await client.query('COMMIT');
+            } catch (err) {
+                await client.query('ROLLBACK');
+                throw err;
+            } finally {
+                client.release();
+            }
+            return this.getPanelAccessPolicies(type, id);
+        },
+
+        async getClientFeaturePolicies(subjectType, subjectId) {
+            const rows = await all(`
+                SELECT feature_key, enabled
+                FROM client_feature_policies
+                WHERE subject_type = $1 AND subject_id = $2
+                ORDER BY feature_key ASC
+            `, [String(subjectType), String(subjectId)]);
+            return rows.map((row) => ({
+                feature_key: row.feature_key,
+                enabled: row.enabled === true || row.enabled === 1,
+            }));
+        },
+
+        async setClientFeaturePolicies(subjectType, subjectId, policies = []) {
+            const client = await getPool().connect();
+            const type = String(subjectType);
+            const id = String(subjectId);
+            try {
+                await client.query('BEGIN');
+                await client.query(
+                    'DELETE FROM client_feature_policies WHERE subject_type = $1 AND subject_id = $2',
+                    [type, id]
+                );
+                for (const policy of (Array.isArray(policies) ? policies : [])) {
+                    await client.query(`
+                        INSERT INTO client_feature_policies
+                            (subject_type, subject_id, feature_key, enabled, updated_at)
+                        VALUES ($1, $2, $3, $4, NOW())
+                    `, [type, id, String(policy.feature_key), !!policy.enabled]);
+                }
+                await client.query('COMMIT');
+            } catch (err) {
+                await client.query('ROLLBACK');
+                throw err;
+            } finally {
+                client.release();
+            }
+            return this.getClientFeaturePolicies(type, id);
+        },
+
         // ---- Device Groups ----
 
         async getAllDeviceGroups() {
@@ -7141,6 +7564,55 @@ function createPostgresAdapter() {
 
         async getAgentBundle(bundleId) {
             return one('SELECT * FROM agent_bundles WHERE bundle_id = $1', [bundleId]);
+        },
+
+        /** Agent enrollment templates — see the SQLite adapter for context. */
+        async listAgentTemplates() {
+            return all(`
+                SELECT id, name, description, enrollment_token, created_at, updated_at
+                FROM agent_templates ORDER BY id DESC
+            `);
+        },
+
+        async getAgentTemplateByToken(token) {
+            const clean = String(token || '').trim();
+            if (!clean) return null;
+            try {
+                return await one('SELECT * FROM agent_templates WHERE enrollment_token = $1', [clean]);
+            } catch (err) {
+                if (!/does not exist|no such table|no such column/i.test(String(err.message || ''))) throw err;
+                return null;
+            }
+        },
+
+        async bindAgentTemplateDevice(token, deviceId) {
+            const clean = String(token || '').trim();
+            const device = String(deviceId || '').trim();
+            if (!clean || !device) return false;
+            try {
+                await q(`
+                    UPDATE agent_templates SET enrolled_device_id = $1, enrolled_at = NOW()
+                    WHERE enrollment_token = $2 AND (enrolled_device_id IS NULL OR enrolled_device_id = '')
+                `, [device, clean]);
+                return true;
+            } catch (err) {
+                if (!/does not exist|no such column/i.test(String(err.message || ''))) throw err;
+                return false;
+            }
+        },
+
+        async createAgentTemplate({ name, description, configJson, enrollmentToken, createdBy }) {
+            const row = await one(`
+                INSERT INTO agent_templates (name, description, config_json, enrollment_token, created_by)
+                VALUES ($1, $2, $3, $4, $5) RETURNING id
+            `, [
+                String(name || '').slice(0, 100),
+                String(description || '').slice(0, 500),
+                String(configJson || '{}'),
+                String(enrollmentToken || ''),
+                createdBy == null ? null : Number(createdBy),
+            ]);
+            return { id: row && row.id, enrollmentToken };
         },
 
         async getAgentBundleByPublicId(publicId) {

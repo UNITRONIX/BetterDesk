@@ -58,6 +58,35 @@ describe('RDFileTransfer static helpers', () => {
         expect(RDFileTransfer.joinLocalPath('/tmp/out', '')).toBe('/tmp/out');
         expect(RDFileTransfer.joinLocalPath('', 'proj/readme.txt')).toBe('proj/readme.txt');
     });
+
+    it('captures a remote download as a Blob for remote-to-remote copy', async () => {
+        const previousWindow = global.window;
+        global.window = {};
+        const sent = [];
+        const ft = new RDFileTransfer({
+            proto: {
+                buildFileSendRequest: () => ({}),
+                buildFileSendConfirm: () => ({})
+            },
+            sendMessage: (message) => sent.push(message),
+            emit: () => {}
+        });
+        ft.enable();
+
+        const promise = ft.downloadFileToBlob('', { name: 'hello.txt', size: 3 });
+        ft.handleFileResponse({
+            digest: { id: 1, fileSize: 3, fileNum: 0 }
+        });
+        ft.handleFileResponse({
+            block: { id: 1, fileNum: 0, data: new Uint8Array([104, 105, 33]), compressed: false }
+        });
+        ft.handleFileResponse({ done: { id: 1, fileNum: 0 } });
+
+        const blob = await promise;
+        expect(await blob.text()).toBe('hi!');
+        expect(sent.length).toBe(2);
+        global.window = previousWindow;
+    });
 });
 
 describe('RDFileTransfer overwrite strategy', () => {

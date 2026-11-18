@@ -1,3 +1,10 @@
+<%# Audit M11 (2026-11-13): data embedded in inline script blocks must not be
+    able to close the block. Uses the server helper when present, with an
+    equivalent fallback for standalone template rendering (tests/previews). %>
+<% var bdJson = (typeof safeJsonScript === 'function') ? safeJsonScript : function (v) {
+    return JSON.stringify(v === undefined ? null : v)
+        .replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
+}; %>
 <%
 // Public download portal — branded per bundle. No auth, no shared layout.
 // Bundle ID itself is the access token.
@@ -134,8 +141,8 @@ function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'
     <script nonce="<%= typeof cspNonce !== 'undefined' ? cspNonce : '' %>">
         // Poll manifest every 8s while at least one platform is still building.
         (function () {
-            const publicId = <%- JSON.stringify(bundle.public_id) %>;
-            const t = <%- JSON.stringify({
+            const publicId = <%- bdJson(bundle.public_id) %>;
+            const t = <%- bdJson({
                 building: t('download.building'),
                 failed:   t('download.failed'),
                 download: t('download.download'),

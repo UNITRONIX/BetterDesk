@@ -19,7 +19,7 @@ Symbols below: ✅ working, ⚠️ partial / behind a feature flag, ❌ missing.
 | Microphone capture (operator → peer) | ✅ | ❌ | ❌ | **missing** |
 | Mouse input (move/buttons/wheel) | ✅ | ✅ | ❌ → being added (Phase 58) | partial |
 | Keyboard input (modifiers, function keys) | ✅ | ✅ | ❌ → being added (Phase 58) | partial |
-| Clipboard sync (text + image) | ✅ bidirectional | ✅ text only via WebSocket | ⚠️ text only via bd-signal `clipboard.*` (planned) | partial |
+| Clipboard sync (text + image) | ✅ bidirectional | ✅ bidirectional text + image via WebSocket and session hub | ⚠️ text only via bd-signal `clipboard.*` (planned) | partial |
 | File transfer (upload/download/resume) | ✅ | ⚠️ basic upload/download, no resume | ⚠️ `files.read` only (no write) | partial |
 | Multi-monitor | ✅ | ✅ peer-side monitor select | ❌ | partial |
 | Session recording (.mp4 / WebM) | ❌ in client | ✅ WebM via canvas.captureStream | ❌ | RDClient-only |
@@ -137,3 +137,34 @@ Audit of upstream tag **1.4.9** ([release](https://github.com/rustdesk/rustdesk/
 2. Remote + file transfer + terminal sessions.
 3. Connection audit row appears in panel (without controller-user column — expected).
 4. Upgrade peer 1.4.8 → 1.4.9 without server change.
+
+## RustDesk 1.5.3 server / stock-client compatibility (2026-11-17)
+
+**Full write-up:** [`docs/important/RUSTDESK_1_5_3_COMPAT_AUDIT.md`](important/RUSTDESK_1_5_3_COMPAT_AUDIT.md) (proto diff, relay path map, API/strategy, enrollment false-positives, lab checklist).
+
+Audit of upstream tags **1.5.1 → 1.5.3** ([1.5.3 release](https://github.com/rustdesk/rustdesk/releases/tag/1.5.3)) against BetterDesk Go signal/relay/API + panel deploy path. OSS `rustdesk-server` latest remains **1.1.16**.
+
+**Verdict: Partial / production-viable with conditions** — deploy-string bootstrap + normal PunchHoleSent→RequestRelay path OK; **force-relay / `sendRelayResponse`** and proto drift remain open.
+
+| Area | Status | Notes |
+|---|---|---|
+| Account login / AB / groups / peers / heartbeat / sysinfo | **OK** | No breaking HTTP Client API shape vs 1.4.9 |
+| Strategy `config_options` (feature toggles) | **OK** | Allowlist + UI + regression test exclude locked 1.5.3 endpoint keys (#16696) |
+| Branding → RustDesk `config_options` | **OK** | Only optional `display-name` |
+| Bootstrap / deploy string / QR / deep-link | **OK with docs** | Relay always `host:port` from panel helpers |
+| Support Agent signed `custom.txt` | **OK** | Bake-time override-settings |
+| Normal RequestRelay via `relayAdvertisedToTarget` | **OK (designed for #16858)** | Stores PunchHoleSent relay verbatim; see `relay_identity_test.go` |
+| Force-relay `sendRelayResponse` | **Fixed in code; lab pending** | Target-bound relay now uses `relayAdvertisedToTarget`; verify live 1.5.3 AlwaysUseRelay — [#504](https://github.com/UNITRONIX/BetterDesk/issues/504) |
+| `ConfigUpdate` on TestNat | **Partial** | Still emitted; 1.5.x clients ignore apply ([9f9585c](https://github.com/rustdesk/rustdesk/commit/9f9585ce155a6558f0625eaf8fabfe8827c9a552)) |
+| Proto vs `hbb_common` | **Additive fields synced** | Runtime audit-context emission and WebRTC identity population remain follow-up work — [#505](https://github.com/UNITRONIX/BetterDesk/issues/505) |
+| Trusted Devices V2 / connection approval | **n/a / client-only** | Peer-local |
+| `ControlledContext` emission | **Still missing** | Attribution gap |
+| OSS `rustdesk-server` 1.1.16 | **Reviewed** | No product action |
+
+### Operational guidance (1.5.3)
+
+1. Configure peers only via deploy string / Network UI / Import — never heartbeat or TestNat `ConfigUpdate`.
+2. Keep relay `host:port` correct; avoid bare host / API port.
+3. After upgrade, retest sessions especially with AlwaysUseRelay / hairpin / org force-relay.
+4. Windows: upgrade GUI + service together (#16755).
+5. Manifest / checklist: [`config/rustdesk-upstream-watch.json`](../config/rustdesk-upstream-watch.json), [`rustdesk-compat-checklist.md`](important/rustdesk-compat-checklist.md).

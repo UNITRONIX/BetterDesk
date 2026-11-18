@@ -1002,9 +1002,13 @@ func (s *Server) handleClientHeartbeat(w http.ResponseWriter, r *http.Request) {
 	// push generic RustDesk config_options to an incoming-only client: those
 	// options can contain connection or lockdown settings that conflict with
 	// its signed profile. Connection mode itself is never placed here.
-	if body.ModifiedAt != serverModifiedAt && !s.withholdClientStrategy(deviceID, body, peer.DeviceType, envelopeVerified) {
+	strategyOptions := s.clientStrategyConfigOptions(deviceID)
+	if (body.ModifiedAt != serverModifiedAt || len(strategyOptions) > 0) && !s.withholdClientStrategy(deviceID, body, peer.DeviceType, envelopeVerified) {
 		branding := s.loadBrandingConfig()
-		opts := branding.Profiles.RustDesk.ConfigOptions
+		opts := mergeRustDeskStrategyOptions(
+			branding.Profiles.RustDesk.ConfigOptions,
+			strategyOptions,
+		)
 		if len(opts) > 0 {
 			resp["strategy"] = map[string]any{
 				"config_options": opts,
@@ -1021,6 +1025,106 @@ func (s *Server) handleClientHeartbeat(w http.ResponseWriter, r *http.Request) {
 	}
 	// connection_mode_command is added only inside the sealed envelope.
 	s.writeHeartbeatResponse(w, deviceID, resp, responsePublicKey)
+}
+
+const maxStrategyPermissionKeyLength = 64
+
+var rustDeskStrategyOptionKeys = map[string]struct{}{
+	"enable-file-transfer":  {},
+	"disable-clipboard":     {},
+	"enable-clipboard":      {},
+	"enable-audio":          {},
+	"enable-tunnel":         {},
+	"enable-camera":         {},
+	"enable-remote-restart": {},
+	"enable-block-input":    {},
+}
+
+// clientStrategyConfigOptions resolves the direct peer strategy used by the
+// heartbeat. User/group policy is compiled into the same strategy permission
+// shape by the panel, while this path remains safe for stock RustDesk clients.
+func (s *Server) clientStrategyConfigOptions(deviceID string) map[string]string {
+	out := map[string]string{}
+	if s == nil || s.db == nil {
+		return out
+	}
+	peerKey, err := s.db.ResolvePeerAssignmentKey(deviceID)
+	if err != nil || peerKey == "" {
+		return out
+	}
+	strategies, err := s.db.ListStrategies()
+	if err != nil {
+		return out
+	}
+	for _, strategy := range strategies {
+		if strategy == nil || !strategy.Enabled {
+			continue
+		}
+		summary, err := s.db.GetStrategyAssignmentSummary(strategy.GUID)
+		if err != nil || summary == nil || !containsString(summary.Peers, peerKey) {
+			continue
+		}
+		var permissions map[string]any
+		if json.Unmarshal([]byte(strategy.Permissions), &permissions) != nil {
+			continue
+		}
+		for key, raw := range permissions {
+			if len(key) == 0 || len(key) > maxStrategyPermissionKeyLength {
+				continue
+			}
+			if _, allowed := rustDeskStrategyOptionKeys[key]; !allowed {
+				continue
+			}
+			value, ok := normalizeStrategyOptionValue(raw)
+			if ok {
+				out[key] = value
+			}
+		}
+	}
+	return out
+}
+
+func containsString(values []string, wanted string) bool {
+	for _, value := range values {
+		if value == wanted {
+			return true
+		}
+	}
+	return false
+}
+
+func normalizeStrategyOptionValue(value any) (string, bool) {
+	switch v := value.(type) {
+	case bool:
+		if v {
+			return "Y", true
+		}
+		return "N", true
+	case string:
+		if v == "Y" || v == "y" {
+			return "Y", true
+		}
+		if v == "N" || v == "n" {
+			return "N", true
+		}
+	}
+	return "", false
+}
+
+func mergeRustDeskStrategyOptions(branding, strategy map[string]string) map[string]string {
+	out := make(map[string]string, len(branding)+len(strategy))
+	for key, value := range branding {
+		out[key] = value
+	}
+	for key, value := range strategy {
+		// Branding is an administrator hard lock. A strategy must never
+		// replace an explicitly branded option with a weaker value.
+		if _, exists := out[key]; exists {
+			continue
+		}
+		out[key] = value
+	}
+	return out
 }
 
 // clientBrandingModifiedAt returns branding revision as Unix ms for heartbeat cursors.

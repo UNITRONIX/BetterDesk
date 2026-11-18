@@ -15,17 +15,22 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: web-nodejs-ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test-and-audit:
     if: github.event_name != 'push' || !contains(github.event.head_commit.message, '[version-bump]')
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: web-nodejs
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: '22.23.2'
           cache: npm
@@ -45,3 +50,9 @@ jobs:
 
       - name: Run tests
         run: npm run test:ci
+
+      # Blocking gate: hard failures (missing/extra keys, empty values) must stop
+      # the build. Pre-existing English fallbacks are soft findings and do not
+      # fail the step, so the historical backlog does not block this job.
+      - name: Verify i18n parity across console locales
+        run: npm run i18n:check

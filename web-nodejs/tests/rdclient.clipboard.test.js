@@ -11,8 +11,10 @@ function loadRdclientModules() {
         TextEncoder,
         Uint8Array,
         Blob: typeof Blob !== 'undefined' ? Blob : undefined,
-        DecompressionStream: typeof DecompressionStream !== 'undefined' ? DecompressionStream : undefined,
-        CompressionStream: typeof CompressionStream !== 'undefined' ? CompressionStream : undefined,
+        // Keep zstd tests deterministic; Node's experimental stream leaves
+        // BlobReader handles open when the format is unsupported.
+        DecompressionStream: undefined,
+        CompressionStream: undefined,
         Response: typeof Response !== 'undefined' ? Response : undefined,
         navigator: { clipboard: { writeText: jest.fn(), write: jest.fn() } },
         DOMParser: class {
@@ -42,6 +44,16 @@ function loadRdclientModules() {
         fs.readFileSync(path.join(base, 'clipboard.js'), 'utf8') + '\nglobalThis.RDClipboard = RDClipboard;',
         sandbox,
         { filename: 'clipboard.js' }
+    );
+    vm.runInNewContext(
+        fs.readFileSync(path.join(base, 'clipboard-hub.js'), 'utf8'),
+        sandbox,
+        { filename: 'clipboard-hub.js' }
+    );
+    vm.runInNewContext(
+        fs.readFileSync(path.join(base, 'protocol.js'), 'utf8') + '\nglobalThis.RDProtocol = RDProtocol;',
+        sandbox,
+        { filename: 'protocol.js' }
     );
     return sandbox;
 }
@@ -113,6 +125,16 @@ describe('RDClipboard helpers', () => {
         expect(decoded).toHaveLength(1);
         expect(decoded[0].text).toBe('kept');
     });
+
+    it('drops compressed entries when zstd is unavailable', async () => {
+        const decoded = await RDClipboard.decodeEntry({
+            compress: true,
+            format: 'Text',
+            content: new Uint8Array([0x28, 0xb5, 0x2f, 0xfd, 0x01])
+        });
+
+        expect(decoded).toBeNull();
+    });
 });
 
 describe('RDCompress helpers', () => {
@@ -131,6 +153,13 @@ describe('RDCompress helpers', () => {
         const raw = new Uint8Array([72, 105]);
         const out = await RDCompress.decompressZstd(raw);
         expect(Array.from(out)).toEqual([72, 105]);
+    });
+
+    it('rejects compressed bytes when no zstd decoder is available', async () => {
+        await expect(RDCompress.decompressZstd(
+            new Uint8Array([0x28, 0xb5, 0x2f, 0xfd, 0x01]),
+            { force: true }
+        )).rejects.toThrow(/zstandard/i);
     });
 });
 
@@ -154,5 +183,56 @@ describe('RDClient clipboard protobuf field', () => {
         const decoded = Message.decode(Message.encode(msg).finish());
         expect(decoded.multiClipboards.clipboards).toHaveLength(1);
         expect(Buffer.from(decoded.multiClipboards.clipboards[0].content).toString('utf8')).toBe('hello');
+    });
+});
+
+describe('RDClipboardHub', () => {
+    let RDClipboardHub;
+
+    beforeAll(() => {
+        RDClipboardHub = loadRdclientModules().RDClipboardHub;
+    });
+
+    it('keeps one latest entry and does not re-emit identical clipboard data', () => {
+        const hub = new RDClipboardHub();
+        const events = [];
+        hub.subscribe((entry) => events.push(entry));
+
+        hub.setFromRemote({ text: 'same' }, 'device-a');
+        hub.setFromLocal({ text: 'same' });
+
+        expect(events).toHaveLength(1);
+        expect(hub.getLatest().sourceSessionId).toBe('device-a');
+    });
+
+    it('does not send back to the source session, but fans out once to others', () => {
+        const hub = new RDClipboardHub();
+        const entry = hub.setFromRemote({ text: 'forward me' }, 'device-a');
+
+        expect(hub.shouldSendTo('device-a')).toBe(false);
+        expect(hub.shouldSendTo('device-b')).toBe(true);
+        hub.markSent('device-b', entry.sequence);
+        expect(hub.shouldSendTo('device-b')).toBe(false);
+    });
+});
+
+describe('RDProtocol clipboard builder', () => {
+    it('builds text and HTML entries in a multi clipboard message', async () => {
+        const sandbox = loadRdclientModules();
+        const protocol = new sandbox.RDProtocol();
+        protocol.enums = {
+            ClipboardFormat: {
+                values: { Text: 0, Html: 2 }
+            }
+        };
+
+        const message = await protocol.buildMultiClipboards({
+            text: 'plain',
+            html: '<b>rich</b>'
+        });
+
+        expect(message.multiClipboards.clipboards).toHaveLength(2);
+        expect(message.multiClipboards.clipboards.map((e) => e.format)).toEqual([0, 2]);
+        expect(new TextDecoder().decode(message.multiClipboards.clipboards[0].content)).toBe('plain');
     });
 });

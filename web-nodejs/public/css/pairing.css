@@ -1,0 +1,135 @@
+/*
+ * BetterDesk Console — short-code pairing page.
+ *
+ * The page exists for one thing: a code the operator reads out and the user types
+ * into the client. So the code is the largest element on the page, grouped in
+ * threes, with the server address right under it — those two values are the
+ * whole pairing.
+ */
+
+.pairing-hero {
+    max-width: 640px;
+}
+
+.pairing-code {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 16px 0 8px;
+    padding: 20px 16px;
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-lg, 12px);
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    font-family: var(--font-mono, ui-monospace, "SF Mono", Consolas, monospace);
+    font-size: clamp(28px, 5vw, 44px);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    line-height: 1.1;
+    text-align: center;
+    user-select: all;
+}
+
+.pairing-code-group {
+    display: inline-block;
+}
+
+.pairing-code-sep {
+    color: var(--text-secondary);
+    font-weight: 400;
+    opacity: 0.6;
+}
+
+/* An expired code stays readable but stops looking usable */
+.pairing-code.is-expired {
+    opacity: 0.45;
+    text-decoration: line-through;
+    text-decoration-thickness: 2px;
+}
+
+.pairing-code-loading {
+    font-family: var(--font-family, system-ui, sans-serif);
+    font-size: var(--font-size-md);
+    font-weight: 400;
+    letter-spacing: normal;
+    color: var(--text-secondary);
+}
+
+.pairing-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 24px;
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    font-variant-numeric: tabular-nums;
+}
+
+.pairing-meta strong {
+    color: var(--text-primary);
+}
+
+.pairing-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.pairing-address {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin: 16px 0 0;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-secondary);
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+}
+
+.pairing-address .material-icons {
+    font-size: 18px;
+}
+
+.pairing-address strong {
+    color: var(--text-primary);
+    font-family: var(--font-mono, ui-monospace, "SF Mono", Consolas, monospace);
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+    .pairing-code {
+        font-size: clamp(26px, 9vw, 34px);
+        padding: 16px 12px;
+    }
+
+    .pairing-actions .btn {
+        flex: 1;
+        justify-content: center;
+    }
+}
+
+/* Beta shell: same rhythm as the rest of UX 3.6 — hairlines, no cards */
+.ux36-page .pairing-hero,
+.ux36-page .pairing-hero.card {
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--bg);
+    box-shadow: none;
+}
+
+.ux36-page .pairing-code {
+    border-color: var(--rule);
+    background: var(--bg-subtle);
+    font-family: var(--mono);
+    letter-spacing: 0.06em;
+}
+
+.ux36-page .pairing-address {
+    border-top-color: var(--rule);
+}
+
+.ux36-page .pairing-address strong {
+    font-family: var(--mono);
+}
