@@ -437,6 +437,7 @@
     "delete_group_confirm": "Gerätegruppe {name} löschen?",
     "group_deleted": "Gerätegruppe gelöscht",
     "folder_group_readonly": "Ordnerbasierte Gruppen werden über Ordner verwaltet.",
+    "default_group_protected": "Die Standard-Gerätegruppe kann nicht gelöscht werden.",
     "manage_user_groups": "Benutzergruppen verwalten",
     "restore_failed": "Gerät konnte nicht wiederhergestellt werden",
     "no_signal_tooltip": "Der Client hat kürzlich die API kontaktiert, ist aber nicht auf dem Signalserver registriert (UDP :21116). Starten Sie den Client nach der Servermigration neu.",

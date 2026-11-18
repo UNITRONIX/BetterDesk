@@ -352,6 +352,7 @@
     "delete_group_confirm": "Gerätegruppe {name} löschen?",
     "group_deleted": "Gerätegruppe gelöscht",
     "folder_group_readonly": "Ordnerbasierte Gruppen werden über Ordner verwaltet.",
+    "default_group_protected": "Le groupe d'appareils Default ne peut pas être supprimé.",
     "group_tag_required": "Tag-Filter ist für dynamische Gruppen erforderlich",
     "group_invalid": "Ungültige Gruppenkennung",
     "group_not_found": "Gruppe nicht gefunden",

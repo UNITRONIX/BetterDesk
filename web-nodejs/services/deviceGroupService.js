@@ -112,6 +112,19 @@ function folderIdFromGroupGuid(value) {
     return Number.isFinite(id) ? id : null;
 }
 
+/**
+ * The seeded system "Default" device group must stay — commercialization and
+ * enrollment fall back to it. Match the install seed note, or name Default
+ * without an organization team_id (org defaults use the org name + team_id).
+ */
+function isProtectedDefaultDeviceGroup(group) {
+    if (!group || typeof group !== 'object') return false;
+    if (String(group.note || '') === 'Default device group') return true;
+    const name = String(group.name || '').trim().toLowerCase();
+    const teamId = String(group.team_id || '').trim();
+    return name === 'default' && !teamId;
+}
+
 function getGroupFolderId(group) {
     const explicit = group && group.folder_id;
     if (explicit !== undefined && explicit !== null && explicit !== '') {
@@ -347,6 +360,7 @@ module.exports = {
     buildDeviceGroupUpdateFields,
     folderIdFromGroupGuid,
     getGroupFolderId,
+    isProtectedDefaultDeviceGroup,
     groupAllowedForUser,
     getUserAccessContext,
     getGroupPeerIds,

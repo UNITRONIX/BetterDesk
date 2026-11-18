@@ -443,6 +443,7 @@
     "delete_group_confirm": "Poistetaanko laiteryhmä {name}?",
     "group_deleted": "Laiteryhmä poistettu",
     "folder_group_readonly": "Kansiota tukevia ryhmiä hallitaan kansioista.",
+    "default_group_protected": "Oletuslaiteryhmää ei voi poistaa.",
     "manage_user_groups": "Hallinnoi käyttäjäryhmiä",
     "restore_failed": "Laite konnte nicht wiederhergestellt werden",
     "no_signal_tooltip": "Asiakas otti hiljattain yhteyttä API:in, mutta ei ole rekisteröitynyt signal-palvelimeen (UDP :21116). Käynnistä asiakas uudelleen palvelinsiirron jälkeen.",

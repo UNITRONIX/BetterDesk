@@ -13,10 +13,6 @@
                     <p class="welcome-subtitle">${_('dashboard.subtitle')}</p>
                 </div>
                 <div class="dashboard-hero-actions">
-                    <div class="system-pill" id="dashboard-system-pill" aria-live="polite">
-                        <span class="status-dot"></span>
-                        <span id="dashboard-system-status">${_('status.checking')}</span>
-                    </div>
                     <button class="btn btn-secondary btn-sm" id="refresh-status-btn">
                         <span class="material-icons" aria-hidden="true">refresh</span>
                         ${_('actions.refresh')}
@@ -35,7 +31,7 @@
             <div class="dashboard-layout">
                 <main class="dashboard-primary" aria-label="${_('dashboard.title')}">
                     <section class="dashboard-stats" aria-label="${_('dashboard.health_overview')}">
-                        <article class="dashboard-stat-card">
+                        <article class="dashboard-stat-card" data-accent="devices">
                             <div class="dashboard-stat-icon devices">
                                 <span class="material-icons" aria-hidden="true">devices</span>
                             </div>
@@ -47,7 +43,7 @@
                             </div>
                         </article>
 
-                        <article class="dashboard-stat-card">
+                        <article class="dashboard-stat-card" data-accent="online">
                             <div class="dashboard-stat-icon online">
                                 <span class="material-icons" aria-hidden="true">wifi</span>
                             </div>
@@ -59,7 +55,7 @@
                             </div>
                         </article>
 
-                        <article class="dashboard-stat-card">
+                        <article class="dashboard-stat-card" data-accent="banned">
                             <div class="dashboard-stat-icon banned">
                                 <span class="material-icons" aria-hidden="true">block</span>
                             </div>
@@ -71,7 +67,7 @@
                             </div>
                         </article>
 
-                        <article class="dashboard-stat-card">
+                        <article class="dashboard-stat-card" data-accent="offline">
                             <div class="dashboard-stat-icon offline">
                                 <span class="material-icons" aria-hidden="true">cloud_off</span>
                             </div>
@@ -83,7 +79,7 @@
                             </div>
                         </article>
 
-                        <article class="dashboard-stat-card">
+                        <article class="dashboard-stat-card" data-accent="uptime">
                             <div class="dashboard-stat-icon uptime">
                                 <span class="material-icons" aria-hidden="true">schedule</span>
                             </div>
@@ -106,26 +102,29 @@
                                 </h2>
                                 <p class="client-config-subtitle">${_('dashboard.client_config_subtitle')}</p>
                             </div>
-                            <div class="client-config-actions">
-                                <button type="button" class="btn btn-secondary btn-sm" id="copy-client-config-btn">
+                            <div class="client-config-actions" role="toolbar" aria-label="${_('dashboard.client_config_title')}">
+                                <button type="button" class="client-config-tool" id="copy-client-config-btn"
+                                        title="${_('dashboard.copy_all_config')}"
+                                        aria-label="${_('dashboard.copy_all_config')}">
                                     <span class="material-icons" aria-hidden="true">content_copy</span>
-                                    ${_('dashboard.copy_all_config')}
                                 </button>
-                                <button type="button" class="btn btn-secondary btn-sm" id="copy-deploy-string-btn">
+                                <button type="button" class="client-config-tool" id="copy-deploy-string-btn"
+                                        title="${_('dashboard.copy_deploy_string')}"
+                                        aria-label="${_('dashboard.copy_deploy_string')}">
                                     <span class="material-icons" aria-hidden="true">terminal</span>
-                                    ${_('dashboard.copy_deploy_string')}
                                 </button>
-                                <button type="button" class="btn btn-secondary btn-sm" id="show-intune-script-btn">
+                                <button type="button" class="client-config-tool" id="show-intune-script-btn"
+                                        title="${_('dashboard.show_intune_script')}"
+                                        aria-label="${_('dashboard.show_intune_script')}">
                                     <span class="material-icons" aria-hidden="true">code</span>
-                                    ${_('dashboard.show_intune_script')}
                                 </button>
-                                <button type="button" class="btn btn-secondary btn-sm" id="show-client-qr-btn">
+                                <button type="button" class="client-config-tool" id="show-client-qr-btn"
+                                        title="${_('dashboard.show_config_qr')}"
+                                        aria-label="${_('dashboard.show_config_qr')}">
                                     <span class="material-icons" aria-hidden="true">qr_code_2</span>
-                                    ${_('dashboard.show_config_qr')}
                                 </button>
-                                ${typeof hasPermission === 'function' && hasPermission('enrollment.approve') ? '<button type="button" class="btn btn-primary btn-sm" id="activate-agent-code-btn">' : ''}
+                                ${typeof hasPermission === 'function' && hasPermission('enrollment.approve') ? `<button type="button" class="client-config-tool client-config-tool-primary" id="activate-agent-code-btn" title="${_('dashboard.pair_with_code')}" aria-label="${_('dashboard.pair_with_code')}">` : ''}
                                     ${typeof hasPermission === 'function' && hasPermission('enrollment.approve') ? '<span class="material-icons" aria-hidden="true">pin</span>' : ''}
-                                    ${typeof hasPermission === 'function' && hasPermission('enrollment.approve') ? _('dashboard.pair_with_code') : ''}
                                 ${typeof hasPermission === 'function' && hasPermission('enrollment.approve') ? '</button>' : ''}
                             </div>
                         </div>
@@ -175,27 +174,6 @@
                                 <button type="button" class="client-config-copy" data-copy-target="client-config-public-key" title="${_('actions.copy')}" aria-label="${_('actions.copy')} ${_('dashboard.config_key')}">
                                     <span class="material-icons" aria-hidden="true">content_copy</span>
                                 </button>
-                            </div>
-                        </div>
-
-                        <div class="client-config-footer">
-                            <div class="client-config-onboarding">
-                                <p>${_('dashboard.client_config_hint')}</p>
-                                <ol class="client-config-steps">
-                                    <li><a href="/agents">${_('dashboard.open_agents')}</a> — ${_('dashboard.agents_hint')}</li>
-                                    <li>${_('dashboard.show_config_qr')} / ${_('dashboard.copy_all_config')} — ${_('dashboard.config_api_server')}</li>
-                                    <li>${_('registrations.title')} — ${_('registrations.subtitle')}</li>
-                                </ol>
-                            </div>
-                            <div class="client-config-links">
-                                <a class="btn btn-primary btn-sm" href="/agents">
-                                    <span class="material-icons" aria-hidden="true">support_agent</span>
-                                    ${_('dashboard.open_agents')}
-                                </a>
-                                <a class="btn btn-secondary btn-sm" href="/keys">
-                                    <span class="material-icons" aria-hidden="true">vpn_key</span>
-                                    ${_('dashboard.open_keys')}
-                                </a>
                             </div>
                         </div>
                     </section>

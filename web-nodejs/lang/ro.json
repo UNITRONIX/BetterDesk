@@ -443,6 +443,7 @@
     "delete_group_confirm": "Ștergeți grupul de dispozitive {name}?",
     "group_deleted": "Grupul de dispozitive a fost șters",
     "folder_group_readonly": "Grupurile susținute de foldere sunt gestionate din dosare.",
+    "default_group_protected": "Grupul de dispozitive Default nu poate fi șters.",
     "manage_user_groups": "Gestionați grupurile de utilizatori",
     "restore_failed": "Dispozitiv konnte nicht wiederhergestellt werden",
     "no_signal_tooltip": "Clientul a contactat API-ul recent, dar nu este înregistrat pe serverul de semnal (UDP :21116). Reporniți clientul după migrarea serverului.",

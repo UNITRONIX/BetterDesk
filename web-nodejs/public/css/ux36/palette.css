@@ -12,11 +12,14 @@
  */
 
 html[data-ui-shell="ux36"] {
-    /* Dark — his neutral scale, not GitHub blue-black */
-    --bg-primary: #141616;
-    --bg-secondary: #1b1e1e;
-    --bg-tertiary: #262a2a;
-    --bg-elevated: #1f2323;
+    /* Dark — his neutral scale, not GitHub blue-black.
+       Content (--bg-primary) sits a step above the top bar (--bg-chrome)
+       so the page canvas reads separately from the navigation chrome. */
+    --bg-chrome: #141616;
+    --bg-primary: #1a1d1d;
+    --bg-secondary: #212525;
+    --bg-tertiary: #2a2e2e;
+    --bg-elevated: #242828;
     --bg-hover: rgba(255, 255, 255, 0.06);
 
     --text-primary: #e4e7e7;
@@ -53,16 +56,17 @@ html[data-ui-shell="ux36"] {
     --status-banned: #ff8f80;
     --status-warning: #e3b85a;
 
-    --card-bg: #1b1e1e;
-    --surface-glass-bg-secondary: #1b1e1e;
-    --surface-glass-bg-tertiary: #262a2a;
-    --surface-glass-bg-elevated: #1f2323;
+    --card-bg: #212525;
+    --surface-glass-bg-secondary: #212525;
+    --surface-glass-bg-tertiary: #2a2e2e;
+    --surface-glass-bg-elevated: #242828;
     --surface-glass-border: #2c3131;
     --surface-glass-blur: 0px;
     --surface-glass-saturate: 1;
 }
 
 html[data-ui-shell="ux36"][data-theme="light"] {
+    --bg-chrome: #ffffff;
     --bg-primary: #ffffff;
     --bg-secondary: #f3f4f4;
     --bg-tertiary: #e8ebeb;

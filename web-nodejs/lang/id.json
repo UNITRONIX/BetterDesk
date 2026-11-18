@@ -443,6 +443,7 @@
     "delete_group_confirm": "Hapus grup perangkat {name}?",
     "group_deleted": "Grup perangkat dihapus",
     "folder_group_readonly": "Grup yang didukung folder dikelola dari folder.",
+    "default_group_protected": "Grup perangkat Default tidak dapat dihapus.",
     "manage_user_groups": "Kelola grup pengguna",
     "restore_failed": "Gagal memulihkan perangkat",
     "no_signal_tooltip": "Klien baru saja menghubungi API tetapi tidak terdaftar di server sinyal (UDP :21116). Mulai ulang klien setelah migrasi server.",

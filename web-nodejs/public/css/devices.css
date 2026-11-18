@@ -227,54 +227,57 @@
     color: var(--accent-red);
 }
 
-/* Add chip (create folder / create group) — unified style */
-.chip-add {
-    display: grid;
-    grid-template-columns: 1fr;
-    grid-template-rows: 1fr auto;
+/* Add chip — quiet secondary row; matches folder/group chips, not a dashed CTA */
+.chip-add,
+.group-chip.chip-add,
+.folder-chip.chip-add {
+    display: inline-flex;
+    flex-direction: row;
     align-items: center;
-    justify-items: center;
-    text-align: center;
-    color: var(--text-secondary);
-    border-style: dashed;
-}
-
-.group-chip.chip-add {
-    /* Override group-chip base grid to match folder-chip add tile */
-    grid-template-columns: 1fr;
-    grid-template-rows: 1fr auto;
-    align-items: center;
-    justify-items: center;
-    text-align: center;
-    gap: 6px 8px;
-    border-style: dashed;
-    color: var(--text-secondary);
+    justify-content: flex-start;
+    gap: 8px;
+    text-align: start;
+    color: var(--text-secondary, #8b949e);
+    border: 1px solid var(--border-primary, #30363d);
+    background: transparent;
+    font-weight: 500;
 }
 
 .chip-add:hover,
 .group-chip.chip-add:hover,
 .folder-chip.chip-add:hover {
-    border-color: var(--accent-blue);
-    color: var(--accent-blue);
-    background: var(--bg-secondary, #161b22);
+    border-color: var(--border-hover, #484f58);
+    color: var(--text-primary, #e6edf3);
+    background: var(--bg-hover, rgba(255, 255, 255, 0.05));
     box-shadow: none;
     transform: none;
 }
 
-.chip-add .material-icons {
-    grid-column: 1;
-    grid-row: 1;
-    align-self: center;
-    justify-self: center;
-    font-size: 26px;
+.chip-add .material-icons,
+.chip-add .chip-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 20px;
+    height: 20px;
+    font-size: 20px !important;
+    line-height: 1;
+    color: inherit;
 }
 
 .chip-add .chip-label {
-    grid-column: 1;
-    grid-row: 2;
-    align-self: end;
-    justify-self: center;
-    text-align: center;
+    display: block;
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 20px;
+    text-align: start;
+    color: inherit;
 }
 
 /* ==================== Device Group Tiles ==================== */
@@ -512,8 +515,8 @@
 }
 
 .toolbar-search {
-    flex: 1;
-    min-width: 180px;
+    flex: 1 1 100%;
+    min-width: 0;
 }
 
 .toolbar-search .form-input {
@@ -527,6 +530,36 @@
     left: 8px;
 }
 
+/* Compact status filter — sits on the same row as deleted toggle + icon tools */
+.toolbar-status-filter {
+    display: inline-flex;
+    align-items: center;
+    flex: 0 1 auto;
+    min-width: 0;
+    margin: 0;
+}
+
+.toolbar-filter-select {
+    height: 32px;
+    min-width: 7.5rem;
+    max-width: 12rem;
+    padding: 0 28px 0 10px;
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-md, 8px);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: var(--font-size-xs, 0.75rem);
+    line-height: 1.2;
+    cursor: pointer;
+}
+
+.toolbar-filter-select:hover,
+.toolbar-filter-select:focus-visible {
+    border-color: var(--accent-blue);
+    outline: none;
+}
+
+/* Legacy segmented control kept for other pages that still share devices.css */
 .toolbar-filters {
     display: flex;
     gap: 2px;
@@ -1076,7 +1109,7 @@ td.column-hidden {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    margin-left: 8px;
+    margin-left: 0;
     font-size: 0.85rem;
     color: var(--text-secondary, #64748b);
     cursor: pointer;
@@ -1627,6 +1660,11 @@ td.column-hidden {
     .toolbar-search {
         min-width: 100%;
         order: -1;
+    }
+
+    .toolbar-filter-select {
+        max-width: none;
+        flex: 1 1 auto;
     }
 
     .toolbar-filters {

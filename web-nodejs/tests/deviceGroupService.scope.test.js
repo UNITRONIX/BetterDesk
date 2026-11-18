@@ -1,5 +1,33 @@
 const deviceGroupService = require('../services/deviceGroupService');
 
+describe('isProtectedDefaultDeviceGroup', () => {
+    test('protects the seeded Default device group', () => {
+        expect(deviceGroupService.isProtectedDefaultDeviceGroup({
+            name: 'Default',
+            note: 'Default device group',
+            team_id: ''
+        })).toBe(true);
+        expect(deviceGroupService.isProtectedDefaultDeviceGroup({
+            name: 'Default',
+            note: '',
+            team_id: ''
+        })).toBe(true);
+    });
+
+    test('allows org defaults and custom groups to be deleted', () => {
+        expect(deviceGroupService.isProtectedDefaultDeviceGroup({
+            name: 'Acme',
+            note: 'Default group created with organization (commercialization)',
+            team_id: 'org-1'
+        })).toBe(false);
+        expect(deviceGroupService.isProtectedDefaultDeviceGroup({
+            name: 'Operators',
+            note: '',
+            team_id: ''
+        })).toBe(false);
+    });
+});
+
 describe('deviceGroupService scope (#227)', () => {
     const devices = [
         { id: '100', folder_id: 1 },

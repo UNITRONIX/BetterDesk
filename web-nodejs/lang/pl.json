@@ -350,6 +350,7 @@
     "delete_group_confirm": "Usunąć grupę urządzeń {name}?",
     "group_deleted": "Grupa urządzeń usunięta",
     "folder_group_readonly": "Grupy powiązane z folderami są zarządzane z poziomu folderów.",
+    "default_group_protected": "Domyślnej grupy urządzeń nie można usunąć.",
     "group_tag_required": "Filtr tagu jest wymagany dla grup dynamicznych",
     "group_invalid": "Nieprawidłowy identyfikator grupy",
     "group_not_found": "Nie znaleziono grupy",

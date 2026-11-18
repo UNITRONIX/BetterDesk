@@ -560,6 +560,12 @@ router.delete('/api/device-groups/:guid', requireAuth, requirePermission('device
         if (deviceGroupService.folderIdFromGroupGuid(guid) !== null) {
             return res.status(400).json({ success: false, error: req.t('devices.folder_group_readonly') });
         }
+        if (deviceGroupService.isProtectedDefaultDeviceGroup(group)) {
+            return res.status(400).json({
+                success: false,
+                error: req.t('devices.default_group_protected')
+            });
+        }
 
         // Stage P2: Go owns the delete. Fall through to the panel's own writer
         // when the switch says so or the endpoint is not deployed yet.

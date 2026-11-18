@@ -81,25 +81,30 @@ describe('UX 3.6 shell scroll chain', () => {
         assert.match(drawerBlock, /\.ux35-sidebar\s*\{[^}]*height:\s*auto/);
     });
 
-    it('keeps the Devices header actions on the left, next to the title', () => {
-        // The title used to carry margin-inline-end: auto, which pushed the
-        // page's own controls (Add RDP/VNC target, Sync status) to the far right
-        // edge where they read as unrelated chrome.
+    it('keeps the Devices title group left-aligned in the header', () => {
+        // Title + count stay a left-aligned header; page actions (RDP/VNC target,
+        // create folder/group) live in the left rail under folders/groups.
         const pagesCss = read('public', 'css', 'ux36', 'pages.css');
         const header = ruleBody(pagesCss, '.ux36-page .devices-header');
         assert.ok(header, '.ux36-page .devices-header rule missing');
         assert.match(header, /justify-content:\s*flex-start/,
-            'the v2 sheet space-betweens the header, pushing the actions right');
+            'the v2 sheet space-betweens the header, pushing leftover actions right');
 
         const title = ruleBody(pagesCss, '.ux36-page .devices-title');
         assert.ok(title, '.ux36-page .devices-title rule missing');
         assert.doesNotMatch(title, /margin-inline-end:\s*auto/,
-            'margin-inline-end: auto pushes the header actions to the right');
+            'margin-inline-end: auto pushes the title cluster to the right');
+    });
 
-        // The actions keep their own row gap so both buttons stay together.
-        const actions = ruleBody(pagesCss, '.ux36-page .devices-actions');
-        assert.ok(actions, '.ux36-page .devices-actions rule missing');
-        assert.match(actions, /gap:/);
+    it('keeps Add RDP/VNC target in the groups rail, not the page header', () => {
+        const view = read('views', 'devices.ejs');
+        const headerSlice = view.slice(
+            view.indexOf('class="devices-header"'),
+            view.indexOf('class="devices-tile-bars"'));
+        assert.doesNotMatch(headerSlice, /id="add-remote-target-btn"/,
+            'Add RDP/VNC must not sit in the page header');
+        assert.match(view, /id="groups-chips"[\s\S]*?id="add-remote-target-btn"/,
+            'Add RDP/VNC belongs under the groups list');
     });
 
     it('matches the reason the body clips overflow in the first place', () => {
@@ -183,6 +188,29 @@ describe('Devices horizontal scrollbar anchoring', () => {
         assert.match(pagesCss, /\.ux36-page \.chat-page\s*\{[^}]*height:\s*100%/);
     });
 
+    it('keeps the Devices sticky toolbar flush under the top bar', () => {
+        // Chromium will not let position:sticky enter the scrollport padding box,
+        // so --page-pad on .ux35-content leaves a gap where table rows paint above
+        // the stuck search/filters. Padding-top must move onto .devices-page.
+        const pagesCss = read('public', 'css', 'ux36', 'pages.css');
+        assert.match(pagesCss,
+            /\.ux36-page \.ux35-content:has\(\.devices-page\)\s*\{[^}]*padding-top:\s*0/);
+        assert.match(pagesCss,
+            /\.ux36-page \.ux35-content:has\(\.devices-page\) > \.devices-page\s*\{[^}]*padding-top:\s*var\(--page-pad\)/);
+        assert.match(pagesCss,
+            /\.ux36-page \.devices-page \.devices-toolbar\s*\{[\s\S]*?position:\s*sticky[\s\S]*?top:\s*0/);
+    });
+
+    it('keeps Settings topic tabs above branding content while scrolling', () => {
+        // Branding hero steps used z-index:1; with --layer-sticky also at 1 the
+        // pills painted over the stuck topic row. Topic nav must win stacking.
+        const pagesCss = read('public', 'css', 'ux36', 'pages.css');
+        assert.match(pagesCss,
+            /\.ux36-page \.settings-shell-nav\s*\{[\s\S]*?z-index:\s*var\(--z-sticky/);
+        assert.match(pagesCss,
+            /\.ux36-page \.branding-hero-steps\s*\{[^}]*z-index:\s*auto/);
+    });
+
     it('flattens the Dashboard cards that still carry v2 gradients and glow', () => {        // dashboard.css (v2) puts a radial glow on the hero, a linear gradient and
         // a blue border on the client-config card, and glass on the activity
         // panel. Next to the beta layout those read as a different design
@@ -200,9 +228,8 @@ describe('Devices horizontal scrollbar anchoring', () => {
         assert.match(pagesCss, /\.ux36-page \.dashboard-shell :is\([\s\S]*?\)\s*\{[^}]*border:\s*1px solid var\(--rule\)/);
         assert.match(pagesCss, /\.ux36-page \.dashboard-shell :is\([\s\S]*?\)\s*\{[^}]*box-shadow:\s*none/);
 
-        // The hero and the status pills lose their glow too.
+        // The hero loses its glow too.
         assert.match(pagesCss, /\.ux36-page \.dashboard-hero\s*\{[^}]*background:\s*none/);
-        assert.match(pagesCss, /\.ux36-page \.system-pill\s*\{[^}]*border:\s*1px solid var\(--rule\)/);
     });
 });
 

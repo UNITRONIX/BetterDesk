@@ -443,6 +443,7 @@
     "delete_group_confirm": "Видалити групу пристроїв {name}?",
     "group_deleted": "Групу пристроїв видалено",
     "folder_group_readonly": "Групи з папками керуються з папок.",
+    "default_group_protected": "Групу пристроїв Default не можна видалити.",
     "manage_user_groups": "Керуйте групами користувачів",
     "restore_failed": "Пристрій konnte nicht wiederhergestellt werden",
     "no_signal_tooltip": "Клієнт нещодавно звернувся до API, але не зареєстрований на сигнальному сервері (UDP :21116). Перезапустіть клієнт після міграції сервера.",

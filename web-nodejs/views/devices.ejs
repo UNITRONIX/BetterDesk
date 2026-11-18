@@ -12,16 +12,6 @@
                     <h1>${_('devices.title')}</h1>
                     <span class="devices-count" id="devices-count">0</span>
                 </div>
-                <div class="devices-actions">
-                    <button class="btn btn-primary btn-sm" id="add-remote-target-btn">
-                        <span class="material-icons">desktop_windows</span>
-                        <span class="btn-label">${_('devices.add_remote_target')}</span>
-                    </button>
-                    <button class="btn btn-secondary btn-sm" id="sync-btn">
-                        <span class="material-icons">sync</span>
-                        <span class="btn-label">${_('devices.sync_status')}</span>
-                    </button>
-                </div>
             </div>
 
             <!-- Folder & group tiles (chip bars sticky on tablet; strategies scroll away) -->
@@ -41,7 +31,7 @@
                     </button>
                     <span id="custom-folders"></span>
                     <button class="folder-chip chip-add" id="add-folder-btn" title="${_('folders.create')}">
-                        <span class="material-icons">add</span>
+                        <span class="material-icons chip-icon" aria-hidden="true">create_new_folder</span>
                         <span class="chip-label">${_('folders.create')}</span>
                     </button>
                 </div>
@@ -57,13 +47,22 @@
                     </button>
                     <span id="custom-device-groups"></span>
                     <button class="group-chip chip-add" id="add-device-group-btn" title="${_('devices.create_group')}">
-                        <span class="material-icons">add</span>
+                        <span class="material-icons chip-icon" aria-hidden="true">group_add</span>
                         <span class="chip-label">${_('devices.create_group')}</span>
                     </button>
+                    <button type="button" class="group-chip chip-add" id="add-remote-target-btn"
+                            title="${_('devices.add_remote_target')}">
+                        <span class="material-icons chip-icon" aria-hidden="true">desktop_windows</span>
+                        <span class="chip-label">${_('devices.add_remote_target')}</span>
+                    </button>
+                </div>
                 </div>
                 </div>
             </div>
 
+            <!-- Main column: toolbar + table share one flow so sticky filters
+                 stay above scrolling rows (grid siblings paint over sticky). -->
+            <div class="devices-main">
             <!-- Toolbar -->
             <div class="devices-toolbar mobile-sticky-toolbar">
                 <div class="toolbar-search search-wrapper">
@@ -71,13 +70,16 @@
                     <input type="text" class="form-input" id="search-input"
                         placeholder="${_('devices.search_placeholder')}">
                 </div>
-                <div class="toolbar-filters">
-                    <button class="filter-btn active" data-filter="all">${_('devices.filter_all')}</button>
-                    <button class="filter-btn" data-filter="online">${_('devices.filter_online')}</button>
-                    <button class="filter-btn" data-filter="offline">${_('devices.filter_offline')}</button>
-                    <button class="filter-btn" data-filter="mesh_agent">${_('mesh.filter_mesh')}</button>
-                    <button class="filter-btn" data-filter="banned">${_('devices.filter_banned')}</button>
-                </div>
+                <label class="toolbar-status-filter" for="device-status-filter">
+                    <select class="form-select toolbar-filter-select" id="device-status-filter"
+                            aria-label="${_('devices.status')}">
+                        <option value="all" selected>${_('devices.filter_all')}</option>
+                        <option value="online">${_('devices.filter_online')}</option>
+                        <option value="offline">${_('devices.filter_offline')}</option>
+                        <option value="mesh_agent">${_('mesh.filter_mesh')}</option>
+                        <option value="banned">${_('devices.filter_banned')}</option>
+                    </select>
+                </label>
                 <label class="show-deleted-toggle toolbar-toggle" for="show-deleted-input" title="${_('devices.show_deleted')}">
                     <input type="checkbox" id="show-deleted-input">
                     <span>${_('devices.show_deleted')}</span>
@@ -163,6 +165,7 @@
                     </div>
                     <div class="pagination-controls" id="pagination-controls"></div>
                 </div>
+            </div>
             </div>
 
             <!-- Shared context menu (devices, folders, groups) -->

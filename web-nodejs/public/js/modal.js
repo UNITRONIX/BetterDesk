@@ -159,11 +159,36 @@ const Modal = (function() {
         activeModal = null;
     }
     
+    function setConfirmButtonLabel(btn, label, icon) {
+        if (!btn) return;
+        btn.innerHTML = `${icon ? `<span class="material-icons" aria-hidden="true">${Utils.escapeHtml(icon)}</span>` : ''}${Utils.escapeHtml(label)}`;
+    }
+
     /**
      * Confirm dialog shorthand
+     * @param {Object} options
+     * @param {number} [options.confirmDelay=0] - Seconds the confirm button stays
+     *   disabled (with a countdown label) before it can be pressed. Useful for
+     *   destructive actions that should not be one click away.
      */
     function confirm(options) {
         return new Promise((resolve) => {
+            const confirmLabel = options.confirmLabel || _('actions.confirm');
+            const confirmIcon = options.confirmIcon;
+            const delaySec = Math.max(0, Math.floor(Number(options.confirmDelay) || 0));
+            let countdownTimer = null;
+            let settled = false;
+
+            const settle = (value) => {
+                if (settled) return;
+                settled = true;
+                if (countdownTimer) {
+                    clearInterval(countdownTimer);
+                    countdownTimer = null;
+                }
+                resolve(value);
+            };
+
             show({
                 title: options.title || _('common.confirm'),
                 content: `<p>${Utils.escapeHtml(options.message || '')}</p>`,
@@ -173,21 +198,45 @@ const Modal = (function() {
                         class: 'btn-secondary',
                         onClick: () => {
                             close();
-                            resolve(false);
+                            settle(false);
                         }
                     },
                     {
-                        label: options.confirmLabel || _('actions.confirm'),
+                        label: delaySec > 0 ? `${confirmLabel} (${delaySec})` : confirmLabel,
                         class: options.danger ? 'btn-danger' : 'btn-primary',
-                        icon: options.confirmIcon,
+                        icon: confirmIcon,
                         onClick: () => {
                             close();
-                            resolve(true);
+                            settle(true);
                         }
                     }
                 ],
                 closable: true,
-                onClose: () => resolve(false)
+                onClose: () => settle(false),
+                onOpen: () => {
+                    if (delaySec <= 0 || !activeModal) return;
+                    const overlay = document.getElementById(activeModal.id);
+                    const btn = overlay && overlay.querySelector('[data-btn-index="1"]');
+                    if (!btn) return;
+
+                    btn.disabled = true;
+                    btn.setAttribute('aria-disabled', 'true');
+                    let remaining = delaySec;
+                    setConfirmButtonLabel(btn, `${confirmLabel} (${remaining})`, confirmIcon);
+
+                    countdownTimer = setInterval(() => {
+                        remaining -= 1;
+                        if (remaining <= 0) {
+                            clearInterval(countdownTimer);
+                            countdownTimer = null;
+                            btn.disabled = false;
+                            btn.removeAttribute('aria-disabled');
+                            setConfirmButtonLabel(btn, confirmLabel, confirmIcon);
+                            return;
+                        }
+                        setConfirmButtonLabel(btn, `${confirmLabel} (${remaining})`, confirmIcon);
+                    }, 1000);
+                }
             });
         });
     }

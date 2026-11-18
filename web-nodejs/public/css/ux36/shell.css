@@ -47,7 +47,7 @@
     height: var(--topbar-h);
     padding: 0 var(--space-3);
     border-bottom: 1px solid var(--rule);
-    background: var(--bg);
+    background: var(--bg-chrome, var(--bg));
 }
 
 /* The top bar's icon buttons are the icon button component (components.css),
@@ -58,6 +58,49 @@
 
 .ux35-topbar-btn {
     position: relative;
+    --topbar-accent: var(--accent);
+}
+
+/* Per-control accent: icons pick up their own colour on hover / open */
+.ux35-topbar-text-btn {
+    --topbar-accent: var(--accent-blue, var(--accent));
+}
+
+#notif-btn {
+    --topbar-accent: var(--accent-yellow, var(--warning));
+}
+
+#refresh-btn {
+    --topbar-accent: var(--accent-green, var(--success));
+}
+
+#ux36-shell-toggle {
+    --topbar-accent: var(--accent-purple, var(--info));
+}
+
+#ux35-theme-btn {
+    --topbar-accent: var(--accent-orange, var(--warning));
+}
+
+#accessibility-btn {
+    --topbar-accent: var(--accent-blue, var(--accent));
+}
+
+#lang-btn {
+    --topbar-accent: var(--accent-green, var(--success));
+}
+
+#user-btn {
+    --topbar-accent: var(--accent-purple, var(--info));
+}
+
+#ux35-actions-menu-btn {
+    --topbar-accent: var(--accent);
+}
+
+.ux35-topbar .ux35-topbar-btn:is(:hover, [aria-expanded="true"], [aria-pressed="true"], .active),
+.ux35-topbar .ux35-topbar-text-btn:is(:hover, [aria-expanded="true"], [aria-pressed="true"], .active) {
+    color: var(--topbar-accent);
 }
 
 .ux35-topbar-menu-btn {
@@ -178,6 +221,7 @@
     color: var(--text);
     font: inherit;
     cursor: pointer;
+    transition: background-color var(--motion), color var(--motion);
 }
 
 .ux35-topbar-text-btn:hover {
@@ -848,6 +892,7 @@
     -webkit-overflow-scrolling: touch;
     padding: var(--page-pad);
     padding-bottom: var(--space-7);
+    background: var(--bg);
 }
 
 /* ── Drawer below 1100px ── */

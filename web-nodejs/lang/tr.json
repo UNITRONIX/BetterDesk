@@ -443,6 +443,7 @@
     "delete_group_confirm": "{name} cihaz grubu silinsin mi?",
     "group_deleted": "Cihaz grubu silindi",
     "folder_group_readonly": "Klasör destekli gruplar klasörlerden yönetilir.",
+    "default_group_protected": "Varsayılan cihaz grubu silinemez.",
     "manage_user_groups": "Kullanıcı gruplarını yönet",
     "restore_failed": "Cihaz geri yükleme başarısız",
     "no_signal_tooltip": "İstemci yakın zamanda API ile iletişim kurdu ancak sinyal sunucusuna (UDP :21116) kayıtlı değil. Sunucu geçişinden sonra istemciyi yeniden başlatın.",

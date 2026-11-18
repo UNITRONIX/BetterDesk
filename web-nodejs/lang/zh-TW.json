@@ -352,6 +352,7 @@
     "delete_group_confirm": "刪除設備分組 {name}？",
     "group_deleted": "設備分組已刪除",
     "folder_group_readonly": "文件夾關聯的分組由文件夾管理。",
+    "default_group_protected": "無法刪除預設裝置群組。",
     "group_tag_required": "動態分組必須設置標籤篩選",
     "group_invalid": "分組標識符無效",
     "group_not_found": "未找到分組",

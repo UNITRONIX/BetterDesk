@@ -140,7 +140,6 @@
         initTagFilter();
         initManageTags();
         initSorting();
-        initSync();
         document.getElementById('add-remote-target-btn')?.addEventListener('click', () => showRemoteTargetModal());
         initFolders();
         initDeviceGroups();
@@ -560,17 +559,27 @@
 
     }
 
-    function buildChipContextMenuHtml(type) {
+    function isProtectedDefaultDeviceGroup(group) {
+        if (!group) return false;
+        if (String(group.note || '') === 'Default device group') return true;
+        const name = String(group.name || '').trim().toLowerCase();
+        const teamId = String(group.team_id || '').trim();
+        return name === 'default' && !teamId;
+    }
+
+    function buildChipContextMenuHtml(type, options = {}) {
+        const allowDelete = options.allowDelete !== false;
         return `
             <button type="button" class="kebab-menu-item" data-action="edit">
                 <span class="material-icons">edit</span>
                 <span>${_('actions.edit')}</span>
             </button>
+            ${allowDelete ? `
             <div class="kebab-divider"></div>
             <button type="button" class="kebab-menu-item danger" data-action="delete">
                 <span class="material-icons">delete</span>
                 <span>${_('actions.delete')}</span>
-            </button>`;
+            </button>` : ''}`;
     }
 
     function positionContextMenu(clientX, clientY) {
@@ -632,7 +641,16 @@
             if (e.target.closest('.chip-action') || e.target.closest('.chip-actions')) return;
             e.preventDefault();
             e.stopPropagation();
-            openContextMenu(e.clientX, e.clientY, buildChipContextMenuHtml(state.type), state);
+            const group = state.type === 'group'
+                ? deviceGroups.find(item => item.guid === state.guid)
+                : null;
+            const allowDelete = !(state.type === 'group' && isProtectedDefaultDeviceGroup(group));
+            openContextMenu(
+                e.clientX,
+                e.clientY,
+                buildChipContextMenuHtml(state.type, { allowDelete }),
+                state
+            );
         });
     }
 
@@ -2798,14 +2816,20 @@
      * Initialize filters
      */
     function initFilters() {
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentFilter = btn.dataset.filter;
-                currentPage = 1;
-                applyFilters();
-            });
+        const statusFilter = document.getElementById('device-status-filter');
+        if (!statusFilter) return;
+
+        const allowed = new Set(['all', 'online', 'offline', 'banned', 'mesh_agent']);
+        if (allowed.has(currentFilter)) {
+            statusFilter.value = currentFilter;
+        }
+
+        statusFilter.addEventListener('change', () => {
+            const next = statusFilter.value || 'all';
+            currentFilter = allowed.has(next) ? next : 'all';
+            if (statusFilter.value !== currentFilter) statusFilter.value = currentFilter;
+            currentPage = 1;
+            applyFilters();
         });
     }
 
@@ -2915,21 +2939,6 @@
         });
     }
     
-    /**
-     * Initialize sync button
-     */
-    function initSync() {
-        document.getElementById('sync-btn')?.addEventListener('click', async () => {
-            try {
-                await Utils.api('/api/sync-status', { method: 'POST' });
-                Notifications.success(_('devices.sync_success'));
-                loadDevices();
-            } catch (error) {
-                Notifications.error(error.message || _('errors.sync_failed'));
-            }
-        });
-    }
-
     // ==================== Tag and Device Group Filters ====================
 
     async function loadTags() {
@@ -3004,6 +3013,7 @@
         if (!container) return;
         container.innerHTML = deviceGroups.map(group => {
             const isDynamic = (group.source_type || 'manual') === 'tag';
+            const isProtectedDefault = isProtectedDefaultDeviceGroup(group);
             return `<span class="group-chip ${currentGroup === group.guid ? 'active' : ''} ${isDynamic ? 'dynamic' : ''}" data-group="${Utils.escapeHtml(group.guid)}" role="button" tabindex="0" title="${Utils.escapeHtml(isDynamic ? (_('devices.dynamic_group_hint') || 'Dynamic tag group') + ': ' + group.tag_filter : group.name)}">
                 <span class="material-icons chip-icon">${isDynamic ? 'sell' : 'hub'}</span>
                 <span class="chip-label">${Utils.escapeHtml(group.name)}</span>
@@ -3015,9 +3025,9 @@
                     <button type="button" class="chip-action group-chip-action" data-action="edit" data-group="${Utils.escapeHtml(group.guid)}" title="${_('devices.edit_group') || 'Edit group'}">
                         <span class="material-icons">edit</span>
                     </button>
-                    <button type="button" class="chip-action group-chip-action group-delete" data-action="delete" data-group="${Utils.escapeHtml(group.guid)}" title="${_('devices.delete_group') || 'Delete group'}">
+                    ${isProtectedDefault ? '' : `<button type="button" class="chip-action group-chip-action group-delete" data-action="delete" data-group="${Utils.escapeHtml(group.guid)}" title="${_('devices.delete_group') || 'Delete group'}">
                         <span class="material-icons">delete</span>
-                    </button>
+                    </button>`}
                 </span>
             </span>`;
         }).join('');
@@ -3055,11 +3065,16 @@
     }
 
     async function deleteDeviceGroup(group) {
+        if (isProtectedDefaultDeviceGroup(group)) {
+            Notifications.error(_('devices.default_group_protected') || 'The Default device group cannot be deleted.');
+            return;
+        }
         const confirmed = await Modal.confirm({
             title: _('devices.delete_group') || 'Delete group',
             message: (_('devices.delete_group_confirm') || 'Delete device group {name}?').replace('{name}', group.name),
             confirmLabel: _('actions.delete'),
-            danger: true
+            danger: true,
+            confirmDelay: 5
         });
         if (!confirmed) return;
 
@@ -3644,7 +3659,8 @@
             title: _('folders.delete'),
             message: _('folders.delete_confirm'),
             confirmLabel: _('actions.delete'),
-            danger: true
+            danger: true,
+            confirmDelay: 5
         });
         
         if (!confirmed) return;

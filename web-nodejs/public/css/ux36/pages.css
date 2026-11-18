@@ -103,14 +103,53 @@
 }
 
 .ux36-page .dashboard-stat-card {
+    --stat-glow: var(--accent);
+    position: relative;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 12px;
-    padding: 16px;
+    padding: 16px 16px 18px;
     border: 0;
     border-radius: 0;
     background: none;
     box-shadow: none;
+    overflow: hidden;
+}
+
+.ux36-page .dashboard-stat-card::after {
+    content: '';
+    position: absolute;
+    left: 14%;
+    right: 14%;
+    bottom: -6px;
+    height: 36px;
+    pointer-events: none;
+    background: radial-gradient(
+        ellipse 70% 100% at 50% 100%,
+        color-mix(in srgb, var(--stat-glow) 42%, transparent) 0%,
+        transparent 72%
+    );
+    opacity: 0.85;
+}
+
+.ux36-page .dashboard-stat-card[data-accent="devices"] {
+    --stat-glow: var(--accent-blue, var(--accent));
+}
+
+.ux36-page .dashboard-stat-card[data-accent="online"] {
+    --stat-glow: var(--accent-green, var(--success));
+}
+
+.ux36-page .dashboard-stat-card[data-accent="banned"] {
+    --stat-glow: var(--accent-red, var(--danger));
+}
+
+.ux36-page .dashboard-stat-card[data-accent="offline"] {
+    --stat-glow: var(--accent-orange, var(--warning));
+}
+
+.ux36-page .dashboard-stat-card[data-accent="uptime"] {
+    --stat-glow: var(--accent-purple, var(--info));
 }
 
 .ux36-page .dashboard-stat-card + .dashboard-stat-card {
@@ -122,19 +161,43 @@
 }
 
 .ux36-page .dashboard-stat-icon {
+    width: 28px;
+    height: 28px;
     color: var(--text-muted);
     background: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.ux36-page .dashboard-stat-icon .material-icons {
+    font-size: 22px;
+    line-height: 1;
+}
+
+.ux36-page .dashboard-stat-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
 }
 
 .ux36-page .dashboard-stat-value {
+    display: flex;
+    align-items: center;
+    min-height: 28px;
+    margin-bottom: 0;
     font-size: var(--text-xl);
     font-weight: 600;
     font-variant-numeric: tabular-nums;
+    line-height: 1;
 }
 
 .ux36-page .dashboard-stat-label {
     color: var(--text-muted);
     font-size: var(--text-sm);
+    line-height: 1.3;
 }
 
 .ux36-page .dashboard-layout {
@@ -169,26 +232,6 @@
     box-shadow: none;
 }
 
-/* Status pills keep their colour meaning, without a glow */
-.ux36-page .system-pill {
-    background: var(--bg-subtle);
-    border: 1px solid var(--rule);
-    border-radius: var(--radius-full);
-    font-weight: 500;
-}
-
-.ux36-page .system-pill.running {
-    border-color: color-mix(in srgb, var(--success) 45%, transparent);
-    color: var(--success);
-    background: var(--bg-subtle);
-}
-
-.ux36-page .system-pill.stopped {
-    border-color: color-mix(in srgb, var(--danger) 45%, transparent);
-    color: var(--danger);
-    background: var(--bg-subtle);
-}
-
 /* Inner blocks of the client config card: hairlines, not nested glass panes */
 .ux36-page .client-config-host-row,
 .ux36-page .client-config-field {
@@ -212,6 +255,8 @@
 }
 
 .ux36-page .devices-header {
+    grid-column: 2;
+    grid-row: 1;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -269,7 +314,7 @@
    strategies card stack in the content column in reading order. */
 .ux36-page .devices-chip-bars {
     grid-column: 1;
-    grid-row: 1 / span 4;
+    grid-row: 1 / span 5;
     display: flex;
     flex-direction: column;
     gap: 24px;
@@ -280,6 +325,18 @@
     max-height: calc(100dvh - var(--topbar-h) - 3 * var(--space-4));
     overflow-y: auto;
     padding-bottom: 8px;
+}
+
+/* Toolbar + table share one column flow. Sticky filters then sit above the
+   rows in the same stacking context (separate grid siblings painted over).
+   Row 2+: header occupies row 1 of the content column. */
+.ux36-page .devices-main {
+    grid-column: 2;
+    grid-row: 2 / span 4;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    min-width: 0;
 }
 
 .ux36-page .devices-page .folders-bar,
@@ -305,6 +362,7 @@
     gap: 8px;
     width: 100%;
     min-height: 36px;
+    min-width: 0;
     padding: 4px 8px 4px 14px;
     border: 0;
     border-inline-start: 2px solid transparent;
@@ -314,11 +372,16 @@
     font-size: var(--text-base);
     text-align: start;
     cursor: pointer;
+    overflow: visible;
+    transform: none;
+    box-shadow: none;
 }
 
 .ux36-page .devices-page .folder-chip:hover,
 .ux36-page .devices-page .group-chip:hover {
     background: var(--hover);
+    transform: none;
+    box-shadow: none;
 }
 
 .ux36-page .devices-page .folder-chip.active,
@@ -329,34 +392,164 @@
     font-weight: 600;
 }
 
-.ux36-page .devices-page .chip-count,
-.ux36-page .devices-page .group-count {
-    margin-inline-start: auto;
+/* Create / add actions — same rail row as folders/groups, muted as secondary */
+.ux36-page .devices-page .folder-chip.chip-add,
+.ux36-page .devices-page .group-chip.chip-add {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    margin-top: 2px;
+    padding: 4px 8px 4px 14px;
+    border: 0;
+    border-inline-start: 2px solid transparent;
+    border-radius: 0 var(--radius) var(--radius) 0;
+    background: transparent;
     color: var(--text-muted);
-    font-size: var(--text-sm);
-    font-variant-numeric: tabular-nums;
+    font-weight: 500;
 }
 
-/* Toolbar sits above the table in the content column */
+.ux36-page .devices-page .folder-chip.chip-add:hover,
+.ux36-page .devices-page .group-chip.chip-add:hover,
+.ux36-page .devices-page .folder-chip.chip-add:focus-visible,
+.ux36-page .devices-page .group-chip.chip-add:focus-visible {
+    background: var(--hover);
+    border-inline-start-color: transparent;
+    color: var(--text);
+    outline: none;
+}
+
+.ux36-page .devices-page .folder-chip.chip-add .material-icons,
+.ux36-page .devices-page .folder-chip.chip-add .chip-icon,
+.ux36-page .devices-page .group-chip.chip-add .material-icons,
+.ux36-page .devices-page .group-chip.chip-add .chip-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    font-size: 20px !important;
+    line-height: 1;
+    opacity: 0.85;
+    color: inherit;
+}
+
+.ux36-page .devices-page .folder-chip.chip-add .chip-label,
+.ux36-page .devices-page .group-chip.chip-add .chip-label {
+    display: block;
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 20px;
+    color: inherit;
+}
+
+/* Rail row: icon · name · small count …… actions.
+   Count stays by the name (not on the trash), actions sit at the end. */
+.ux36-page .devices-page .folder-chip .chip-icon,
+.ux36-page .devices-page .group-chip .chip-icon {
+    grid-column: auto;
+    grid-row: auto;
+    flex: none;
+    font-size: 20px !important;
+}
+
+.ux36-page .devices-page .folder-chip .chip-label,
+.ux36-page .devices-page .group-chip .chip-label {
+    grid-column: auto;
+    grid-row: auto;
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ux36-page .devices-page .chip-count,
+.ux36-page .devices-page .group-count {
+    grid-column: auto;
+    grid-row: auto;
+    flex: none;
+    margin-inline-start: 0;
+    align-self: center;
+    justify-self: auto;
+    padding: 0;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    background: transparent;
+}
+
+/* Built-in rows (All / Unassigned) have no action buttons — keep the
+   count on the trailing edge like before. */
+.ux36-page .devices-page .folder-chip:not(:has(.chip-actions)) .chip-count,
+.ux36-page .devices-page .group-chip:not(:has(.chip-actions)) .chip-count {
+    margin-inline-start: auto;
+}
+
+.ux36-page .devices-page .folder-chip.active .chip-count,
+.ux36-page .devices-page .group-chip.active .chip-count {
+    color: var(--text-muted);
+}
+
+.ux36-page .devices-page .folder-chip .chip-actions,
+.ux36-page .devices-page .group-chip .chip-actions {
+    position: static;
+    top: auto;
+    right: auto;
+    margin-inline-start: auto;
+    flex: none;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    background: transparent;
+    padding: 0;
+}
+
+/* Chromium will not let position:sticky enter the scrollport padding box —
+   rows paint into --page-pad above the stuck toolbar. Same pattern as Settings. */
+.ux36-page .ux35-content:has(.devices-page) {
+    padding-top: 0;
+}
+
+.ux36-page .ux35-content:has(.devices-page) > .devices-page {
+    padding-top: var(--page-pad);
+}
+
+/* Sticky + opaque canvas so rows scroll under search/filters cleanly.
+   Full-bleed into the remaining inline page-pad so nothing peeks beside it. */
 .ux36-page .devices-page .devices-toolbar {
-    grid-column: 2;
-    grid-row: 1;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 8px;
-    margin-bottom: 16px;
-    padding: 0;
+    flex: none;
+    margin: 0 calc(-1 * var(--page-pad)) 0;
+    padding: 4px var(--page-pad) 12px;
     border: 0;
-    background: none;
+    border-bottom: 1px solid var(--rule);
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: var(--z-sticky, 200);
 }
 
 .ux36-page .devices-page .devices-table-container {
-    grid-column: 2;
-    grid-row: 2;
+    position: relative;
+    z-index: 0;
     min-width: 0;
     border: 0;
     background: none;
+    overflow: visible;
 }
 
 .ux36-page .devices-page .devices-table {
@@ -397,11 +590,14 @@
         gap: 16px;
     }
 
+    .ux36-page .devices-header,
     .ux36-page .devices-chip-bars,
-    .ux36-page .devices-toolbar,
-    .ux36-page .devices-table-container {
+    .ux36-page .devices-main {
         grid-column: 1;
         grid-row: auto;
+    }
+
+    .ux36-page .devices-chip-bars {
         position: static;
         max-height: none;
     }
@@ -518,12 +714,25 @@
     font-size: var(--text-sm);
 }
 
-/* The topic row stays under the bar while the topic is scrolled */
+/* The topic row stays under the bar while the topic is scrolled.
+   Must sit above in-page sticky/raised content (branding hero steps used
+   z-index:1 and painted over these tabs while scrolling). */
 .ux36-page .settings-shell-nav {
     position: sticky;
     top: 0;
-    z-index: var(--layer-sticky);
+    z-index: var(--z-sticky, 200);
     background: var(--bg);
+}
+
+/* Branding module rail sticks under the topic tabs, never over them */
+.ux36-page .branding-module-nav {
+    top: 48px;
+    z-index: 0;
+}
+
+.ux36-page .branding-hero-copy,
+.ux36-page .branding-hero-steps {
+    z-index: auto;
 }
 
 /* Panels inside a topic are ruled sections, not separate cards */

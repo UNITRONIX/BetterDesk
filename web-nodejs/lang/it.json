@@ -437,6 +437,7 @@
     "delete_group_confirm": "Eliminare il gruppo dispositivi {name}?",
     "group_deleted": "Gruppo dispositivi eliminato",
     "folder_group_readonly": "I gruppi basati su cartelle sono gestiti tramite Cartelle.",
+    "default_group_protected": "Il gruppo dispositivi Default non può essere eliminato.",
     "manage_user_groups": "Gestisci gruppi utente",
     "restore_failed": "Èchec de la restauration de il dispositivo",
     "no_signal_tooltip": "Il client ha contattato l'API di recente ma non è registrato sul server di segnale (UDP :21116). Riavvia il client dopo la migrazione del server.",

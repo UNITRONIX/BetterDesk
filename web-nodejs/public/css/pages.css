@@ -1227,7 +1227,7 @@
 
 .branding-hero-copy {
     position: relative;
-    z-index: 1;
+    z-index: 0;
     max-width: 680px;
 }
 
@@ -1258,7 +1258,7 @@
 
 .branding-hero-steps {
     position: relative;
-    z-index: 1;
+    z-index: 0;
     display: grid;
     gap: var(--space-sm);
     min-width: 190px;
@@ -1476,7 +1476,9 @@
     flex-direction: column;
     gap: var(--space-xs);
     position: sticky;
-    top: 72px;
+    /* Sit just under .settings-shell-nav (~40–48px), not over the topic tabs */
+    top: 48px;
+    z-index: 0;
 }
 
 .branding-module-btn {

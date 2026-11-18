@@ -437,6 +437,7 @@
     "delete_group_confirm": "Excluir o grupo de dispositivos {name}?",
     "group_deleted": "Grupo de dispositivos excluído",
     "folder_group_readonly": "Grupos baseados em pastas são gerenciados em Pastas.",
+    "default_group_protected": "O grupo de dispositivos Default não pode ser excluído.",
     "manage_user_groups": "Gerenciar grupos de usuários",
     "restore_failed": "Erro al restaurar o dispositivo",
     "no_signal_tooltip": "O cliente contactou a API recentemente, mas não está registado no servidor de sinal (UDP :21116). Reinicie o cliente após a migração do servidor.",

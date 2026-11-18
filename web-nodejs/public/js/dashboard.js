@@ -339,7 +339,6 @@
             
             updateServerStatus('hbbs-status', status.hbbs);
             updateServerStatus('hbbr-status', status.hbbr);
-            updateSystemStatus(status);
             
             // Populate all port values from server response
             const portMap = {
@@ -363,7 +362,6 @@
             console.error('Failed to load server status:', error);
             updateServerStatus('hbbs-status', { status: 'unknown' });
             updateServerStatus('hbbr-status', { status: 'unknown' });
-            updateSystemStatus(null);
             return null;
         }
     }
@@ -390,28 +388,6 @@
         } else {
             element.classList.add('unknown');
             statusText.textContent = _('status.unknown');
-        }
-    }
-
-    function updateSystemStatus(status) {
-        const pill = findById('dashboard-system-pill');
-        const text = findById('dashboard-system-status');
-        if (!pill || !text) return;
-
-        pill.classList.remove('running', 'stopped', 'unknown');
-
-        const signalRunning = status?.hbbs?.status === 'running' || status?.hbbs?.online === true;
-        const relayRunning = status?.hbbr?.status === 'running' || status?.hbbr?.online === true;
-
-        if (signalRunning && relayRunning) {
-            pill.classList.add('running');
-            text.textContent = _('dashboard.system_ready');
-        } else if (status) {
-            pill.classList.add('stopped');
-            text.textContent = _('dashboard.system_attention');
-        } else {
-            pill.classList.add('unknown');
-            text.textContent = _('status.unknown');
         }
     }
 

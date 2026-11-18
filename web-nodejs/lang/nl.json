@@ -437,6 +437,7 @@
     "delete_group_confirm": "Apparaatgroep {name} verwijderen?",
     "group_deleted": "Apparaatgroep verwijderd",
     "folder_group_readonly": "Mapgebaseerde groepen worden via Mappen beheerd.",
+    "default_group_protected": "De standaard apparaatgroep kan niet worden verwijderd.",
     "manage_user_groups": "Gebruikersgroepen beheren",
     "restore_failed": "Gerat konnte nicht wiederhergestellt werden",
     "no_signal_tooltip": "De client heeft onlangs de API bereikt maar is niet geregistreerd op de signalserver (UDP :21116). Herstart de client na servermigratie.",

@@ -443,6 +443,7 @@
     "delete_group_confirm": "Törli a {name} eszközcsoportot?",
     "group_deleted": "Eszközcsoport törölve",
     "folder_group_readonly": "A mappaalapú csoportok kezelése mappákból történik.",
+    "default_group_protected": "Az alapértelmezett eszközcsoport nem törölhető.",
     "manage_user_groups": "Felhasználói csoportok kezelése",
     "restore_failed": "Eszköz konnte nicht wiederhergestellt werden",
     "no_signal_tooltip": "Az ügyfél nemrég elérte az API-t, de nincs regisztrálva a jelzőszerveren (UDP :21116). A szerver migrációja után indítsa újra az ügyfelet.",
