@@ -162,6 +162,21 @@
     --side-w: 360px;
 }
 
+/*
+ * Compatibility aliases used by the UX 3.6 page sheet. Scope these to the
+ * beta shell instead of redefining the root palette variables: custom
+ * branding and the UX 3.6 palette must remain authoritative at the root.
+ */
+.ux36-page {
+    --accent-blue: var(--accent);
+    --accent-green: var(--success);
+    --accent-red: var(--danger);
+    --accent-orange: var(--warning);
+    --accent-purple: var(--info);
+    --stat-glow: var(--accent);
+    --z-sticky: 200;
+}
+
 :root[data-theme="dark"] {
     --on-accent: #0c1b1e;
     --series-1: #4493ec;
