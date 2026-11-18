@@ -7,13 +7,6 @@
 
 ## [3.5.262] — 2026-11-18
 
-### Changed
-- _(none yet)_
-
----
-
-## [3.5.261] — 2026-11-18
-
 ### Security
 
 - **Relay WebSocket DoS (GHSA-98mc-f6p7-gj85, high).** `crypto.timingSafeEqual`
@@ -65,13 +58,6 @@
   `permission_denied ... circuit breaker is open` from GitHub's registry
   authorization service, not a build error. The preflight retries briefly and then
   reports an infrastructure failure instead of a false red build.
-
----
-
-## [Unreleased]
-
-### Changed
-- _(none yet)_
 
 ---
 
