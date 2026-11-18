@@ -2,6 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 const SERVER_BINARY_NAME = 'betterdesk-server';
 const ALLOWED_TARGET_DIRS = [
@@ -209,6 +210,23 @@ function canWriteDirectory(dirPath) {
     }
 }
 
+function filesHaveSameSHA256(firstPath, secondPath) {
+    try {
+        const firstStat = fs.statSync(firstPath);
+        const secondStat = fs.statSync(secondPath);
+        if (!firstStat.isFile() || !secondStat.isFile() || firstStat.size !== secondStat.size) {
+            return false;
+        }
+        const hashFile = filePath => crypto
+            .createHash('sha256')
+            .update(fs.readFileSync(filePath))
+            .digest('hex');
+        return hashFile(firstPath) === hashFile(secondPath);
+    } catch (_e) {
+        return false;
+    }
+}
+
 function canUsePrivilegedDeploy(scriptPath) {
     if (process.platform !== 'linux') return false;
     if (typeof process.getuid === 'function' && process.getuid() === 0) {
@@ -251,4 +269,5 @@ module.exports = {
     deployServerBinaryAtomic,
     assessServerBinaryDeployCapability,
     canUsePrivilegedDeploy,
+    filesHaveSameSHA256,
 };

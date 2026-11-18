@@ -13,6 +13,10 @@
   SQLite consolidated/legacy deployments and PostgreSQL use the same source of
   truth. The full legacy address-book document remains intact when one alias is
   changed.
+- Server binary updates now stop before attempting an unwritable root-owned
+  target and report the required root deploy step clearly. After a validated
+  manual deploy, the panel automatically clears the stale-binary warning when
+  the source and service binaries are byte-identical.
 
 ---
 

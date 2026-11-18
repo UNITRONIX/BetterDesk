@@ -49,6 +49,7 @@ const {
 const {
     assessServerBinaryDeployCapability,
     deployServerBinaryAtomic,
+    filesHaveSameSHA256,
     resolveDeployScriptPath,
 } = require('../lib/linuxServerBinaryDeploy');
 const { resolveLastUpdateResultForDisplay } = require('../lib/updateResultStore');
@@ -711,12 +712,29 @@ function clearServerBinaryStale() {
     try { if (fs.existsSync(SERVER_STALE_FILE)) fs.unlinkSync(SERVER_STALE_FILE); } catch (_e) { /* ok */ }
 }
 
+/**
+ * A root operator may finish the validated deploy helper outside the panel.
+ * Reconcile the warning when the compiled source binary and the service target
+ * are byte-identical; never clear it merely because the source tree changed.
+ */
+function reconcileServerBinaryStale() {
+    const sourceName = IS_WINDOWS ? 'betterdesk-server.exe' : 'betterdesk-server';
+    const source = path.join(resolveServerSourceRootForUpdate(), sourceName);
+    const target = detectServerBinaryPath();
+    if (!target || !filesHaveSameSHA256(source, target)) return false;
+    clearServerBinaryStale();
+    return true;
+}
+
 function getServerBinaryStatus() {
     if (isImageBasedDockerDeployment()) {
         return { stale: false, dockerMode: true };
     }
     try {
         if (fs.existsSync(SERVER_STALE_FILE)) {
+            if (reconcileServerBinaryStale()) {
+                return { stale: false };
+            }
             const data = JSON.parse(fs.readFileSync(SERVER_STALE_FILE, 'utf8'));
             return {
                 stale: true,
@@ -2084,7 +2102,10 @@ function deployServerBinary(builtBinaryPath, targetPath) {
     }
 
     const capability = assessServerBinaryDeployCapability(targetPath, { consoleRoot: ROOT_DIR });
-    if (capability.ready && capability.method === 'privileged') {
+    if (!capability.ready) {
+        return deployServerBinaryPrivileged(builtBinaryPath, targetPath);
+    }
+    if (capability.method === 'privileged') {
         return deployServerBinaryPrivileged(builtBinaryPath, targetPath);
     }
 

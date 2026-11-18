@@ -8,6 +8,7 @@ const {
     deployServerBinaryAtomic,
     buildAllowedDeployTargets,
     resolveDeployScriptPath,
+    filesHaveSameSHA256,
 } = require('../lib/linuxServerBinaryDeploy');
 
 const describeLinux = process.platform === 'linux' ? describe : describe.skip;
@@ -128,5 +129,17 @@ describeLinux('linuxServerBinaryDeploy', () => {
         expect(resolveDeployScriptPath(consoleRoot)).toBe(
             path.join(consoleRoot, 'scripts/linux-deploy-server-binary.js')
         );
+    });
+
+    test('filesHaveSameSHA256 detects a completed manual promotion', () => {
+        const source = path.join(serverRoot, 'betterdesk-server');
+        const target = path.join(tmpRoot, 'bin', 'betterdesk-server');
+        writeBinary(source);
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        fs.copyFileSync(source, target);
+
+        expect(filesHaveSameSHA256(source, target)).toBe(true);
+        fs.appendFileSync(target, Buffer.from('different'));
+        expect(filesHaveSameSHA256(source, target)).toBe(false);
     });
 });
