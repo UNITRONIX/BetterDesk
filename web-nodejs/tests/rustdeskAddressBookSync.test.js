@@ -5,6 +5,66 @@
 const sync = require('../services/rustdeskAddressBookSync');
 
 describe('rustdeskAddressBookSync', () => {
+    it('builds a per-peer alias map without filling aliases from panel names', () => {
+        const aliases = sync.buildLegacyAliasMap(JSON.stringify({
+            peers: [
+                { id: 'A', alias: 'Office', display_name: 'Panel name' },
+                { id: 'B', hostname: 'No alias' },
+                { id: 'C', alias: 42 }
+            ],
+            tags: ['Office']
+        }));
+
+        expect(aliases.get('A')).toBe('Office');
+        expect(aliases.get('B')).toBe('');
+        expect(aliases.get('C')).toBe('');
+        expect(aliases.has('missing')).toBe(false);
+    });
+
+    it('updates one legacy alias while preserving the complete AB document', () => {
+        const raw = JSON.stringify({
+            peers: [{
+                id: 'A',
+                alias: 'Old name',
+                hash: 'secret-hash',
+                tags: ['Office'],
+                custom_field: 'keep me'
+            }],
+            tags: ['Office'],
+            tag_colors: '{"Office":123}',
+            rule: { mode: 'shared' }
+        });
+
+        const result = JSON.parse(sync.updateLegacyPeerAlias(raw, 'A', 'New name'));
+
+        expect(result).toEqual({
+            peers: [{
+                id: 'A',
+                alias: 'New name',
+                hash: 'secret-hash',
+                tags: ['Office'],
+                custom_field: 'keep me'
+            }],
+            tags: ['Office'],
+            tag_colors: '{"Office":123}',
+            rule: { mode: 'shared' }
+        });
+    });
+
+    it('adds a missing peer only when a non-empty alias is saved', () => {
+        const added = JSON.parse(sync.updateLegacyPeerAlias('{}', 'NEW', 'New device'));
+        const cleared = JSON.parse(sync.updateLegacyPeerAlias('{}', 'NEW', ''));
+
+        expect(added.peers).toEqual([{ id: 'NEW', alias: 'New device' }]);
+        expect(cleared.peers).toEqual([]);
+    });
+
+    it('sanitizes control characters and limits aliases to 128 characters', () => {
+        const alias = sync.sanitizeAlias(`  Office\u0000 PC  ${'x'.repeat(200)}`);
+
+        expect(alias).toBe(`Office PC  ${'x'.repeat(200)}`.slice(0, 128));
+    });
+
     it('merges panel tags into existing address book peers without turning folders into tags', () => {
         const result = JSON.parse(sync.mergeAddressBookData(JSON.stringify({
             peers: [{ id: '123456789', tags: ['Existing'] }],

@@ -21,6 +21,8 @@ jest.mock('../services/database', () => ({
     getPeerSysinfo: jest.fn().mockResolvedValue(null),
     getLatestPeerMetric: jest.fn().mockResolvedValue(null),
     getPeerMetrics: jest.fn().mockResolvedValue([]),
+    getAddressBook: jest.fn().mockResolvedValue({ data: '{}' }),
+    saveAddressBook: jest.fn().mockResolvedValue(undefined),
     getDeviceGroupsForPeer: jest.fn().mockResolvedValue([]),
     getDeviceGroupAccessForUser: jest.fn().mockResolvedValue([]),
     getUserGroupsForUser: jest.fn().mockResolvedValue([]),
@@ -101,6 +103,27 @@ describe('Devices Routes', () => {
                     sortOrder: 'desc'
                 })
             );
+        });
+
+        it('should expose only the logged-in user address book aliases', async () => {
+            serverBackend.getAllDevices.mockResolvedValue([
+                { id: '123456789', hostname: 'PC-1' },
+                { id: '987654321', hostname: 'PC-2' }
+            ]);
+            db.getAddressBook.mockResolvedValue({
+                data: JSON.stringify({
+                    peers: [{ id: '123456789', alias: 'Office PC' }]
+                })
+            });
+
+            const res = await request(app).get('/api/devices');
+
+            expect(res.status).toBe(200);
+            expect(res.body.data.devices).toEqual(expect.arrayContaining([
+                expect.objectContaining({ id: '123456789', address_book_alias: 'Office PC' }),
+                expect.objectContaining({ id: '987654321', address_book_alias: '' })
+            ]));
+            expect(db.getAddressBook).toHaveBeenCalledWith(1, 'legacy');
         });
 
         it('should sanitize sort parameters', async () => {
@@ -224,6 +247,85 @@ describe('Devices Routes', () => {
                 os_full: 'Windows 10',
                 version: '10.0'
             }));
+        });
+
+        it('should include the current user address book alias', async () => {
+            serverBackend.getDeviceById.mockResolvedValue({
+                id: '123456789',
+                hostname: 'PC-1'
+            });
+            db.getAddressBook.mockResolvedValue({
+                data: JSON.stringify({ peers: [{ id: '123456789', alias: 'Office PC' }] })
+            });
+
+            const res = await request(app).get('/api/devices/123456789');
+
+            expect(res.status).toBe(200);
+            expect(res.body.data.address_book_alias).toBe('Office PC');
+        });
+    });
+
+    describe('PATCH /api/devices/:id/address-book-alias', () => {
+        it('updates one alias in the legacy address book without changing other fields', async () => {
+            serverBackend.getDeviceById.mockResolvedValue({ id: '123456789', hostname: 'PC-1' });
+            db.getAddressBook.mockResolvedValue({
+                data: JSON.stringify({
+                    peers: [{
+                        id: '123456789',
+                        alias: 'Old name',
+                        hash: 'keep-hash',
+                        tags: ['Office'],
+                        extra: true
+                    }],
+                    tags: ['Office'],
+                    tag_colors: '{"Office":123}'
+                })
+            });
+
+            const res = await request(app)
+                .patch('/api/devices/123456789/address-book-alias')
+                .send({ alias: 'New name' });
+
+            expect(res.status).toBe(200);
+            expect(res.body.data.address_book_alias).toBe('New name');
+            expect(db.saveAddressBook).toHaveBeenCalledWith(
+                1,
+                expect.any(String),
+                'legacy'
+            );
+            const saved = JSON.parse(db.saveAddressBook.mock.calls[0][1]);
+            expect(saved.peers[0]).toEqual(expect.objectContaining({
+                id: '123456789',
+                alias: 'New name',
+                hash: 'keep-hash',
+                tags: ['Office'],
+                extra: true
+            }));
+            expect(saved.tag_colors).toBe('{"Office":123}');
+        });
+
+        it('creates a legacy address book peer when assigning a new alias', async () => {
+            serverBackend.getDeviceById.mockResolvedValue({ id: 'NEW123', hostname: 'PC-1' });
+            db.getAddressBook.mockResolvedValue({ data: '{}' });
+
+            const res = await request(app)
+                .patch('/api/devices/NEW123/address-book-alias')
+                .send({ alias: 'New device' });
+
+            expect(res.status).toBe(200);
+            const saved = JSON.parse(db.saveAddressBook.mock.calls[0][1]);
+            expect(saved.peers).toEqual([{ id: 'NEW123', alias: 'New device' }]);
+        });
+
+        it('rejects aliases longer than the client-compatible limit', async () => {
+            serverBackend.getDeviceById.mockResolvedValue({ id: '123456789', hostname: 'PC-1' });
+
+            const res = await request(app)
+                .patch('/api/devices/123456789/address-book-alias')
+                .send({ alias: 'x'.repeat(129) });
+
+            expect(res.status).toBe(400);
+            expect(db.saveAddressBook).not.toHaveBeenCalled();
         });
     });
 

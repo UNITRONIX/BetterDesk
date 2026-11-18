@@ -105,6 +105,10 @@
                             <span>${_('devices.device_type')}</span>
                         </label>
                         <label class="column-toggle">
+                            <input type="checkbox" data-column="address_book_alias" checked>
+                            <span>${_('devices.address_book_name')}</span>
+                        </label>
+                        <label class="column-toggle">
                             <input type="checkbox" data-column="platform" checked>
                             <span>${_('devices.platform')}</span>
                         </label>
@@ -132,6 +136,7 @@
                             <tr>
                                 <th class="sortable" data-sort="id" data-column="id">${_('devices.id')}</th>
                                 <th class="sortable" data-sort="hostname" data-column="hostname">${_('devices.hostname')}</th>
+                                <th class="sortable" data-sort="address_book_alias" data-column="address_book_alias">${_('devices.address_book_name')}</th>
                                 <th class="sortable" data-sort="device_type" data-column="device_type">${_('devices.device_type')}</th>
                                 <th class="sortable" data-sort="platform" data-column="platform">${_('devices.platform')}</th>
                                 <th class="sortable" data-sort="last_online" data-column="last_online">${_('devices.last_seen')}</th>
@@ -142,7 +147,7 @@
                         </thead>
                         <tbody id="devices-tbody">
                             <tr class="loading-row">
-                                <td colspan=\"8\" style=\"text-align: center; padding: 40px;\">
+                                <td colspan=\"9\" style=\"text-align: center; padding: 40px;\">
                                     <span class="skeleton skeleton-text" style="width: 200px;"></span>
                                 </td>
                             </tr>

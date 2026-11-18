@@ -978,6 +978,7 @@
                     device.id?.toLowerCase().includes(q) ||
                     device.display_name?.toLowerCase().includes(q) ||
                     device.hostname?.toLowerCase().includes(q) ||
+                    device.address_book_alias?.toLowerCase().includes(q) ||
                     device.username?.toLowerCase().includes(q) ||
                     device.platform?.toLowerCase().includes(q) ||
                     (device.device_type || 'rustdesk').toLowerCase().includes(q);
@@ -1061,6 +1062,7 @@
                     </div>
                 </td>
                 <td data-column="hostname">${Utils.escapeHtml(device.display_name || device.hostname || device.note || '-')}</td>
+                <td data-column="address_book_alias">${Utils.escapeHtml(device.address_book_alias || '-')}</td>
                 <td data-column="device_type">
                     <div class="platform-icon">
                         <span class="material-icons">${getDeviceTypeIcon(device.device_type)}</span>
@@ -2444,6 +2446,13 @@
                                placeholder="${_('devices.display_name_placeholder')}" maxlength="128" />
                     </div>
                     <div class="device-info-item full-width">
+                        <label for="edit-address-book-name">${_('devices.address_book_name')}</label>
+                        <p class="form-hint">${Utils.escapeHtml(_('devices.address_book_name_hint'))}</p>
+                        <input type="text" id="edit-address-book-name" class="form-input"
+                               value="${Utils.escapeHtml(device.address_book_alias || '')}"
+                               placeholder="${_('devices.address_book_name_placeholder')}" maxlength="128" />
+                    </div>
+                    <div class="device-info-item full-width">
                         <label for="edit-note">${_('devices.note')}</label>
                         <textarea id="edit-note" class="form-input" rows="2" 
                                   placeholder="${_('devices.note_placeholder')}" maxlength="512">${Utils.escapeHtml(device.note || '')}</textarea>
@@ -2490,6 +2499,7 @@
             buttons: [
                 { label: _('actions.save'), class: 'btn-primary', onClick: async () => {
                     const displayName = document.getElementById('edit-display-name').value.trim();
+                    const addressBookAlias = document.getElementById('edit-address-book-name').value.trim();
                     const note = document.getElementById('edit-note').value.trim();
                     const tags = [...editTags];
                     const saveBtn = document.querySelector('.modal-overlay.open [data-btn-index="0"]');
@@ -2514,6 +2524,11 @@
                             body: JSON.stringify({ display_name: displayName, note }),
                             headers: { 'Content-Type': 'application/json' }
                         });
+                        const aliasResult = await Utils.api(`/api/devices/${encodeURIComponent(device.id)}/address-book-alias`, {
+                            method: 'PATCH',
+                            body: JSON.stringify({ alias: addressBookAlias }),
+                            headers: { 'Content-Type': 'application/json' }
+                        });
                         const tagResult = await Utils.api(`/api/devices/${encodeURIComponent(device.id)}/tags`, {
                             method: 'PUT',
                             body: JSON.stringify({ tags }),
@@ -2521,6 +2536,7 @@
                         });
 
                         device.display_name = displayName;
+                        device.address_book_alias = aliasResult?.address_book_alias ?? addressBookAlias;
                         device.note = note;
                         device.tags = tagResult?.tags || tags;
                         availableTags = Array.from(new Set(availableTags.concat(device.tags))).sort((a, b) => a.localeCompare(b));
@@ -2529,6 +2545,7 @@
                             detail: {
                                 id: device.id,
                                 display_name: displayName,
+                                address_book_alias: device.address_book_alias,
                                 note: note,
                                 tags: device.tags
                             }

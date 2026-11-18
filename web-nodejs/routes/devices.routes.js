@@ -14,6 +14,8 @@ const tagManagementService = require('../services/tagManagementService');
 const { requireAuth, requirePermission, requestHasPermission } = require('../middleware/auth');
 const { bodyInt, bodyString, bodyBool, plainBodyObject } = require('../lib/bodyScalars');
 
+const legacyAddressBookLocks = new Map();
+
 /**
  * GET /devices - Devices list page
  */
@@ -46,6 +48,48 @@ function mapChangeIdError(req, error) {
     return error;
 }
 
+async function getLegacyAddressBookAliasMap(req) {
+    const aliases = new Map();
+    const userId = req.session?.user?.id || req.session?.userId;
+    if (!userId || typeof db.getAddressBook !== 'function') return aliases;
+
+    try {
+        const row = await db.getAddressBook(userId, 'legacy');
+        return addressBookSync.buildLegacyAliasMap(row?.data);
+    } catch (err) {
+        console.warn('[API:DEVICES] Failed to read legacy address book aliases:', err.message);
+        return aliases;
+    }
+}
+
+async function enrichDeviceWithAddressBookAlias(req, device, aliases) {
+    if (!device || typeof device !== 'object') return device;
+    const aliasMap = aliases || await getLegacyAddressBookAliasMap(req);
+    device.address_book_alias = aliasMap.get(String(device.id || '').trim()) || '';
+    return device;
+}
+
+async function withLegacyAddressBookLock(userId, operation) {
+    const key = String(userId);
+    const previous = legacyAddressBookLocks.get(key) || Promise.resolve();
+    let release;
+    const current = new Promise(resolve => {
+        release = resolve;
+    });
+    const queue = previous.catch(() => {}).then(() => current);
+    legacyAddressBookLocks.set(key, queue);
+
+    await previous.catch(() => {});
+    try {
+        return await operation();
+    } finally {
+        release();
+        if (legacyAddressBookLocks.get(key) === queue) {
+            legacyAddressBookLocks.delete(key);
+        }
+    }
+}
+
 router.get('/api/devices', requireAuth, requirePermission('device.view'), async (req, res) => {
     try {
         // Validate and sanitize sort parameters
@@ -66,7 +110,9 @@ router.get('/api/devices', requireAuth, requirePermission('device.view'), async 
         let devices = await serverBackend.getAllDevices(filters);
         const scope = await deviceGroupService.getDeviceScopeForUser(db, req.session.user, devices);
         devices = deviceGroupService.filterDevicesByScope(devices, scope);
+        const aliases = await getLegacyAddressBookAliasMap(req);
         for (const device of devices) {
+            await enrichDeviceWithAddressBookAlias(req, device, aliases);
             try {
                 device.groups = await db.getDeviceGroupsForPeer(device.id);
             } catch (_) {
@@ -719,6 +765,7 @@ router.get('/api/devices/:id', requireAuth, requirePermission('device.view'), as
             });
         }
         if (await rejectIfDeviceOutOfScope(req, res, device)) return;
+        await enrichDeviceWithAddressBookAlias(req, device);
 
         // Enrich with sysinfo data (from peer_sysinfo table)
         try {
@@ -954,6 +1001,75 @@ router.patch('/api/devices/:id', requireAuth, requirePermission('device.edit'), 
         });
     } catch (err) {
         console.error('Update device error:', err);
+        res.status(500).json({
+            success: false,
+            error: req.t('errors.server_error')
+        });
+    }
+});
+
+/**
+ * PATCH /api/devices/:id/address-book-alias - Update the current user's
+ * personal legacy RustDesk address-book alias without changing fleet metadata.
+ */
+router.patch('/api/devices/:id/address-book-alias', requireAuth, requirePermission('device.view'), async (req, res) => {
+    try {
+        const id = String(req.params.id || '').trim();
+        const rawAlias = req.body?.alias;
+        if (typeof rawAlias !== 'string') {
+            return res.status(400).json({
+                success: false,
+                error: req.t('devices.address_book_name_required')
+            });
+        }
+        if (rawAlias.trim().length > 128) {
+            return res.status(400).json({
+                success: false,
+                error: req.t('devices.address_book_name_too_long')
+            });
+        }
+
+        const device = await serverBackend.getDeviceById(id);
+        if (!device) {
+            return res.status(404).json({
+                success: false,
+                error: req.t('devices.not_found')
+            });
+        }
+        if (await rejectIfDeviceOutOfScope(req, res, device)) return;
+
+        const userId = req.session.user?.id || req.session.userId;
+        if (!userId || typeof db.getAddressBook !== 'function' || typeof db.saveAddressBook !== 'function') {
+            return res.status(500).json({
+                success: false,
+                error: req.t('errors.server_error')
+            });
+        }
+
+        const alias = addressBookSync.sanitizeAlias(rawAlias);
+        await withLegacyAddressBookLock(userId, async () => {
+            const row = await db.getAddressBook(userId, 'legacy');
+            const data = addressBookSync.updateLegacyPeerAlias(row?.data, id, alias);
+            await db.saveAddressBook(userId, data, 'legacy');
+        });
+
+        try {
+            await db.logAction(
+                req.session.userId,
+                'address_book_alias_updated',
+                `Address book alias updated for device ${id}`,
+                req.ip
+            );
+        } catch (auditErr) {
+            console.warn('Address book alias audit log failed:', auditErr.message);
+        }
+
+        res.json({
+            success: true,
+            data: { address_book_alias: alias }
+        });
+    } catch (err) {
+        console.error('Update address book alias error:', err);
         res.status(500).json({
             success: false,
             error: req.t('errors.server_error')

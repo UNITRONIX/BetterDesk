@@ -1,7 +1,7 @@
 ## [Unreleased]
 
 ### Changed
-- _(none yet)_
+- Devices now show the logged-in user's RustDesk legacy address-book alias in an optional, searchable and sortable column. Editing the alias writes only to that user's address book and does not change the global device name.
 
 ---
 

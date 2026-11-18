@@ -10,6 +10,15 @@
 'use strict';
 
 const MAX_TAG_LENGTH = 50;
+const MAX_ALIAS_LENGTH = 128;
+
+function sanitizeAlias(value) {
+    if (typeof value !== 'string') return '';
+    return value
+        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '')
+        .trim()
+        .slice(0, MAX_ALIAS_LENGTH);
+}
 
 function sanitizeTag(value) {
     if (typeof value !== 'string') return '';
@@ -79,6 +88,55 @@ function parseAddressBookData(data) {
     parsed.tags = normalizeTags(parsed.tags);
 
     return parsed;
+}
+
+/**
+ * Return the aliases from a user's legacy RustDesk address book.
+ *
+ * The legacy client stores the whole address book as one JSON document. Keep
+ * this read-only projection separate from mergeAddressBookData so the panel
+ * never fills or rewrites a user's personal aliases while rendering Devices.
+ */
+function buildLegacyAliasMap(data) {
+    const aliases = new Map();
+    const ab = parseAddressBookData(data);
+    for (const peer of ab.peers) {
+        if (!peer || typeof peer !== 'object' || Array.isArray(peer)) continue;
+        const id = String(peer.id || '').trim();
+        if (!id) continue;
+        aliases.set(id, sanitizeAlias(peer.alias));
+    }
+    return aliases;
+}
+
+/**
+ * Update one peer alias while preserving the complete legacy AB document.
+ *
+ * RustDesk's legacy client sends full-document POSTs, so this helper must not
+ * rebuild peers from panel fields or discard unknown top-level/peer fields.
+ */
+function updateLegacyPeerAlias(data, peerId, alias) {
+    const id = String(peerId || '').trim();
+    const sanitizedAlias = sanitizeAlias(alias);
+    const ab = parseAddressBookData(data);
+    let peer;
+    for (const item of ab.peers) {
+        if (
+            item && typeof item === 'object' && !Array.isArray(item) &&
+            String(item.id || '').trim() === id
+        ) {
+            // RustDesk's map-based server parsing uses the last duplicate ID.
+            peer = item;
+        }
+    }
+
+    if (peer) {
+        peer.alias = sanitizedAlias;
+    } else if (id && sanitizedAlias) {
+        ab.peers.push({ id, alias: sanitizedAlias });
+    }
+
+    return JSON.stringify(ab);
 }
 
 function getDeviceTags(device) {
@@ -218,6 +276,9 @@ function filterAddressBookPeersByScope(data, options = {}) {
 
 module.exports = {
     normalizeTags,
+    sanitizeAlias,
+    buildLegacyAliasMap,
+    updateLegacyPeerAlias,
     parseAddressBookData,
     filterFolderTags,
     mergeAddressBookData,
