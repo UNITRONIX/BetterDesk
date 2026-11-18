@@ -240,7 +240,14 @@ function initBdRelay(server) {
     // ---- Relay connections ----
 
     relayWss.on('connection', (ws, req) => {
-        handleRelayConnection(ws, req);
+        // A synchronous throw inside a 'connection' listener is fatal to the whole
+        // console (no uncaughtException handler exists). Keep relay failures local.
+        try {
+            handleRelayConnection(ws, req);
+        } catch (err) {
+            console.error('[bd-relay] connection handler failed:', err && err.message ? err.message : err);
+            try { ws.close(1011, 'Internal error'); } catch (_) { /* already closed */ }
+        }
     });
 
     // ---- Signal connections ----
@@ -291,8 +298,17 @@ function handleRelayConnection(ws, req) {
     }
 
     // Validate token
+    // GHSA-98mc-f6p7-gj85: crypto.timingSafeEqual throws a RangeError when the
+    // buffers differ in length, so a wrong-length token used to kill the process.
+    // Compare lengths first (they are fixed at 64 hex chars, so this leaks
+    // nothing) and coerce with String() because Buffer.from(undefined) throws.
+    // An empty/missing token pair must never compare equal, hence the length>0 guard.
     const expectedToken = role === 'initiator' ? session.initiatorToken : session.targetToken;
-    if (!crypto.timingSafeEqual(Buffer.from(token), Buffer.from(expectedToken))) {
+    const provided = Buffer.from(String(token ?? ''));
+    const expected = Buffer.from(String(expectedToken ?? ''));
+    if (provided.length === 0
+        || provided.length !== expected.length
+        || !crypto.timingSafeEqual(provided, expected)) {
         ws.close(4403, 'Invalid token');
         return;
     }

@@ -25,6 +25,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: release-server-${{ github.ref }}
+  cancel-in-progress: false
+
 env:
   SERVER_DIR: betterdesk-server
 
@@ -43,11 +47,12 @@ jobs:
             goarch: amd64
             suffix: windows-amd64.exe
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Setup Go
-        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
         with:
           go-version-file: ${{ env.SERVER_DIR }}/go.mod
           cache-dependency-path: ${{ env.SERVER_DIR }}/go.sum
@@ -81,7 +86,7 @@ jobs:
           EOF
 
       - name: Upload artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: betterdesk-server-${{ matrix.suffix }}
           path: |
@@ -94,11 +99,12 @@ jobs:
   # ---------------------------------------------------------------------------
   build-migrate:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Setup Go
-        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
         with:
           go-version-file: ${{ env.SERVER_DIR }}/go.mod
           cache-dependency-path: ${{ env.SERVER_DIR }}/go.sum
@@ -110,7 +116,7 @@ jobs:
         run: go build -trimpath -ldflags="-s -w" -o migrate-linux-amd64 .
 
       - name: Upload migration tool
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: migrate-linux-amd64
           path: ${{ env.SERVER_DIR }}/tools/migrate/migrate-linux-amd64
@@ -122,9 +128,10 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     needs: [build, build-migrate]
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Download all artifacts
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
 
       - name: Generate checksums
         run: |

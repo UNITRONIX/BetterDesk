@@ -179,7 +179,7 @@ func main() {
 	} else {
 		log.Printf("  API:        :%d (HTTP)", cfg.APIPort)
 	}
-	log.Printf("  Database:   %s", cfg.DBPath)
+	log.Printf("  Database:   %s", config.RedactedDBPath(cfg.DBPath))
 	if cfg.SignalTLSEnabled() {
 		log.Printf("  TLS Signal: ENABLED (dual-mode: plain+TLS)")
 	}

@@ -7,6 +7,62 @@
 
 ## [3.5.261] — 2026-11-18
 
+### Security
+
+- **Relay WebSocket DoS (GHSA-98mc-f6p7-gj85, high).** `crypto.timingSafeEqual`
+  was called with attacker-supplied relay tokens without a length check. It throws
+  `RangeError` on mismatched lengths, the `'connection'` listener had no try/catch,
+  and the process has no `uncaughtException` handler — so one enrolled device
+  could terminate the console and drop every relayed session by sending a token of
+  the wrong length. Lengths are now compared first, values are `String()`-coerced,
+  and the listener keeps a failure local to the socket.
+- **CDAP API key expiry bypass (GHSA-7j6j-h4qf-86mq, high).** The CDAP agent
+  authentication path looked keys up without checking `expires_at`, so an expired
+  key authenticated agent connections indefinitely while the REST API correctly
+  rejected it. Expiry is now enforced on both paths.
+- **Remote-viewer device scope (GHSA-22mg-g52q-x75c).** `/ws/remote-viewer/:device_id`
+  verified `device.connect` but never checked that the user may access *that*
+  device, so an operator whose device scope or group ACL excluded a device could
+  still watch its screen and inject input. The upgrade now runs the same
+  `userCanAccessDevice` check as `remoteTargetGateway`; an out-of-scope device
+  answers 404, identical to a device that does not exist.
+- **Database password in startup log (GHSA-qxwx-jg77-5v67, moderate).** The
+  banner printed the PostgreSQL DSN verbatim, writing the database password to
+  container logs on every start. Credentials are now redacted; SQLite paths are
+  unchanged.
+
+### Fixed
+
+- **Web Console CI and Installer CI no longer fail on every push.** Both ran
+  `tests/updateService.channel.test.js`, which spied on the exported
+  `updateService.checkGoAvailable` while `runUpdatePreflight` called the module-local
+  function directly. The mock never applied, so the result depended on the runner's
+  Go version: it passed on older Go and failed on CI. The function now calls through
+  `module.exports`, making the seam spy-able and the test deterministic.
+- Translated the 58 `users.access_*` / `users.client_features` keys introduced with
+  panel access policies into all 24 non-English locales, and removed four legacy
+  `meta.*` keys from `fr` and `zh-TW` that fell outside the EN/PL baseline.
+
+### CI
+
+- Added a blocking i18n parity gate to Web Console CI. Hard failures (missing,
+  extra, or empty keys) stop the build; the pre-existing English fallback backlog is
+  reported without failing.
+- Upgraded all GitHub Actions to their Node 24 major versions (checkout v7,
+  setup-node v7, setup-go v7, upload-artifact v7, download-artifact v8,
+  setup-python v7, build-push-action v7, codeql-action v4), still pinned to commit
+  SHAs. This clears the Node 20 deprecation warning on every run.
+- Added `concurrency` groups and `timeout-minutes` to every workflow and job;
+  duplicate pushes now cancel superseded runs instead of queueing.
+- Added a GHCR preflight to the Docker publish workflow. The 2026-11-18 failure was
+  `permission_denied ... circuit breaker is open` from GitHub's registry
+  authorization service, not a build error. The preflight retries briefly and then
+  reports an infrastructure failure instead of a false red build.
+
+---
+
+## [Unreleased]
+
 ### Changed
 - _(none yet)_
 

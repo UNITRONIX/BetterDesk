@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/url"
 	"os"
 	"runtime"
 	"strconv"
@@ -901,4 +902,47 @@ func (c *Config) CDAPTLSEnabled() bool {
 // dual-mode protocol.
 func (c *Config) CDAPTLSRequiredEnabled() bool {
 	return c.CDAPTLSRequired && c.HasTLSCert()
+}
+
+// RedactedDBPath returns a loggable form of DBPath with credentials removed.
+//
+// GHSA-qxwx-jg77-5v67: the startup banner printed DBPath verbatim, so a
+// PostgreSQL DSN leaked the database password into container logs on every
+// start. Only the scheme, user, host, port and database name are kept; the
+// password is replaced with "xxxxx". SQLite file paths contain no credentials
+// and are returned unchanged.
+func RedactedDBPath(dsn string) string {
+	if dsn == "" {
+		return ""
+	}
+	// Only URI-style DSNs carry credentials. Plain filesystem paths do not.
+	if !strings.Contains(dsn, "://") {
+		return dsn
+	}
+	parsed, err := url.Parse(dsn)
+	if err != nil {
+		// Unparseable: avoid echoing anything that might contain a secret.
+		return "<unparseable database DSN>"
+	}
+	if parsed.User != nil {
+		if _, hasPassword := parsed.User.Password(); hasPassword {
+			username := parsed.User.Username()
+			parsed.User = url.UserPassword(username, "xxxxx")
+		}
+	}
+	// Query strings can also carry credentials (e.g. password=).
+	if parsed.RawQuery != "" {
+		query := parsed.Query()
+		redacted := false
+		for _, key := range []string{"password", "passwd", "pwd"} {
+			if query.Has(key) {
+				query.Set(key, "xxxxx")
+				redacted = true
+			}
+		}
+		if redacted {
+			parsed.RawQuery = query.Encode()
+		}
+	}
+	return parsed.String()
 }

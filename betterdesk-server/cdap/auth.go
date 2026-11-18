@@ -174,6 +174,18 @@ func (g *Gateway) authAPIKey(p AuthPayload, clientIP string) (string, string, er
 		return "", "", fmt.Errorf("invalid API key")
 	}
 
+	// GHSA-7j6j-h4qf-86mq: the REST path enforced API key expiry but this CDAP
+	// path did not, so an expired key kept authenticating agents forever. Match
+	// the REST behaviour (api/auth_handlers.go) exactly.
+	if apiKey.ExpiresAt != "" {
+		if exp, parseErr := time.Parse("2006-01-02 15:04:05", apiKey.ExpiresAt); parseErr == nil && exp.Before(time.Now()) {
+			g.auditAction("cdap_auth_failed", clientIP, map[string]string{
+				"reason": "api key expired",
+			})
+			return "", "", fmt.Errorf("API key expired")
+		}
+	}
+
 	// Touch last_used
 	g.db.TouchAPIKey(apiKey.ID)
 

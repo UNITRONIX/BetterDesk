@@ -15,6 +15,7 @@ permissions:
 jobs:
   retired:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Desktop builds moved to BetterDesk-Client
         run: |

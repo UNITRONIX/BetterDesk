@@ -3499,7 +3499,10 @@ async function runUpdatePreflight(opts = {}) {
         warnings.push('Go server binary path could not be detected — deploy step may require manual repair');
     }
 
-    const goInfo = checkGoAvailable();
+    // Call through module.exports so callers (and tests) that replace these with
+    // jest.spyOn(updateService, ...) actually take effect. A direct module-local
+    // call bypassed the mock and made the result depend on the host's Go build.
+    const goInfo = (module.exports.checkGoAvailable || checkGoAvailable)();
     const hasCompatibleGo = !!(goInfo.available && goInfo.meetsMinimum);
     // applyUpdate can bootstrap a vendored Go toolchain when system Go is missing or too old.
     const canBootstrapGoToolchain = true;
@@ -3524,7 +3527,7 @@ async function runUpdatePreflight(opts = {}) {
     }
 
     try {
-        await getRemoteHeadSHA();
+        await (module.exports.getRemoteHeadSHA || getRemoteHeadSHA)();
     } catch (err) {
         issues.push(`Cannot reach GitHub API: ${err.message}`);
     }
