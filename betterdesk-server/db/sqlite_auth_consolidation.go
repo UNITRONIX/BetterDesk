@@ -24,6 +24,21 @@ const sqliteAuthConsolidationName = "sqlite_auth_consolidation_v1"
 
 var sqliteIdentifier = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`)
 
+// userMergeOptions carries the non-secret knobs the users merge needs.
+//
+// It is a value type so the merge helpers stay testable without a database
+// handle: Warnf routes warnings into the report the operator reads.
+type userMergeOptions struct {
+	PreferTargetCredentials bool
+	Warnf                   func(format string, args ...any)
+}
+
+func (o userMergeOptions) warnf(format string, args ...any) {
+	if o.Warnf != nil {
+		o.Warnf(format, args...)
+	}
+}
+
 // SQLiteAuthConsolidationOptions controls a safe auth.db migration. Services
 // using either database must be stopped before a non-dry-run migration.
 type SQLiteAuthConsolidationOptions struct {
@@ -32,6 +47,15 @@ type SQLiteAuthConsolidationOptions struct {
 	BackupDir  string
 	DryRun     bool
 	Now        func() time.Time
+	// PreferTargetCredentials keeps the target (Go server) password hash when
+	// the same account exists on both sides with matching role and TOTP but a
+	// different hash format (bcrypt in the console, pbkdf2 in the server).
+	//
+	// This is opt-in on purpose: two different hashes can mean two different
+	// passwords, and silently picking one would hand access to whoever holds
+	// it. Without this flag the migration keeps failing loudly and asks an
+	// operator to resolve the account by hand.
+	PreferTargetCredentials bool
 }
 
 // SQLiteAuthConsolidationReport is safe to display in an updater or CLI. It
@@ -109,21 +133,19 @@ func ConsolidateSQLiteAuth(opts SQLiteAuthConsolidationOptions) (*SQLiteAuthCons
 	}
 	report.SourceSHA256 = sourceHash
 
+	mergeOpts := userMergeOptions{
+		PreferTargetCredentials: opts.PreferTargetCredentials,
+		Warnf: func(format string, args ...any) {
+			report.Warnings = append(report.Warnings, fmt.Sprintf(format, args...))
+		},
+	}
+
 	if opts.DryRun {
-		if err := validateUserCollisions(targetPath, sourcePath); err != nil {
-			return nil, err
-		}
-		src, err := openSQLiteReadOnly(sourcePath)
-		if err != nil {
-			return nil, err
-		}
-		defer src.Close()
-		tables, err := sqliteTables(src)
-		if err != nil {
-			return nil, err
-		}
-		report.TablesCopied = sortedKeys(tables)
-		return report, nil
+		// The dry run used to only list users and tables, so it reported
+		// success for migrations that could never succeed (hash format
+		// conflicts, foreign key ordering, profile column conflicts). Run the
+		// real consolidation against throwaway snapshots instead.
+		return dryRunConsolidation(targetPath, sourcePath, sourceHash, report, mergeOpts)
 	}
 
 	now := time.Now
@@ -162,7 +184,7 @@ func ConsolidateSQLiteAuth(opts SQLiteAuthConsolidationOptions) (*SQLiteAuthCons
 	defer candidate.Close()
 	defer os.Remove(candidatePath)
 
-	if err := migrateLegacyAuthIntoCandidate(candidate, sourcePath, sourceHash, &report.TablesCopied); err != nil {
+	if err := migrateLegacyAuthIntoCandidate(candidate, sourcePath, sourceHash, &report.TablesCopied, mergeOpts); err != nil {
 		return nil, fmt.Errorf("migrate legacy auth into candidate: %w", err)
 	}
 	if err := validateSQLiteDB(candidate); err != nil {
@@ -184,6 +206,50 @@ func ConsolidateSQLiteAuth(opts SQLiteAuthConsolidationOptions) (*SQLiteAuthCons
 	}
 	// Prevent the deferred cleanup from removing the activated file.
 	report.CandidatePath = ""
+	return report, nil
+}
+
+// dryRunConsolidation exercises the real migration against throwaway copies of
+// both databases and then discards them.
+//
+// The old dry run only compared ids/usernames and listed tables, so it passed
+// for migrations that failed minutes later on a real install. Running the real
+// code path means the dry run fails exactly where the real run would, without
+// touching either database.
+func dryRunConsolidation(targetPath, sourcePath, sourceHash string, report *SQLiteAuthConsolidationReport, mergeOpts userMergeOptions) (*SQLiteAuthConsolidationReport, error) {
+	tempDir, err := os.MkdirTemp("", "betterdesk-auth-dry-run-")
+	if err != nil {
+		return nil, fmt.Errorf("create dry run directory: %w", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	candidateTarget := filepath.Join(tempDir, "target.sqlite3")
+	candidateSource := filepath.Join(tempDir, "auth.sqlite3")
+	if err := sqliteSnapshot(targetPath, candidateTarget); err != nil {
+		return nil, fmt.Errorf("dry run: snapshot target database: %w", err)
+	}
+	if err := sqliteSnapshot(sourcePath, candidateSource); err != nil {
+		return nil, fmt.Errorf("dry run: snapshot legacy auth database: %w", err)
+	}
+
+	if err := validateUserCollisions(candidateTarget, candidateSource); err != nil {
+		return nil, err
+	}
+
+	candidate, err := openSQLiteReadWrite(candidateTarget)
+	if err != nil {
+		return nil, fmt.Errorf("dry run: open candidate: %w", err)
+	}
+	defer candidate.Close()
+
+	var copied []string
+	if err := migrateLegacyAuthIntoCandidate(candidate, candidateSource, sourceHash, &copied, mergeOpts); err != nil {
+		return nil, fmt.Errorf("dry run: migrate legacy auth into candidate: %w", err)
+	}
+	if err := validateSQLiteDB(candidate); err != nil {
+		return nil, fmt.Errorf("dry run: candidate database validation failed: %w", err)
+	}
+	report.TablesCopied = copied
 	return report, nil
 }
 
@@ -246,7 +312,13 @@ func SQLiteAuthConsolidated(dbPath string) (bool, error) {
 	return marker > 0, nil
 }
 
-func migrateLegacyAuthIntoCandidate(candidate *sql.DB, sourcePath, sourceHash string, copied *[]string) error {
+func migrateLegacyAuthIntoCandidate(candidate *sql.DB, sourcePath, sourceHash string, copied *[]string, opts userMergeOptions) error {
+	// Snapshot existing violations before touching anything, so the merge is
+	// only blamed for foreign key problems it actually introduces.
+	baseline, err := foreignKeyBaseline(candidate)
+	if err != nil {
+		return err
+	}
 	if _, err := candidate.Exec(`ATTACH DATABASE ? AS legacy_auth`, sourcePath); err != nil {
 		return fmt.Errorf("attach legacy auth database: %w", err)
 	}
@@ -290,29 +362,64 @@ func migrateLegacyAuthIntoCandidate(candidate *sql.DB, sourcePath, sourceHash st
 	if err := ensureUserColumns(candidate); err != nil {
 		return err
 	}
-	if err := ensureUsersCompatible(candidate); err != nil {
+	if err := ensureUsersCompatible(candidate, opts); err != nil {
 		return err
 	}
 
+	// Pass 1: create every missing legacy table before any row is inserted.
+	// Creating and filling one table at a time in alphabetical order breaks on
+	// foreign keys (alert_history references alert_rules, user_group_members
+	// references user_groups, ...) because the candidate runs with
+	// _foreign_keys=ON and the parent may sort later than the child.
 	tableNames := sortedKeys(sourceTables)
 	for _, table := range tableNames {
-		if table == "sqlite_sequence" || table == "address_books" {
+		if table == "sqlite_sequence" || table == "address_books" || table == "users" {
 			continue
 		}
 		if !sqliteIdentifier.MatchString(table) {
 			return fmt.Errorf("unsafe legacy table name %q", table)
 		}
-		if _, exists := targetTables[table]; !exists {
-			if err := createLegacyTable(candidate, sourceTables[table]); err != nil {
-				return fmt.Errorf("create legacy table %s: %w", table, err)
-			}
-			targetTables[table] = sourceTables[table]
+		if _, exists := targetTables[table]; exists {
+			continue
+		}
+		if err := createLegacyTable(candidate, sourceTables[table]); err != nil {
+			return fmt.Errorf("create legacy table %s: %w", table, err)
+		}
+		targetTables[table] = sourceTables[table]
+	}
+
+	// Pass 2: copy rows now that every parent table exists. Row order is still
+	// alphabetical, so a child may be filled before its parent; foreign keys
+	// are disabled for the copy and re-checked explicitly below. This is safe
+	// because the candidate is a disposable snapshot and the check must pass
+	// before it can replace the live database.
+	// PRAGMA foreign_keys is a no-op inside a transaction; this runs outside one.
+	if _, err := candidate.Exec(`PRAGMA foreign_keys=OFF`); err != nil {
+		return err
+	}
+	for _, table := range tableNames {
+		if table == "sqlite_sequence" || table == "address_books" || table == "users" {
+			continue
 		}
 		if err := copyCompatibleTable(candidate, table); err != nil {
 			return fmt.Errorf("copy legacy table %s: %w", table, err)
 		}
 		*copied = append(*copied, table)
 	}
+
+	// users is deliberately not part of the generic copy. ensureUserColumns has
+	// just added console profile columns, so a byte-for-byte row comparison
+	// reports a conflict for any account with a non-empty profile field. It
+	// also has to insert accounts that only exist in the console, which the
+	// generic copy never did.
+	mergedUsers, err := mergeUsers(candidate, opts)
+	if err != nil {
+		return fmt.Errorf("merge users: %w", err)
+	}
+	if mergedUsers > 0 {
+		*copied = append(*copied, "users")
+	}
+
 	if _, hasAddressBooks := sourceTables["address_books"]; hasAddressBooks {
 		if err := copyAddressBooks(candidate); err != nil {
 			return err
@@ -320,6 +427,17 @@ func migrateLegacyAuthIntoCandidate(candidate *sql.DB, sourcePath, sourceHash st
 		*copied = append(*copied, "address_books")
 	}
 	if err := mergeMissingUserProfileFields(candidate); err != nil {
+		return err
+	}
+	// Re-enable enforcement. The pre-existing database may already contain
+	// foreign key violations (a long-running install accumulates orphaned
+	// audit_log rows for deleted users), so the migration must not require a
+	// pristine database: it records the baseline before copying and fails only
+	// if the merge introduced NEW violations.
+	if _, err := candidate.Exec(`PRAGMA foreign_keys=ON`); err != nil {
+		return err
+	}
+	if err := checkForeignKeys(candidate, baseline); err != nil {
 		return err
 	}
 	if _, err := candidate.Exec(`
@@ -360,7 +478,7 @@ func ensureUserColumns(candidate *sql.DB) error {
 	return nil
 }
 
-func ensureUsersCompatible(candidate *sql.DB) error {
+func ensureUsersCompatible(candidate *sql.DB, opts userMergeOptions) error {
 	rows, err := candidate.Query(`
 		SELECT id, username, COALESCE(password_hash,''), COALESCE(role,''), COALESCE(totp_secret,''), COALESCE(totp_enabled,0)
 		FROM legacy_auth.users ORDER BY id`)
@@ -415,11 +533,176 @@ func ensureUsersCompatible(candidate *sql.DB) error {
 		if targetID != user.id {
 			return fmt.Errorf("user identity conflict for %q: legacy id %d, target id %d", user.username, user.id, targetID)
 		}
-		if targetHash != user.password || targetRole != user.role || targetSecret != user.totpSecret || targetEnabled != user.totpEnabled {
-			return fmt.Errorf("credential or role conflict for user %q; resolve manually before consolidation", user.username)
+		if targetRole == user.role && targetSecret == user.totpSecret && targetEnabled == user.totpEnabled {
+			if targetHash == user.password {
+				continue
+			}
+			// Same identity and MFA state, different hash text. That is usually
+			// just two encodings of one password (bcrypt in the console,
+			// pbkdf2 in the Go server), but it can also be two different
+			// passwords, so it only proceeds with explicit consent.
+			if !opts.PreferTargetCredentials {
+				return fmt.Errorf("credential or role conflict for user %q: password hashes differ (%s vs %s); resolve manually before consolidation or rerun with -migrate-sqlite-auth-prefer-target-credentials to keep the target hash", user.username, hashFormatLabel(targetHash), hashFormatLabel(user.password))
+			}
+			opts.warnf("user %q exists in both databases with a different password hash format (%s in target, %s in legacy auth); keeping the target hash", user.username, hashFormatLabel(targetHash), hashFormatLabel(user.password))
+			continue
 		}
+		return fmt.Errorf("credential or role conflict for user %q; resolve manually before consolidation", user.username)
 	}
 	return nil
+}
+
+// hashFormatLabel names a password hash scheme without revealing the hash.
+// Reports and error messages end up in logs and pasted issue comments.
+func hashFormatLabel(hash string) string {
+	switch {
+	case hash == "":
+		return "empty"
+	case strings.HasPrefix(hash, "$2a$"), strings.HasPrefix(hash, "$2b$"), strings.HasPrefix(hash, "$2y$"):
+		return "bcrypt"
+	case strings.HasPrefix(hash, "pbkdf2-sha256$"), strings.HasPrefix(hash, "pbkdf2$"):
+		return "pbkdf2-sha256"
+	case strings.HasPrefix(hash, "$argon2"):
+		return "argon2"
+	case strings.HasPrefix(hash, "scrypt$"):
+		return "scrypt"
+	default:
+		return "unknown-format"
+	}
+}
+
+// mergeUsers copies console-only accounts into the consolidated database and
+// leaves shared accounts alone.
+//
+// The generic copyCompatibleTable cannot do this: ensureUserColumns adds the
+// console's profile columns to the target users table right before the copy,
+// so any shared account with a non-empty preferred_language/email/phone and so
+// on looks like a "conflicting row". This function therefore compares only the
+// authentication columns and inserts the accounts that are genuinely missing
+// instead of dropping them.
+//
+// Accounts present in both databases have already been reconciled by
+// ensureUsersCompatible, which aborts on a real credential or role conflict.
+func mergeUsers(candidate *sql.DB, opts userMergeOptions) (int, error) {
+	legacyCols, err := sqliteColumns(candidate, "legacy_auth", "users")
+	if err != nil {
+		return 0, err
+	}
+	targetCols, err := sqliteColumns(candidate, "main", "users")
+	if err != nil {
+		return 0, err
+	}
+	targetSet := make(map[string]bool, len(targetCols))
+	for _, col := range targetCols {
+		targetSet[col.Name] = true
+	}
+
+	// Only copy columns that exist on both sides; the target may have grown
+	// profile columns that the console never wrote.
+	var cols []string
+	for _, col := range legacyCols {
+		if targetSet[col.Name] && sqliteIdentifier.MatchString(col.Name) {
+			cols = append(cols, col.Name)
+		}
+	}
+	if len(cols) == 0 {
+		return 0, errors.New("users tables share no columns")
+	}
+
+	// Insert only rows whose username is absent from the target. Username is
+	// the identity the rest of the migration joins on (address_books,
+	// org_users, strategy_assignments), so username - not id - decides.
+	inserted, err := candidate.Exec(`
+		INSERT INTO users (` + quoteIdentifiers(cols) + `)
+		SELECT ` + quoteIdentifiersPrefixed(cols, "legacy") + `
+		FROM legacy_auth.users AS legacy
+		WHERE NOT EXISTS (SELECT 1 FROM main.users AS target WHERE target.username = legacy.username)`)
+	if err != nil {
+		return 0, err
+	}
+	affected, err := inserted.RowsAffected()
+	if err != nil {
+		return 0, nil
+	}
+	if affected > 0 {
+		opts.warnf("added %d account(s) that existed only in the console auth database", affected)
+	}
+	return int(affected), nil
+}
+
+func quoteIdentifiersPrefixed(names []string, prefix string) string {
+	quoted := make([]string, len(names))
+	for i, name := range names {
+		quoted[i] = `"` + prefix + `"."` + name + `"`
+	}
+	return strings.Join(quoted, ", ")
+}
+
+// checkForeignKeys compares foreign key violations against a baseline taken
+// before the copy and reports only the new ones.
+//
+// A long-running install can legitimately carry violations: audit_log rows for
+// deleted users are a common example, and the reporter's install had dozens.
+// Requiring a pristine database would block a migration that is otherwise
+// correct, so the merge is judged by what it changes rather than by the
+// absolute count.
+func checkForeignKeys(candidate *sql.DB, baseline map[string]bool) error {
+	current, err := collectForeignKeyViolations(candidate)
+	if err != nil {
+		return err
+	}
+	var introduced []string
+	for _, violation := range current {
+		if !baseline[violation] {
+			introduced = append(introduced, violation)
+			if len(introduced) >= 10 {
+				break
+			}
+		}
+	}
+	if len(introduced) > 0 {
+		return fmt.Errorf("consolidation introduced foreign key violations: %s; the legacy auth database references rows that do not exist in the target", strings.Join(introduced, ", "))
+	}
+	return nil
+}
+
+// collectForeignKeyViolations lists violated foreign keys as stable strings so
+// two runs can be compared.
+func collectForeignKeyViolations(candidate *sql.DB) ([]string, error) {
+	rows, err := candidate.Query(`PRAGMA foreign_key_check`)
+	if err != nil {
+		return nil, fmt.Errorf("foreign key check: %w", err)
+	}
+	defer rows.Close()
+	var violations []string
+	for rows.Next() {
+		var table string
+		var rowid sql.NullInt64
+		var parent string
+		var fkid sql.NullInt64
+		if err := rows.Scan(&table, &rowid, &parent, &fkid); err != nil {
+			return nil, fmt.Errorf("foreign key check: %w", err)
+		}
+		violations = append(violations, fmt.Sprintf("%s#%d->%s", table, rowid.Int64, parent))
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("foreign key check: %w", err)
+	}
+	return violations, nil
+}
+
+// foreignKeyBaseline snapshots the violations that already exist, so the copy
+// is only blamed for the ones it causes.
+func foreignKeyBaseline(db *sql.DB) (map[string]bool, error) {
+	violations, err := collectForeignKeyViolations(db)
+	if err != nil {
+		return nil, err
+	}
+	baseline := make(map[string]bool, len(violations))
+	for _, violation := range violations {
+		baseline[violation] = true
+	}
+	return baseline, nil
 }
 
 func mergeMissingUserProfileFields(candidate *sql.DB) error {
@@ -733,15 +1016,12 @@ func validateSQLiteDB(db *sql.DB) error {
 	if integrity != "ok" {
 		return fmt.Errorf("integrity_check: %s", integrity)
 	}
-	rows, err := db.Query(`PRAGMA foreign_key_check`)
-	if err != nil {
-		return err
-	}
-	defer rows.Close()
-	if rows.Next() {
-		return errors.New("foreign_key_check returned violations")
-	}
-	return rows.Err()
+	// Foreign keys are deliberately not required to be violation-free here:
+	// this validator also runs against the operator's existing database, and a
+	// long-lived install can carry orphaned rows (an audit trail whose user was
+	// deleted, for example). migrateLegacyAuthIntoCandidate compares against a
+	// baseline instead and fails only on violations the merge introduces.
+	return nil
 }
 
 func sqliteSnapshot(sourcePath, destinationPath string) error {

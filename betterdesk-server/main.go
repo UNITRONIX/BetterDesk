@@ -43,10 +43,11 @@ var (
 	Version   = "dev"
 	BuildDate = "unknown"
 
-	runSQLiteAuthConsolidation       bool
-	sqliteAuthConsolidationDryRun    bool
-	sqliteAuthConsolidationBackupDir string
-	sqliteAuthConsolidationRollback  string
+	runSQLiteAuthConsolidation               bool
+	sqliteAuthConsolidationDryRun            bool
+	sqliteAuthConsolidationBackupDir         string
+	sqliteAuthConsolidationPreferTargetCreds bool
+	sqliteAuthConsolidationRollback          string
 )
 
 type persistedTimeSyncConfig struct {
@@ -148,10 +149,11 @@ func main() {
 	}
 	if runSQLiteAuthConsolidation {
 		report, err := db.ConsolidateSQLiteAuth(db.SQLiteAuthConsolidationOptions{
-			DBPath:     cfg.DBPath,
-			AuthDBPath: cfg.AuthDBPath,
-			BackupDir:  sqliteAuthConsolidationBackupDir,
-			DryRun:     sqliteAuthConsolidationDryRun,
+			DBPath:                  cfg.DBPath,
+			AuthDBPath:              cfg.AuthDBPath,
+			BackupDir:               sqliteAuthConsolidationBackupDir,
+			DryRun:                  sqliteAuthConsolidationDryRun,
+			PreferTargetCredentials: sqliteAuthConsolidationPreferTargetCreds,
 		})
 		if err != nil {
 			log.Fatalf("SQLite auth consolidation failed: %v", err)
@@ -1078,6 +1080,7 @@ func parseFlags() *config.Config {
 	flag.BoolVar(&runSQLiteAuthConsolidation, "migrate-sqlite-auth", false, "Safely consolidate legacy auth.db into the selected SQLite DB, then exit")
 	flag.BoolVar(&sqliteAuthConsolidationDryRun, "migrate-sqlite-auth-dry-run", false, "Validate legacy auth.db consolidation without modifying databases")
 	flag.StringVar(&sqliteAuthConsolidationBackupDir, "migrate-sqlite-auth-backup-dir", "", "Directory for SQLite auth consolidation backups")
+	flag.BoolVar(&sqliteAuthConsolidationPreferTargetCreds, "migrate-sqlite-auth-prefer-target-credentials", false, "Keep the target (Go server) password hash when a shared account differs only in hash format; logs a warning per account")
 	flag.StringVar(&sqliteAuthConsolidationRollback, "rollback-sqlite-auth", "", "Restore the selected SQLite DB from a consolidation snapshot, then exit")
 	flag.StringVar(&cfg.AdminPassword, "admin-password", cfg.AdminPassword, "Password for admin TCP interface")
 	flag.BoolVar(&cfg.ForceHTTPS, "force-https", cfg.ForceHTTPS, "Reject non-TLS API requests")
