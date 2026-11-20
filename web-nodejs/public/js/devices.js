@@ -1172,9 +1172,44 @@
      * Handle device actions
      */
     /**
-     * Try to add a remote session tab in an existing RDClient window via BroadcastChannel.
-     * Falls back to opening a new browser tab if no RDClient page is listening.
+     * Open a remote session in the RDClient viewer window.
+     *
+     * Issue #514: the previous implementation opened the window from a 300 ms
+     * timer, after a BroadcastChannel ping. Chrome blocks window.open() outside
+     * the user gesture, so the button appeared to do nothing. It also opened
+     * '/remote/' - the device picker, which does not load remote.js and
+     * therefore never consumed the queued session.
+     *
+     * The window is now opened synchronously here, inside the click handler,
+     * and pointed straight at the device viewer URL. An already-open viewer is
+     * still reused through the BroadcastChannel handshake; the URL form simply
+     * needs no handshake.
      */
+    const REMOTE_VIEWER_WINDOW = 'betterdesk-rdviewer';
+    // Explicit size: a small popup trips the viewer's small-screen gate.
+    const REMOTE_VIEWER_FEATURES = 'width=1600,height=950';
+
+    function _openRemoteViewerWindow() {
+        let win = null;
+        try {
+            win = window.open('', REMOTE_VIEWER_WINDOW, REMOTE_VIEWER_FEATURES);
+        } catch (_) {
+            win = null;
+        }
+        return win;
+    }
+
+    function _remoteViewerIsLoaded(win) {
+        // A freshly opened named window sits on about:blank. Cross-origin reads
+        // throw, which also means something is already loaded there.
+        if (!win || win.closed) return false;
+        try {
+            return win.location.href !== 'about:blank';
+        } catch (_) {
+            return true;
+        }
+    }
+
     function _tryAddRemoteTab(deviceId, data) {
         if (window.DeviceCapabilities && window.DeviceCapabilities.isPhone()) {
             if (window.RdClientMobile && window.RdClientMobile.showPhoneUnsupportedToast) {
@@ -1188,26 +1223,37 @@
             return;
         }
 
+        const viewerUrl = '/remote/' + encodeURIComponent(String(deviceId));
+        const deviceName = (data && data.deviceName) || '';
+
+        // 1. Synchronous open - the only place a popup is allowed.
+        const viewerWindow = _openRemoteViewerWindow();
+        if (viewerWindow && !_remoteViewerIsLoaded(viewerWindow)) {
+            // No viewer was running: navigate the window we just opened. The
+            // device id is in the URL, so no queue handoff is needed.
+            viewerWindow.location.href = viewerUrl;
+            return;
+        }
+        if (!viewerWindow) {
+            // Popup blocker still said no; fall back to a plain tab. This is
+            // inside the gesture as well, so it normally succeeds.
+            window.open(viewerUrl, '_blank', 'noopener');
+            return;
+        }
+
+        // 2. A viewer is already open: ask it to add a session tab instead of
+        // reloading the whole window.
+        if (typeof BroadcastChannel === 'undefined') {
+            viewerWindow.location.href = viewerUrl;
+            return;
+        }
+
         const operatorKey = window.BetterDesk && window.BetterDesk.user
             ? (window.BetterDesk.user.id || window.BetterDesk.user.username || 'current')
             : 'current';
         const queueKey = 'betterdesk.remote.pendingSessions.' +
             encodeURIComponent(String(operatorKey));
-        const enqueue = function () {
-            try {
-                const current = JSON.parse(window.localStorage.getItem(queueKey) || '[]');
-                current.push({
-                    deviceId: String(deviceId),
-                    deviceName: (data && data.deviceName) || '',
-                    queuedAt: Date.now()
-                });
-                window.localStorage.setItem(queueKey, JSON.stringify(current.slice(-32)));
-                return true;
-            } catch (_) {
-                return false;
-            }
-        };
-        const drain = function () {
+        const drainQueue = function () {
             try {
                 const current = JSON.parse(window.localStorage.getItem(queueKey) || '[]');
                 window.localStorage.removeItem(queueKey);
@@ -1219,26 +1265,18 @@
             }
         };
 
-        enqueue();
-        if (typeof BroadcastChannel === 'undefined') {
-            window.open('/remote/', 'betterdesk-rdviewer');
-            return;
-        }
-
         const bc = new BroadcastChannel('betterdesk-remote');
         let handled = false;
 
-        // Listen for acknowledgment from remote page
         bc.onmessage = (ev) => {
             if (ev.data && ev.data.type === 'pong') {
-                // Remote page exists — send the add-session command
                 handled = true;
-                const pending = drain();
+                const pending = drainQueue();
                 bc.postMessage({
                     type: 'add-sessions',
                     sessions: pending.length ? pending : [{
-                        deviceId: deviceId,
-                        deviceName: (data && data.deviceName) || ''
+                        deviceId: String(deviceId),
+                        deviceName: deviceName
                     }]
                 });
                 bc.close();
@@ -1248,16 +1286,18 @@
             }
         };
 
-        // Ping to check if a remote page is open
         bc.postMessage({ type: 'ping' });
 
-        // Timeout: if no response within 300ms, open new tab
+        // The window already exists, so navigating it on timeout is not a
+        // popup and is not blocked.
         setTimeout(() => {
-            if (!handled) {
-                bc.close();
-                // All rapid requests reuse one viewer window. The viewer drains
-                // the localStorage queue after its bootstrap completes.
-                window.open('/remote/', 'betterdesk-rdviewer');
+            if (handled) return;
+            bc.close();
+            try {
+                viewerWindow.location.href = viewerUrl;
+                viewerWindow.focus();
+            } catch (_) {
+                window.open(viewerUrl, REMOTE_VIEWER_WINDOW, REMOTE_VIEWER_FEATURES);
             }
         }, 300);
     }

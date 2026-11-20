@@ -1183,9 +1183,26 @@
         session.panel.querySelector('.session-btn-authenticate')
             ?.addEventListener('click', () => {
                 const pw = session.passwordInput.value;
-                if (!pw) { session.passwordInput.focus(); return; }
+                if (!pw) {
+                    // Issue #514: this used to return silently, so clicking
+                    // Connect with an empty field looked like a dead button.
+                    if (session.loginError) {
+                        session.loginError.textContent =
+                            _('remote.password_empty_hint') || 'Please enter the device password.';
+                        session.loginError.style.display = 'block';
+                    }
+                    session.passwordInput.focus();
+                    return;
+                }
                 if (session.client) session.client.authenticate(pw);
             });
+
+        // Clear the hint as soon as the operator starts typing.
+        session.passwordInput?.addEventListener('input', () => {
+            if (session.loginError && session.loginError.style.display === 'block') {
+                session.loginError.style.display = 'none';
+            }
+        });
 
         session.passwordInput?.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {

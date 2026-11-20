@@ -117,6 +117,14 @@
 .user-group-manager-item .user-group-member-count { grid-area: count; }
 .user-group-manager-item .user-group-manager-actions { grid-area: actions; }
 
+/* Explains why access levels on a memberless group appear clamped to none. */
+.user-group-empty-hint {
+    grid-column: 1 / -1;
+    color: var(--text-tertiary);
+    font-size: var(--font-size-sm);
+    line-height: 1.35;
+}
+
 .user-group-manager-main {
     display: flex;
     align-items: center;

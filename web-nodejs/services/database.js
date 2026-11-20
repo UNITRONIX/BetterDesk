@@ -248,6 +248,7 @@ const facade = {
     updateUserGroup:    (guid, data) => adapter.updateUserGroup(guid, data),
     deleteUserGroup:    (guid) => adapter.deleteUserGroup(guid),
     getUserGroupsForUser: (userId) => adapter.getUserGroupsForUser(userId),
+    getUserGroupMembers: (guid) => adapter.getUserGroupMembers(guid),
     setUserGroupMemberships: (userId, groupGuids) => adapter.setUserGroupMemberships(userId, groupGuids),
     getPanelAccessPolicies: (subjectType, subjectId) =>
         adapter.getPanelAccessPolicies(subjectType, subjectId),

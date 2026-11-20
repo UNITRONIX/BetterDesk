@@ -3204,6 +3204,22 @@ function createSqliteAdapter(config) {
             `).all(userId);
         },
 
+        async getUserGroupMembers(guid) {
+            // Members of one group, used to resolve the role ceiling of a
+            // group-scoped panel access policy. Resolve the public guid first
+            // so callers never need to know internal primary keys.
+            const db = openAuth();
+            const group = db.prepare('SELECT id FROM user_groups WHERE guid = ?')
+                .get(String(guid || ''));
+            if (!group) return [];
+            return db.prepare(`
+                SELECT u.id, u.username, u.role FROM user_group_members ugm
+                INNER JOIN users u ON u.id = ugm.user_id
+                WHERE ugm.user_group_id = ?
+                ORDER BY u.username ASC
+            `).all(group.id);
+        },
+
         async setUserGroupMemberships(userId, groupGuids = []) {
             const db = openAuth();
             const user = db.prepare('SELECT id FROM users WHERE id = ?').get(userId);
@@ -6915,6 +6931,17 @@ function createPostgresAdapter() {
                 WHERE ugm.user_id = $1
                 ORDER BY ug.name ASC
             `, [userId]);
+        },
+
+        async getUserGroupMembers(guid) {
+            const group = await one('SELECT id FROM user_groups WHERE guid = $1', [String(guid || '')]);
+            if (!group) return [];
+            return all(`
+                SELECT u.id, u.username, u.role FROM user_group_members ugm
+                INNER JOIN users u ON u.id = ugm.user_id
+                WHERE ugm.user_group_id = $1
+                ORDER BY u.username ASC
+            `, [group.id]);
         },
 
         async setUserGroupMemberships(userId, groupGuids = []) {

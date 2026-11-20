@@ -175,25 +175,43 @@
             return;
         }
 
+        // Issue #514: open the viewer window synchronously, inside the click
+        // handler. Opening it from the 300 ms timeout below was silently
+        // blocked by Chrome, so the button appeared dead. An already-open
+        // viewer is still reused via the BroadcastChannel handshake.
+        var viewerUrl = '/remote/' + encodeURIComponent(String(deviceId));
+        var viewerWindow = null;
+        try {
+            viewerWindow = window.open('', 'betterdesk-rdviewer', 'width=1600,height=950');
+        } catch (_) {
+            viewerWindow = null;
+        }
+
+        var viewerLoaded = false;
+        if (viewerWindow && !viewerWindow.closed) {
+            try {
+                viewerLoaded = viewerWindow.location.href !== 'about:blank';
+            } catch (_) {
+                viewerLoaded = true;
+            }
+        }
+
+        if (!viewerWindow) {
+            window.open(viewerUrl, '_blank', 'noopener');
+            return;
+        }
+        if (!viewerLoaded) {
+            // Fresh window: the device id is already in the URL, so no session
+            // queue handoff is needed.
+            viewerWindow.location.href = viewerUrl;
+            return;
+        }
+
         var operatorKey = window.BetterDesk && window.BetterDesk.user
             ? (window.BetterDesk.user.id || window.BetterDesk.user.username || 'current')
             : 'current';
         var queueKey = 'betterdesk.remote.pendingSessions.' +
             encodeURIComponent(String(operatorKey));
-        var enqueue = function () {
-            try {
-                var current = JSON.parse(window.localStorage.getItem(queueKey) || '[]');
-                current.push({
-                    deviceId: String(deviceId),
-                    deviceName: deviceName || '',
-                    queuedAt: Date.now()
-                });
-                window.localStorage.setItem(queueKey, JSON.stringify(current.slice(-32)));
-                return true;
-            } catch (_) {
-                return false;
-            }
-        };
         var drain = function () {
             try {
                 var current = JSON.parse(window.localStorage.getItem(queueKey) || '[]');
@@ -206,9 +224,8 @@
             }
         };
 
-        enqueue();
         if (typeof BroadcastChannel === 'undefined') {
-            window.open('/remote/', 'betterdesk-rdviewer');
+            viewerWindow.location.href = viewerUrl;
             return;
         }
 
@@ -222,7 +239,7 @@
                 bc.postMessage({
                     type: 'add-sessions',
                     sessions: pending.length ? pending : [{
-                        deviceId: deviceId,
+                        deviceId: String(deviceId),
                         deviceName: deviceName || ''
                     }]
                 });
@@ -235,9 +252,15 @@
 
         bc.postMessage({ type: 'ping' });
         setTimeout(function () {
-            if (!handled) {
-                bc.close();
-                window.open('/remote/', 'betterdesk-rdviewer');
+            if (handled) return;
+            bc.close();
+            // The window already exists, so this navigation is not a popup and
+            // is not blocked.
+            try {
+                viewerWindow.location.href = viewerUrl;
+                viewerWindow.focus();
+            } catch (_) {
+                window.open(viewerUrl, 'betterdesk-rdviewer', 'width=1600,height=950');
             }
         }, 300);
     }

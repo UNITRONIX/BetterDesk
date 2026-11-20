@@ -480,6 +480,7 @@
                     </div>
                 </div>
                 <span class="user-group-member-count">${_('users.group_members_count', { count: group.member_count || 0 }) || (group.member_count || 0)}</span>
+                ${!group.member_count ? `<span class="user-group-empty-hint">${_('users.group_no_members_ceiling_hint') || 'Add a member first: access levels are limited by the members\' roles, so they are clamped to none while the group is empty.'}</span>` : ''}
                 <div class="user-group-manager-actions">
                     <button class="action-btn" data-action="edit-user-group" data-guid="${Utils.escapeHtml(group.guid)}" title="${_('users.edit_user_group') || 'Edit user group'}">
                         <span class="material-icons">edit</span>
