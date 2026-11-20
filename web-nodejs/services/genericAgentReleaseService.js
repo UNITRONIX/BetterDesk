@@ -173,8 +173,118 @@ function assertNoExternalConfig(fileName, file) {
     }
 }
 
-async function importLatest() {
+function releasePublicKey() {
+    const publicKeyText = String(
+        process.env.BETTERDESK_SUPPORT_RELEASE_PUBLIC_KEY || DEFAULT_RELEASE_PUBLIC_KEY
+    ).trim();
+    if (!publicKeyText) throw new Error('generic_agent_release_public_key_missing');
+    return Buffer.from(publicKeyText, 'base64');
+}
+
+/**
+ * Verify a signed release manifest. Shared by the download path and the
+ * idempotent cache path: a cached release is only trusted again after its
+ * stored signature has been re-checked, so a tampered cache is never served.
+ */
+function verifyReleaseSignature(manifestBody, sumsBody, signatureBody) {
+    let signature;
+    let publicKey;
+    try {
+        publicKey = releasePublicKey();
+        signature = Buffer.from(String(signatureBody || '').trim(), 'base64');
+    } catch (error) {
+        if (error && error.message === 'generic_agent_release_public_key_missing') throw error;
+        throw new Error('generic_agent_release_signature_invalid');
+    }
+    if (
+        publicKey.length !== nacl.sign.publicKeyLength
+        || signature.length !== nacl.sign.signatureLength
+        || !nacl.sign.detached.verify(
+            new Uint8Array(manifestBody),
+            new Uint8Array(signature),
+            new Uint8Array(publicKey)
+        )
+    ) {
+        throw new Error('generic_agent_release_signature_invalid');
+    }
+    const checksums = new Map(
+        String(sumsBody || '').split(/\r?\n/).map((line) => {
+            const match = /^([a-f0-9]{64})\s+\*?([A-Za-z0-9._-]+)$/.exec(line.trim());
+            return match ? [match[2], match[1]] : null;
+        }).filter(Boolean)
+    );
+    return checksums;
+}
+
+/**
+ * Return the cached release when the same tag is already installed.
+ *
+ * Issue #515: importLatest() used to re-download all six assets (~181 MB) and
+ * then fail on rename(staging, destination) with ENOTEMPTY when the tag was
+ * already present. Besides being slow, every failure leaked a staging
+ * directory. The cache is only reused after the stored signature and
+ * checksums have been verified again.
+ */
+async function reuseCachedRelease(release) {
+    const destination = path.join(root(), release.tag_name);
+    // The signature covers the manifest exactly as published. manifest.json is
+    // an enriched copy (release_tag, imported_at), so verification has to use
+    // the stored original bytes.
+    const signedPath = path.join(destination, 'manifest.signed');
+    const manifestPath = path.join(destination, 'manifest.json');
+    try {
+        const [signedBody, sumsBody, signatureBody] = await Promise.all([
+            fsp.readFile(signedPath),
+            fsp.readFile(path.join(destination, 'SHA256SUMS')),
+            fsp.readFile(path.join(destination, 'manifest.sig')),
+        ]);
+        const checksums = verifyReleaseSignature(signedBody, sumsBody, signatureBody);
+        const manifest = JSON.parse(await fsp.readFile(manifestPath, 'utf8'));
+        if (!manifest || manifest.release_tag !== release.tag_name
+            || manifest.schema_version !== 1
+            || manifest.sku !== 'betterdesk-support'
+            || manifest.generic !== true
+            || !Array.isArray(manifest.assets)) {
+            return null;
+        }
+        // The enriched copy must describe exactly the same assets as the signed
+        // one, so editing manifest.json cannot change what gets served.
+        const signed = JSON.parse(signedBody.toString('utf8'));
+        const project = (list) => (list || [])
+            .map((asset) => `${asset.name}:${String(asset.sha256 || '').toLowerCase()}:${asset.size}`)
+            .sort();
+        if (JSON.stringify(project(signed.assets)) !== JSON.stringify(project(manifest.assets))) {
+            return null;
+        }
+        // Every asset must still be present and match its checksum, so a
+        // partially deleted or modified cache is re-imported instead of served.
+        for (const asset of manifest.assets) {
+            const name = safeName(asset.name);
+            const expected = checksums.get(name);
+            if (!name || !expected || String(expected).toLowerCase() !== String(asset.sha256 || '').toLowerCase()) {
+                return null;
+            }
+            const filePath = path.join(destination, name);
+            const digest = checksum(await fsp.readFile(filePath));
+            if (digest !== expected) return null;
+        }
+        return { tag: release.tag_name, manifest, path: destination, alreadyImported: true };
+    } catch (_) {
+        // Missing, unreadable, tampered or unverifiable -> fall through to a
+        // full re-import. Never surface a half-trusted cache entry.
+        return null;
+    }
+}
+
+async function importLatest(options = {}) {
+    const force = options.force === true;
     const release = await fetchLatestRelease();
+    const tagName = safeName(release.tag_name);
+    if (!tagName || !String(release.tag_name).startsWith(RELEASE_PREFIX)) {
+        // The tag becomes a path segment; never let an unexpected value through.
+        throw new Error('generic_agent_release_tag_invalid');
+    }
+    const releaseTag = String(release.tag_name);
     const manifestAsset = release.assets?.find((asset) => asset.name === 'manifest.json');
     const sumsAsset = release.assets?.find((asset) => asset.name === 'SHA256SUMS');
     const signatureAsset = release.assets?.find((asset) => asset.name === 'manifest.sig');
@@ -182,32 +292,20 @@ async function importLatest() {
         throw new Error('generic_agent_release_manifest_missing');
     }
 
+    const destination = path.join(root(), releaseTag);
+    if (!force) {
+        const cached = await reuseCachedRelease(release);
+        if (cached) return cached;
+    }
+
     const manifestFile = await downloadAsset(manifestAsset);
     const sumsFile = await downloadAsset(sumsAsset);
     const signatureFile = await downloadAsset(signatureAsset);
-    const publicKeyText = String(
-        process.env.BETTERDESK_SUPPORT_RELEASE_PUBLIC_KEY || DEFAULT_RELEASE_PUBLIC_KEY
-    ).trim();
-    if (!publicKeyText) throw new Error('generic_agent_release_public_key_missing');
-    let signature;
-    let publicKey;
-    try {
-        signature = Buffer.from(signatureFile.body.toString('utf8').trim(), 'base64');
-        publicKey = Buffer.from(publicKeyText, 'base64');
-    } catch (_) {
-        throw new Error('generic_agent_release_signature_invalid');
-    }
-    if (
-        publicKey.length !== nacl.sign.publicKeyLength
-        || signature.length !== nacl.sign.signatureLength
-        || !nacl.sign.detached.verify(
-            new Uint8Array(manifestFile.body),
-            new Uint8Array(signature),
-            new Uint8Array(publicKey)
-        )
-    ) {
-        throw new Error('generic_agent_release_signature_invalid');
-    }
+    const checksums = verifyReleaseSignature(
+        manifestFile.body,
+        sumsFile.body.toString('utf8'),
+        signatureFile.body.toString('utf8')
+    );
     const manifest = JSON.parse(manifestFile.body.toString('utf8'));
     if (manifest.schema_version !== 1
         || manifest.sku !== 'betterdesk-support'
@@ -218,12 +316,6 @@ async function importLatest() {
         throw new Error('generic_agent_release_manifest_invalid');
     }
 
-    const checksums = new Map(
-        sumsFile.body.toString('utf8').split(/\r?\n/).map((line) => {
-            const match = /^([a-f0-9]{64})\s+\*?([A-Za-z0-9._-]+)$/.exec(line.trim());
-            return match ? [match[2], match[1]] : null;
-        }).filter(Boolean)
-    );
     const files = [];
     for (const asset of manifest.assets) {
         const name = safeName(asset.name);
@@ -245,22 +337,83 @@ async function importLatest() {
         files.push(downloaded);
     }
 
-    const destination = path.join(root(), release.tag_name);
+    // Issue #515: staging is always removed. Previously a failure here (for
+    // example ENOTEMPTY on rename) left one ~181 MB directory behind per
+    // attempt, and nothing ever cleaned them up.
     const staging = `${destination}.tmp-${process.pid}-${Date.now()}`;
     await fsp.rm(staging, { recursive: true, force: true });
-    await fsp.mkdir(staging, { recursive: true, mode: 0o750 });
-    await Promise.all(files.map((file) => fsp.writeFile(
-        path.join(staging, file.name),
-        file.body,
-        { mode: 0o640 }
-    )));
-    await fsp.writeFile(path.join(staging, 'manifest.json'), JSON.stringify({
-        ...manifest,
-        release_tag: release.tag_name,
-        imported_at: new Date().toISOString(),
-    }, null, 2) + '\n', { mode: 0o640 });
-    await fsp.rename(staging, destination);
-    return { tag: release.tag_name, manifest, path: destination };
+    try {
+        await fsp.mkdir(staging, { recursive: true, mode: 0o750 });
+        await Promise.all(files.map((file) => fsp.writeFile(
+            path.join(staging, file.name),
+            file.body,
+            { mode: 0o640 }
+        )));
+        // Keep the signature, the signed manifest bytes and the checksums next
+        // to the manifest: the idempotent path above re-verifies them instead
+        // of trusting the cache. manifest.json itself is an enriched copy.
+        await fsp.writeFile(
+            path.join(staging, 'manifest.signed'),
+            manifestFile.body,
+            { mode: 0o640 }
+        );
+        await fsp.writeFile(
+            path.join(staging, 'manifest.sig'),
+            signatureFile.body,
+            { mode: 0o640 }
+        );
+        await fsp.writeFile(
+            path.join(staging, 'SHA256SUMS'),
+            sumsFile.body,
+            { mode: 0o640 }
+        );
+        await fsp.writeFile(path.join(staging, 'manifest.json'), JSON.stringify({
+            ...manifest,
+            release_tag: releaseTag,
+            imported_at: new Date().toISOString(),
+        }, null, 2) + '\n', { mode: 0o640 });
+
+        if (force) {
+            // Explicit re-import: replace the existing tag atomically. The old
+            // directory is moved aside first so a partial state is impossible,
+            // and only the derived backup path is deleted afterwards.
+            const previous = `${destination}.old-${process.pid}-${Date.now()}`;
+            const existed = await fsp.stat(destination).then(() => true).catch(() => false);
+            if (existed) await fsp.rename(destination, previous);
+            try {
+                await fsp.rename(staging, destination);
+            } catch (error) {
+                if (existed) await fsp.rename(previous, destination).catch(() => {});
+                throw error;
+            }
+            if (existed) {
+                await fsp.rm(previous, { recursive: true, force: true }).catch(() => {});
+            }
+        } else {
+            // An untrusted cache (missing manifest, modified asset, bad
+            // signature) must be replaced, not merged into. rename(2) cannot
+            // overwrite a non-empty directory, which is the ENOTEMPTY failure
+            // from issue #515, so the stale tree is moved aside first.
+            const stale = await fsp.stat(destination).then(() => true).catch(() => false);
+            if (stale) {
+                const previous = `${destination}.old-${process.pid}-${Date.now()}`;
+                await fsp.rename(destination, previous);
+                try {
+                    await fsp.rename(staging, destination);
+                } catch (error) {
+                    await fsp.rename(previous, destination).catch(() => {});
+                    throw error;
+                }
+                await fsp.rm(previous, { recursive: true, force: true }).catch(() => {});
+            } else {
+                await fsp.rename(staging, destination);
+            }
+        }
+    } finally {
+        // Only ever the staging path - never `destination`.
+        await fsp.rm(staging, { recursive: true, force: true }).catch(() => {});
+    }
+    return { tag: releaseTag, manifest, path: destination, alreadyImported: false };
 }
 
 async function listCached() {

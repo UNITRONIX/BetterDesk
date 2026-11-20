@@ -233,15 +233,21 @@ router.get('/api/agent-releases/signing-status', requireAuth, requirePermission(
 
 router.post('/api/agent-releases/sync', requireAuth, requirePermission('enrollment.manage'), async (req, res) => {
     try {
-        const imported = await genericAgentReleases.importLatest();
+        // force=1 re-imports even when the tag is already present. Without it
+        // a repeated "Import latest release" returns the cached copy instead
+        // of downloading ~181 MB again (issue #515).
+        const force = req.body?.force === true || req.body?.force === '1';
+        const imported = await genericAgentReleases.importLatest({ force });
         try {
             await db.logAction(req.session.userId, 'generic_agent_release_imported',
-                `Imported generic Support Agent release ${imported.tag}`, req.ip);
+                `Imported generic Support Agent release ${imported.tag}` +
+                (imported.alreadyImported ? ' (already cached)' : ''), req.ip);
         } catch (_) {}
         res.status(201).json({
             success: true,
             tag: imported.tag,
             manifest: imported.manifest,
+            already_imported: imported.alreadyImported === true,
         });
     } catch (e) {
         res.status(502).json({ success: false, error: e.message });
