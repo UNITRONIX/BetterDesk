@@ -1,13 +1,30 @@
+<%
+/*
+ * Defensive locals: this template must render even when it is used from a
+ * path that has no i18n/branding locals (see issue #513). Never assume a
+ * local exists here - an unguarded reference would turn one error page into
+ * a second, unrenderable one.
+ */
+var viewLang = (typeof lang !== 'undefined' && lang) ? lang : 'en';
+var viewAppName = (typeof appName !== 'undefined' && appName) ? appName : 'BetterDesk';
+var viewCacheVersion = (typeof cacheVersion !== 'undefined') ? cacheVersion : '';
+var viewBrandingRevision = (typeof brandingRevision !== 'undefined')
+    ? brandingRevision
+    : viewCacheVersion;
+var viewT = (typeof _ === 'function')
+    ? _
+    : function (key, fallback) { return fallback || key; };
+%>
 <!DOCTYPE html>
-<html lang="<%= lang || 'en' %>">
+<html lang="<%= viewLang %>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>404 - Not Found | <%= appName %></title>
+    <title>404 - Not Found | <%= viewAppName %></title>
     <link rel="icon" type="image/svg+xml" href="/branding/favicon.svg">
-    <link rel="stylesheet" href="/css/main.css?v=<%= typeof cacheVersion !== 'undefined' ? cacheVersion : '' %>">
-    <link rel="stylesheet" href="/css/theme.css?v=<%= typeof cacheVersion !== 'undefined' ? cacheVersion : '' %>">
-    <link rel="stylesheet" href="/css/branding.css?v=<%= typeof brandingRevision !== 'undefined' ? brandingRevision : (typeof cacheVersion !== 'undefined' ? cacheVersion : '') %>">
+    <link rel="stylesheet" href="/css/main.css?v=<%= viewCacheVersion %>">
+    <link rel="stylesheet" href="/css/theme.css?v=<%= viewCacheVersion %>">
+    <link rel="stylesheet" href="/css/branding.css?v=<%= viewBrandingRevision %>">
     <style>
         .error-page {
             min-height: 100vh;
@@ -48,11 +65,11 @@
         <div class="error-container">
             <span class="material-icons error-icon">search_off</span>
             <div class="error-code">404</div>
-            <h1 class="error-title"><%= _('errors.not_found_title') %></h1>
-            <p class="error-message"><%= _('errors.not_found_message') %></p>
+            <h1 class="error-title"><%= viewT('errors.not_found_title', 'Not Found') %></h1>
+            <p class="error-message"><%= viewT('errors.not_found_message', 'The page you are looking for does not exist.') %></p>
             <a href="/" class="btn btn-primary">
                 <span class="material-icons">home</span>
-                <%= _('errors.go_home') %>
+                <%= viewT('errors.go_home', 'Go Home') %>
             </a>
         </div>
     </div>

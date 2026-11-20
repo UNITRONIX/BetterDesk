@@ -235,6 +235,12 @@ app.use('/wallpapers', express.static(path.join(__dirname, 'wallpapers'), {
 // Resolve role overrides before browser-facing routers. Static assets are
 // intentionally served first so authenticated pages do not add a Go lookup
 // for every CSS, image, and JavaScript request.
+//
+// i18n is mounted BEFORE the permission guards: `panelAccessGuard` renders
+// `errors/403` on a denial, and the error templates need `lang`, `appName`
+// and `_()`. It still runs after cookieParser() and the session middleware,
+// so language detection keeps working.
+app.use(initI18n());
 app.use(loadEffectivePermissions);
 app.use(loadEffectivePolicy);
 app.use(panelAccessGuard);
@@ -262,9 +268,6 @@ app.use(rustdeskApiRoutes);
 // (the initial registration endpoint is the only X-Device-Id compatibility
 // path), not browser CSRF cookies.
 app.use('/api/bd', bdApiRoutes);
-
-// i18n middleware
-app.use(initI18n());
 
 // Embed mode — when ?embed=1 is present, layout renders without sidebar/navbar
 // Used by Desktop Mode to load pages inside floating windows (iframes)

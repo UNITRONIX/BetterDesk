@@ -1,13 +1,33 @@
+<%
+/*
+ * Defensive locals: this template is the last-resort render, so it must never
+ * throw. It is reached when another page failed, and it is itself used by
+ * panelAccessGuard/503 paths that run before initI18n() (issue #513).
+ */
+var viewLang = (typeof lang !== 'undefined' && lang) ? lang : 'en';
+var viewAppName = (typeof appName !== 'undefined' && appName) ? appName : 'BetterDesk';
+var viewCacheVersion = (typeof cacheVersion !== 'undefined') ? cacheVersion : '';
+var viewBrandingRevision = (typeof brandingRevision !== 'undefined')
+    ? brandingRevision
+    : viewCacheVersion;
+var viewT = (typeof _ === 'function')
+    ? _
+    : function (key, fallback) { return fallback || key; };
+var viewErrorText = '';
+if (typeof error !== 'undefined' && error) {
+    viewErrorText = String(error.message || error);
+}
+%>
 <!DOCTYPE html>
-<html lang="<%= lang || 'en' %>">
+<html lang="<%= viewLang %>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>500 - Server Error | <%= appName %></title>
+    <title>500 - Server Error | <%= viewAppName %></title>
     <link rel="icon" type="image/svg+xml" href="/branding/favicon.svg">
-    <link rel="stylesheet" href="/css/main.css?v=<%= typeof cacheVersion !== 'undefined' ? cacheVersion : '' %>">
-    <link rel="stylesheet" href="/css/theme.css?v=<%= typeof cacheVersion !== 'undefined' ? cacheVersion : '' %>">
-    <link rel="stylesheet" href="/css/branding.css?v=<%= typeof brandingRevision !== 'undefined' ? brandingRevision : (typeof cacheVersion !== 'undefined' ? cacheVersion : '') %>">
+    <link rel="stylesheet" href="/css/main.css?v=<%= viewCacheVersion %>">
+    <link rel="stylesheet" href="/css/theme.css?v=<%= viewCacheVersion %>">
+    <link rel="stylesheet" href="/css/branding.css?v=<%= viewBrandingRevision %>">
     <style>
         .error-page {
             min-height: 100vh;
@@ -60,23 +80,23 @@
         <div class="error-container">
             <span class="material-icons error-icon">error</span>
             <div class="error-code">500</div>
-            <h1 class="error-title"><%= _('errors.server_error_title') %></h1>
-            <p class="error-message"><%= _('errors.server_error_message') %></p>
-            
-            <% if (typeof error !== 'undefined' && error && process.env.NODE_ENV === 'development') { %>
+            <h1 class="error-title"><%= viewT('errors.server_error_title', 'Server Error') %></h1>
+            <p class="error-message"><%= viewT('errors.server_error_message', 'Something went wrong. Please try again.') %></p>
+
+            <% if (viewErrorText && typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') { %>
             <div class="error-details">
-                <pre><%= error.message || error %></pre>
+                <pre><%= viewErrorText %></pre>
             </div>
             <% } %>
-            
+
             <div class="flex gap-sm justify-center">
                 <button id="btn-retry" class="btn btn-secondary">
                     <span class="material-icons">refresh</span>
-                    <%= _('errors.try_again') %>
+                    <%= viewT('errors.try_again', 'Try Again') %>
                 </button>
                 <a href="/" class="btn btn-primary">
                     <span class="material-icons">home</span>
-                    <%= _('errors.go_home') %>
+                    <%= viewT('errors.go_home', 'Go Home') %>
                 </a>
             </div>
         </div>

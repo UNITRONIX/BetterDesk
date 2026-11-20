@@ -1,13 +1,36 @@
+<%
+/*
+ * Defensive locals.
+ *
+ * This template is rendered from middleware that runs BEFORE initI18n() -
+ * panelAccessGuard renders errors/403 on a denial. In that path lang, appName
+ * and _() do not exist yet, and an unguarded reference throws, which turns a
+ * 403 into a bare 500 (issue #513). Never assume a local is present here.
+ */
+var viewLang = (typeof lang !== 'undefined' && lang) ? lang : 'en';
+var viewAppName = (typeof appName !== 'undefined' && appName) ? appName : 'BetterDesk';
+var viewCacheVersion = (typeof cacheVersion !== 'undefined') ? cacheVersion : '';
+var viewBrandingRevision = (typeof brandingRevision !== 'undefined')
+    ? brandingRevision
+    : viewCacheVersion;
+var viewT = (typeof _ === 'function')
+    ? _
+    : function (key, fallback) { return fallback || key; };
+var viewTitle = (typeof title !== 'undefined' && title) ? title : 'Forbidden';
+var viewMessage = (typeof message !== 'undefined' && message)
+    ? message
+    : 'You do not have permission to access this page.';
+%>
 <!DOCTYPE html>
-<html lang="<%= lang || 'en' %>">
+<html lang="<%= viewLang %>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>403 - Forbidden | <%= appName %></title>
+    <title>403 - Forbidden | <%= viewAppName %></title>
     <link rel="icon" type="image/svg+xml" href="/branding/favicon.svg">
-    <link rel="stylesheet" href="/css/main.css?v=<%= typeof cacheVersion !== 'undefined' ? cacheVersion : '' %>">
-    <link rel="stylesheet" href="/css/theme.css?v=<%= typeof cacheVersion !== 'undefined' ? cacheVersion : '' %>">
-    <link rel="stylesheet" href="/css/branding.css?v=<%= typeof brandingRevision !== 'undefined' ? brandingRevision : (typeof cacheVersion !== 'undefined' ? cacheVersion : '') %>">
+    <link rel="stylesheet" href="/css/main.css?v=<%= viewCacheVersion %>">
+    <link rel="stylesheet" href="/css/theme.css?v=<%= viewCacheVersion %>">
+    <link rel="stylesheet" href="/css/branding.css?v=<%= viewBrandingRevision %>">
     <style>
         .error-page {
             min-height: 100vh;
@@ -48,11 +71,11 @@
         <div class="error-container">
             <span class="material-icons error-icon">lock</span>
             <div class="error-code">403</div>
-            <h1 class="error-title"><%= _('errors.forbidden_title') %></h1>
-            <p class="error-message"><%= _('errors.forbidden_message') %></p>
+            <h1 class="error-title"><%= viewT('errors.forbidden_title', viewTitle) %></h1>
+            <p class="error-message"><%= viewT('errors.forbidden_message', viewMessage) %></p>
             <a href="/" class="btn btn-primary">
                 <span class="material-icons">home</span>
-                <%= _('errors.go_home') %>
+                <%= viewT('errors.go_home', 'Go Home') %>
             </a>
         </div>
     </div>
