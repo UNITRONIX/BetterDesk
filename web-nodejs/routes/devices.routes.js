@@ -46,24 +46,40 @@ function mapChangeIdError(req, error) {
     return error;
 }
 
+/**
+ * Read the operator's legacy address-book aliases from the Go server.
+ *
+ * Issue #510 follow-up: on a split install (SQLITE_AUTH_DB_MODE=legacy) an
+ * older console read its own auth.db copy, which the RustDesk client never
+ * writes to, so the "Address book name" column was silently empty. The alias
+ * now comes from Go, but if that read fails the column would look empty for
+ * the same confusing reason. The second return value tells the caller whether
+ * the data could be read at all so the UI can explain the empty column.
+ */
 async function getLegacyAddressBookAliasMap(req) {
     const aliases = new Map();
     try {
         const result = await betterdeskApi.getPanelLegacyAddressBook(req);
         if (!result.success) {
             console.warn('[API:DEVICES] Failed to read Go legacy address book:', result.error);
-            return aliases;
+            return { aliases, available: false };
         }
-        return addressBookSync.buildLegacyAliasMap(result.data?.data);
+        return {
+            aliases: addressBookSync.buildLegacyAliasMap(result.data?.data),
+            available: true,
+        };
     } catch (err) {
         console.warn('[API:DEVICES] Failed to read Go legacy address book aliases:', err.message);
-        return aliases;
+        return { aliases, available: false };
     }
 }
 
 async function enrichDeviceWithAddressBookAlias(req, device, aliases) {
     if (!device || typeof device !== 'object') return device;
-    const aliasMap = aliases || await getLegacyAddressBookAliasMap(req);
+    const resolved = aliases || await getLegacyAddressBookAliasMap(req);
+    // Accept both the { aliases, available } envelope and a bare Map so older
+    // call sites keep working.
+    const aliasMap = resolved instanceof Map ? resolved : resolved.aliases;
     device.address_book_alias = aliasMap.get(String(device.id || '').trim()) || '';
     return device;
 }
@@ -88,9 +104,9 @@ router.get('/api/devices', requireAuth, requirePermission('device.view'), async 
         let devices = await serverBackend.getAllDevices(filters);
         const scope = await deviceGroupService.getDeviceScopeForUser(db, req.session.user, devices);
         devices = deviceGroupService.filterDevicesByScope(devices, scope);
-        const aliases = await getLegacyAddressBookAliasMap(req);
+        const aliasSource = await getLegacyAddressBookAliasMap(req);
         for (const device of devices) {
-            await enrichDeviceWithAddressBookAlias(req, device, aliases);
+            await enrichDeviceWithAddressBookAlias(req, device, aliasSource);
             try {
                 device.groups = await db.getDeviceGroupsForPeer(device.id);
             } catch (_) {
@@ -102,7 +118,11 @@ router.get('/api/devices', requireAuth, requirePermission('device.view'), async 
             success: true,
             data: {
                 devices,
-                total: devices.length
+                total: devices.length,
+                // Issue #510: tell the UI when the alias source could not be
+                // read, so an empty "Address book name" column is explained
+                // instead of looking like a bug.
+                address_book_alias_available: aliasSource.available !== false
             }
         });
     } catch (err) {
