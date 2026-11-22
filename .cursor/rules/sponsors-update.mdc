@@ -15,7 +15,9 @@ When the operator reports a new BetterDesk supporter (Buy Me a Coffee, GitHub Sp
  - GitHub Sponsors **Bronze+** — follow tier perks in `SPONSORS.md` (logo/README as required).
 4. Use the supporter’s preferred public name; link GitHub when known. Mention relevant issues only if they contributed a useful report.
 5. Bump `*Last updated:*` at the bottom of `SPONSORS.md`.
-6. **Commit and push to `main`** (or the branch the operator names) so the list is public promptly — sponsors are not “dev-only” docs.
+6. Land on **`dev` first** (Help panel + docs). To make the list public on the default branch, open a PR into **`main`** that **skips the stable minor bump** — see [main-skip-release.mdc](main-skip-release.mdc):
+   - PR title **`docs(sponsors): …`** (or `docs: …` / `[skip-release]`), and/or label **`docs`** / **`skip-release`**
+   - Never use a generic `fix`/`feat`/`chore` title for a sponsors-only merge to `main` (that triggers **+0.1.0** and a new GitHub Release).
 7. Do **not** imply Commercial Grant for Buy Me a Coffee or $5/$15 GitHub tiers (see [`docs/COMMERCIAL-GRANT.md`](docs/COMMERCIAL-GRANT.md)).
 
 ## Checklist
@@ -23,4 +25,5 @@ When the operator reports a new BetterDesk supporter (Buy Me a Coffee, GitHub Sp
 - [ ] Entry added under the right heading in `SPONSORS.md`
 - [ ] Matching entry/links updated in `web-nodejs/config/supporters.json`
 - [ ] `Last updated` date refreshed
-- [ ] Committed and pushed to the public default/`main` path the operator requested
+- [ ] On `dev` (panel Help)
+- [ ] On `main` only via `docs(sponsors):` / `[skip-release]` (no accidental minor release)

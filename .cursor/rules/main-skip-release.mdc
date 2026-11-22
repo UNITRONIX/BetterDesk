@@ -1,0 +1,50 @@
+---
+description: How to land changes on main without a stable minor release (stay on current 3.5.x line)
+alwaysApply: true
+---
+
+# Main — non-release landings (no minor bump)
+
+Source of truth: [docs/important/branching-and-versioning.md](../../docs/important/branching-and-versioning.md).
+CI guard: [`.github/workflows/version-bump-main.yml`](../../.github/workflows/version-bump-main.yml).
+
+## What each merge to `main` does
+
+| Intent | How to mark the PR | Version effect |
+|--------|--------------------|----------------|
+| **Stable release** (`dev` → `main`) | Normal release PR / checklist | **+0.1.0** (e.g. 3.5.262 → **3.6.0**) + tag + GitHub Release |
+| **Stable hotfix** (operator explicitly asked) | Title or label contains **`hotfix`** | **+0.0.1** (stay on same minor, e.g. 3.5.262 → **3.5.263**) + tag + Release |
+| **No release** (docs, sponsors list, meta) | See markers below | **No bump**, no tag, no Release |
+
+Never treat a sponsors/docs-only merge as a stable release. That is what minted the accidental **v3.6.0**.
+
+## Markers that skip the version bump entirely
+
+Use **at least one** of these on the PR into `main`:
+
+1. Title starts with `docs(` or `docs:`  
+   - Example: `docs(sponsors): add betterde.sk as Bronze Sponsor`
+2. Title contains `[skip-release]`  
+   - Example: `chore(meta): tweak FUNDING.yml [skip-release]`
+3. Label **`skip-release`** or **`docs`**
+
+If none of these apply, CI assumes a real release and will **minor-bump**.
+
+## When to use no-bump vs hotfix vs full release
+
+- **No bump:** SPONSORS.md / Help supporters, README sponsor links, pure docs, funding meta — public on `main` without shipping a new stable product version.
+- **Hotfix (+0.0.1):** Operator said “patch production / hotfix on main” and the change must ship to stable channel **without** jumping minor (stay on 3.5.x).
+- **Full release (+0.1.0):** Curated `dev` → `main` only, after [PRE_RELEASE_CHECKLIST.md](../../docs/PRE_RELEASE_CHECKLIST.md).
+
+## Agent checklist before merging to `main`
+
+- [ ] Operator explicitly asked for `main` / stable / release / hotfix / “public sponsors on main”
+- [ ] If **not** a release or hotfix: PR title is `docs(…)` / `docs:` **or** includes `[skip-release]` **or** has label `docs` / `skip-release`
+- [ ] Prefer landing the same change on **`dev` first** (panel/Help), then a narrow docs/skip-release PR to `main` when the list must be public on the default branch
+- [ ] After merge: confirm **no** new `vX.Y.0` tag appeared unless a real release was intended; Latest Release should still be the previous stable
+
+## Do not
+
+- Merge routine fixes to `main` “just to publish” — use `dev`
+- Rely on admin bypass instead of the markers above
+- Use a feature/fix title for sponsors-only PRs (that triggers **+0.1.0**)

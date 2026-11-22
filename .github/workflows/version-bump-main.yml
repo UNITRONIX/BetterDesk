@@ -5,6 +5,10 @@
 # the bump commit, and open a PR to land VERSION files on protected main.
 # Direct push to main is not used (branch protection: require pull request).
 #
+# Skip (no bump): docs(/docs:/[skip-release] title, or docs/skip-release labels.
+# Hotfix (+0.0.1): title/label contains "hotfix". Otherwise +0.1.0.
+# Agent rules: .cursor/rules/main-skip-release.mdc
+#
 # Repo setting required for the bump PR step:
 #   Settings -> Actions -> General -> Workflow permissions
 #   -> "Allow GitHub Actions to create and approve pull requests"
