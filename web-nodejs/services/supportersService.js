@@ -10,6 +10,7 @@ const CONFIG_PATH = path.join(__dirname, '..', 'config', 'supporters.json');
 
 const EMPTY = Object.freeze({
     honorary: [],
+    bronze: [],
     individuals: [],
     links: {
         repo: 'https://github.com/UNITRONIX/BetterDesk',
@@ -29,12 +30,13 @@ function loadSupporters() {
         const data = JSON.parse(raw);
         _cache = {
             honorary: Array.isArray(data.honorary) ? data.honorary : [],
+            bronze: Array.isArray(data.bronze) ? data.bronze : [],
             individuals: Array.isArray(data.individuals) ? data.individuals : [],
             links: { ...EMPTY.links, ...(data.links && typeof data.links === 'object' ? data.links : {}) }
         };
     } catch (err) {
         console.warn('[supportersService] Failed to load supporters.json:', err.message);
-        _cache = { ...EMPTY, honorary: [], individuals: [], links: { ...EMPTY.links } };
+        _cache = { ...EMPTY, honorary: [], bronze: [], individuals: [], links: { ...EMPTY.links } };
     }
     return _cache;
 }

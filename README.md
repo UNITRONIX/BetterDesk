@@ -29,6 +29,10 @@
 
 [INSOLVE](https://insolve.pl) — see [SPONSORS.md](SPONSORS.md) for everyone who backs the project.
 
+### Bronze Sponsor
+
+[betterde.sk](https://betterde.sk) ([@trybetterdesk](https://github.com/trybetterdesk))
+
 </div>
 
 ---
