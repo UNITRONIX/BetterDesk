@@ -1,11 +1,13 @@
 /**
  * BetterDesk RdClient — operator login (/remote/login)
+ * UX 3.6 (beta) shell
  */
 
 (function () {
     'use strict';
 
-    var DEFAULT_GRADIENT = 'linear-gradient(135deg, #0d1117 0%, #161b22 40%, #1a1a2e 70%, #0f3460 100%)';
+    var DEFAULT_GRADIENT =
+        'linear-gradient(145deg, var(--bg) 0%, var(--bg-subtle) 55%, color-mix(in srgb, var(--accent) 18%, var(--bg)) 100%)';
 
     function t(key, fallback) {
         if (typeof _ === 'function') {
@@ -37,7 +39,11 @@
     function preloadWallpaper() {
         var el = document.getElementById('rdclient-wallpaper');
         if (!el) return;
-        el.style.background = DEFAULT_GRADIENT;
+        /* Branding.css may paint body.rdclient-login-page::before; keep a
+           token-based fallback when no operator wallpaper is configured. */
+        if (!el.style.background && !el.style.backgroundImage) {
+            el.style.background = DEFAULT_GRADIENT;
+        }
     }
 
     async function prefillCredentials() {
@@ -67,6 +73,58 @@
             document.getElementById('rdclient-error-text'),
             t('rdclient_login.session_expired', 'Session expired. Please sign in again.')
         );
+    }
+
+    function setLangMenuOpen(open) {
+        var btn = document.getElementById('rdclient-lang-btn');
+        var dropdown = document.getElementById('rdclient-lang-dropdown');
+        if (!btn || !dropdown) return;
+        dropdown.classList.toggle('open', open);
+        if (open) {
+            dropdown.removeAttribute('hidden');
+        } else {
+            dropdown.setAttribute('hidden', '');
+        }
+        btn.setAttribute('aria-expanded', String(open));
+    }
+
+    function bindLanguageMenu() {
+        var btn = document.getElementById('rdclient-lang-btn');
+        var dropdown = document.getElementById('rdclient-lang-dropdown');
+        var selector = document.querySelector('.rdclient-login-lang');
+        if (!btn || !dropdown || !selector) return;
+
+        btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            var willOpen = !dropdown.classList.contains('open');
+            setLangMenuOpen(willOpen);
+        });
+
+        dropdown.querySelectorAll('.lang-option').forEach(function (option) {
+            option.addEventListener('click', function (e) {
+                e.stopPropagation();
+                var code = option.getAttribute('data-lang');
+                if (code && typeof window.changeLanguage === 'function') {
+                    window.changeLanguage(code);
+                }
+            });
+            option.addEventListener('keydown', function (e) {
+                if (e.key !== 'Enter' && e.key !== ' ') return;
+                e.preventDefault();
+                var code = option.getAttribute('data-lang');
+                if (code && typeof window.changeLanguage === 'function') {
+                    window.changeLanguage(code);
+                }
+            });
+        });
+
+        document.addEventListener('click', function (e) {
+            if (!selector.contains(e.target)) setLangMenuOpen(false);
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') setLangMenuOpen(false);
+        });
     }
 
     function bindLoginForm() {
@@ -150,7 +208,7 @@
         var totpForm = document.getElementById('rdclient-totp-form');
         if (totpForm) {
             totpForm.classList.remove('hidden');
-            var first = totpForm.querySelector('.dl-totp-digit[data-idx="0"]');
+            var first = totpForm.querySelector('.rdclient-totp-digit[data-idx="0"]');
             if (first) setTimeout(function () { first.focus(); }, 100);
         }
     }
@@ -158,12 +216,12 @@
     function hideTotpForm() {
         document.getElementById('rdclient-login-form').classList.remove('hidden');
         document.getElementById('rdclient-totp-form').classList.add('hidden');
-        document.querySelectorAll('#rdclient-totp-form .dl-totp-digit').forEach(function (d) { d.value = ''; });
+        document.querySelectorAll('#rdclient-totp-form .rdclient-totp-digit').forEach(function (d) { d.value = ''; });
     }
 
     function getTotpCode() {
         var code = '';
-        document.querySelectorAll('#rdclient-totp-form .dl-totp-digit').forEach(function (d) { code += d.value; });
+        document.querySelectorAll('#rdclient-totp-form .rdclient-totp-digit').forEach(function (d) { code += d.value; });
         return code;
     }
 
@@ -177,7 +235,7 @@
 
         if (!form) return;
 
-        var digits = form.querySelectorAll('.dl-totp-digit');
+        var digits = form.querySelectorAll('.rdclient-totp-digit');
         digits.forEach(function (digit, idx) {
             digit.addEventListener('input', function () {
                 var val = digit.value.replace(/\D/g, '');
@@ -226,7 +284,7 @@
                     return;
                 }
                 showError(errorEl, errorText, data.error || t('rdclient_login.invalid_code', 'Invalid code'));
-                document.querySelectorAll('#rdclient-totp-form .dl-totp-digit').forEach(function (d) { d.value = ''; });
+                document.querySelectorAll('#rdclient-totp-form .rdclient-totp-digit').forEach(function (d) { d.value = ''; });
                 if (digits[0]) digits[0].focus();
             })
             .catch(function () {
@@ -249,6 +307,7 @@
         preloadWallpaper();
         prefillCredentials();
         checkSessionExpired();
+        bindLanguageMenu();
         bindLoginForm();
         bindTotpForm();
     }

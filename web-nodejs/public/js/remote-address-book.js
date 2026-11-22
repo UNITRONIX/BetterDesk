@@ -78,15 +78,34 @@
         }
     }
 
+    function devicePlatformLabel(d) {
+        return d.platform || d.os || d.os_full || (d.system_info && (d.system_info.platform || d.system_info.os_full)) || '';
+    }
+
     function platformIcon(platform) {
+        if (global.Utils && typeof global.Utils.getPlatformIcon === 'function') {
+            return global.Utils.getPlatformIcon(platform);
+        }
         if (!platform) return 'devices';
         var p = platform.toLowerCase();
-        if (p.indexOf('windows') !== -1) return 'desktop_windows';
-        if (p.indexOf('mac') !== -1 || p.indexOf('darwin') !== -1) return 'desktop_mac';
-        if (p.indexOf('linux') !== -1 || p.indexOf('fedora') !== -1 || p.indexOf('ubuntu') !== -1) return 'computer';
-        if (p.indexOf('android') !== -1) return 'phone_android';
+        if (p.indexOf('windows') !== -1) return 'laptop_windows';
+        if (p.indexOf('mac') !== -1 || p.indexOf('darwin') !== -1) return 'laptop_mac';
+        if (p.indexOf('linux') !== -1 || p.indexOf('fedora') !== -1 || p.indexOf('ubuntu') !== -1) return 'terminal';
+        if (p.indexOf('android') !== -1) return 'android';
         if (p.indexOf('ios') !== -1) return 'phone_iphone';
         return 'devices';
+    }
+
+    function platformIconHtml(platform, size) {
+        if (global.Utils && typeof global.Utils.getPlatformIconHtml === 'function') {
+            return global.Utils.getPlatformIconHtml(platform, {
+                size: size || 40,
+                className: c('-card-os'),
+                title: platform || ''
+            });
+        }
+        return '<span class="material-icons ' + c('-card-os') + '" aria-hidden="true">' +
+            platformIcon(platform) + '</span>';
     }
 
     function deviceStatusInfo(d) {
@@ -196,9 +215,15 @@
             titleEl.textContent = t('remote_dashboard.nav_address_book', 'Address book');
         }
 
+        function isExcludedFromAddressBook(d) {
+            /* RdClient is for connecting — banned / soft-deleted peers stay in Console only. */
+            return !!(d && (d.banned || d.soft_deleted));
+        }
+
         function applyFilters() {
             var q = searchQuery.trim().toLowerCase();
             filtered = devices.filter(function (d) {
+                if (isExcludedFromAddressBook(d)) return false;
                 if (currentFolder === 'unassigned' && d.folder_id) return false;
                 if (currentFolder !== 'all' && currentFolder !== 'unassigned') {
                     if (!folderIdsEqual(d.folder_id, currentFolder)) return false;
@@ -212,7 +237,7 @@
                     if (tags.indexOf(selectedTag.toLowerCase()) === -1) return false;
                 }
                 if (currentFilter === 'online' && !d.online) return false;
-                if (currentFilter === 'offline' && (d.online || d.banned)) return false;
+                if (currentFilter === 'offline' && d.online) return false;
                 if (q) {
                     var hay = [d.id, d.hostname, d.note, d.platform, d.os, d.display_name].filter(Boolean).join(' ').toLowerCase();
                     if (hay.indexOf(q) === -1) return false;
@@ -345,7 +370,7 @@
             grid.innerHTML = filtered.map(function (d) {
                 var st = deviceStatusInfo(d);
                 var name = displayName(d);
-                var platform = d.platform || d.os || '';
+                var platform = devicePlatformLabel(d);
                 var canConnect = !d.banned && !isConnected(d.id);
                 var isOffline = !d.online;
                 var tags = normalizeTags(d.tags);
@@ -358,7 +383,7 @@
                     (connected ? ' ' + c('-card-connected') : '') +
                     '" style="--rd-card-bg:' + bg + '" data-id="' + esc(d.id) + '">' +
                     '<div class="' + c('-card-top') + '">' +
-                    '<span class="material-icons ' + c('-card-os') + '">' + platformIcon(platform) + '</span>' +
+                    platformIconHtml(platform, 40) +
                     '</div>' +
                     '<div class="' + c('-card-body') + '">' +
                     '<div class="' + c('-card-name') + '" title="' + esc(name) + '">' + esc(name) + '</div>' +
@@ -382,7 +407,7 @@
             tbody.innerHTML = filtered.map(function (d) {
                 var st = deviceStatusInfo(d);
                 var hostname = displayName(d);
-                var platform = d.platform || d.os || '—';
+                var platform = devicePlatformLabel(d) || '—';
                 var last = d.online
                     ? t('status.online', 'Online')
                     : (global.Utils && global.Utils.formatRelativeTime
@@ -391,6 +416,9 @@
                 var canConnect = !d.banned && !isConnected(d.id);
                 var isOffline = !d.online;
                 var connected = isConnected(d.id);
+                var rowOsIcon = (global.Utils && typeof global.Utils.getPlatformIconHtml === 'function')
+                    ? global.Utils.getPlatformIconHtml(platform === '—' ? '' : platform, { size: 18, title: platform })
+                    : '<span class="material-icons" aria-hidden="true">' + platformIcon(platform === '—' ? '' : platform) + '</span>';
 
                 return '<tr data-id="' + esc(d.id) + '"' + (isOffline ? ' class="' + c('-row-offline') + '"' : '') + '>' +
                     '<td><span class="' + c('-status') + '">' +
@@ -398,7 +426,7 @@
                     esc(st.label) + '</span></td>' +
                     '<td><span class="' + c('-device-id') + '">' + esc(d.id) + '</span></td>' +
                     '<td><div class="' + c('-host-cell') + '">' +
-                    '<span class="material-icons">' + deviceTypeIcon(d.device_type) + '</span>' +
+                    rowOsIcon +
                     '<span class="' + c('-hostname') + '" title="' + esc(hostname) + '">' + esc(hostname) + '</span>' +
                     '</div></td>' +
                     '<td class="' + c('-platform') + '">' + esc(platform) + '</td>' +
@@ -484,7 +512,9 @@
                     global.Utils.api('/api/tags').catch(function () { return { tags: [] }; })
                 ]);
 
-                devices = results[0].devices || [];
+                devices = (results[0].devices || []).filter(function (d) {
+                    return !isExcludedFromAddressBook(d);
+                });
                 folders = results[1].folders || [];
                 deviceGroups = results[2].groups || [];
                 availableTags = results[3].tags || [];
@@ -521,8 +551,12 @@
 
             root.querySelectorAll('.' + c('-filter')).forEach(function (btn) {
                 btn.addEventListener('click', function () {
-                    root.querySelectorAll('.' + c('-filter')).forEach(function (b) { b.classList.remove('active'); });
+                    root.querySelectorAll('.' + c('-filter')).forEach(function (b) {
+                        b.classList.remove('active');
+                        b.setAttribute('aria-pressed', 'false');
+                    });
                     btn.classList.add('active');
+                    btn.setAttribute('aria-pressed', 'true');
                     currentFilter = btn.getAttribute('data-filter') || 'all';
                     renderDevices();
                 });
@@ -560,12 +594,16 @@
                     viewMode = 'grid';
                     gridBtn.classList.add('active');
                     listBtn.classList.remove('active');
+                    gridBtn.setAttribute('aria-pressed', 'true');
+                    listBtn.setAttribute('aria-pressed', 'false');
                     renderDevices();
                 });
                 listBtn.addEventListener('click', function () {
                     viewMode = 'list';
                     listBtn.classList.add('active');
                     gridBtn.classList.remove('active');
+                    listBtn.setAttribute('aria-pressed', 'true');
+                    gridBtn.setAttribute('aria-pressed', 'false');
                     renderDevices();
                 });
             }

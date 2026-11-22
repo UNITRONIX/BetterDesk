@@ -229,13 +229,14 @@ function handleAgentConnection(ws, deviceId) {
  * @returns {Promise<{allowed: boolean, statusCode?: number, statusText?: string, reason?: string}>}
  */
 async function authorizeViewerDevice(user, deviceId) {
-    const device = await db.getPeerById(deviceId);
-    if (!device) {
-        return { allowed: false, statusCode: 404, statusText: 'Not Found', reason: 'unknown-device' };
-    }
-    const visible = await deviceGroupService.userCanAccessDevice(db, user, device);
-    if (!visible) {
-        return { allowed: false, statusCode: 404, statusText: 'Not Found', reason: 'out-of-scope' };
+    const result = await deviceGroupService.authorizeUserDeviceAccess(db, user, deviceId);
+    if (!result.allowed) {
+        return {
+            allowed: false,
+            statusCode: result.statusCode || 404,
+            statusText: 'Not Found',
+            reason: result.reason || 'out-of-scope'
+        };
     }
     return { allowed: true };
 }

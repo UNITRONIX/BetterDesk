@@ -19,7 +19,7 @@ jest.mock('../services/database', () => ({
 }));
 
 jest.mock('../services/deviceGroupService', () => ({
-    userCanAccessDevice: jest.fn(),
+    authorizeUserDeviceAccess: jest.fn(),
 }));
 
 const db = require('../services/database');
@@ -27,7 +27,6 @@ const deviceGroupService = require('../services/deviceGroupService');
 const remoteRelay = require('../services/remoteRelay');
 
 describe('remoteRelay.authorizeViewerDevice (GHSA-22mg-g52q-x75c)', () => {
-    const device = { id: 'DEVICE_B', hostname: 'lab-pc' };
     const operator = { id: 7, username: 'olga', role: 'operator' };
 
     beforeEach(() => {
@@ -35,43 +34,54 @@ describe('remoteRelay.authorizeViewerDevice (GHSA-22mg-g52q-x75c)', () => {
     });
 
     test('allows a device the user can access', async () => {
-        db.getPeerById.mockResolvedValue(device);
-        deviceGroupService.userCanAccessDevice.mockResolvedValue(true);
+        deviceGroupService.authorizeUserDeviceAccess.mockResolvedValue({ allowed: true });
 
         const result = await remoteRelay.authorizeViewerDevice(operator, 'DEVICE_B');
 
         expect(result.allowed).toBe(true);
-        expect(db.getPeerById).toHaveBeenCalledWith('DEVICE_B');
-        expect(deviceGroupService.userCanAccessDevice).toHaveBeenCalledWith(db, operator, device);
+        expect(deviceGroupService.authorizeUserDeviceAccess).toHaveBeenCalledWith(db, operator, 'DEVICE_B');
     });
 
     test('rejects a device outside the user scope', async () => {
-        db.getPeerById.mockResolvedValue(device);
-        deviceGroupService.userCanAccessDevice.mockResolvedValue(false);
+        deviceGroupService.authorizeUserDeviceAccess.mockResolvedValue({
+            allowed: false,
+            statusCode: 404,
+            reason: 'out-of-scope'
+        });
 
         const result = await remoteRelay.authorizeViewerDevice(operator, 'DEVICE_B');
 
         expect(result.allowed).toBe(false);
         expect(result.statusCode).toBe(404);
+        expect(result.statusText).toBe('Not Found');
     });
 
     test('rejects an unknown device', async () => {
-        db.getPeerById.mockResolvedValue(null);
+        deviceGroupService.authorizeUserDeviceAccess.mockResolvedValue({
+            allowed: false,
+            statusCode: 404,
+            reason: 'unknown-device'
+        });
 
         const result = await remoteRelay.authorizeViewerDevice(operator, 'NOPE');
 
         expect(result.allowed).toBe(false);
         expect(result.statusCode).toBe(404);
-        // Scope must not be consulted for a device we cannot find.
-        expect(deviceGroupService.userCanAccessDevice).not.toHaveBeenCalled();
     });
 
     test('out-of-scope and missing devices are indistinguishable', async () => {
-        db.getPeerById.mockResolvedValue(device);
-        deviceGroupService.userCanAccessDevice.mockResolvedValue(false);
+        deviceGroupService.authorizeUserDeviceAccess.mockResolvedValue({
+            allowed: false,
+            statusCode: 404,
+            reason: 'out-of-scope'
+        });
         const outOfScope = await remoteRelay.authorizeViewerDevice(operator, 'DEVICE_B');
 
-        db.getPeerById.mockResolvedValue(null);
+        deviceGroupService.authorizeUserDeviceAccess.mockResolvedValue({
+            allowed: false,
+            statusCode: 404,
+            reason: 'unknown-device'
+        });
         const missing = await remoteRelay.authorizeViewerDevice(operator, 'DEVICE_B');
 
         expect(outOfScope.statusCode).toBe(missing.statusCode);

@@ -73,7 +73,8 @@ async function enrichFolderAccess(folder) {
  */
 router.get('/api/folders', requireAuth, requirePermission('device.view'), async (req, res) => {
     try {
-        const folders = await db.getAllFolders();
+        let folders = await db.getAllFolders();
+        const accessUser = await deviceGroupService.getUserAccessContext(db, req.session.user);
 
         // Enrich each folder with device_count from assignments table
         try {
@@ -90,6 +91,34 @@ router.get('/api/folders', requireAuth, requirePermission('device.view'), async 
             }
         } catch (err) {
             console.error('Failed to compute folder device counts:', err.message);
+        }
+
+        // Hide folders the operator is not allowed to see (ACL on folder_* device groups).
+        folders = (folders || []).filter((folder) => deviceGroupService.groupAllowedForUser({
+            allowed_users: folder.allowed_users,
+            allowed_groups: folder.allowed_groups
+        }, accessUser));
+
+        // Counts must not reveal devices outside the caller's scope.
+        try {
+            const devices = await serverBackend.getAllDevices({});
+            const scope = await deviceGroupService.getDeviceScopeForUser(db, req.session.user, devices);
+            const visibleIds = new Set(
+                deviceGroupService.filterDevicesByScope(devices, scope).map((d) => String(d.id))
+            );
+            const assignments = await db.getAllFolderAssignments();
+            const visibleCountByFolder = {};
+            for (const [deviceId, folderIdRaw] of Object.entries(assignments || {})) {
+                if (!visibleIds.has(String(deviceId))) continue;
+                const folderId = Number(folderIdRaw);
+                if (!Number.isFinite(folderId)) continue;
+                visibleCountByFolder[folderId] = (visibleCountByFolder[folderId] || 0) + 1;
+            }
+            for (const folder of folders) {
+                folder.device_count = visibleCountByFolder[Number(folder.id)] || 0;
+            }
+        } catch (err) {
+            console.error('Failed to scope folder device counts:', err.message);
         }
 
         res.json({

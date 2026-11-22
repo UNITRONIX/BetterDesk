@@ -17,6 +17,7 @@ const { rdClientPageLimiter } = require('../middleware/rateLimiter');
 const betterdeskApi = require('../services/betterdeskApi');
 const keyService = require('../services/keyService');
 const serverConnectionConfig = require('../services/serverConnectionConfigService');
+const deviceGroupService = require('../services/deviceGroupService');
 const {
     getGuestToken,
     getGuestTokenFromQuery,
@@ -25,6 +26,30 @@ const {
     attachGuestGrant,
     peerAllowedByGrant,
 } = require('../middleware/guestAccess');
+
+/**
+ * Panel operators must pass device-scope before opening a viewer.
+ * Guest / mesh-share grants already validated their allowlist.
+ */
+async function assertPanelRemoteDeviceScope(req, deviceId) {
+    if (req.guestGrant || req.meshShareGrant) return { allowed: true };
+    if (!req.session || !req.session.user) {
+        return { allowed: false, statusCode: 401 };
+    }
+    const isRemoteTarget = String(deviceId || '').startsWith('rt_');
+    return deviceGroupService.authorizeUserDeviceAccess(db, req.session.user, deviceId, {
+        resolveDevice: async (id) => {
+            if (isRemoteTarget) {
+                try {
+                    return await betterdeskApi.getRemoteTarget(id);
+                } catch (_) {
+                    return null;
+                }
+            }
+            return db.getDevice(id);
+        }
+    });
+}
 
 const DEFAULT_CONNECTION_SNAPSHOT = {
     p2p_first: true,
@@ -236,14 +261,28 @@ router.get('/remote/:deviceId', rdClientPageLimiter, requireRemoteAccess, async 
         return res.redirect('/devices');
     }
 
+    const scope = await assertPanelRemoteDeviceScope(req, deviceId);
+    if (!scope.allowed) {
+        const status = scope.statusCode || 404;
+        if (status === 401) {
+            return res.redirect('/remote/login?expired=1&return=' + encodeURIComponent(req.originalUrl || '/remote'));
+        }
+        return res.status(404).render('errors/404', {
+            title: req.t('errors.not_found', 'Not found'),
+            message: req.t('errors.device_not_found', 'Device not found'),
+        });
+    }
+
     const isRemoteTarget = deviceId.startsWith('rt_');
-    let device = null;
-    try {
-        device = isRemoteTarget
-            ? await betterdeskApi.getRemoteTarget(deviceId)
-            : await db.getDevice(deviceId);
-    } catch {
-        // Database lookup failure is non-blocking - viewer can still work
+    let device = scope.device || null;
+    if (!device) {
+        try {
+            device = isRemoteTarget
+                ? await betterdeskApi.getRemoteTarget(deviceId)
+                : await db.getDevice(deviceId);
+        } catch {
+            // Database lookup failure is non-blocking - viewer can still work
+        }
     }
 
     let isOsAgent = false;
@@ -339,20 +378,30 @@ router.get('/remote-desktop/:deviceId', rdClientPageLimiter, requireRdClientAuth
 /**
  * GET /api/remote/sessions - List active native remote sessions
  */
-router.get('/api/remote/sessions', requireRdClientAuth(), (req, res) => {
+router.get('/api/remote/sessions', requireRdClientAuth('device.connect'), async (req, res) => {
     const relay = getRemoteRelay();
     if (!relay) return res.json({ sessions: [] });
-    const sessions = relay.getActiveSessions();
-    res.json({ sessions });
+    const sessions = relay.getActiveSessions() || [];
+    if (!req.session || !req.session.user) return res.json({ sessions: [] });
+
+    const visible = [];
+    for (const deviceId of sessions) {
+        const scope = await deviceGroupService.authorizeUserDeviceAccess(db, req.session.user, deviceId);
+        if (scope.allowed) visible.push(deviceId);
+    }
+    res.json({ sessions: visible });
 });
 
 /**
  * GET /api/remote/session/:deviceId - Get state of a single native remote session
  */
-router.get('/api/remote/session/:deviceId', requireRdClientAuth(), (req, res) => {
+router.get('/api/remote/session/:deviceId', requireRdClientAuth('device.connect'), async (req, res) => {
     const relay = getRemoteRelay();
     if (!relay) return res.status(404).json({ error: 'Remote relay not available' });
-    const state = relay.getSessionState(req.params.deviceId);
+    const deviceId = req.params.deviceId;
+    const scope = await assertPanelRemoteDeviceScope(req, deviceId);
+    if (!scope.allowed) return res.status(404).json({ error: 'Session not found' });
+    const state = relay.getSessionState(deviceId);
     if (!state) return res.status(404).json({ error: 'Session not found' });
     res.json(state);
 });

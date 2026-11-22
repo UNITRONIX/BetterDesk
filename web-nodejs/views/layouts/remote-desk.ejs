@@ -6,7 +6,7 @@
         .replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
 }; %>
 <!DOCTYPE html>
-<html lang="<%= lang || 'en' %>">
+<html lang="<%= lang || 'en' %>" data-ui-shell="ux36">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -14,10 +14,17 @@
     <title><%= typeof title !== 'undefined' ? title + ' - ' : '' %><%= appName %></title>
 
     <link rel="icon" type="image/svg+xml" href="/branding/favicon.svg">
+    <link rel="preload" href="/fonts/IBMPlexSans-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="/css/material-icons-local.css?v=<%= cacheVersion %>">
-    <link rel="stylesheet" href="/css/variables.css?v=<%= cacheVersion %>">
     <link rel="stylesheet" href="/css/theme.css?v=<%= cacheVersion %>">
     <link rel="stylesheet" href="/css/branding.css?v=<%= typeof brandingRevision !== 'undefined' ? brandingRevision : cacheVersion %>">
+    <% if (!branding || branding.themeMode !== 'custom') { %>
+    <link rel="stylesheet" href="/css/ux36/palette.css?v=<%= cacheVersion %>">
+    <% } %>
+    <link rel="stylesheet" href="/css/ux36/tokens.css?v=<%= cacheVersion %>">
+    <link rel="stylesheet" href="/css/ux36/base.css?v=<%= cacheVersion %>">
+    <link rel="stylesheet" href="/css/ux36/components.css?v=<%= cacheVersion %>">
+    <link rel="stylesheet" href="/css/ux36/legacy-bridge.css?v=<%= cacheVersion %>">
     <link rel="stylesheet" href="/css/mobile-shell.css?v=<%= cacheVersion %>">
     <% if (typeof pageStyles !== 'undefined' && pageStyles) { %>
         <% (Array.isArray(pageStyles) ? pageStyles : [pageStyles]).forEach(function(style) { %>
@@ -36,6 +43,7 @@
             csrfToken: '<%= typeof csrfToken !== "undefined" ? csrfToken : "" %>',
             user: <%- bdJson(user || null) %>,
             branding: <%- bdJson(branding || {}) %>,
+            appName: <%- bdJson(appName || 'BetterDesk') %>,
             availableLanguages: <%- bdJson(availableLanguageList || []) %>
         };
     </script>

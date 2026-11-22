@@ -354,6 +354,42 @@ function initWsProxy(server, sessionMiddleware) {
                         return;
                     }
 
+                    // When the browser binds the upgrade to a concrete peer
+                    // (?peer_id=), enforce the same folder/group device scope as
+                    // the inventory APIs. Guests already validated peer_id above.
+                    if (hasUser) {
+                        const peerId = String(url.searchParams.get('peer_id') || '').trim();
+                        if (peerId) {
+                            if (!/^[A-Za-z0-9_-]{3,64}$/.test(peerId)) {
+                                socket.write('HTTP/1.1 400 Bad Request\r\n\r\n');
+                                socket.destroy();
+                                return;
+                            }
+                            try {
+                                const db = require('./database');
+                                const deviceGroupService = require('./deviceGroupService');
+                                const scope = await deviceGroupService.authorizeUserDeviceAccess(
+                                    db,
+                                    request.session.user,
+                                    peerId
+                                );
+                                if (!scope.allowed) {
+                                    console.warn(
+                                        `WS proxy: Rejected ${pathname} upgrade — peer ${peerId} out of scope for ${request.session.username || request.session.userId}`
+                                    );
+                                    socket.write('HTTP/1.1 404 Not Found\r\n\r\n');
+                                    socket.destroy();
+                                    return;
+                                }
+                            } catch (err) {
+                                console.warn(`WS proxy: peer scope check failed: ${err.message || err}`);
+                                socket.write('HTTP/1.1 403 Forbidden\r\n\r\n');
+                                socket.destroy();
+                                return;
+                            }
+                        }
+                    }
+
                     if (pathname === '/ws/rendezvous') {
                         rendezvousWss.handleUpgrade(request, socket, head, (ws) => {
                             rendezvousWss.emit('connection', ws, request);

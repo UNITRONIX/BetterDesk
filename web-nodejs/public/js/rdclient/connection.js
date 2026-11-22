@@ -46,15 +46,18 @@ class RDConnection {
      */
     _guestQuerySuffix() {
         try {
+            const params = new URLSearchParams();
             const q = new URLSearchParams(window.location.search);
             const token = q.get('guest') || q.get('t') || window.__guestToken || '';
             if (token) {
-                const params = new URLSearchParams();
                 params.set('guest', token);
-                if (this.deviceId) params.set('peer_id', this.deviceId);
                 if (this.guestSessionId) params.set('guest_session', this.guestSessionId);
-                return `?${params.toString()}`;
             }
+            // Always bind the WS upgrade to the target device so the panel can
+            // re-check folder/group scope (not only guest links).
+            if (this.deviceId) params.set('peer_id', this.deviceId);
+            const qs = params.toString();
+            return qs ? `?${qs}` : '';
         } catch (_) { /* ignore */ }
         return '';
     }

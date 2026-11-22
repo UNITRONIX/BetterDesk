@@ -29,27 +29,91 @@
         var el = document.getElementById('rd-desk-logo');
         if (!el) return;
         var b = (window.BetterDesk && window.BetterDesk.branding) || {};
+        var nameEl = document.getElementById('rd-desk-brand-name');
+        var brandName = b.appName || (window.BetterDesk && window.BetterDesk.appName) || 'BetterDesk';
+
+        if (nameEl) {
+            if (b.logoType === 'text' && b.logoText) {
+                nameEl.innerHTML = esc(b.logoText) +
+                    (b.logoTextAccent ? '<span class="brand-text-accent">' + esc(b.logoTextAccent) + '</span>' : '');
+                nameEl.classList.add('brand-text-logo');
+            } else {
+                nameEl.textContent = brandName;
+                nameEl.classList.remove('brand-text-logo');
+            }
+        }
+
         if (b.logoType === 'text' && b.logoText) {
-            el.innerHTML = '<span class="brand-text-logo">' + esc(b.logoText) +
-                (b.logoTextAccent ? '<span class="brand-text-accent">' + esc(b.logoTextAccent) + '</span>' : '') +
-                '</span>';
+            /* Wordmark lives in the title; keep a compact mark in the logo slot */
+            el.innerHTML = '<span class="material-icons">' + esc(b.logoIcon || 'dns') + '</span>';
+            el.classList.add('is-icon');
             return;
         }
         if (b.logoType === 'svg' && b.logoSvg) {
             el.innerHTML = b.logoSvg;
+            el.classList.add('is-image');
             return;
         }
         if (b.logoType === 'image' && b.logoUrl) {
             el.innerHTML = '<img src="' + esc(b.logoUrl) + '" alt="">';
+            el.classList.add('is-image');
             return;
         }
-        el.innerHTML = '<span class="material-icons">' + esc(b.logoIcon || 'connected_tv') + '</span>';
+        el.innerHTML = '<span class="material-icons">' + esc(b.logoIcon || 'dns') + '</span>';
+        el.classList.add('is-icon');
     }
 
     function renderUser() {
         var el = document.getElementById('rd-desk-user');
         var user = window.BetterDesk && window.BetterDesk.user;
         if (el && user) el.textContent = user.username || user.name || '';
+    }
+
+    function setLangMenuOpen(open) {
+        var btn = document.getElementById('rd-desk-lang-btn');
+        var dropdown = document.getElementById('rd-desk-lang-dropdown');
+        if (!btn || !dropdown) return;
+        dropdown.classList.toggle('open', open);
+        if (open) dropdown.removeAttribute('hidden');
+        else dropdown.setAttribute('hidden', '');
+        btn.setAttribute('aria-expanded', String(open));
+    }
+
+    function bindLanguageMenu() {
+        var btn = document.getElementById('rd-desk-lang-btn');
+        var dropdown = document.getElementById('rd-desk-lang-dropdown');
+        var selector = document.querySelector('.rd-desk-lang');
+        if (!btn || !dropdown || !selector) return;
+
+        btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            setLangMenuOpen(!dropdown.classList.contains('open'));
+        });
+
+        dropdown.querySelectorAll('.lang-option').forEach(function (option) {
+            option.addEventListener('click', function (e) {
+                e.stopPropagation();
+                var code = option.getAttribute('data-lang');
+                if (code && typeof window.changeLanguage === 'function') {
+                    window.changeLanguage(code);
+                }
+            });
+            option.addEventListener('keydown', function (e) {
+                if (e.key !== 'Enter' && e.key !== ' ') return;
+                e.preventDefault();
+                var code = option.getAttribute('data-lang');
+                if (code && typeof window.changeLanguage === 'function') {
+                    window.changeLanguage(code);
+                }
+            });
+        });
+
+        document.addEventListener('click', function (e) {
+            if (!selector.contains(e.target)) setLangMenuOpen(false);
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') setLangMenuOpen(false);
+        });
     }
 
     function isRdClientDesktop() {
@@ -326,24 +390,11 @@
         syncDesktopViewport();
     }
 
-    function populateLanguageSelect() {
-        var sel = document.getElementById('rd-desk-lang');
-        if (!sel || sel.options.length > 0) return;
-        var langs = (window.BetterDesk && window.BetterDesk.availableLanguages) || [];
-        langs.forEach(function (lang) {
-            var opt = document.createElement('option');
-            opt.value = lang.code;
-            opt.textContent = lang.native || lang.name || lang.code;
-            if (lang.code === (window.BetterDesk && window.BetterDesk.lang)) opt.selected = true;
-            sel.appendChild(opt);
-        });
-    }
-
     function bindDesktopSettings() {
         if (!isRdClientDesktop()) return;
         var btn = document.getElementById('rd-desk-settings');
         if (!btn) return;
-        btn.style.display = '';
+        btn.hidden = false;
         btn.addEventListener('click', function () {
             var invoke = window.__TAURI__ && window.__TAURI__.core && window.__TAURI__.core.invoke;
             if (invoke) invoke('open_settings').catch(function () { /* ignore */ });
@@ -370,7 +421,7 @@
         if (dashboardInitialized) return;
         dashboardInitialized = true;
         markDesktopLayout();
-        populateLanguageSelect();
+        bindLanguageMenu();
         bindDesktopSettings();
         renderBrandLogo();
         renderUser();

@@ -1,13 +1,23 @@
 /**
- * RdClient operator login — extends desktop-login styles
+ * RdClient operator login — UX 3.6 (beta) shell
  */
 
-.rdclient-login-page .dl-login-layer {
-    display: none;
+.rdclient-login-page {
+    margin: 0;
+    min-height: 100vh;
+    font-family: var(--font);
+    color: var(--text);
+    background: var(--bg);
+    position: relative;
+    isolation: isolate;
 }
 
-.rdclient-login-page .dl-lock-screen {
-    display: none;
+.rdclient-login-wallpaper {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: linear-gradient(145deg, var(--bg) 0%, var(--bg-subtle) 55%, color-mix(in srgb, var(--accent) 18%, var(--bg)) 100%);
 }
 
 .rdclient-login-shell {
@@ -18,86 +28,388 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 24px 16px 32px;
+    padding: var(--space-5) var(--space-4) var(--space-6);
+    box-sizing: border-box;
 }
 
-.rdclient-login-wallpaper {
+/* Language: icon button, top-right (UX36 topbar pattern) */
+.rdclient-login-lang {
     position: fixed;
-    inset: 0;
-    z-index: 0;
-    background: linear-gradient(135deg, #0d1117 0%, #161b22 40%, #1a1a2e 70%, #0f3460 100%);
+    top: var(--space-4);
+    inset-inline-end: var(--space-4);
+    z-index: var(--layer-menu);
 }
 
+.rdclient-login-lang .icon-btn {
+    --icon-btn-size: var(--control-h);
+    background: var(--bg-float);
+    border-color: var(--rule);
+    box-shadow: var(--shadow-float);
+}
+
+.rdclient-login-lang .lang-dropdown {
+    position: absolute;
+    top: calc(100% + var(--space-1));
+    inset-inline-end: 0;
+    z-index: var(--layer-menu);
+    display: none;
+    min-width: 220px;
+    max-height: min(70vh, 480px);
+    overflow-y: auto;
+    padding: var(--space-1) 0;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--bg-float);
+    box-shadow: var(--shadow-float);
+    color: var(--text);
+}
+
+.rdclient-login-lang .lang-dropdown.open,
+.rdclient-login-lang .lang-dropdown:not([hidden]) {
+    display: block;
+}
+
+.rdclient-login-lang .lang-dropdown[hidden] {
+    display: none !important;
+}
+
+.rdclient-login-lang .lang-option.active {
+    font-weight: 600;
+}
+
+.rdclient-login-lang .lang-label {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.rdclient-login-lang .lang-check {
+    font-size: 18px;
+    color: var(--accent);
+}
+
+.rdclient-login-lang .lang-flag {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    font-size: 16px;
+    line-height: 1;
+}
+
+/* Brand mark from console branding settings */
 .rdclient-login-brand {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 24px;
-    color: var(--text-primary, #e6edf3);
-    font-size: 1.125rem;
+    justify-content: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
+    color: var(--text);
+    font-size: var(--text-lg);
     font-weight: 600;
+    text-align: center;
+    max-width: min(420px, 100%);
 }
 
 .rdclient-login-brand .material-icons {
-    font-size: 28px;
-    color: var(--accent-blue, #388bfd);
+    font-size: 32px;
+    color: var(--accent);
 }
 
+.rdclient-login-brand-name {
+    letter-spacing: 0.01em;
+}
+
+.rdclient-login-brand .brand-text-logo {
+    font-family: var(--font);
+    font-weight: 700;
+    font-size: var(--text-xl);
+    color: var(--text);
+    letter-spacing: 0.02em;
+    line-height: 1.2;
+}
+
+.rdclient-login-brand .brand-text-logo .brand-text-accent {
+    display: block;
+    font-size: 0.55em;
+    font-weight: 400;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+}
+
+.rdclient-login-logo-img {
+    max-height: 48px;
+    max-width: 220px;
+    object-fit: contain;
+}
+
+.rdclient-login-logo-svg {
+    display: inline-flex;
+    align-items: center;
+    max-height: 48px;
+}
+
+.rdclient-login-logo-svg svg {
+    max-height: 48px;
+    width: auto;
+}
+
+/* Card */
 .rdclient-login-card-wrap {
     width: 100%;
-    max-width: 420px;
+    max-width: 400px;
+}
+
+.rdclient-login-card {
+    width: 100%;
+    padding: var(--space-6) var(--space-5) var(--space-5);
+    background: var(--bg-float);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-float);
+    text-align: center;
+    box-sizing: border-box;
 }
 
 .rdclient-login-heading {
-    text-align: center;
-    margin-bottom: 8px;
+    margin-bottom: var(--space-4);
 }
 
 .rdclient-login-heading h1 {
-    margin: 0 0 6px;
-    font-size: 1.25rem;
+    margin: 0 0 var(--space-2);
+    font-size: var(--text-lg);
     font-weight: 600;
-    color: var(--text-primary, #e6edf3);
+    line-height: 1.25;
+    color: var(--text);
 }
 
 .rdclient-login-heading p {
-    margin: 0 0 16px;
-    font-size: 0.8125rem;
-    color: var(--text-secondary, #8b949e);
+    margin: 0;
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    line-height: var(--leading);
+}
+
+.rdclient-login-avatar {
+    width: 72px;
+    height: 72px;
+    margin: 0 auto var(--space-5);
+    border-radius: var(--radius-full);
+    background: var(--tag-bg);
+    border: 1px solid var(--rule);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.rdclient-login-avatar .material-icons {
+    font-size: 36px;
+    color: var(--text-muted);
+}
+
+.rdclient-login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    text-align: start;
+}
+
+.rdclient-login-form .form-group {
+    margin-bottom: var(--space-3);
+}
+
+.rdclient-password-wrapper {
+    position: relative;
+}
+
+.rdclient-password-wrapper .form-input {
+    padding-inline-end: calc(var(--icon-btn-size) + var(--space-2));
+}
+
+.rdclient-password-toggle {
+    position: absolute;
+    inset-inline-end: var(--space-1);
+    top: 50%;
+    transform: translateY(-50%);
 }
 
 .rdclient-remember {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin: 4px 0 12px;
-    font-size: 0.8125rem;
-    color: var(--text-secondary, #8b949e);
+    gap: var(--check-gap);
+    margin: 0 0 var(--space-4);
+    font-size: var(--text-sm);
+    color: var(--text-muted);
     cursor: pointer;
     user-select: none;
 }
 
 .rdclient-remember input {
-    width: 16px;
-    height: 16px;
-    accent-color: var(--accent-blue, #388bfd);
+    width: var(--check-size);
+    height: var(--check-size);
+    accent-color: var(--accent);
+    flex-shrink: 0;
 }
 
-.rdclient-login-footer {
-    margin-top: 24px;
+.rdclient-login-error {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.75rem;
-    color: var(--text-secondary, #8b949e);
+    align-items: flex-start;
+    gap: var(--space-2);
+    margin-bottom: var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    background: color-mix(in srgb, var(--danger) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--danger) 35%, transparent);
+    border-radius: var(--radius);
+    color: var(--danger);
+    font-size: var(--text-sm);
+    text-align: start;
+}
+
+.rdclient-login-error .material-icons {
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.rdclient-login-form .btn-block {
+    margin-top: var(--space-1);
+}
+
+.rdclient-login-form .btn.loading {
+    position: relative;
+    color: transparent;
+    pointer-events: none;
+}
+
+.rdclient-login-form .btn.loading .material-icons,
+.rdclient-login-form .btn.loading .rdclient-submit-text {
+    opacity: 0;
+}
+
+.rdclient-login-form .btn.loading::after {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border: 2px solid color-mix(in srgb, var(--on-accent) 35%, transparent);
+    border-top-color: var(--on-accent);
+    border-radius: 50%;
+    animation: rdclient-spin 0.6s linear infinite;
+}
+
+@keyframes rdclient-spin {
+    to { transform: rotate(360deg); }
 }
 
 .rdclient-login-console-link {
-    color: var(--accent-blue, #388bfd);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    align-self: center;
+    margin-top: var(--space-4);
+    color: var(--accent);
+    font-size: var(--text-sm);
     text-decoration: none;
+    text-underline-offset: 2px;
 }
 
 .rdclient-login-console-link:hover {
+    color: var(--accent-hover);
     text-decoration: underline;
+}
+
+/* TOTP */
+.rdclient-totp-header {
+    margin-bottom: var(--space-5);
+    text-align: center;
+}
+
+.rdclient-totp-icon {
+    font-size: 36px;
+    color: var(--accent);
+    margin-bottom: var(--space-2);
+}
+
+.rdclient-totp-title {
+    font-size: var(--text-md);
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: var(--space-1);
+}
+
+.rdclient-totp-subtitle {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    line-height: var(--leading);
+}
+
+.rdclient-totp-inputs {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    margin-bottom: var(--space-4);
+}
+
+.rdclient-totp-digit {
+    width: 40px;
+    min-width: 40px;
+    max-width: 40px;
+    min-height: 44px;
+    padding: 0;
+    text-align: center;
+    font-size: var(--text-lg);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.rdclient-totp-separator {
+    color: var(--text-muted);
+    font-size: var(--text-md);
+}
+
+.rdclient-totp-back {
+    margin-top: var(--space-4);
+    text-align: center;
+}
+
+.rdclient-totp-back .btn-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+.rdclient-totp-back .material-icons {
+    font-size: 16px;
+}
+
+.rdclient-login-footer {
+    margin-top: var(--space-5);
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.hidden {
+    display: none !important;
+}
+
+@media (max-width: 480px) {
+    .rdclient-login-card {
+        padding: var(--space-5) var(--space-4) var(--space-4);
+    }
+
+    .rdclient-totp-digit {
+        width: 34px;
+        min-width: 34px;
+        max-width: 34px;
+        min-height: 40px;
+        font-size: var(--text-md);
+    }
+
+    .rdclient-login-lang {
+        top: var(--space-3);
+        inset-inline-end: var(--space-3);
+    }
 }

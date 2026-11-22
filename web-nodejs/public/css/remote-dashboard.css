@@ -1,6 +1,6 @@
 /**
  * BetterDesk — RdClient operator dashboard (standalone /remote)
- * RustDesk-inspired address book; uses panel branding tokens + font.
+ * UX 3.6 (beta) shell — branding tokens + IBM Plex via ux36.
  */
 
 html {
@@ -19,11 +19,11 @@ html.rd-desk-desktop {
     height: 100%;
     min-height: 0;
     overflow: hidden;
-    background: var(--bg-primary, #0d1117);
-    color: var(--text-primary, #e6edf3);
-    font-family: var(--font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif);
-    font-size: var(--font-size-sm, 0.875rem);
-    line-height: var(--line-height, 1.5);
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: var(--text-base);
+    line-height: var(--leading);
 }
 
 .rd-desk-body::before,
@@ -64,138 +64,234 @@ html.rd-desk-desktop {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
+    gap: var(--space-4);
     flex-shrink: 0;
-    padding: 14px 20px;
-    border-bottom: 1px solid var(--border-primary, #30363d);
-    background: var(--surface-glass-bg-secondary, var(--bg-secondary, #161b22));
-    backdrop-filter: blur(var(--surface-glass-blur, 16px)) saturate(var(--surface-glass-saturate, 1.2));
-    -webkit-backdrop-filter: blur(var(--surface-glass-blur, 16px)) saturate(var(--surface-glass-saturate, 1.2));
+    min-height: 56px;
+    padding: var(--space-3) var(--space-5);
+    border-bottom: 1px solid var(--rule);
+    background: var(--bg-float);
 }
 
 .rd-desk-brand {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: var(--space-3);
     min-width: 0;
 }
 
 .rd-desk-logo {
-    width: 42px;
-    height: 42px;
-    border-radius: var(--radius-md, 10px);
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius);
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--surface-glass-bg-tertiary, var(--bg-tertiary, #21262d));
-    border: 1px solid var(--border-primary, #30363d);
+    background: var(--bg-subtle);
+    border: 1px solid var(--rule);
     flex-shrink: 0;
     overflow: hidden;
 }
 
-.rd-desk-logo .material-icons {
-    font-size: 24px;
-    color: var(--accent-blue, #58a6ff);
+.rd-desk-logo.is-image {
+    background: transparent;
+    border-color: transparent;
+    padding: 0;
 }
 
-.rd-desk-logo img {
+.rd-desk-logo .material-icons {
+    font-size: 22px;
+    color: var(--accent);
+}
+
+.rd-desk-logo img,
+.rd-desk-logo svg {
     max-width: 100%;
     max-height: 100%;
+    width: auto;
+    height: auto;
     object-fit: contain;
 }
 
-.rd-desk-logo .brand-text-logo {
-    font-size: 10px;
-    font-weight: 700;
-    padding: 0 4px;
-    text-align: center;
-    line-height: 1.2;
+.rd-desk-logo svg {
+    display: block;
+}
+
+.rd-desk-brand-text {
+    min-width: 0;
 }
 
 .rd-desk-title {
     margin: 0;
-    font-size: var(--font-size-lg, 1.125rem);
+    font-size: var(--text-md);
     font-weight: 600;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.01em;
+    color: var(--text);
+    line-height: 1.25;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.rd-desk-title.brand-text-logo {
+    font-weight: 700;
+}
+
+.rd-desk-title .brand-text-accent {
+    display: inline;
+    margin-inline-start: 0.25em;
+    font-size: 0.75em;
+    font-weight: 400;
+    color: var(--text-muted);
 }
 
 .rd-desk-subtitle {
     margin: 2px 0 0;
-    font-size: var(--font-size-xs, 0.75rem);
-    color: var(--text-secondary, #8b949e);
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .rd-desk-header-actions {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-2);
     flex-shrink: 0;
 }
 
+.rd-desk-header-actions .icon-btn {
+    --icon-btn-size: var(--control-h);
+}
+
+.rd-desk-lang {
+    position: relative;
+}
+
+.rd-desk-lang .lang-dropdown {
+    position: absolute;
+    top: calc(100% + var(--space-1));
+    inset-inline-end: 0;
+    z-index: var(--layer-menu);
+    display: none;
+    min-width: 220px;
+    max-height: min(70vh, 480px);
+    overflow-y: auto;
+    padding: var(--space-1) 0;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--bg-float);
+    box-shadow: var(--shadow-float);
+    color: var(--text);
+}
+
+.rd-desk-lang .lang-dropdown.open,
+.rd-desk-lang .lang-dropdown:not([hidden]) {
+    display: block;
+}
+
+.rd-desk-lang .lang-dropdown[hidden] {
+    display: none !important;
+}
+
+.rd-desk-lang .lang-option.active {
+    font-weight: 600;
+}
+
+.rd-desk-lang .lang-label {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.rd-desk-lang .lang-check {
+    font-size: 18px;
+    color: var(--accent);
+}
+
+.rd-desk-lang .lang-flag {
+    display: inline-flex;
+    width: 20px;
+    height: 20px;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    line-height: 1;
+}
+
 .rd-desk-user {
-    font-size: var(--font-size-xs, 0.75rem);
-    color: var(--text-secondary, #8b949e);
+    font-size: var(--text-sm);
+    color: var(--text-muted);
     max-width: 140px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    padding-right: 4px;
+    padding: 0 var(--space-2);
+    min-height: var(--control-h);
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--bg-subtle);
+}
+
+.rd-desk-open-console {
+    text-decoration: none;
+}
+
+.rd-desk-open-console .material-icons {
+    font-size: 18px;
 }
 
 /* ── Quick connect ── */
 .rd-desk-quick-connect {
     flex-shrink: 0;
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--border-primary, #30363d);
-    background: rgba(13, 17, 23, 0.18);
+    padding: var(--space-2) var(--space-5);
+    border-bottom: 1px solid var(--rule);
+    background: var(--bg-float);
 }
 
 .rd-desk-quick-connect-inner {
     display: flex;
     align-items: center;
-    gap: 12px;
-    max-width: 720px;
-    padding: 14px 16px;
-    border-radius: var(--radius-lg, 12px);
-    border: 1px solid var(--border-primary, #30363d);
-    background: var(--surface-glass-bg-secondary, rgba(22, 27, 34, 0.55));
+    gap: var(--space-2);
+    width: 100%;
+    min-height: var(--control-h);
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
 }
 
 .rd-desk-quick-icon {
-    font-size: 28px;
-    color: var(--accent-blue, #58a6ff);
+    font-size: 20px;
+    color: var(--accent);
     flex-shrink: 0;
 }
 
 .rd-desk-quick-label {
-    font-size: var(--font-size-sm, 0.875rem);
+    font-size: var(--text-sm);
     font-weight: 500;
-    color: var(--text-secondary, #8b949e);
+    color: var(--text-muted);
     white-space: nowrap;
     flex-shrink: 0;
 }
 
 .rd-desk-quick-input {
-    flex: 1;
-    min-width: 120px;
-    padding: 10px 14px;
-    border-radius: var(--radius-md, 8px);
-    border: 1px solid var(--border-primary, #30363d);
-    background: var(--surface-glass-bg-tertiary, var(--bg-tertiary, #21262d));
-    color: var(--text-primary, #e6edf3);
-    font-family: var(--font-mono, monospace);
-    font-size: var(--font-size-sm, 0.875rem);
-    letter-spacing: 0.04em;
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    font-family: var(--mono);
+    letter-spacing: 0.03em;
 }
 
-.rd-desk-quick-input:focus {
-    outline: none;
-    border-color: var(--accent-blue, #58a6ff);
-    box-shadow: 0 0 0 2px var(--accent-blue-muted, rgba(88, 166, 255, 0.15));
+.rd-desk-quick-connect-inner .btn {
+    flex-shrink: 0;
 }
 
 .rd-desk-quick-input.rd-desk-input-error {
-    border-color: var(--accent-red, #f85149);
+    border-color: var(--danger);
     animation: rd-desk-shake 0.35s ease;
 }
 
@@ -205,33 +301,28 @@ html.rd-desk-desktop {
     75% { transform: translateX(4px); }
 }
 
-/* ── Scroll areas (independent sidebar + device list) ── */
+/* ── Scroll areas ── */
 .rd-desk-sidebar-scroll,
 .rd-desk-devices-scroll {
     scrollbar-width: thin;
-    scrollbar-color: var(--scrollbar-thumb, var(--bg-elevated, #30363d)) var(--scrollbar-track, var(--bg-secondary, #161b22));
+    scrollbar-color: var(--border) var(--bg-subtle);
 }
 
 .rd-desk-sidebar-scroll::-webkit-scrollbar,
 .rd-desk-devices-scroll::-webkit-scrollbar {
-    width: var(--scrollbar-width, 8px);
-    height: var(--scrollbar-width, 8px);
+    width: 8px;
+    height: 8px;
 }
 
 .rd-desk-sidebar-scroll::-webkit-scrollbar-track,
 .rd-desk-devices-scroll::-webkit-scrollbar-track {
-    background: var(--scrollbar-track, var(--bg-secondary, #161b22));
+    background: var(--bg-subtle);
 }
 
 .rd-desk-sidebar-scroll::-webkit-scrollbar-thumb,
 .rd-desk-devices-scroll::-webkit-scrollbar-thumb {
-    background: var(--scrollbar-thumb, var(--bg-elevated, #30363d));
-    border-radius: 999px;
-}
-
-.rd-desk-sidebar-scroll::-webkit-scrollbar-thumb:hover,
-.rd-desk-devices-scroll::-webkit-scrollbar-thumb:hover {
-    background: var(--scrollbar-thumb-hover, var(--border-hover, #484f58));
+    background: var(--border);
+    border-radius: var(--radius-full);
 }
 
 /* ── Workspace ── */
@@ -244,14 +335,14 @@ html.rd-desk-desktop {
 
 /* ── Sidebar ── */
 .rd-desk-sidebar {
-    width: 240px;
-    flex: 0 0 240px;
+    width: 248px;
+    flex: 0 0 248px;
     display: flex;
     flex-direction: column;
     min-height: 0;
     overflow: hidden;
-    border-right: 1px solid var(--border-primary, #30363d);
-    background: var(--surface-glass-bg-secondary, var(--bg-secondary, #161b22));
+    border-right: 1px solid var(--rule);
+    background: var(--bg-subtle);
     padding: 0;
 }
 
@@ -261,7 +352,7 @@ html.rd-desk-desktop {
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
-    padding: 12px 0;
+    padding: var(--space-3) 0;
     -webkit-overflow-scrolling: touch;
 }
 
@@ -269,46 +360,42 @@ html.rd-desk-desktop {
     display: flex;
     flex-direction: column;
     min-height: 0;
-    margin-bottom: 8px;
-    flex-shrink: 0;
-}
-
-.rd-desk-nav-section.is-collapsed {
+    margin-bottom: var(--space-2);
     flex-shrink: 0;
 }
 
 .rd-desk-nav-heading {
-    padding: 8px 16px 6px;
-    font-size: var(--font-size-xs, 0.75rem);
+    padding: var(--space-2) var(--space-4);
+    font-size: var(--text-xs);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: var(--text-tertiary, #6e7681);
+    color: var(--text-muted);
 }
 
 .rd-desk-nav-heading-btn {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 8px;
+    gap: var(--space-2);
     width: 100%;
     margin: 0;
     border: none;
     background: transparent;
     font-family: inherit;
-    text-align: left;
+    text-align: start;
     cursor: pointer;
-    transition: color 0.12s;
+    transition: color var(--motion);
 }
 
 .rd-desk-nav-heading-btn:hover {
-    color: var(--text-secondary, #8b949e);
+    color: var(--text);
 }
 
 .rd-desk-nav-chevron {
     font-size: 18px !important;
-    color: var(--text-tertiary, #6e7681);
-    transition: transform 0.15s ease;
+    color: var(--text-muted);
+    transition: transform var(--motion);
     flex-shrink: 0;
 }
 
@@ -334,36 +421,38 @@ html.rd-desk-desktop {
 .rd-desk-nav-item {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--space-2);
     width: 100%;
-    padding: 8px 16px;
+    min-height: var(--control-h);
+    padding: var(--space-1) var(--space-4);
     border: none;
     background: transparent;
-    color: var(--text-primary, #e6edf3);
+    color: var(--text);
     font-family: inherit;
-    font-size: var(--font-size-sm, 0.875rem);
-    text-align: left;
+    font-size: var(--text-sm);
+    text-align: start;
     cursor: pointer;
-    transition: background 0.12s, color 0.12s;
+    transition: background-color var(--motion), color var(--motion);
 }
 
 .rd-desk-nav-item .material-icons {
     font-size: 18px;
-    color: var(--text-secondary, #8b949e);
+    color: var(--text-muted);
     flex-shrink: 0;
 }
 
 .rd-desk-nav-item:hover {
-    background: var(--bg-hover, rgba(255, 255, 255, 0.05));
+    background: var(--hover);
 }
 
 .rd-desk-nav-item.active {
-    background: var(--accent-blue-muted, rgba(88, 166, 255, 0.15));
-    color: var(--accent-blue, #58a6ff);
+    background: var(--accent-tint);
+    color: var(--text);
+    font-weight: 600;
 }
 
 .rd-desk-nav-item.active .material-icons {
-    color: var(--accent-blue, #58a6ff);
+    color: var(--accent);
 }
 
 .rd-desk-nav-label {
@@ -375,20 +464,21 @@ html.rd-desk-desktop {
 }
 
 .rd-desk-nav-count {
-    font-size: var(--font-size-xs, 0.75rem);
-    color: var(--text-tertiary, #6e7681);
+    font-size: var(--text-xs);
+    color: var(--text-muted);
     min-width: 1.5em;
-    text-align: right;
+    text-align: end;
+    font-variant-numeric: tabular-nums;
 }
 
 .rd-desk-nav-item.active .rd-desk-nav-count {
-    color: var(--accent-blue, #58a6ff);
+    color: var(--accent);
 }
 
 .rd-desk-nav-empty {
-    padding: 8px 16px;
-    font-size: var(--font-size-xs, 0.75rem);
-    color: var(--text-tertiary, #6e7681);
+    padding: var(--space-2) var(--space-4);
+    font-size: var(--text-xs);
+    color: var(--text-muted);
     font-style: italic;
 }
 
@@ -396,11 +486,11 @@ html.rd-desk-desktop {
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: var(--accent-purple, #a371f7);
+    background: var(--info);
     flex-shrink: 0;
 }
 
-/* ── Content ── */
+/* ── Content / toolbar ── */
 .rd-desk-content {
     flex: 1;
     min-height: 0;
@@ -408,38 +498,34 @@ html.rd-desk-desktop {
     flex-direction: column;
     min-width: 0;
     overflow: hidden;
+    background: var(--bg);
 }
 
 .rd-desk-toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 10px;
     flex-shrink: 0;
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--border-primary, #30363d);
-    background: var(--bg-primary, #0d1117);
+    padding: var(--space-2) var(--space-4);
+    border-bottom: 1px solid var(--rule);
+    background: var(--bg-float);
 }
 
 .rd-desk-section-title {
-    font-size: var(--font-size-md, 1rem);
+    font-size: var(--text-base);
     font-weight: 600;
     white-space: nowrap;
+    color: var(--text);
+    line-height: var(--control-leading);
 }
 
 .rd-desk-toolbar-left {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 4px;
-    margin-right: 4px;
-}
-
-.rd-desk-panel-toggle {
+    gap: var(--space-1);
+    min-height: var(--control-h);
     flex-shrink: 0;
 }
 
 .rd-desk-panel-toggle .material-icons {
-    transition: transform 0.15s ease;
+    transition: transform var(--motion);
 }
 
 .rd-desk-devices-panel.is-collapsed .rd-desk-panel-toggle .material-icons {
@@ -447,108 +533,40 @@ html.rd-desk-desktop {
 }
 
 .rd-desk-search-wrap {
-    position: relative;
-    flex: 1;
+    /* .toolbar-search + .search-wrapper from UX36 */
     min-width: 160px;
-    max-width: 320px;
-}
-
-.rd-desk-search-icon {
-    position: absolute;
-    left: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 18px;
-    color: var(--text-secondary, #8b949e);
-    pointer-events: none;
 }
 
 .rd-desk-search {
     width: 100%;
-    box-sizing: border-box;
-    padding: 8px 12px 8px 36px;
-    border-radius: var(--radius-md, 8px);
-    border: 1px solid var(--border-primary, #30363d);
-    background: var(--surface-glass-bg-secondary, var(--bg-secondary, #161b22));
-    color: var(--text-primary, #e6edf3);
-    font-family: inherit;
-    font-size: var(--font-size-sm, 0.875rem);
 }
 
-.rd-desk-search:focus {
-    outline: none;
-    border-color: var(--accent-blue, #58a6ff);
-}
-
-.rd-desk-filters {
-    display: flex;
-    gap: 2px;
-    padding: 3px;
-    border-radius: var(--radius-md, 8px);
-    background: var(--surface-glass-bg-secondary, var(--bg-secondary, #161b22));
-    border: 1px solid var(--border-primary, #30363d);
-}
-
-.rd-desk-filter {
-    padding: 5px 10px;
-    border: none;
-    border-radius: 6px;
-    background: transparent;
-    color: var(--text-secondary, #8b949e);
-    font-family: inherit;
-    font-size: var(--font-size-xs, 0.75rem);
-    cursor: pointer;
-    transition: background 0.12s, color 0.12s;
-}
-
-.rd-desk-filter:hover {
-    color: var(--text-primary, #e6edf3);
-}
-
-.rd-desk-filter.active {
-    background: var(--accent-blue-muted, rgba(88, 166, 255, 0.15));
-    color: var(--accent-blue, #58a6ff);
-    font-weight: 500;
-}
-
-.rd-desk-view-toggle {
-    display: flex;
-    gap: 2px;
-    padding: 2px;
-    border-radius: var(--radius-md, 8px);
-    border: 1px solid var(--border-primary, #30363d);
-    background: var(--surface-glass-bg-secondary, var(--bg-secondary, #161b22));
+/* Filters + view switch: UX36 .filter-btn / .view-switch only — no local overrides */
+.rd-desk-view-toggle.view-switch > button .material-icons {
+    font-size: 18px;
 }
 
 .rd-desk-count {
-    margin-left: auto;
-    font-size: var(--font-size-xs, 0.75rem);
-    color: var(--text-secondary, #8b949e);
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
 }
 
 /* ── Main area ── */
 .rd-desk-main {
-    background: rgba(13, 17, 23, 0.12);
     flex: 1;
     min-height: 0;
     overflow: hidden;
     display: flex;
     flex-direction: column;
     position: relative;
+    background: var(--bg);
 }
 
 .rd-desk-content,
 .rd-desk-devices-panel {
     min-height: 0;
-}
-
-.rd-desk-table-wrap,
-.rd-desk-empty,
-.rd-desk-error,
-.rd-desk-loading {
-    background: var(--surface-glass-bg-secondary, var(--bg-secondary, #161b22));
-    backdrop-filter: blur(var(--surface-glass-blur, 16px)) saturate(var(--surface-glass-saturate, 1.2));
-    -webkit-backdrop-filter: blur(var(--surface-glass-blur, 16px)) saturate(var(--surface-glass-saturate, 1.2));
 }
 
 .rd-desk-devices-panel {
@@ -569,7 +587,7 @@ html.rd-desk-desktop {
     overflow-y: auto;
     overflow-x: hidden;
     overscroll-behavior: contain;
-    padding: 16px;
+    padding: var(--space-4);
     -webkit-overflow-scrolling: touch;
 }
 
@@ -590,18 +608,21 @@ html.rd-desk-desktop {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 12px;
-    padding: 64px 24px;
-    color: var(--text-secondary, #8b949e);
+    gap: var(--space-3);
+    padding: var(--space-7) var(--space-5);
+    color: var(--text-muted);
     text-align: center;
     min-height: 280px;
+    background: var(--bg-float);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
 }
 
 .rd-desk-loading .material-icons,
 .rd-desk-empty .material-icons,
 .rd-desk-error .material-icons {
     font-size: 48px;
-    opacity: 0.6;
+    opacity: 0.55;
 }
 
 .rd-desk-spin,
@@ -617,28 +638,28 @@ html.rd-desk-desktop {
     display: none !important;
 }
 
-/* ── Card grid (RustDesk-inspired) ── */
+/* ── Card grid ── */
 .rd-desk-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
-    gap: 14px;
+    grid-template-columns: repeat(auto-fill, minmax(176px, 1fr));
+    gap: var(--space-4);
 }
 
 .rd-desk-card {
     display: flex;
     flex-direction: column;
-    border-radius: var(--radius-lg, 12px);
+    border-radius: var(--radius);
     overflow: hidden;
-    background: linear-gradient(160deg, var(--rd-card-bg, #1e3a5f) 0%, color-mix(in srgb, var(--rd-card-bg, #1e3a5f) 70%, #000) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    min-height: 148px;
+    background: linear-gradient(160deg, var(--rd-card-bg, #1e3a5f) 0%, color-mix(in srgb, var(--rd-card-bg, #1e3a5f) 72%, #000) 100%);
+    border: 1px solid color-mix(in srgb, #fff 10%, transparent);
+    min-height: 156px;
     cursor: default;
-    transition: transform 0.15s, box-shadow 0.15s;
+    transition: transform var(--motion), box-shadow var(--motion);
 }
 
 .rd-desk-card:not(.rd-desk-card-disabled):hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-float);
 }
 
 .rd-desk-card-disabled {
@@ -647,7 +668,7 @@ html.rd-desk-desktop {
 }
 
 .rd-desk-card-offline {
-    opacity: 0.78;
+    opacity: 0.8;
 }
 
 .rd-desk-card-offline:not(.rd-desk-card-disabled):hover {
@@ -661,7 +682,7 @@ html.rd-desk-desktop {
 .rd-desk-card-top {
     display: flex;
     justify-content: center;
-    padding: 20px 12px 8px;
+    padding: var(--space-5) var(--space-3) var(--space-2);
 }
 
 .rd-desk-card-os {
@@ -670,14 +691,39 @@ html.rd-desk-desktop {
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
+/* UX36 OS marks on address-book cards (larger than inline text marks) */
+.rd-desk-card-top .os-icon {
+    width: 40px;
+    height: 40px;
+    color: rgba(255, 255, 255, 0.95);
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
+}
+
+.rd-desk-card-top .os-icon.os-windows { fill: #9cd1ff; }
+.rd-desk-card-top .os-icon.os-android { fill: #7ee787; }
+.rd-desk-card-top .os-icon.os-linux { fill: #e3b341; }
+.rd-desk-card-top .os-icon.os-apple { fill: #f0f3f6; }
+.rd-desk-card-top .os-icon.os-chrome { fill: #ff9b91; }
+.rd-desk-card-top .os-icon.os-icon-none {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.92);
+}
+
+.rd-desk-host-cell .os-icon {
+    width: 18px;
+    height: 18px;
+}
+
 .rd-desk-card-body {
     flex: 1;
-    padding: 0 12px 8px;
+    padding: 0 var(--space-3) var(--space-2);
     text-align: center;
 }
 
 .rd-desk-card-name {
-    font-size: var(--font-size-sm, 0.875rem);
+    font-size: var(--text-sm);
     font-weight: 600;
     color: #fff;
     overflow: hidden;
@@ -689,14 +735,14 @@ html.rd-desk-desktop {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 4px;
-    margin-top: 6px;
+    gap: var(--space-1);
+    margin-top: var(--space-2);
 }
 
 .rd-desk-card-tag {
     font-size: 10px;
     padding: 2px 6px;
-    border-radius: 999px;
+    border-radius: var(--radius-sm);
     background: rgba(0, 0, 0, 0.25);
     color: rgba(255, 255, 255, 0.85);
 }
@@ -704,15 +750,15 @@ html.rd-desk-desktop {
 .rd-desk-card-footer {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 8px 10px;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
     background: rgba(0, 0, 0, 0.22);
     border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .rd-desk-card-id {
     flex: 1;
-    font-family: var(--font-mono, monospace);
+    font-family: var(--mono);
     font-size: 11px;
     color: rgba(255, 255, 255, 0.75);
     overflow: hidden;
@@ -721,22 +767,22 @@ html.rd-desk-desktop {
 }
 
 .rd-desk-card-connect {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 28px;
-    height: 28px;
+    width: var(--control-h-sm);
+    height: var(--control-h-sm);
     padding: 0;
-    border: none;
-    border-radius: 6px;
+    border: 1px solid transparent;
+    border-radius: var(--radius);
     background: rgba(255, 255, 255, 0.15);
     color: #fff;
     cursor: pointer;
-    transition: background 0.12s;
+    transition: background-color var(--motion);
 }
 
 .rd-desk-card-connect:hover {
-    background: var(--accent-blue, #58a6ff);
+    background: var(--accent);
 }
 
 .rd-desk-card-connect .material-icons {
@@ -755,7 +801,7 @@ html.rd-desk-desktop {
 
 .rd-desk-connected-label {
     font-size: 11px;
-    color: var(--text-secondary, #8b949e);
+    color: var(--text-muted);
 }
 
 .rd-desk-card-connected {
@@ -764,33 +810,34 @@ html.rd-desk-desktop {
 
 /* ── List view ── */
 .rd-desk-table-wrap {
-    border-radius: var(--radius-lg, 12px);
-    border: 1px solid var(--border-primary, #30363d);
-    background: var(--surface-glass-bg-secondary, var(--bg-secondary, #161b22));
+    border-radius: var(--radius);
+    border: 1px solid var(--rule);
+    background: var(--bg-float);
     overflow: auto;
 }
 
 .rd-desk-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: var(--font-size-sm, 0.875rem);
+    font-size: var(--text-sm);
 }
 
 .rd-desk-table th {
-    text-align: left;
-    padding: 11px 14px;
+    text-align: start;
+    padding: var(--space-3) var(--space-3);
     font-weight: 600;
-    font-size: var(--font-size-xs, 0.75rem);
+    font-size: var(--text-xs);
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: var(--text-secondary, #8b949e);
-    border-bottom: 1px solid var(--border-primary, #30363d);
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--rule);
     white-space: nowrap;
+    background: var(--bg-subtle);
 }
 
 .rd-desk-table td {
-    padding: 11px 14px;
-    border-bottom: 1px solid var(--border-secondary, #21262d);
+    padding: var(--space-3);
+    border-bottom: 1px solid var(--rule);
     vertical-align: middle;
 }
 
@@ -799,25 +846,26 @@ html.rd-desk-desktop {
 }
 
 .rd-desk-table tbody tr:hover {
-    background: var(--bg-hover, rgba(255, 255, 255, 0.03));
+    background: var(--hover);
 }
 
-/* ── Shared components ── */
+/* Legacy button aliases (cards / dynamic markup may still use these) */
 .rd-desk-btn {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 8px 14px;
-    border-radius: var(--radius-md, 8px);
-    border: 1px solid transparent;
-    background: var(--accent-blue, #58a6ff);
-    color: #fff;
+    gap: var(--space-2);
+    min-height: var(--control-h);
+    padding: 0 var(--control-pad-x);
+    border-radius: var(--control-radius);
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: var(--on-accent);
     font-family: inherit;
-    font-size: var(--font-size-sm, 0.875rem);
-    font-weight: 500;
+    font-size: var(--text-base);
+    font-weight: var(--control-weight);
     cursor: pointer;
     text-decoration: none;
-    transition: filter 0.12s, background 0.12s;
+    transition: background-color var(--motion), border-color var(--motion);
     white-space: nowrap;
 }
 
@@ -826,61 +874,61 @@ html.rd-desk-desktop {
 }
 
 .rd-desk-btn:hover {
-    filter: brightness(1.08);
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
 }
 
 .rd-desk-btn:disabled {
-    opacity: 0.45;
+    opacity: 0.5;
     cursor: not-allowed;
-    filter: none;
 }
 
 .rd-desk-btn-ghost {
-    background: var(--surface-glass-bg-secondary, var(--bg-secondary, #161b22));
-    color: var(--text-primary, #e6edf3);
-    border-color: var(--border-primary, #30363d);
+    background: var(--bg);
+    color: var(--text);
+    border-color: var(--border);
+}
+
+.rd-desk-btn-ghost:hover {
+    background: var(--hover);
 }
 
 .rd-desk-btn-sm {
-    padding: 5px 10px;
-    font-size: var(--font-size-xs, 0.75rem);
+    min-height: var(--control-h-sm);
+    padding: 0 var(--control-pad-x-sm);
+    font-size: var(--text-sm);
 }
 
 .rd-desk-icon-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
+    width: var(--icon-btn-size);
+    height: var(--icon-btn-size);
     padding: 0;
-    border: 1px solid var(--border-primary, #30363d);
-    border-radius: var(--radius-md, 8px);
-    background: var(--surface-glass-bg-secondary, var(--bg-secondary, #161b22));
-    color: var(--text-secondary, #8b949e);
+    border: 1px solid transparent;
+    border-radius: var(--control-radius);
+    background: transparent;
+    color: var(--text-muted);
     cursor: pointer;
-    transition: background 0.12s, color 0.12s;
+    transition: background-color var(--motion), color var(--motion);
 }
 
 .rd-desk-icon-btn .material-icons {
-    font-size: 20px;
+    font-size: var(--icon-btn-glyph);
 }
 
-.rd-desk-icon-btn:hover {
-    color: var(--text-primary, #e6edf3);
-    background: var(--bg-hover, rgba(255, 255, 255, 0.05));
-}
-
+.rd-desk-icon-btn:hover,
 .rd-desk-icon-btn.active {
-    color: var(--accent-blue, #58a6ff);
-    background: var(--accent-blue-muted, rgba(88, 166, 255, 0.15));
-    border-color: var(--accent-blue, #58a6ff);
+    background: var(--hover);
+    color: var(--text);
 }
 
 .rd-desk-status {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    font-size: var(--font-size-sm, 0.875rem);
+    gap: var(--space-2);
+    font-size: var(--text-sm);
 }
 
 .rd-desk-status-dot {
@@ -890,26 +938,26 @@ html.rd-desk-desktop {
     flex-shrink: 0;
 }
 
-.rd-desk-status-dot.online { background: var(--status-online, #2ea44f); }
-.rd-desk-status-dot.offline { background: var(--text-tertiary, #6e7681); }
-.rd-desk-status-dot.banned { background: var(--status-banned, #f85149); }
-.rd-desk-status-dot.no_signal { background: var(--status-warning, #d29922); }
+.rd-desk-status-dot.online { background: var(--success); }
+.rd-desk-status-dot.offline { background: var(--text-muted); }
+.rd-desk-status-dot.banned { background: var(--danger); }
+.rd-desk-status-dot.no_signal { background: var(--warning); }
 
 .rd-desk-device-id {
-    font-family: var(--font-mono, monospace);
-    font-size: var(--font-size-xs, 0.75rem);
+    font-family: var(--mono);
+    font-size: var(--text-xs);
 }
 
 .rd-desk-host-cell {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-2);
     min-width: 0;
 }
 
 .rd-desk-host-cell .material-icons {
     font-size: 18px;
-    color: var(--text-secondary, #8b949e);
+    color: var(--text-muted);
     flex-shrink: 0;
 }
 
@@ -921,8 +969,8 @@ html.rd-desk-desktop {
 
 .rd-desk-platform,
 .rd-desk-last {
-    color: var(--text-secondary, #8b949e);
-    font-size: var(--font-size-xs, 0.75rem);
+    color: var(--text-muted);
+    font-size: var(--text-xs);
     white-space: nowrap;
 }
 
@@ -930,18 +978,65 @@ html.rd-desk-desktop {
 .rd-desk-footer {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-2);
     flex-shrink: 0;
-    padding: 8px 20px;
-    border-top: 1px solid var(--border-primary, #30363d);
-    background: var(--surface-glass-bg-secondary, var(--bg-secondary, #161b22));
-    font-size: var(--font-size-xs, 0.75rem);
-    color: var(--text-secondary, #8b949e);
+    padding: var(--space-2) var(--space-5);
+    border-top: 1px solid var(--rule);
+    background: var(--bg-float);
+    font-size: var(--text-xs);
+    color: var(--text-muted);
 }
 
 .rd-desk-sync-time {
-    margin-left: auto;
-    color: var(--text-tertiary, #6e7681);
+    margin-inline-start: auto;
+}
+
+/* ── Phone gate ── */
+.rd-phone-gate {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-5);
+    background: var(--bg);
+}
+
+.rd-phone-gate[hidden] {
+    display: none !important;
+}
+
+.rd-phone-gate-card {
+    max-width: 420px;
+    padding: var(--space-6);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--bg-float);
+    box-shadow: var(--shadow-float);
+    text-align: center;
+}
+
+.rd-phone-gate-icon .material-icons {
+    font-size: 48px;
+    color: var(--accent);
+}
+
+.rd-phone-gate-title {
+    margin: var(--space-3) 0 var(--space-2);
+    font-size: var(--text-lg);
+}
+
+.rd-phone-gate-body {
+    margin: 0 0 var(--space-5);
+    color: var(--text-muted);
+}
+
+.rd-phone-gate-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    justify-content: center;
 }
 
 /* ── Responsive ── */
@@ -955,23 +1050,22 @@ html.rd-desk-desktop {
         width: 100%;
         max-height: min(240px, 35vh);
         border-right: none;
-        border-bottom: 1px solid var(--border-primary, #30363d);
+        border-bottom: 1px solid var(--rule);
     }
 
     .rd-desk-quick-label {
         display: none;
     }
 
-    .rd-desk-count {
-        margin-left: 0;
-        width: 100%;
+    .rd-desk-open-console span:not(.material-icons) {
+        display: none;
     }
 }
 
 @media (max-width: 600px) {
     .rd-desk-grid {
         grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-        gap: 10px;
+        gap: var(--space-3);
     }
 
     .rd-desk-table th:nth-child(4),
@@ -980,9 +1074,12 @@ html.rd-desk-desktop {
     .rd-desk-table td:nth-child(5) {
         display: none;
     }
+
+    .rd-desk-user {
+        display: none;
+    }
 }
 
-/* Mobile / tablet: allow full-page scroll with safe areas */
 @media (max-width: 1024px), (max-height: 720px) {
     html.rd-desk-desktop {
         height: auto;

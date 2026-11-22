@@ -270,6 +270,32 @@ async function userCanAccessDevice(db, user, device, allDevices) {
     return device && scope.has(String(device.id));
 }
 
+/**
+ * Authorize a panel operator against a concrete device/target id.
+ * Missing and out-of-scope devices both return 404 so callers cannot probe scope.
+ * @returns {Promise<{allowed: boolean, statusCode?: number, reason?: string}>}
+ */
+async function authorizeUserDeviceAccess(db, user, deviceOrId, options = {}) {
+    const resolveDevice = typeof options.resolveDevice === 'function'
+        ? options.resolveDevice
+        : async (id) => (typeof db.getPeerById === 'function' ? db.getPeerById(id) : null);
+
+    let device = deviceOrId;
+    if (!device || typeof device !== 'object') {
+        const id = String(deviceOrId || '').trim();
+        if (!id) return { allowed: false, statusCode: 404, reason: 'unknown-device' };
+        device = await resolveDevice(id);
+    }
+    if (!device || !device.id) {
+        return { allowed: false, statusCode: 404, reason: 'unknown-device' };
+    }
+    const visible = await userCanAccessDevice(db, user, device, options.allDevices);
+    if (!visible) {
+        return { allowed: false, statusCode: 404, reason: 'out-of-scope' };
+    }
+    return { allowed: true, device };
+}
+
 async function collectAclUsernames(db, group, targetSet) {
     if (!group || !targetSet) return;
     const allowedUsers = normalizeUsernames(group.allowed_users);
@@ -368,6 +394,7 @@ module.exports = {
     getDeviceScopeForUser,
     filterDevicesByScope,
     userCanAccessDevice,
+    authorizeUserDeviceAccess,
     resolveOperatorUsernamesForDevice,
     resolveOperatorEmailsForDevice,
     resolveFolderNameForDevice,

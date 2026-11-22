@@ -1160,16 +1160,21 @@ function generateBackgroundCss(branding) {
         rdclientOverlay = clampNumber(branding.rdclientBgOverlay, 0, 95);
     }
     if (rdclientBg) {
-        out += `body.rd-desk-body::before {\n` +
+        const rdclientBgRule =
+               `    background: ${rdclientBg};\n    ${rdclientType === 'image' ? sizeRule(branding.rdclientBgSize || branding.bgSize) : ''}\n`;
+        out += `body.rd-desk-body::before,\nbody.rdclient-login-page::before {\n` +
                `    content: '';\n    position: fixed;\n    inset: 0;\n    z-index: 0;\n    pointer-events: none;\n` +
-               `    background: ${rdclientBg};\n    ${rdclientType === 'image' ? sizeRule(branding.rdclientBgSize || branding.bgSize) : ''}\n}\n`;
+               rdclientBgRule +
+               `}\n`;
         if (rdclientOverlay) {
-            out += `body.rd-desk-body::after {\n` +
+            out += `body.rd-desk-body::after,\nbody.rdclient-login-page::after {\n` +
                    `    content: '';\n    position: fixed;\n    inset: 0;\n    z-index: 0;\n` +
                    `    background: rgba(0, 0, 0, ${(rdclientOverlay / 100).toFixed(2)});\n    pointer-events: none;\n}\n`;
         }
-        out += `body.rd-desk-body { background-color: transparent; position: relative; isolation: isolate; }\n`;
-        out += `body.rd-desk-body .rd-desk-app { position: relative; z-index: 1; }\n`;
+        out += `body.rd-desk-body,\nbody.rdclient-login-page { background-color: transparent; position: relative; isolation: isolate; }\n`;
+        out += `body.rd-desk-body .rd-desk-app,\nbody.rdclient-login-page .rdclient-login-shell { position: relative; z-index: 1; }\n`;
+        /* Hide the page's fallback gradient when branding wallpaper is active */
+        out += `body.rdclient-login-page .rdclient-login-wallpaper { background: transparent !important; }\n`;
     }
 
     return out;

@@ -284,17 +284,65 @@ const Utils = {
     },
     
     /**
-     * Get platform icon name based on platform string
+     * Normalize a device platform/os string into a UX36 OS kind.
+     * @returns {'windows'|'android'|'linux'|'apple'|'chrome'|''}
+     */
+    getPlatformKind(platform) {
+        if (!platform) return '';
+        const p = String(platform).toLowerCase();
+        if (p.includes('windows') || p.includes('win32') || p.includes('win64')) return 'windows';
+        if (p.includes('android')) return 'android';
+        if (p.includes('chrome os') || p.includes('chromeos') || p.includes('chromium os')) return 'chrome';
+        if (p.includes('mac') || p.includes('darwin') || p.includes('ios') || p.includes('iphone') || p.includes('ipad')) return 'apple';
+        if (
+            p.includes('linux') || p.includes('ubuntu') || p.includes('debian') ||
+            p.includes('fedora') || p.includes('centos') || p.includes('redhat') ||
+            p.includes('suse') || p.includes('arch') || p.includes('manjaro') ||
+            p.includes('mint') || p.includes('rocky') || p.includes('alma')
+        ) return 'linux';
+        return '';
+    },
+
+    /**
+     * Get Material Icons glyph for a platform (legacy callers).
      */
     getPlatformIcon(platform) {
-        if (!platform) return 'devices';
-        const p = platform.toLowerCase();
-        if (p.includes('windows')) return 'desktop_windows';
-        if (p.includes('mac') || p.includes('darwin')) return 'desktop_mac';
-        if (p.includes('linux')) return 'computer';
-        if (p.includes('android')) return 'smartphone';
-        if (p.includes('ios') || p.includes('iphone')) return 'phone_iphone';
-        return 'devices';
+        switch (this.getPlatformKind(platform)) {
+            case 'windows': return 'laptop_windows';
+            case 'apple': return 'laptop_mac';
+            case 'linux': return 'terminal';
+            case 'android': return 'android';
+            case 'chrome': return 'laptop_chromebook';
+            default: return 'devices';
+        }
+    },
+
+    /**
+     * Coloured OS mark used by UX 3.6 (.os-icon + --os-* tokens).
+     * Safe SVG markup (no user-controlled path data).
+     */
+    getPlatformIconHtml(platform, options = {}) {
+        const kind = this.getPlatformKind(platform);
+        const size = Number(options.size) > 0 ? Number(options.size) : 16;
+        const title = options.title != null ? String(options.title) : String(platform || '');
+        const extraClass = options.className ? ` ${options.className}` : '';
+        if (!kind) {
+            return `<span class="os-icon os-icon-none material-icons${extraClass}" style="font-size:${size}px" aria-hidden="true">devices</span>`;
+        }
+        const paths = {
+            // Four-pane Windows mark
+            windows: '<path d="M3 3h8.2v8.2H3zm9.8 0H21v8.2h-8.2zM3 12.8H11.2V21H3zm9.8 0H21V21h-8.2z"/>',
+            // Android robot (simplified)
+            android: '<path d="M17.6 9.5l1.5-2.6a.6.6 0 10-1-.6l-1.6 2.7A7.4 7.4 0 0012 8c-1.6 0-3.1.5-4.4 1.3L6 6.3a.6.6 0 10-1 .6l1.5 2.6A7.3 7.3 0 004.5 15v.8h15V15c0-2.1-.9-4-2-5.5zM8.4 13.2a.9.9 0 110-1.8.9.9 0 010 1.8zm7.2 0a.9.9 0 110-1.8.9.9 0 010 1.8zM7.2 17.2h1.6V21H7.2zm8 0H16.8V21H15.2z"/>',
+            // Tux-less Linux mark (circle + beak)
+            linux: '<path d="M12 2.5c-2.4 0-4.4 2.4-4.4 5.4 0 1.5.5 2.8 1.3 3.7-.9.5-1.6 1.5-1.9 2.8-.4 1.7.1 3.3 1.3 4.1.6.4 1.3.6 2 .6.7 0 1.3-.3 1.7-.8.4.5 1 .8 1.7.8.7 0 1.4-.2 2-.6 1.2-.8 1.7-2.4 1.3-4.1-.3-1.3-1-2.3-1.9-2.8.8-.9 1.3-2.2 1.3-3.7C16.4 4.9 14.4 2.5 12 2.5zm-2.2 6.2a1 1 0 110-2 1 1 0 010 2zm4.4 0a1 1 0 110-2 1 1 0 010 2z"/>',
+            // Apple logo (simplified)
+            apple: '<path d="M16.4 12.6c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.2-2.8.9-3.5.9-.7 0-1.9-.8-3.1-.8-1.6 0-3.1 1-3.9 2.4-1.7 2.9-.4 7.2 1.2 9.6.8 1.1 1.7 2.4 3 2.3 1.2 0 1.6-.8 3.1-.8s1.8.8 3.1.8c1.3 0 2.1-1.2 2.9-2.3.9-1.3 1.3-2.5 1.3-2.6-.1 0-2.5-1-2.5-3.7zM14.2 5.8c.6-.8 1.1-1.9.9-3-.9 0-2 .6-2.6 1.4-.6.7-1.1 1.8-.9 2.9 1 .1 2-.5 2.6-1.3z"/>',
+            // Chrome-ish circle mark
+            chrome: '<path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 3.5A6.5 6.5 0 0118 10H12a2.5 2.5 0 00-2.3 1.5L7.2 6.3A6.5 6.5 0 0112 5.5zM5.5 12c0-1.3.4-2.6 1-3.7L9.7 14A2.5 2.5 0 0012 15.5c.7 0 1.3-.3 1.8-.7l2.5 4.3A6.5 6.5 0 015.5 12zm9 0a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>'
+        };
+        const label = title ? ` title="${String(title).replace(/"/g, '&quot;')}"` : '';
+        return `<svg class="os-icon os-${kind}${extraClass}" viewBox="0 0 24 24" width="${size}" height="${size}" focusable="false" aria-hidden="true"${label}>${paths[kind]}</svg>`;
     },
 
     /**
