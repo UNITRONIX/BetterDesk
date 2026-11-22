@@ -8,6 +8,15 @@
       "blurb": "Security review, production audits, infrastructure testing, and real-world deployment feedback."
     }
   ],
+  "bronze": [
+    {
+      "name": "betterde.sk",
+      "role": "Bronze Sponsor",
+      "url": "https://betterde.sk",
+      "github": "trybetterdesk",
+      "githubUrl": "https://github.com/trybetterdesk"
+    }
+  ],
   "individuals": [
     {
       "name": "Marco Jakobs",
