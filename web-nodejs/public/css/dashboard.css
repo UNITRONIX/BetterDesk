@@ -50,14 +50,14 @@
     --stat-glow: var(--accent-blue);
     position: relative;
     background: var(--bg-secondary);
-    border: 1px solid var(--border-primary);
+    border: none;
     border-radius: var(--radius-lg);
     padding: var(--space-lg);
     display: flex;
     align-items: flex-start;
     gap: var(--space-md);
     overflow: hidden;
-    transition: border-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
     transform: translateY(0);
 }
 
@@ -98,7 +98,6 @@
 }
 
 .dashboard-stat-card:hover {
-    border-color: var(--border-hover);
     transform: translateY(-2px);
 }
 
@@ -198,7 +197,7 @@
 
 .server-status-card {
     background: var(--bg-secondary);
-    border: 1px solid var(--border-primary);
+    border: none;
     border-radius: var(--radius-lg);
     padding: var(--space-lg);
 }
@@ -303,7 +302,7 @@
 
 .activity-list {
     background: var(--bg-secondary);
-    border: 1px solid var(--border-primary);
+    border: none;
     border-radius: var(--radius-lg);
     overflow: hidden;
 }
@@ -394,7 +393,7 @@
 
 .quick-action-card {
     background: var(--bg-secondary);
-    border: 1px solid var(--border-primary);
+    border: none;
     border-radius: var(--radius-lg);
     padding: var(--space-lg);
     display: flex;
@@ -402,11 +401,10 @@
     align-items: center;
     text-align: center;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: background var(--transition-fast);
 }
 
 .quick-action-card:hover {
-    border-color: var(--accent-blue);
     background: var(--accent-blue-muted);
 }
 
@@ -696,7 +694,7 @@
     gap: var(--space-sm);
     padding: var(--space-sm) var(--space-md);
     background: var(--accent-blue-muted);
-    border: 1px solid rgba(88, 166, 255, 0.35);
+    border: none;
     border-radius: var(--radius-lg);
     color: var(--text-primary);
 }
@@ -762,6 +760,7 @@
 .dashboard-stat-card {
     padding: var(--space-md);
     align-items: flex-start;
+    border: none;
 }
 
 .dashboard-stat-icon {
@@ -780,7 +779,7 @@
 
 .client-config-card {
     padding: var(--space-lg);
-    border-color: rgba(88, 166, 255, 0.32);
+    border: none;
     background:
         linear-gradient(135deg, rgba(88, 166, 255, 0.12), transparent 42%),
         var(--surface-glass-bg-secondary, var(--bg-secondary));
@@ -856,7 +855,7 @@
 .client-config-host-row {
     margin-top: var(--space-md);
     padding: var(--space-md);
-    border: 1px solid var(--border-primary);
+    border: none;
     border-radius: var(--radius-lg);
     background: var(--bg-secondary);
 }
@@ -917,7 +916,7 @@
     min-width: 0;
     padding: var(--space-md) calc(var(--space-lg) + 28px) var(--space-md) var(--space-md);
     background: var(--bg-tertiary);
-    border: 1px solid var(--border-primary);
+    border: none;
     border-radius: var(--radius-lg);
 }
 
@@ -1011,6 +1010,7 @@
 
 .server-status-card {
     padding: var(--space-md);
+    border: none;
 }
 
 .server-status-header {
@@ -1033,6 +1033,7 @@
 .quick-action-card {
     min-height: 128px;
     padding: var(--space-md);
+    border: none;
 }
 
 .quick-action-card:focus-visible,
@@ -1052,6 +1053,10 @@
 .attention-section,
 .activity-feed-section {
     padding: var(--space-md);
+}
+
+.activity-feed-section {
+    border: none;
 }
 
 .attention-list {

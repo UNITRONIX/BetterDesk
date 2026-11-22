@@ -55,16 +55,16 @@
          aria-valuemin="200" aria-valuemax="320" aria-valuenow="232"
          title="<%= _('ux35.resize_sidebar') || 'Resize sidebar' %>"></div>
 
+    <div class="ux35-sidebar-filter ux36-sidebar-filter">
+        <label class="sr-only" for="ux35-sidebar-filter-input"><%= _('ux35.filter_menu') || 'Filter menu' %></label>
+        <input type="search" id="ux35-sidebar-filter-input" class="ux35-sidebar-filter-input form-input"
+               placeholder="<%= _('ux35.filter_menu_placeholder') || 'Search menu…' %>"
+               autocomplete="off">
+    </div>
+
     <nav class="ux35-sidebar-nav ux36-sidebar-nav" id="ux35-sidebar-nav"
          data-more-label="<%= _('nav.more') %>"
          data-fewer-label="<%= _('nav.fewer') %>">
-        <div class="ux35-sidebar-filter ux36-sidebar-filter">
-            <label class="sr-only" for="ux35-sidebar-filter-input"><%= _('ux35.filter_menu') || 'Filter menu' %></label>
-            <input type="search" id="ux35-sidebar-filter-input" class="ux35-sidebar-filter-input form-input"
-                   placeholder="<%= _('ux35.filter_menu_placeholder') || 'Search menu…' %>"
-                   autocomplete="off">
-        </div>
-
         <% _sections.forEach(function (section) { %>
         <% const split = _splitPages(section.pages); %>
         <% const moreOpen = split.more.some(function (p) { return p.active; }); %>

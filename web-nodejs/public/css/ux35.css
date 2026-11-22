@@ -273,17 +273,22 @@ body.app-page.ux35-page {
 }
 
 .ux35-sidebar-filter {
+    flex-shrink: 0;
     padding: 8px 12px 4px;
-    position: sticky;
-    top: 0;
-    z-index: 2;
+    position: relative;
+    z-index: 1;
     background: var(--ux35-sidebar-bg);
+    isolation: isolate;
 }
-.ux35-sidebar-filter-input {
+.ux35-sidebar-filter-input,
+.ux35-sidebar-filter .form-input {
     width: 100%;
     min-height: 32px;
     font-size: 12px;
     padding: 6px 10px;
+    background: var(--bg-secondary, var(--ux35-sidebar-bg));
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
 }
 .ux35-sidebar-heading-toggle {
     display: flex;

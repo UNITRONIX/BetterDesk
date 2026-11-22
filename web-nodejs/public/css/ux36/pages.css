@@ -98,8 +98,8 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 0;
-    border-top: 1px solid var(--rule);
-    border-bottom: 1px solid var(--rule);
+    border-top: none;
+    border-bottom: none;
 }
 
 .ux36-page .dashboard-stat-card {
@@ -153,7 +153,7 @@
 }
 
 .ux36-page .dashboard-stat-card + .dashboard-stat-card {
-    border-inline-start: 1px solid var(--rule);
+    border-inline-start: none;
 }
 
 .ux36-page .dashboard-stat-card:hover {
@@ -213,13 +213,31 @@
    the same hairlines as every other beta page. The operator's own colours
    still flow through --bg / --rule, so branding keeps working. */
 .ux36-page .dashboard-shell :is(
-    .client-config-card, .activity-feed-section, .attention-section,
-    .server-status-card, .quick-action-card, .dashboard-tip,
-    .client-config-host-row, .client-config-field, .attention-item
+    .attention-section, .attention-item
 ) {
     background: var(--bg);
     background-image: none;
     border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    box-shadow: none;
+}
+
+.ux36-page .dashboard-shell .activity-feed-section,
+.ux36-page .dashboard-shell .activity-feed-section .activity-list {
+    background: var(--bg);
+    background-image: none;
+    border: none;
+    border-radius: var(--radius);
+    box-shadow: none;
+}
+
+.ux36-page .dashboard-shell :is(
+    .server-status-card, .quick-action-card, .client-config-card,
+    .client-config-host-row, .client-config-field
+) {
+    background: var(--bg);
+    background-image: none;
+    border: none;
     border-radius: var(--radius);
     box-shadow: none;
 }
@@ -240,7 +258,8 @@
 
 .ux36-page .dashboard-tip {
     background: var(--bg-subtle);
-    border-color: var(--rule);
+    border: none;
+    box-shadow: none;
 }
 
 @media (max-width: 1199px) {

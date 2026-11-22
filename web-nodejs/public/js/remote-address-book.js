@@ -90,22 +90,24 @@
         var p = platform.toLowerCase();
         if (p.indexOf('windows') !== -1) return 'laptop_windows';
         if (p.indexOf('mac') !== -1 || p.indexOf('darwin') !== -1) return 'laptop_mac';
-        if (p.indexOf('linux') !== -1 || p.indexOf('fedora') !== -1 || p.indexOf('ubuntu') !== -1) return 'terminal';
+        if (
+            p.indexOf('linux') !== -1 || p.indexOf('fedora') !== -1 ||
+            p.indexOf('ubuntu') !== -1 || p.indexOf('nobara') !== -1 ||
+            p.indexOf('debian') !== -1 || p.indexOf('arch') !== -1
+        ) return 'terminal';
         if (p.indexOf('android') !== -1) return 'android';
         if (p.indexOf('ios') !== -1) return 'phone_iphone';
         return 'devices';
     }
 
-    function platformIconHtml(platform, size) {
-        if (global.Utils && typeof global.Utils.getPlatformIconHtml === 'function') {
-            return global.Utils.getPlatformIconHtml(platform, {
-                size: size || 40,
-                className: c('-card-os'),
-                title: platform || ''
-            });
-        }
-        return '<span class="material-icons ' + c('-card-os') + '" aria-hidden="true">' +
-            platformIcon(platform) + '</span>';
+    /* RdClient cards use Material Icons — not the coloured UX36 SVG OS marks
+       (the Linux mark reads as a yellow "emoji" on dark card backgrounds). */
+    function platformIconHtml(platform, size, className) {
+        var cls = className || '';
+        var sizePx = Number(size) > 0 ? Number(size) : 40;
+        var title = platform ? ' title="' + esc(platform) + '"' : '';
+        return '<span class="material-icons ' + cls + '" style="font-size:' + sizePx +
+            'px" aria-hidden="true"' + title + '>' + platformIcon(platform) + '</span>';
     }
 
     function deviceStatusInfo(d) {
@@ -383,7 +385,7 @@
                     (connected ? ' ' + c('-card-connected') : '') +
                     '" style="--rd-card-bg:' + bg + '" data-id="' + esc(d.id) + '">' +
                     '<div class="' + c('-card-top') + '">' +
-                    platformIconHtml(platform, 40) +
+                    platformIconHtml(platform, 40, c('-card-os')) +
                     '</div>' +
                     '<div class="' + c('-card-body') + '">' +
                     '<div class="' + c('-card-name') + '" title="' + esc(name) + '">' + esc(name) + '</div>' +
@@ -416,9 +418,7 @@
                 var canConnect = !d.banned && !isConnected(d.id);
                 var isOffline = !d.online;
                 var connected = isConnected(d.id);
-                var rowOsIcon = (global.Utils && typeof global.Utils.getPlatformIconHtml === 'function')
-                    ? global.Utils.getPlatformIconHtml(platform === '—' ? '' : platform, { size: 18, title: platform })
-                    : '<span class="material-icons" aria-hidden="true">' + platformIcon(platform === '—' ? '' : platform) + '</span>';
+                var rowOsIcon = platformIconHtml(platform === '—' ? '' : platform, 18);
 
                 return '<tr data-id="' + esc(d.id) + '"' + (isOffline ? ' class="' + c('-row-offline') + '"' : '') + '>' +
                     '<td><span class="' + c('-status') + '">' +

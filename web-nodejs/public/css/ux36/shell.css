@@ -550,8 +550,9 @@
 
 .ux35-sidebar-nav {
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
-    padding: var(--space-3) var(--space-2);
+    padding: 0 var(--space-2) var(--space-3);
 }
 
 .ux35-sidebar-section + .ux35-sidebar-section {
@@ -670,12 +671,14 @@
 
 /* ── Menu filter and the section's "More" row ── */
 
+/* Filter sits outside the scrolling <nav>, flush under the top bar */
 .ux36-sidebar-filter {
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    padding: 0 var(--space-2) var(--space-2);
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+    padding: var(--space-3) var(--space-2) var(--space-2);
     background: var(--bg-subtle);
+    isolation: isolate;
 }
 
 .ux36-sidebar-filter .form-input {
@@ -683,6 +686,9 @@
     min-height: var(--control-h-sm);
     padding-inline: var(--control-pad-x-sm);
     font-size: var(--text-sm);
+    background: var(--bg);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
 }
 
 .ux35-sidebar-item.nav-more-toggle {

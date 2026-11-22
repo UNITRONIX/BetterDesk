@@ -296,9 +296,10 @@ const Utils = {
         if (p.includes('mac') || p.includes('darwin') || p.includes('ios') || p.includes('iphone') || p.includes('ipad')) return 'apple';
         if (
             p.includes('linux') || p.includes('ubuntu') || p.includes('debian') ||
-            p.includes('fedora') || p.includes('centos') || p.includes('redhat') ||
-            p.includes('suse') || p.includes('arch') || p.includes('manjaro') ||
-            p.includes('mint') || p.includes('rocky') || p.includes('alma')
+            p.includes('fedora') || p.includes('nobara') || p.includes('centos') ||
+            p.includes('redhat') || p.includes('suse') || p.includes('arch') ||
+            p.includes('manjaro') || p.includes('mint') || p.includes('rocky') ||
+            p.includes('alma')
         ) return 'linux';
         return '';
     },

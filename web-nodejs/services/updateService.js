@@ -155,12 +155,22 @@ function setUpdateChannel(channelId) {
     };
 }
 
-// Optional GitHub personal-access token  (60 req/h without, 5 000 with)
-const GITHUB_TOKEN = process.env.UPDATE_GITHUB_TOKEN || process.env.GITHUB_TOKEN || '';
+// Optional GitHub personal-access token  (60 req/h without, 5 000 with).
+// BETTERDESK_GITHUB_TOKEN is the same PAT used by Generator / client import.
+function resolveGithubToken() {
+    return String(
+        process.env.UPDATE_GITHUB_TOKEN
+        || process.env.BETTERDESK_GITHUB_TOKEN
+        || process.env.GITHUB_TOKEN
+        || ''
+    ).trim();
+}
 
 /** @type {Map<string, { expires: number, data: unknown }>} */
 const GH_GET_CACHE = new Map();
 const GH_GET_CACHE_TTL_MS = Number(process.env.UPDATE_GITHUB_CACHE_MS) || 120_000;
+const GH_GET_TIMEOUT_MS = Number(process.env.UPDATE_GITHUB_TIMEOUT_MS) || 20_000;
+const GH_GET_RETRIES = Math.max(0, Number(process.env.UPDATE_GITHUB_RETRIES) || 2);
 
 // ---------- component definitions ----------
 const COMPONENTS = {
@@ -325,9 +335,9 @@ function githubApiError(statusCode, body, headers = {}) {
     if (rateLimited) {
         const resetRaw = headers['x-ratelimit-reset'];
         const resetAt = resetRaw ? new Date(Number(resetRaw) * 1000).toISOString() : null;
-        const hint = GITHUB_TOKEN
+        const hint = resolveGithubToken()
             ? 'GitHub API rate limit exceeded for the configured token.'
-            : 'GitHub API rate limit exceeded for unauthenticated requests (60/hour). Set UPDATE_GITHUB_TOKEN in the console .env — a read-only Personal Access Token raises the limit to 5,000/hour.';
+            : 'GitHub API rate limit exceeded for unauthenticated requests (60/hour). Set UPDATE_GITHUB_TOKEN or BETTERDESK_GITHUB_TOKEN in the console .env — a read-only Personal Access Token raises the limit to 5,000/hour.';
         const err = new Error(resetAt ? `${hint} Resets at ${resetAt}.` : hint);
         err.code = 'GITHUB_RATE_LIMIT';
         err.statusCode = statusCode;
@@ -378,10 +388,18 @@ function ghGetCacheKey(urlPath) {
     return url.pathname + url.search;
 }
 
+function isRetryableGithubNetworkError(err) {
+    const msg = String(err && err.message ? err.message : err || '');
+    return msg === 'GitHub API timeout'
+        || /ETIMEDOUT|ECONNRESET|EAI_AGAIN|ENETUNREACH|socket hang up|ECONNREFUSED/i.test(msg);
+}
+
 /**
  * HTTPS GET → parsed JSON. Follows a small, same-host redirect chain.
+ * Retries transient network/timeouts (panel update checks used to fail hard
+ * on a single slow GitHub response).
  */
-function ghGet(urlPath, { bypassCache = false, redirectCount = 0 } = {}) {
+function ghGet(urlPath, { bypassCache = false, redirectCount = 0, attempt = 0 } = {}) {
     const url = parseAllowedGithubUrl(urlPath, GITHUB_API_HOST);
     const cacheKey = ghGetCacheKey(urlPath);
     if (!bypassCache && GH_GET_CACHE_TTL_MS > 0) {
@@ -393,9 +411,18 @@ function ghGet(urlPath, { bypassCache = false, redirectCount = 0 } = {}) {
 
     return new Promise((resolve, reject) => {
         const headers = { 'User-Agent': USER_AGENT, 'Accept': 'application/vnd.github+json' };
-        if (GITHUB_TOKEN) headers['Authorization'] = `Bearer ${GITHUB_TOKEN}`;
+        const token = resolveGithubToken();
+        if (token) headers.Authorization = `Bearer ${token}`;
 
-        const req = https.get({ hostname: url.hostname, path: url.pathname + url.search, headers }, (res) => {
+        const req = https.get({
+            hostname: url.hostname,
+            servername: url.hostname,
+            path: url.pathname + url.search,
+            headers,
+            // Prefer IPv4 — broken IPv6 paths hang until the socket timeout.
+            family: 4,
+            timeout: GH_GET_TIMEOUT_MS,
+        }, (res) => {
             if (isGithubRedirectStatus(res.statusCode)) {
                 res.resume();
                 if (!res.headers.location || redirectCount >= MAX_GITHUB_REDIRECTS) {
@@ -409,7 +436,7 @@ function ghGet(urlPath, { bypassCache = false, redirectCount = 0 } = {}) {
                 }
                 return ghGet(redirectUrl.toString(), {
                     bypassCache,
-                    redirectCount: redirectCount + 1
+                    redirectCount: redirectCount + 1,
                 }).then(resolve, reject);
             }
             const chunks = [];
@@ -431,7 +458,20 @@ function ghGet(urlPath, { bypassCache = false, redirectCount = 0 } = {}) {
             });
         });
         req.on('error', reject);
-        req.setTimeout(15000, () => { req.destroy(); reject(new Error('GitHub API timeout')); });
+        req.setTimeout(GH_GET_TIMEOUT_MS, () => {
+            req.destroy();
+            reject(new Error('GitHub API timeout'));
+        });
+    }).catch((err) => {
+        if (!isRetryableGithubNetworkError(err) || attempt >= GH_GET_RETRIES) {
+            throw err;
+        }
+        const delayMs = Math.min(400 * (attempt + 1), 2000);
+        return new Promise((r) => setTimeout(r, delayMs)).then(() => ghGet(urlPath, {
+            bypassCache: true,
+            redirectCount,
+            attempt: attempt + 1,
+        }));
     });
 }
 
@@ -450,7 +490,8 @@ function ghDownloadFileOnce(owner, repo, ref, filePath) {
     const url = `https://raw.githubusercontent.com/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/${encodeURIComponent(ref)}/${filePath}`;
     return new Promise((resolve, reject) => {
         const headers = { 'User-Agent': USER_AGENT };
-        if (GITHUB_TOKEN) headers['Authorization'] = `Bearer ${GITHUB_TOKEN}`;
+        const token = resolveGithubToken();
+        if (token) headers.Authorization = `Bearer ${token}`;
 
         const follow = (target, redirectCount = 0) => {
             let parsedTarget;

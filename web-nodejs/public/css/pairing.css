@@ -11,6 +11,18 @@
     max-width: 640px;
 }
 
+.pairing-hero.card,
+.ux35-page .pairing-hero.card,
+.pairing-active.card,
+.ux35-page .pairing-active.card {
+    border: none;
+    box-shadow: none;
+}
+
+.pairing-active {
+    margin-top: 16px;
+}
+
 .pairing-code {
     display: flex;
     align-items: center;
@@ -110,10 +122,12 @@
     }
 }
 
-/* Beta shell: same rhythm as the rest of UX 3.6 — hairlines, no cards */
+/* Beta shell: same rhythm as the rest of UX 3.6 — no outer card frame */
 .ux36-page .pairing-hero,
-.ux36-page .pairing-hero.card {
-    border: 1px solid var(--rule);
+.ux36-page .pairing-hero.card,
+.ux36-page .pairing-active,
+.ux36-page .pairing-active.card {
+    border: none;
     border-radius: var(--radius);
     background: var(--bg);
     box-shadow: none;
