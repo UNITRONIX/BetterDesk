@@ -25,8 +25,9 @@ Source of truth for product branching: [docs/important/branching-and-versioning.
 
 Use `main` **only** when the operator clearly asks for one of:
 
-- a production release (`dev` → `main`, “release”, “ship stable”, checklist)
-- an explicit stable hotfix (“hotfix on main/stable”, “patch production now”)
+- a production release (`dev` → `main`, “release”, “ship stable”, checklist) → **+0.1.0**
+- an explicit stable hotfix (“hotfix on main/stable”, “patch production now”) → title/label **`hotfix`** → **+0.0.1** (same minor line, e.g. stay on 3.5.x)
+- a **no-bump** public landing (sponsors list, pure docs) → markers in [main-skip-release.mdc](main-skip-release.mdc) (`docs(…)` / `[skip-release]` / label `docs`|`skip-release`)
 
 If unclear, assume **`dev`** and ask once.
 
