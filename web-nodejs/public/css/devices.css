@@ -1427,7 +1427,7 @@ td.column-hidden {
     font-size: var(--font-size-sm);
 }
 
-.device-info-item span {
+.device-info-item > span {
     font-family: var(--font-mono);
     font-size: var(--font-size-sm);
 }
