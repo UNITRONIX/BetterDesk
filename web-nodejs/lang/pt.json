@@ -482,7 +482,12 @@
     "tag_device_one": "dispositivo",
     "tag_device_many": "dispositivos",
     "tag_group_one": "grupo dinâmico",
-    "tag_group_many": "grupos dinâmicos"
+    "tag_group_many": "grupos dinâmicos",
+    "reset_identity": "Repor identidade do dispositivo",
+    "reset_identity_title": "Repor identidade do dispositivo",
+    "reset_identity_confirm": "Repor o dispositivo {id} para que possa registar-se novamente após uma reinstalação? O registo do servidor será eliminado permanentemente.",
+    "reset_identity_success": "Identidade reposta; o dispositivo pode registar-se novamente",
+    "address_book_alias_unavailable": "Os nomes do livro de endereços não estão disponíveis porque a consola não consegue alcançar com segurança o serviço de livro de endereços Go. Configure PANEL_TRUST_SECRET e PANEL_TRUST_ALLOWED_HOSTS em implementações separadas."
   },
   "keys": {
     "title": "Chaves do servidor",
@@ -4874,7 +4879,10 @@
     "pair_activate": "Emparelhar com código",
     "pair_body": "O emparelhamento usa um código curto de uso único (válido 10 minutos). O QR do agente continua a poder ser digitalizado em Emparelhar com código → Digitalizar QR do agente.",
     "branding_link": "Branding do cliente",
-    "branding_body": "A aparência (logótipo, cores, etiquetas) é carregada em tempo de execução a partir do Branding do cliente — não vai embutida no instalador."
+    "branding_body": "A aparência (logótipo, cores, etiquetas) é carregada em tempo de execução a partir do Branding do cliente — não vai embutida no instalador.",
+    "distribution_title": "Transferências genéricas e clientes pré-configurados",
+    "distribution_body": "O portal público disponibiliza versões genéricas assinadas para emparelhamento por QR ou código único. Uma configuração custom.txt assinada requer o Gerador, a semente de assinatura do operador e um cliente com a chave pública correspondente.",
+    "distribution_warning": "Não copie uma semente de assinatura de uma versão do cliente para este servidor. Os binários genéricos devem ser emparelhados ou reconstruídos com a sua própria chave."
   },
   "pairing": {
     "title": "Código de emparelhamento",

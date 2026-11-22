@@ -406,6 +406,10 @@
                 <span>${_('devices.manage_groups') || 'Manage Groups'}</span>
             </button>
             <div class="kebab-divider"></div>
+            <button type="button" class="kebab-menu-item danger" data-action="reset-identity" data-id="${eid}">
+                <span class="material-icons">restart_alt</span>
+                <span>${_('devices.reset_identity')}</span>
+            </button>
             <button type="button" class="kebab-menu-item danger" data-action="delete" data-id="${eid}">
                 <span class="material-icons">delete</span>
                 <span>${_('actions.delete')}</span>
@@ -819,6 +823,13 @@
             const endpoint = '/api/devices' + qs;
             const response = await fetchOnce(endpoint, () => Utils.api(endpoint));
             devices = response.devices || [];
+            const aliasWarning = document.getElementById('address-book-alias-warning');
+            if (aliasWarning) {
+                aliasWarning.textContent = response.address_book_alias_available === false
+                    ? _('devices.address_book_alias_unavailable')
+                    : '';
+                aliasWarning.hidden = response.address_book_alias_available !== false;
+            }
             
             // Update count
             document.getElementById('devices-count').textContent = devices.length;
@@ -1431,6 +1442,10 @@
 
             case 'permanent-delete':
                 await permanentDeleteDevice(deviceId);
+                break;
+
+            case 'reset-identity':
+                await resetDeviceIdentity(deviceId);
                 break;
 
             case 'access-policy':
@@ -2393,6 +2408,24 @@
         try {
             await Utils.api(`/api/devices/${encodeURIComponent(deviceId)}?hard=true`, { method: 'DELETE' });
             Notifications.success(_('devices.permanent_delete_success'));
+            loadDevices();
+        } catch (error) {
+            Notifications.error(error.message || _('errors.delete_failed'));
+        }
+    }
+
+    async function resetDeviceIdentity(deviceId) {
+        const confirmed = await Modal.confirm({
+            title: _('devices.reset_identity_title'),
+            message: _('devices.reset_identity_confirm', { id: deviceId }),
+            confirmLabel: _('devices.reset_identity'),
+            danger: true
+        });
+        if (!confirmed) return;
+
+        try {
+            await Utils.api(`/api/devices/${encodeURIComponent(deviceId)}?hard=true`, { method: 'DELETE' });
+            Notifications.success(_('devices.reset_identity_success'));
             loadDevices();
         } catch (error) {
             Notifications.error(error.message || _('errors.delete_failed'));

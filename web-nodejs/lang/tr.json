@@ -488,7 +488,12 @@
     "tag_device_one": "cihaz",
     "tag_device_many": "cihaz",
     "tag_group_one": "dinamik grup",
-    "tag_group_many": "dinamik grup"
+    "tag_group_many": "dinamik grup",
+    "reset_identity": "Cihaz kimliğini sıfırla",
+    "reset_identity_title": "Cihaz kimliğini sıfırla",
+    "reset_identity_confirm": "{id} cihazı yeniden kurulumdan sonra tekrar kaydolabilsin mi? Sunucu kaydı kalıcı olarak silinir.",
+    "reset_identity_success": "Cihaz kimliği sıfırlandı; cihaz yeniden kaydolabilir",
+    "address_book_alias_unavailable": "Adres defteri adları kullanılamıyor çünkü konsol Go adres defteri hizmetine güvenli şekilde ulaşamıyor. Ayrık dağıtımlarda PANEL_TRUST_SECRET ve PANEL_TRUST_ALLOWED_HOSTS değerlerini yapılandırın."
   },
   "keys": {
     "title": "Sunucu Anahtarları",
@@ -4880,7 +4885,10 @@
     "pair_activate": "Kodla eşleştir",
     "pair_body": "Eşleştirme kısa, tek kullanımlık bir kod kullanır (10 dakika geçerli). Aracının QR kodu Kodla eşleştir → Ajan QR tara ile yine okutulabilir.",
     "branding_link": "İstemci markası",
-    "branding_body": "Görünüm (logo, renkler, etiketler) çalışma zamanında İstemci markasından yüklenir — yükleyiciye gömülmez."
+    "branding_body": "Görünüm (logo, renkler, etiketler) çalışma zamanında İstemci markasından yüklenir — yükleyiciye gömülmez.",
+    "distribution_title": "Genel indirmeler ve önceden yapılandırılmış istemciler",
+    "distribution_body": "Genel portal, QR veya tek kullanımlık kodla eşleştirme için genel imzalı sürümler sunar. İmzalı custom.txt yapılandırması Generator, operatör imzalama çekirdeği ve eşleşen genel anahtarı içeren bir istemci derlemesi gerektirir.",
+    "distribution_warning": "Bir istemci sürümündeki imzalama çekirdeğini bu sunucuya kopyalamayın. Genel ikili dosyalar eşleştirilmeli veya kendi anahtarınızla yeniden oluşturulmalıdır."
   },
   "pairing": {
     "title": "Eşleştirme kodu",

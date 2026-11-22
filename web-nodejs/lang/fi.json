@@ -488,7 +488,12 @@
     "tag_device_one": "laite",
     "tag_device_many": "laitetta",
     "tag_group_one": "dynaaminen ryhmä",
-    "tag_group_many": "dynaamista ryhmää"
+    "tag_group_many": "dynaamista ryhmää",
+    "reset_identity": "Nollaa laitteen identiteetti",
+    "reset_identity_title": "Nollaa laitteen identiteetti",
+    "reset_identity_confirm": "Nollataanko laite {id}, jotta se voi rekisteröityä uudelleen uudelleenasennuksen jälkeen? Palvelintietue poistetaan pysyvästi.",
+    "reset_identity_success": "Laitteen identiteetti nollattiin; se voi rekisteröityä uudelleen",
+    "address_book_alias_unavailable": "Osoitekirjan nimet eivät ole käytettävissä, koska konsoli ei saa turvallista yhteyttä Gon osoitekirjapalveluun. Määritä erillisissä asennuksissa PANEL_TRUST_SECRET ja PANEL_TRUST_ALLOWED_HOSTS."
   },
   "keys": {
     "title": "Palvelimen avaimet",
@@ -4880,7 +4885,10 @@
     "pair_activate": "Yhdistä koodilla",
     "pair_body": "Paritus käyttää lyhyttä kertakäyttöistä koodia (voimassa 10 minuuttia). Agentin QR-koodi voidaan yhä skannata kohdasta Yhdistä koodilla → Skannaa agentin QR.",
     "branding_link": "Asiakkaan brändäys",
-    "branding_body": "Ulkoasu (logo, värit, tekstit) ladataan ajon aikana Asiakkaan brändäyksestä — sitä ei upoteta asennusohjelmaan."
+    "branding_body": "Ulkoasu (logo, värit, tekstit) ladataan ajon aikana Asiakkaan brändäyksestä — sitä ei upoteta asennusohjelmaan.",
+    "distribution_title": "Yleiset lataukset ja esikonfiguroidut asiakkaat",
+    "distribution_body": "Julkinen portaali tarjoaa yleisiä allekirjoitettuja julkaisuja QR- tai kertakäyttökoodilla paritettaviksi. Allekirjoitettu custom.txt vaatii Generaattorin, ylläpitäjän allekirjoitusavaimen ja asiakkaan, jossa on vastaava julkinen avain.",
+    "distribution_warning": "Älä kopioi asiakasjulkaisun allekirjoitusavainta tälle palvelimelle. Yleiset binäärit on paritettava tai rakennettava uudelleen omalla avaimellasi."
   },
   "pairing": {
     "title": "Pariliitoskoodi",

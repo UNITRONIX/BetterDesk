@@ -482,7 +482,12 @@
     "tag_device_one": "台裝置",
     "tag_device_many": "台裝置",
     "tag_group_one": "個動態群組",
-    "tag_group_many": "個動態群組"
+    "tag_group_many": "個動態群組",
+    "reset_identity": "重設裝置身分",
+    "reset_identity_title": "重設裝置身分",
+    "reset_identity_confirm": "要重設裝置 {id}，讓它在重新安裝後可以再次註冊嗎？伺服器記錄將永久刪除且無法復原。",
+    "reset_identity_success": "裝置身分已重設，可以再次註冊",
+    "address_book_alias_unavailable": "通訊錄名稱無法使用，因為主控台無法安全連線至 Go 通訊錄服務。對於分離部署，請設定 PANEL_TRUST_SECRET 和 PANEL_TRUST_ALLOWED_HOSTS。"
   },
   "keys": {
     "title": "服務器密鑰",
@@ -4874,7 +4879,10 @@
     "pair_activate": "使用配對碼",
     "pair_body": "配對使用短的一次性配對碼（10 分鐘內有效）。仍可從「使用配對碼」→「掃描代理程式 QR」掃描代理程式的 QR。",
     "branding_link": "用戶端品牌",
-    "branding_body": "外觀（標誌、顏色、標籤）在執行時從用戶端品牌載入，不會寫入安裝程式。"
+    "branding_body": "外觀（標誌、顏色、標籤）在執行時從用戶端品牌載入，不會寫入安裝程式。",
+    "distribution_title": "通用下載與預先設定的用戶端",
+    "distribution_body": "公開入口提供通用的簽章版本，可透過 QR 或一次性代碼配對。簽章的 custom.txt 設定需要產生器、管理員簽章種子，以及包含相符公開金鑰的用戶端建置版本。",
+    "distribution_warning": "請勿將用戶端版本中的簽章種子複製到此伺服器。通用二進位檔必須配對，或使用自己的金鑰重新建置。"
   },
   "pairing": {
     "title": "配對碼",

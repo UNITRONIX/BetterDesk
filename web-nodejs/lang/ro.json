@@ -488,7 +488,12 @@
     "tag_device_one": "dispozitiv",
     "tag_device_many": "dispozitive",
     "tag_group_one": "grup dinamic",
-    "tag_group_many": "grupuri dinamice"
+    "tag_group_many": "grupuri dinamice",
+    "reset_identity": "Resetează identitatea dispozitivului",
+    "reset_identity_title": "Resetează identitatea dispozitivului",
+    "reset_identity_confirm": "Resetezi dispozitivul {id} pentru a se putea înregistra din nou după reinstalare? Înregistrarea de pe server va fi ștearsă definitiv.",
+    "reset_identity_success": "Identitatea dispozitivului a fost resetată; se poate înregistra din nou",
+    "address_book_alias_unavailable": "Numele din agenda de adrese nu sunt disponibile deoarece consola nu poate accesa în siguranță serviciul Go pentru agenda de adrese. Configurați PANEL_TRUST_SECRET și PANEL_TRUST_ALLOWED_HOSTS pentru implementări separate."
   },
   "keys": {
     "title": "Cheile serverului",
@@ -4880,7 +4885,10 @@
     "pair_activate": "Asociere cu cod",
     "pair_body": "Asocierea folosește un cod scurt de unică folosință (valabil 10 minute). QR-ul agentului poate fi scanat în continuare din Asociere cu cod → Scanează QR agent.",
     "branding_link": "Branding client",
-    "branding_body": "Aspectul (logo, culori, etichete) este încărcat la runtime din Branding client — nu este înglobat în instalator."
+    "branding_body": "Aspectul (logo, culori, etichete) este încărcat la runtime din Branding client — nu este înglobat în instalator.",
+    "distribution_title": "Descărcări generice și clienți preconfigurați",
+    "distribution_body": "Portalul public oferă versiuni generice semnate pentru asociere prin QR sau cod de unică folosință. O configurație custom.txt semnată necesită Generatorul, seed-ul de semnare al operatorului și un client cu cheia publică potrivită.",
+    "distribution_warning": "Nu copiați pe acest server un seed de semnare dintr-o versiune de client. Binarele generice trebuie asociate sau reconstruite cu cheia proprie."
   },
   "pairing": {
     "title": "Cod de asociere",

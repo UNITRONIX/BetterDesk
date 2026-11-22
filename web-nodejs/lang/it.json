@@ -482,7 +482,12 @@
     "tag_device_one": "dispositivo",
     "tag_device_many": "dispositivi",
     "tag_group_one": "gruppo dinamico",
-    "tag_group_many": "gruppi dinamici"
+    "tag_group_many": "gruppi dinamici",
+    "reset_identity": "Reimposta identità del dispositivo",
+    "reset_identity_title": "Reimposta identità del dispositivo",
+    "reset_identity_confirm": "Reimpostare il dispositivo {id} per consentire una nuova registrazione dopo la reinstallazione? Il record del server verrà eliminato definitivamente.",
+    "reset_identity_success": "Identità reimpostata; il dispositivo può registrarsi di nuovo",
+    "address_book_alias_unavailable": "I nomi della rubrica non sono disponibili perché la console non può raggiungere in modo sicuro il servizio rubrica Go. Configura PANEL_TRUST_SECRET e PANEL_TRUST_ALLOWED_HOSTS nelle installazioni separate."
   },
   "keys": {
     "title": "Chiavi del server",
@@ -4874,7 +4879,10 @@
     "pair_activate": "Abbina con codice",
     "pair_body": "L’abbinamento usa un codice breve monouso (valido 10 minuti). Il QR dell’agente è ancora scansionabile da Abbina con codice → Scansiona QR agente.",
     "branding_link": "Branding client",
-    "branding_body": "Aspetto (logo, colori, etichette) caricato a runtime dal Branding client — non incorporato nell’installer."
+    "branding_body": "Aspetto (logo, colori, etichette) caricato a runtime dal Branding client — non incorporato nell’installer.",
+    "distribution_title": "Download generici e client preconfigurati",
+    "distribution_body": "Il portale pubblico distribuisce release generiche firmate da associare tramite QR o codice monouso. Una configurazione custom.txt firmata richiede il Generatore, il seed di firma dell’operatore e un client con la chiave pubblica corrispondente.",
+    "distribution_warning": "Non copiare su questo server un seed di firma da una release client. I binari generici devono essere associati o ricostruiti con la tua chiave."
   },
   "pairing": {
     "title": "Codice di abbinamento",

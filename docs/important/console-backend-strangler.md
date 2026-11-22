@@ -146,8 +146,12 @@ owning a browser session, so endpoints can move one at a time.
 - Accepted only from loopback, or from hosts listed in
   `PANEL_TRUST_ALLOWED_HOSTS` (container networks). The browser never sees this
   credential.
+- A request carrying `X-BetterDesk-Panel` is rejected if the bridge is disabled,
+  malformed, or sent from a disallowed peer; it never falls through to API-key
+  authentication, which would otherwise use the bridge principal instead of the
+  signed-in operator. Requests without that header retain the legacy auth paths.
 - With no secret configured the bridge is off and behaviour is exactly what it
-  was: JWT / API key only.
+  was for requests that do not send the panel-trust header: JWT / API key only.
 - Tests (`panel_trust_test.go`): missing header, missing secret, valid statement,
   wrong secret, tampered payload, expired, future-dated, overlong TTL,
   cross-endpoint replay, cross-method replay, nonce replay, peer allowlist, role

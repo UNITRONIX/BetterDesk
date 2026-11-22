@@ -488,7 +488,12 @@
     "tag_device_one": "thiết bị",
     "tag_device_many": "thiết bị",
     "tag_group_one": "nhóm động",
-    "tag_group_many": "nhóm động"
+    "tag_group_many": "nhóm động",
+    "reset_identity": "Đặt lại danh tính thiết bị",
+    "reset_identity_title": "Đặt lại danh tính thiết bị",
+    "reset_identity_confirm": "Đặt lại thiết bị {id} để thiết bị có thể đăng ký lại sau khi cài đặt lại? Bản ghi máy chủ sẽ bị xóa vĩnh viễn.",
+    "reset_identity_success": "Đã đặt lại danh tính; thiết bị có thể đăng ký lại",
+    "address_book_alias_unavailable": "Tên trong sổ địa chỉ không khả dụng vì bảng điều khiển không thể kết nối an toàn tới dịch vụ sổ địa chỉ Go. Hãy cấu hình PANEL_TRUST_SECRET và PANEL_TRUST_ALLOWED_HOSTS cho triển khai tách rời."
   },
   "keys": {
     "title": "Khóa máy chủ",
@@ -4880,7 +4885,10 @@
     "pair_activate": "Ghép nối bằng mã",
     "pair_body": "Ghép nối dùng mã ngắn dùng một lần (hiệu lực 10 phút). Vẫn có thể quét QR của agent từ Ghép nối bằng mã → Quét QR agent.",
     "branding_link": "Thương hiệu máy khách",
-    "branding_body": "Giao diện (logo, màu, nhãn) được tải lúc chạy từ Thương hiệu máy khách — không gắn sẵn trong trình cài."
+    "branding_body": "Giao diện (logo, màu, nhãn) được tải lúc chạy từ Thương hiệu máy khách — không gắn sẵn trong trình cài.",
+    "distribution_title": "Tải xuống chung và máy khách được cấu hình sẵn",
+    "distribution_body": "Cổng công khai cung cấp các bản phát hành chung đã ký để ghép nối bằng QR hoặc mã dùng một lần. Cấu hình custom.txt đã ký cần Generator, seed ký của quản trị viên và bản dựng máy khách chứa khóa công khai tương ứng.",
+    "distribution_warning": "Không sao chép seed ký từ bản phát hành máy khách vào máy chủ này. Các tệp nhị phân chung phải được ghép nối hoặc dựng lại bằng khóa riêng của bạn."
   },
   "pairing": {
     "title": "Mã ghép nối",

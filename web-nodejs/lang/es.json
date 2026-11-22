@@ -482,7 +482,12 @@
     "tag_device_one": "dispositivo",
     "tag_device_many": "dispositivos",
     "tag_group_one": "grupo dinámico",
-    "tag_group_many": "grupos dinámicos"
+    "tag_group_many": "grupos dinámicos",
+    "reset_identity": "Restablecer identidad del dispositivo",
+    "reset_identity_title": "Restablecer identidad del dispositivo",
+    "reset_identity_confirm": "¿Restablecer el dispositivo {id} para que pueda registrarse después de reinstalarlo? El registro del servidor se eliminará permanentemente.",
+    "reset_identity_success": "Identidad restablecida; el dispositivo puede registrarse de nuevo",
+    "address_book_alias_unavailable": "Los nombres de la libreta de direcciones no están disponibles porque la consola no puede acceder de forma segura al servicio de libreta de direcciones de Go. Configura PANEL_TRUST_SECRET y PANEL_TRUST_ALLOWED_HOSTS en despliegues separados."
   },
   "keys": {
     "title": "Panel",
@@ -4874,7 +4879,10 @@
     "pair_activate": "Emparejar con código",
     "pair_body": "El emparejamiento usa un código corto de un solo uso (válido 10 minutos). El QR del agente aún puede escanearse en Emparejar con código → Escanear QR del agente.",
     "branding_link": "Marca del cliente",
-    "branding_body": "La apariencia (logo, colores, etiquetas) se carga en tiempo de ejecución desde la marca del cliente; no va embebida en el instalador."
+    "branding_body": "La apariencia (logo, colores, etiquetas) se carga en tiempo de ejecución desde la marca del cliente; no va embebida en el instalador.",
+    "distribution_title": "Descargas genéricas y clientes preconfigurados",
+    "distribution_body": "El portal público sirve versiones genéricas firmadas para emparejar mediante QR o código de un solo uso. Una configuración custom.txt firmada requiere el Generador, la semilla de firma del operador y un cliente con la clave pública correspondiente.",
+    "distribution_warning": "No copies una semilla de firma de una versión del cliente en este servidor. Los binarios genéricos deben emparejarse o reconstruirse con tu propia clave."
   },
   "pairing": {
     "title": "Código de emparejamiento",

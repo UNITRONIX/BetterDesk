@@ -1162,11 +1162,23 @@ func hashAPIKey(key string) string {
 // Auth order: Bearer JWT → X-API-Key (scoped DB lookup).
 func (s *Server) authenticateRequest(r *http.Request) (username, role string, ok bool) {
 	// 0. Panel trust bridge — a statement signed by the Node console for a
-	//    signed-in operator. Only accepted on the loopback hop (unless the
-	//    operator explicitly allows remote panel hosts) and only when the
-	//    bridge has a secret; the role still comes from the database when the
-	//    account exists, so a stale or forged claim cannot raise privileges.
-	if r.Header.Get(PanelTrustHeader) != "" && s.panelTrustEnabled() && s.panelTrustPeerAllowed(r) {
+	//    signed-in operator. A request that presents the panel-trust header
+	//    must not fall through to API-key authentication: doing so would
+	//    silently authenticate the bridge principal (for example,
+	//    apikey:console-bridge) and can write data under the wrong operator.
+	//    Only accepted on the loopback hop (unless the operator explicitly
+	//    allows remote panel hosts) and when the bridge has a secret; the role
+	//    still comes from the database when the account exists, so a stale or
+	//    forged claim cannot raise privileges.
+	if r.Header.Get(PanelTrustHeader) != "" {
+		if !s.panelTrustEnabled() {
+			log.Printf("[panel-trust] rejected %s %s: bridge is not configured", r.Method, redactPathSegment(r.URL.Path))
+			return "", "", false
+		}
+		if !s.panelTrustPeerAllowed(r) {
+			log.Printf("[panel-trust] rejected %s %s: peer is not allowed", r.Method, redactPathSegment(r.URL.Path))
+			return "", "", false
+		}
 		claim, err := s.verifyPanelTrust(r)
 		if err != nil {
 			log.Printf("[panel-trust] rejected %s %s: %v", r.Method, redactPathSegment(r.URL.Path), err)

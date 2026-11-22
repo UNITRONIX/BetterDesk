@@ -488,7 +488,12 @@
     "tag_device_one": "enhed",
     "tag_device_many": "enheder",
     "tag_group_one": "dynamisk gruppe",
-    "tag_group_many": "dynamiske grupper"
+    "tag_group_many": "dynamiske grupper",
+    "reset_identity": "Nulstil enhedsidentitet",
+    "reset_identity_title": "Nulstil enhedsidentitet",
+    "reset_identity_confirm": "Nulstil enhed {id}, så den kan registreres igen efter en geninstallation? Serverposten slettes permanent.",
+    "reset_identity_success": "Enhedsidentiteten er nulstillet; enheden kan registreres igen",
+    "address_book_alias_unavailable": "Navne fra adressebogen er ikke tilgængelige, fordi konsollen ikke kan nå Go-adressebogstjenesten sikkert. Konfigurer PANEL_TRUST_SECRET og PANEL_TRUST_ALLOWED_HOSTS ved opdelt installation."
   },
   "keys": {
     "title": "Servernøgler",
@@ -4880,7 +4885,10 @@
     "pair_activate": "Forbind med kode",
     "pair_body": "Parring bruger en kort engangskode (gyldig i 10 minutter). Agentens QR kan stadig scannes fra Forbind med kode → Scan agent-QR.",
     "branding_link": "Klientbranding",
-    "branding_body": "Udseende (logo, farver, etiketter) indlæses ved kørsel fra Klientbranding — det er ikke indbygget i installeren."
+    "branding_body": "Udseende (logo, farver, etiketter) indlæses ved kørsel fra Klientbranding — det er ikke indbygget i installeren.",
+    "distribution_title": "Generiske downloads og forudkonfigurerede klienter",
+    "distribution_body": "Den offentlige portal leverer generiske, signerede releases til parring med QR eller engangskode. En signeret custom.txt-konfiguration kræver Generatoren, operatørens signeringsseed og en klient med den matchende offentlige nøgle.",
+    "distribution_warning": "Kopiér ikke et signeringsseed fra en klientrelease til denne server. Generiske binære filer skal parres eller bygges igen med din egen nøgle."
   },
   "pairing": {
     "title": "Parringskode",

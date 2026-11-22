@@ -482,7 +482,12 @@
     "tag_device_one": "台设备",
     "tag_device_many": "台设备",
     "tag_group_one": "个动态组",
-    "tag_group_many": "个动态组"
+    "tag_group_many": "个动态组",
+    "reset_identity": "重置设备身份",
+    "reset_identity_title": "重置设备身份",
+    "reset_identity_confirm": "要重置设备 {id}，使其在重新安装后可以再次注册吗？服务器记录将被永久删除且无法撤销。",
+    "reset_identity_success": "设备身份已重置，可以再次注册",
+    "address_book_alias_unavailable": "地址簿名称不可用，因为控制台无法安全访问 Go 地址簿服务。对于拆分部署，请配置 PANEL_TRUST_SECRET 和 PANEL_TRUST_ALLOWED_HOSTS。"
   },
   "keys": {
     "title": "服务器密钥",
@@ -4874,7 +4879,10 @@
     "pair_activate": "使用配对码",
     "pair_body": "配对使用短的一次性配对码（10 分钟内有效）。仍可从“使用配对码”→“扫描代理二维码”扫描代理的二维码。",
     "branding_link": "客户端品牌",
-    "branding_body": "外观（徽标、颜色、标签）在运行时从客户端品牌加载，不会写入安装包。"
+    "branding_body": "外观（徽标、颜色、标签）在运行时从客户端品牌加载，不会写入安装包。",
+    "distribution_title": "通用下载与预配置客户端",
+    "distribution_body": "公共门户提供通用的签名版本，可通过二维码或一次性代码配对。签名的 custom.txt 配置需要生成器、管理员签名种子，以及包含匹配公钥的客户端构建版本。",
+    "distribution_warning": "不要将客户端版本中的签名种子复制到此服务器。通用二进制文件必须进行配对，或使用自己的密钥重新构建。"
   },
   "pairing": {
     "title": "配对码",

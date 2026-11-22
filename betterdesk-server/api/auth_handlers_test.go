@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
@@ -92,6 +93,34 @@ func TestUserViewOverrideBlocksPanelAndClientDirectory(t *testing.T) {
 	}
 	if len(body.Data) != 0 {
 		t.Fatalf("client user list leaked %d users despite user.view deny", len(body.Data))
+	}
+}
+
+func TestPanelTrustHeaderNeverFallsThroughToAPIKey(t *testing.T) {
+	database := testSetupDB(t)
+	defer database.Close()
+
+	const operatorKey = "operator-panel-fallback-468"
+	keyHash := sha256.Sum256([]byte(operatorKey))
+	if err := database.CreateAPIKey(&db.APIKey{
+		KeyHash:   hex.EncodeToString(keyHash[:]),
+		KeyPrefix: operatorKey[:8],
+		Name:      "console-bridge",
+		Role:      auth.RoleOperator,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	srv := New(config.DefaultConfig(), database, peer.NewMap(), nil, "1.0.0-test")
+	srv.SetPanelTrustSecret("panel-trust-secret-for-test")
+
+	req := httptest.NewRequest(http.MethodGet, "/api/address-book", nil)
+	req.RemoteAddr = "203.0.113.7:21114"
+	req.Header.Set(PanelTrustHeader, "invalid-or-untrusted-panel-statement")
+	req.Header.Set("X-API-Key", operatorKey)
+
+	if username, _, ok := srv.authenticateRequest(req); ok {
+		t.Fatalf("panel-trust request unexpectedly authenticated as %q", username)
 	}
 }
 

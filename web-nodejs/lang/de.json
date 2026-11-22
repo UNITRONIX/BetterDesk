@@ -482,7 +482,12 @@
     "tag_device_one": "Gerät",
     "tag_device_many": "Geräte",
     "tag_group_one": "dynamische Gruppe",
-    "tag_group_many": "dynamische Gruppen"
+    "tag_group_many": "dynamische Gruppen",
+    "reset_identity": "Geräteidentität zurücksetzen",
+    "reset_identity_title": "Geräteidentität zurücksetzen",
+    "reset_identity_confirm": "Gerät {id} zurücksetzen, damit es sich nach einer Neuinstallation erneut registrieren kann? Der Serverdatensatz wird dauerhaft gelöscht und kann nicht wiederhergestellt werden.",
+    "reset_identity_success": "Geräteidentität zurückgesetzt; erneute Registrierung möglich",
+    "address_book_alias_unavailable": "Adressbuchnamen sind nicht verfügbar, weil die Konsole den Go-Adressbuchdienst nicht sicher erreichen kann. Konfigurieren Sie für getrennte Bereitstellungen PANEL_TRUST_SECRET und PANEL_TRUST_ALLOWED_HOSTS."
   },
   "keys": {
     "title": "Dashboard",
@@ -4874,7 +4879,10 @@
     "pair_activate": "Mit Code koppeln",
     "pair_body": "Die Kopplung nutzt einen kurzen Einmalcode (10 Minuten gültig). Der QR-Code des Agenten lässt sich weiterhin über „Mit Code koppeln“ → „Agent-QR scannen“ einlesen.",
     "branding_link": "Client-Branding",
-    "branding_body": "Erscheinungsbild (Logo, Farben, Beschriftungen) wird zur Laufzeit aus dem Client-Branding geladen — nicht in den Installer eingebettet."
+    "branding_body": "Erscheinungsbild (Logo, Farben, Beschriftungen) wird zur Laufzeit aus dem Client-Branding geladen — nicht in den Installer eingebettet.",
+    "distribution_title": "Generische Downloads und vorkonfigurierte Clients",
+    "distribution_body": "Das öffentliche Portal stellt generische, signierte Releases für die Kopplung per QR- oder Einmalcode bereit. Eine signierte custom.txt-Konfiguration erfordert den Generator, einen Signatur-Seed des Betreibers und einen Client mit passendem öffentlichen Schlüssel.",
+    "distribution_warning": "Kopieren Sie keinen Signatur-Seed aus einem Client-Release auf diesen Server. Generische Binärdateien müssen gekoppelt oder mit Ihrem eigenen Schlüssel neu gebaut werden."
   },
   "pairing": {
     "title": "Kopplungscode",

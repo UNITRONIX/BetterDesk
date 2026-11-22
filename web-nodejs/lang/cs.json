@@ -482,7 +482,12 @@
     "tag_device_one": "zařízení",
     "tag_device_many": "zařízení",
     "tag_group_one": "dynamická skupina",
-    "tag_group_many": "dynamických skupin"
+    "tag_group_many": "dynamických skupin",
+    "reset_identity": "Resetovat identitu zařízení",
+    "reset_identity_title": "Reset identity zařízení",
+    "reset_identity_confirm": "Resetovat zařízení {id}, aby se po přeinstalaci mohlo znovu zaregistrovat? Záznam na serveru bude trvale odstraněn.",
+    "reset_identity_success": "Identita zařízení byla resetována; zařízení se může znovu zaregistrovat",
+    "address_book_alias_unavailable": "Názvy z adresáře nejsou dostupné, protože konzole se nemůže bezpečně připojit ke službě adresáře Go. U samostatných nasazení nastavte PANEL_TRUST_SECRET a PANEL_TRUST_ALLOWED_HOSTS."
   },
   "keys": {
     "title": "Klíče serveru",
@@ -4874,7 +4879,10 @@
     "pair_activate": "Spárovat kódem",
     "pair_body": "Párování používá krátký jednorázový kód (platný 10 minut). QR agenta lze stále naskenovat v Spárovat kódem → Skenovat QR agenta.",
     "branding_link": "Branding klienta",
-    "branding_body": "Vzhled (logo, barvy, popisky) se načítá za běhu z Brandingu klienta — není zabudován do instalátoru."
+    "branding_body": "Vzhled (logo, barvy, popisky) se načítá za běhu z Brandingu klienta — není zabudován do instalátoru.",
+    "distribution_title": "Obecná stažení a předkonfigurovaní klienti",
+    "distribution_body": "Veřejný portál poskytuje obecná podepsaná vydání pro spárování pomocí QR nebo jednorázového kódu. Podepsaná konfigurace custom.txt vyžaduje Generátor, podpisový seed operátora a klienta s odpovídajícím veřejným klíčem.",
+    "distribution_warning": "Nekopírujte podpisový seed z vydání klienta na tento server. Obecné binární soubory je nutné spárovat nebo znovu sestavit s vlastním klíčem."
   },
   "pairing": {
     "title": "Párovací kód",

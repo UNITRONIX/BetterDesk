@@ -488,7 +488,12 @@
     "tag_device_one": "perangkat",
     "tag_device_many": "perangkat",
     "tag_group_one": "grup dinamis",
-    "tag_group_many": "grup dinamis"
+    "tag_group_many": "grup dinamis",
+    "reset_identity": "Atur ulang identitas perangkat",
+    "reset_identity_title": "Atur ulang identitas perangkat",
+    "reset_identity_confirm": "Atur ulang perangkat {id} agar dapat mendaftar lagi setelah instalasi ulang? Catatan server akan dihapus permanen.",
+    "reset_identity_success": "Identitas perangkat diatur ulang; perangkat dapat mendaftar lagi",
+    "address_book_alias_unavailable": "Nama buku alamat tidak tersedia karena konsol tidak dapat menjangkau layanan buku alamat Go dengan aman. Konfigurasikan PANEL_TRUST_SECRET dan PANEL_TRUST_ALLOWED_HOSTS untuk deployment terpisah."
   },
   "keys": {
     "title": "Kunci Server",
@@ -4880,7 +4885,10 @@
     "pair_activate": "Pasangkan dengan kode",
     "pair_body": "Pemasangan memakai kode sekali pakai yang singkat (berlaku 10 menit). QR agen masih dapat dipindai dari Pasangkan dengan kode → Pindai QR agen.",
     "branding_link": "Branding klien",
-    "branding_body": "Tampilan (logo, warna, label) dimuat saat runtime dari Branding klien — tidak dibake ke penginstal."
+    "branding_body": "Tampilan (logo, warna, label) dimuat saat runtime dari Branding klien — tidak dibake ke penginstal.",
+    "distribution_title": "Unduhan generik dan klien yang telah dikonfigurasi",
+    "distribution_body": "Portal publik menyediakan rilis bertanda tangan generik untuk dipasangkan dengan QR atau kode sekali pakai. Konfigurasi custom.txt bertanda tangan memerlukan Generator, seed penandatangan operator, dan build klien dengan kunci publik yang cocok.",
+    "distribution_warning": "Jangan menyalin seed penandatangan dari rilis klien ke server ini. Biner generik harus dipasangkan atau dibangun ulang dengan kunci Anda sendiri."
   },
   "pairing": {
     "title": "Kode pemasangan",

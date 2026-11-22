@@ -482,7 +482,12 @@
     "tag_device_one": "apparaat",
     "tag_device_many": "apparaten",
     "tag_group_one": "dynamische groep",
-    "tag_group_many": "dynamische groepen"
+    "tag_group_many": "dynamische groepen",
+    "reset_identity": "Apparaatidentiteit resetten",
+    "reset_identity_title": "Apparaatidentiteit resetten",
+    "reset_identity_confirm": "Apparaat {id} resetten zodat het zich na een herinstallatie opnieuw kan registreren? Het serverrecord wordt permanent verwijderd.",
+    "reset_identity_success": "Apparaatidentiteit gereset; opnieuw registreren is mogelijk",
+    "address_book_alias_unavailable": "Adresboeknamen zijn niet beschikbaar omdat de console de Go-adresboekservice niet veilig kan bereiken. Configureer PANEL_TRUST_SECRET en PANEL_TRUST_ALLOWED_HOSTS voor gesplitste implementaties."
   },
   "keys": {
     "title": "Serversleutels",
@@ -4874,7 +4879,10 @@
     "pair_activate": "Koppelen met code",
     "pair_body": "Koppelen gebruikt een korte eenmalige code (10 minuten geldig). De QR van de agent is nog steeds te scannen via Koppelen met code → Agent-QR scannen.",
     "branding_link": "Clientbranding",
-    "branding_body": "Uiterlijk (logo, kleuren, labels) wordt tijdens runtime geladen uit Clientbranding — niet in de installer gebakken."
+    "branding_body": "Uiterlijk (logo, kleuren, labels) wordt tijdens runtime geladen uit Clientbranding — niet in de installer gebakken.",
+    "distribution_title": "Generieke downloads en vooraf geconfigureerde clients",
+    "distribution_body": "Het openbare portaal biedt generieke, ondertekende releases voor koppeling via QR- of eenmalige code. Een ondertekende custom.txt-configuratie vereist de Generator, een ondertekeningsseed van de beheerder en een client met de bijbehorende openbare sleutel.",
+    "distribution_warning": "Kopieer geen ondertekeningsseed uit een clientrelease naar deze server. Generieke binaries moeten worden gekoppeld of opnieuw gebouwd met uw eigen sleutel."
   },
   "pairing": {
     "title": "Koppelcode",

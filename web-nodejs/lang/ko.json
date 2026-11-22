@@ -482,7 +482,12 @@
     "tag_device_one": "장치",
     "tag_device_many": "장치",
     "tag_group_one": "동적 그룹",
-    "tag_group_many": "동적 그룹"
+    "tag_group_many": "동적 그룹",
+    "reset_identity": "장치 ID 재설정",
+    "reset_identity_title": "장치 ID 재설정",
+    "reset_identity_confirm": "재설치 후 다시 등록할 수 있도록 장치 {id}를 재설정하시겠습니까? 서버 기록은 영구적으로 삭제됩니다.",
+    "reset_identity_success": "장치 ID가 재설정되었습니다. 다시 등록할 수 있습니다",
+    "address_book_alias_unavailable": "콘솔이 Go 주소록 서비스에 안전하게 연결할 수 없어 주소록 이름을 사용할 수 없습니다. 분리 배포에서는 PANEL_TRUST_SECRET 및 PANEL_TRUST_ALLOWED_HOSTS를 구성하세요."
   },
   "keys": {
     "title": "서버 키",
@@ -4874,7 +4879,10 @@
     "pair_activate": "코드로 페어링",
     "pair_body": "페어링에는 짧은 일회용 코드(10분 유효)를 사용합니다. 에이전트 QR은 코드로 페어링 → 에이전트 QR 스캔에서 계속 스캔할 수 있습니다.",
     "branding_link": "클라이언트 브랜딩",
-    "branding_body": "모양(로고, 색상, 라벨)은 런타임에 클라이언트 브랜딩에서 로드되며 설치 프로그램에 포함되지 않습니다."
+    "branding_body": "모양(로고, 색상, 라벨)은 런타임에 클라이언트 브랜딩에서 로드되며 설치 프로그램에 포함되지 않습니다.",
+    "distribution_title": "일반 다운로드 및 사전 구성 클라이언트",
+    "distribution_body": "공개 포털은 QR 또는 일회용 코드로 페어링할 수 있는 일반 서명 릴리스를 제공합니다. 서명된 custom.txt 구성에는 Generator, 운영자 서명 시드, 일치하는 공개 키가 포함된 클라이언트 빌드가 필요합니다.",
+    "distribution_warning": "클라이언트 릴리스의 서명 시드를 이 서버에 복사하지 마세요. 일반 바이너리는 페어링하거나 자체 키로 다시 빌드해야 합니다."
   },
   "pairing": {
     "title": "페어링 코드",

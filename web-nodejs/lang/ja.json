@@ -482,7 +482,12 @@
     "tag_device_one": "デバイス",
     "tag_device_many": "デバイス",
     "tag_group_one": "動的グループ",
-    "tag_group_many": "動的グループ"
+    "tag_group_many": "動的グループ",
+    "reset_identity": "デバイス ID をリセット",
+    "reset_identity_title": "デバイス ID をリセット",
+    "reset_identity_confirm": "再インストール後に再登録できるよう、デバイス {id} をリセットしますか？サーバーの記録は完全に削除され、元に戻せません。",
+    "reset_identity_success": "デバイス ID をリセットしました。再登録できます",
+    "address_book_alias_unavailable": "アドレス帳名を利用できません。コンソールが Go アドレス帳サービスに安全に接続できないためです。分離構成では PANEL_TRUST_SECRET と PANEL_TRUST_ALLOWED_HOSTS を設定してください。"
   },
   "keys": {
     "title": "サーバーキー",
@@ -4874,7 +4879,10 @@
     "pair_activate": "コードでペアリング",
     "pair_body": "ペアリングには短いワンタイムコード（有効期限 10 分）を使います。エージェントの QR は「コードでペアリング」→「エージェントQRをスキャン」から引き続き読み取れます。",
     "branding_link": "クライアントブランディング",
-    "branding_body": "外観（ロゴ・色・ラベル）は実行時にクライアントブランディングから読み込まれます。インストーラーには焼き込まれません。"
+    "branding_body": "外観（ロゴ・色・ラベル）は実行時にクライアントブランディングから読み込まれます。インストーラーには焼き込まれません。",
+    "distribution_title": "汎用ダウンロードと事前設定済みクライアント",
+    "distribution_body": "公開ポータルは、QR またはワンタイムコードでペアリングする汎用の署名済みリリースを提供します。署名済み custom.txt には、Generator、運用者の署名シード、対応する公開鍵を含むクライアントビルドが必要です。",
+    "distribution_warning": "クライアントリリースの署名シードをこのサーバーにコピーしないでください。汎用バイナリはペアリングするか、独自の鍵で再ビルドする必要があります。"
   },
   "pairing": {
     "title": "ペアリングコード",

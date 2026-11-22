@@ -331,6 +331,10 @@
         "permanent_delete_title": "Permanently Delete Device",
         "permanent_delete_confirm": "Permanently delete device {id}? This releases its ID for reuse and cannot be undone.",
         "permanent_delete_success": "Device permanently deleted",
+        "reset_identity": "Reset device identity",
+        "reset_identity_title": "Reset Device Identity",
+        "reset_identity_confirm": "Reset device {id} so it can register again after a reinstall? This permanently deletes the server record and cannot be undone.",
+        "reset_identity_success": "Device identity reset; it can register again",
         "filter_deleted": "Deleted",
         "no_selection": "No devices selected",
         "device_type": "Type",
@@ -490,7 +494,8 @@
         "group_commercialization_assign_existing": "Assign existing package",
         "group_commercialization_create_new": "Create new package and assign",
         "group_commercialization_saved": "Package assigned to group",
-        "group_one_only": "A device can belong to only one group"
+        "group_one_only": "A device can belong to only one group",
+        "address_book_alias_unavailable": "Address-book names are unavailable because the console cannot securely reach the Go address-book service. Configure PANEL_TRUST_SECRET and PANEL_TRUST_ALLOWED_HOSTS for split deployments."
     },
     "keys": {
         "title": "Server Keys",
@@ -4874,7 +4879,10 @@
         "pair_activate": "Pair with code",
         "pair_body": "Pairing uses a short one-time code (valid for 10 minutes). The agent’s QR code can still be scanned from Pair with code → Scan agent QR.",
         "branding_link": "Client Branding",
-        "branding_body": "Appearance (logo, colors, labels) is loaded at runtime from Client Branding — it is not baked into the installer."
+        "branding_body": "Appearance (logo, colors, labels) is loaded at runtime from Client Branding — it is not baked into the installer.",
+        "distribution_title": "Generic downloads and preconfigured clients",
+        "distribution_body": "The public portal serves generic, signed releases for pairing by QR or one-time code. A signed custom.txt configuration requires the Generator, an operator signing seed, and a client build containing the matching public key.",
+        "distribution_warning": "Do not copy a signing seed from a client release into this server. Generic binaries must be paired or rebuilt with your own signing key."
     },
     "pairing": {
         "title": "Pairing code",

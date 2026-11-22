@@ -482,7 +482,12 @@
     "tag_device_one": "appareil",
     "tag_device_many": "appareils",
     "tag_group_one": "groupe dynamique",
-    "tag_group_many": "groupes dynamiques"
+    "tag_group_many": "groupes dynamiques",
+    "reset_identity": "Réinitialiser l'identité de l'appareil",
+    "reset_identity_title": "Réinitialiser l'identité de l'appareil",
+    "reset_identity_confirm": "Réinitialiser l'appareil {id} pour permettre une nouvelle inscription après une réinstallation ? L'enregistrement serveur sera supprimé définitivement.",
+    "reset_identity_success": "Identité de l'appareil réinitialisée ; nouvelle inscription possible",
+    "address_book_alias_unavailable": "Les noms du carnet d'adresses sont indisponibles, car la console ne peut pas joindre le service de carnet d'adresses Go de manière sécurisée. Configurez PANEL_TRUST_SECRET et PANEL_TRUST_ALLOWED_HOSTS pour les déploiements séparés."
   },
   "keys": {
     "title": "Tableau de bord",
@@ -4874,7 +4879,10 @@
     "pair_activate": "Appairer par code",
     "pair_body": "L’appairage utilise un code court à usage unique (valable 10 minutes). Le QR de l’agent reste scannable via Appairer par code → Scanner le QR de l’agent.",
     "branding_link": "Habillage client",
-    "branding_body": "L’apparence (logo, couleurs, libellés) est chargée à l’exécution depuis l’habillage client — elle n’est pas intégrée à l’installateur."
+    "branding_body": "L’apparence (logo, couleurs, libellés) est chargée à l’exécution depuis l’habillage client — elle n’est pas intégrée à l’installateur.",
+    "distribution_title": "Téléchargements génériques et clients préconfigurés",
+    "distribution_body": "Le portail public fournit des versions génériques signées à associer par QR ou code à usage unique. Une configuration custom.txt signée nécessite le Générateur, la graine de signature de l'opérateur et un client contenant la clé publique correspondante.",
+    "distribution_warning": "Ne copiez pas une graine de signature d'une version client sur ce serveur. Les binaires génériques doivent être appairés ou reconstruits avec votre propre clé."
   },
   "pairing": {
     "title": "Code d'appairage",

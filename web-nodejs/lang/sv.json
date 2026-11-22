@@ -488,7 +488,12 @@
     "tag_device_one": "enhet",
     "tag_device_many": "enheter",
     "tag_group_one": "dynamisk grupp",
-    "tag_group_many": "dynamiska grupper"
+    "tag_group_many": "dynamiska grupper",
+    "reset_identity": "Återställ enhetsidentitet",
+    "reset_identity_title": "Återställ enhetsidentitet",
+    "reset_identity_confirm": "Återställ enhet {id} så att den kan registreras igen efter ominstallation? Serverposten tas bort permanent.",
+    "reset_identity_success": "Enhetsidentiteten återställdes; enheten kan registreras igen",
+    "address_book_alias_unavailable": "Namn från adressboken är inte tillgängliga eftersom konsolen inte kan nå Go-adressbokstjänsten på ett säkert sätt. Konfigurera PANEL_TRUST_SECRET och PANEL_TRUST_ALLOWED_HOSTS vid delade installationer."
   },
   "keys": {
     "title": "Servernycklar",
@@ -4880,7 +4885,10 @@
     "pair_activate": "Parkoppla med kod",
     "pair_body": "Parning använder en kort engångskod (giltig i 10 minuter). Agentens QR kan fortfarande skannas via Parkoppla med kod → Skanna agent-QR.",
     "branding_link": "Klientvarumärke",
-    "branding_body": "Utseendet (logotyp, färger, etiketter) laddas vid körning från Klientvarumärke — det bakas inte in i installaren."
+    "branding_body": "Utseendet (logotyp, färger, etiketter) laddas vid körning från Klientvarumärke — det bakas inte in i installaren.",
+    "distribution_title": "Generiska nedladdningar och förkonfigurerade klienter",
+    "distribution_body": "Den offentliga portalen tillhandahåller generiska, signerade utgåvor för parkoppling med QR- eller engångskod. En signerad custom.txt-konfiguration kräver Generatorn, operatörens signeringsseed och en klient med motsvarande offentlig nyckel.",
+    "distribution_warning": "Kopiera inte en signeringsseed från en klientutgåva till den här servern. Generiska binärer måste parkopplas eller byggas om med din egen nyckel."
   },
   "pairing": {
     "title": "Parkopplingskod",

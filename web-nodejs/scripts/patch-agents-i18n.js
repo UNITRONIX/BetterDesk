@@ -6,6 +6,327 @@ const path = require('path');
 
 const LANG_DIR = path.join(__dirname, '..', 'lang');
 
+const RESET_IDENTITY_BY_LANG = {
+    en: {
+        reset_identity: 'Reset device identity',
+        reset_identity_title: 'Reset Device Identity',
+        reset_identity_confirm: 'Reset device {id} so it can register again after a reinstall? This permanently deletes the server record and cannot be undone.',
+        reset_identity_success: 'Device identity reset; it can register again',
+    },
+    pl: {
+        reset_identity: 'Zresetuj tożsamość urządzenia',
+        reset_identity_title: 'Resetowanie tożsamości urządzenia',
+        reset_identity_confirm: 'Zresetować urządzenie {id}, aby mogło zarejestrować się po ponownej instalacji? Spowoduje to trwałe usunięcie rekordu serwera i nie można tego cofnąć.',
+        reset_identity_success: 'Tożsamość urządzenia zresetowana; urządzenie może zarejestrować się ponownie',
+    },
+    de: {
+        reset_identity: 'Geräteidentität zurücksetzen',
+        reset_identity_title: 'Geräteidentität zurücksetzen',
+        reset_identity_confirm: 'Gerät {id} zurücksetzen, damit es sich nach einer Neuinstallation erneut registrieren kann? Der Serverdatensatz wird dauerhaft gelöscht und kann nicht wiederhergestellt werden.',
+        reset_identity_success: 'Geräteidentität zurückgesetzt; erneute Registrierung möglich',
+    },
+    fr: {
+        reset_identity: "Réinitialiser l'identité de l'appareil",
+        reset_identity_title: "Réinitialiser l'identité de l'appareil",
+        reset_identity_confirm: "Réinitialiser l'appareil {id} pour permettre une nouvelle inscription après une réinstallation ? L'enregistrement serveur sera supprimé définitivement.",
+        reset_identity_success: "Identité de l'appareil réinitialisée ; nouvelle inscription possible",
+    },
+    es: {
+        reset_identity: 'Restablecer identidad del dispositivo',
+        reset_identity_title: 'Restablecer identidad del dispositivo',
+        reset_identity_confirm: '¿Restablecer el dispositivo {id} para que pueda registrarse después de reinstalarlo? El registro del servidor se eliminará permanentemente.',
+        reset_identity_success: 'Identidad restablecida; el dispositivo puede registrarse de nuevo',
+    },
+    it: {
+        reset_identity: "Reimposta identità del dispositivo",
+        reset_identity_title: "Reimposta identità del dispositivo",
+        reset_identity_confirm: "Reimpostare il dispositivo {id} per consentire una nuova registrazione dopo la reinstallazione? Il record del server verrà eliminato definitivamente.",
+        reset_identity_success: "Identità reimpostata; il dispositivo può registrarsi di nuovo",
+    },
+    pt: {
+        reset_identity: 'Repor identidade do dispositivo',
+        reset_identity_title: 'Repor identidade do dispositivo',
+        reset_identity_confirm: 'Repor o dispositivo {id} para que possa registar-se novamente após uma reinstalação? O registo do servidor será eliminado permanentemente.',
+        reset_identity_success: 'Identidade reposta; o dispositivo pode registar-se novamente',
+    },
+    nl: {
+        reset_identity: 'Apparaatidentiteit resetten',
+        reset_identity_title: 'Apparaatidentiteit resetten',
+        reset_identity_confirm: 'Apparaat {id} resetten zodat het zich na een herinstallatie opnieuw kan registreren? Het serverrecord wordt permanent verwijderd.',
+        reset_identity_success: 'Apparaatidentiteit gereset; opnieuw registreren is mogelijk',
+    },
+    cs: {
+        reset_identity: 'Resetovat identitu zařízení',
+        reset_identity_title: 'Reset identity zařízení',
+        reset_identity_confirm: 'Resetovat zařízení {id}, aby se po přeinstalaci mohlo znovu zaregistrovat? Záznam na serveru bude trvale odstraněn.',
+        reset_identity_success: 'Identita zařízení byla resetována; zařízení se může znovu zaregistrovat',
+    },
+    da: {
+        reset_identity: 'Nulstil enhedsidentitet',
+        reset_identity_title: 'Nulstil enhedsidentitet',
+        reset_identity_confirm: 'Nulstil enhed {id}, så den kan registreres igen efter en geninstallation? Serverposten slettes permanent.',
+        reset_identity_success: 'Enhedsidentiteten er nulstillet; enheden kan registreres igen',
+    },
+    fi: {
+        reset_identity: 'Nollaa laitteen identiteetti',
+        reset_identity_title: 'Nollaa laitteen identiteetti',
+        reset_identity_confirm: 'Nollataanko laite {id}, jotta se voi rekisteröityä uudelleen uudelleenasennuksen jälkeen? Palvelintietue poistetaan pysyvästi.',
+        reset_identity_success: 'Laitteen identiteetti nollattiin; se voi rekisteröityä uudelleen',
+    },
+    hu: {
+        reset_identity: 'Eszközazonosító visszaállítása',
+        reset_identity_title: 'Eszközazonosító visszaállítása',
+        reset_identity_confirm: 'Visszaállítja a(z) {id} eszközt, hogy újratelepítés után ismét regisztrálhasson? A szerverrekord végleg törlődik.',
+        reset_identity_success: 'Az eszközazonosító visszaállítva; az eszköz újra regisztrálható',
+    },
+    nb: {
+        reset_identity: 'Tilbakestill enhetsidentitet',
+        reset_identity_title: 'Tilbakestill enhetsidentitet',
+        reset_identity_confirm: 'Tilbakestill enhet {id} slik at den kan registreres på nytt etter reinstallasjon? Serverposten slettes permanent.',
+        reset_identity_success: 'Enhetsidentiteten er tilbakestilt; enheten kan registreres på nytt',
+    },
+    ro: {
+        reset_identity: 'Resetează identitatea dispozitivului',
+        reset_identity_title: 'Resetează identitatea dispozitivului',
+        reset_identity_confirm: 'Resetezi dispozitivul {id} pentru a se putea înregistra din nou după reinstalare? Înregistrarea de pe server va fi ștearsă definitiv.',
+        reset_identity_success: 'Identitatea dispozitivului a fost resetată; se poate înregistra din nou',
+    },
+    sv: {
+        reset_identity: 'Återställ enhetsidentitet',
+        reset_identity_title: 'Återställ enhetsidentitet',
+        reset_identity_confirm: 'Återställ enhet {id} så att den kan registreras igen efter ominstallation? Serverposten tas bort permanent.',
+        reset_identity_success: 'Enhetsidentiteten återställdes; enheten kan registreras igen',
+    },
+    tr: {
+        reset_identity: 'Cihaz kimliğini sıfırla',
+        reset_identity_title: 'Cihaz kimliğini sıfırla',
+        reset_identity_confirm: '{id} cihazı yeniden kurulumdan sonra tekrar kaydolabilsin mi? Sunucu kaydı kalıcı olarak silinir.',
+        reset_identity_success: 'Cihaz kimliği sıfırlandı; cihaz yeniden kaydolabilir',
+    },
+    uk: {
+        reset_identity: 'Скинути ідентичність пристрою',
+        reset_identity_title: 'Скинути ідентичність пристрою',
+        reset_identity_confirm: 'Скинути пристрій {id}, щоб він міг повторно зареєструватися після перевстановлення? Запис на сервері буде видалено назавжди.',
+        reset_identity_success: 'Ідентичність пристрою скинуто; його можна зареєструвати знову',
+    },
+    ar: {
+        reset_identity: 'إعادة تعيين هوية الجهاز',
+        reset_identity_title: 'إعادة تعيين هوية الجهاز',
+        reset_identity_confirm: 'هل تريد إعادة تعيين الجهاز {id} ليتمكن من التسجيل بعد إعادة التثبيت؟ سيُحذف سجل الخادم نهائيًا ولا يمكن التراجع.',
+        reset_identity_success: 'تمت إعادة تعيين هوية الجهاز ويمكنه التسجيل مجددًا',
+    },
+    hi: {
+        reset_identity: 'डिवाइस की पहचान रीसेट करें',
+        reset_identity_title: 'डिवाइस की पहचान रीसेट करें',
+        reset_identity_confirm: 'क्या डिवाइस {id} को रीसेट करें ताकि पुनः इंस्टॉल के बाद यह फिर पंजीकृत हो सके? सर्वर रिकॉर्ड स्थायी रूप से हट जाएगा।',
+        reset_identity_success: 'डिवाइस की पहचान रीसेट हो गई; डिवाइस फिर पंजीकृत हो सकता है',
+    },
+    id: {
+        reset_identity: 'Atur ulang identitas perangkat',
+        reset_identity_title: 'Atur ulang identitas perangkat',
+        reset_identity_confirm: 'Atur ulang perangkat {id} agar dapat mendaftar lagi setelah instalasi ulang? Catatan server akan dihapus permanen.',
+        reset_identity_success: 'Identitas perangkat diatur ulang; perangkat dapat mendaftar lagi',
+    },
+    ja: {
+        reset_identity: 'デバイス ID をリセット',
+        reset_identity_title: 'デバイス ID をリセット',
+        reset_identity_confirm: '再インストール後に再登録できるよう、デバイス {id} をリセットしますか？サーバーの記録は完全に削除され、元に戻せません。',
+        reset_identity_success: 'デバイス ID をリセットしました。再登録できます',
+    },
+    ko: {
+        reset_identity: '장치 ID 재설정',
+        reset_identity_title: '장치 ID 재설정',
+        reset_identity_confirm: '재설치 후 다시 등록할 수 있도록 장치 {id}를 재설정하시겠습니까? 서버 기록은 영구적으로 삭제됩니다.',
+        reset_identity_success: '장치 ID가 재설정되었습니다. 다시 등록할 수 있습니다',
+    },
+    th: {
+        reset_identity: 'รีเซ็ตข้อมูลประจำตัวอุปกรณ์',
+        reset_identity_title: 'รีเซ็ตข้อมูลประจำตัวอุปกรณ์',
+        reset_identity_confirm: 'รีเซ็ตอุปกรณ์ {id} เพื่อให้ลงทะเบียนใหม่หลังติดตั้งใหม่หรือไม่? ระเบียนบนเซิร์ฟเวอร์จะถูกลบถาวร',
+        reset_identity_success: 'รีเซ็ตข้อมูลประจำตัวแล้ว อุปกรณ์ลงทะเบียนใหม่ได้',
+    },
+    vi: {
+        reset_identity: 'Đặt lại danh tính thiết bị',
+        reset_identity_title: 'Đặt lại danh tính thiết bị',
+        reset_identity_confirm: 'Đặt lại thiết bị {id} để thiết bị có thể đăng ký lại sau khi cài đặt lại? Bản ghi máy chủ sẽ bị xóa vĩnh viễn.',
+        reset_identity_success: 'Đã đặt lại danh tính; thiết bị có thể đăng ký lại',
+    },
+    zh: {
+        reset_identity: '重置设备身份',
+        reset_identity_title: '重置设备身份',
+        reset_identity_confirm: '要重置设备 {id}，使其在重新安装后可以再次注册吗？服务器记录将被永久删除且无法撤销。',
+        reset_identity_success: '设备身份已重置，可以再次注册',
+    },
+    'zh-TW': {
+        reset_identity: '重設裝置身分',
+        reset_identity_title: '重設裝置身分',
+        reset_identity_confirm: '要重設裝置 {id}，讓它在重新安裝後可以再次註冊嗎？伺服器記錄將永久刪除且無法復原。',
+        reset_identity_success: '裝置身分已重設，可以再次註冊',
+    },
+};
+
+const ADDRESS_BOOK_ALIAS_BY_LANG = {
+    en: 'Address-book names are unavailable because the console cannot securely reach the Go address-book service. Configure PANEL_TRUST_SECRET and PANEL_TRUST_ALLOWED_HOSTS for split deployments.',
+    pl: 'Nazwy z książki adresowej są niedostępne, ponieważ konsola nie może bezpiecznie połączyć się z usługą książki adresowej Go. W konfiguracji rozdzielonego wdrożenia ustaw PANEL_TRUST_SECRET i PANEL_TRUST_ALLOWED_HOSTS.',
+    de: 'Adressbuchnamen sind nicht verfügbar, weil die Konsole den Go-Adressbuchdienst nicht sicher erreichen kann. Konfigurieren Sie für getrennte Bereitstellungen PANEL_TRUST_SECRET und PANEL_TRUST_ALLOWED_HOSTS.',
+    fr: "Les noms du carnet d'adresses sont indisponibles, car la console ne peut pas joindre le service de carnet d'adresses Go de manière sécurisée. Configurez PANEL_TRUST_SECRET et PANEL_TRUST_ALLOWED_HOSTS pour les déploiements séparés.",
+    es: 'Los nombres de la libreta de direcciones no están disponibles porque la consola no puede acceder de forma segura al servicio de libreta de direcciones de Go. Configura PANEL_TRUST_SECRET y PANEL_TRUST_ALLOWED_HOSTS en despliegues separados.',
+    it: "I nomi della rubrica non sono disponibili perché la console non può raggiungere in modo sicuro il servizio rubrica Go. Configura PANEL_TRUST_SECRET e PANEL_TRUST_ALLOWED_HOSTS nelle installazioni separate.",
+    pt: 'Os nomes do livro de endereços não estão disponíveis porque a consola não consegue alcançar com segurança o serviço de livro de endereços Go. Configure PANEL_TRUST_SECRET e PANEL_TRUST_ALLOWED_HOSTS em implementações separadas.',
+    nl: 'Adresboeknamen zijn niet beschikbaar omdat de console de Go-adresboekservice niet veilig kan bereiken. Configureer PANEL_TRUST_SECRET en PANEL_TRUST_ALLOWED_HOSTS voor gesplitste implementaties.',
+    cs: 'Názvy z adresáře nejsou dostupné, protože konzole se nemůže bezpečně připojit ke službě adresáře Go. U samostatných nasazení nastavte PANEL_TRUST_SECRET a PANEL_TRUST_ALLOWED_HOSTS.',
+    da: 'Navne fra adressebogen er ikke tilgængelige, fordi konsollen ikke kan nå Go-adressebogstjenesten sikkert. Konfigurer PANEL_TRUST_SECRET og PANEL_TRUST_ALLOWED_HOSTS ved opdelt installation.',
+    fi: 'Osoitekirjan nimet eivät ole käytettävissä, koska konsoli ei saa turvallista yhteyttä Gon osoitekirjapalveluun. Määritä erillisissä asennuksissa PANEL_TRUST_SECRET ja PANEL_TRUST_ALLOWED_HOSTS.',
+    hu: 'A címjegyzék nevei nem érhetők el, mert a konzol nem tud biztonságosan kapcsolódni a Go címjegyzék-szolgáltatásához. Megosztott telepítésnél állítsa be a PANEL_TRUST_SECRET és PANEL_TRUST_ALLOWED_HOSTS értéket.',
+    nb: 'Adresseboksnavn er ikke tilgjengelige fordi konsollen ikke kan nå Go-adresseboktjenesten på en sikker måte. Konfigurer PANEL_TRUST_SECRET og PANEL_TRUST_ALLOWED_HOSTS ved delt installasjon.',
+    ro: 'Numele din agenda de adrese nu sunt disponibile deoarece consola nu poate accesa în siguranță serviciul Go pentru agenda de adrese. Configurați PANEL_TRUST_SECRET și PANEL_TRUST_ALLOWED_HOSTS pentru implementări separate.',
+    sv: 'Namn från adressboken är inte tillgängliga eftersom konsolen inte kan nå Go-adressbokstjänsten på ett säkert sätt. Konfigurera PANEL_TRUST_SECRET och PANEL_TRUST_ALLOWED_HOSTS vid delade installationer.',
+    tr: 'Adres defteri adları kullanılamıyor çünkü konsol Go adres defteri hizmetine güvenli şekilde ulaşamıyor. Ayrık dağıtımlarda PANEL_TRUST_SECRET ve PANEL_TRUST_ALLOWED_HOSTS değerlerini yapılandırın.',
+    uk: 'Назви з адресної книги недоступні, оскільки консоль не може безпечно підключитися до служби адресної книги Go. Для розділених розгортань налаштуйте PANEL_TRUST_SECRET і PANEL_TRUST_ALLOWED_HOSTS.',
+    ar: 'أسماء دفتر العناوين غير متاحة لأن وحدة التحكم لا تستطيع الوصول بأمان إلى خدمة دفتر عناوين Go. اضبط PANEL_TRUST_SECRET وPANEL_TRUST_ALLOWED_HOSTS في عمليات النشر المنفصلة.',
+    hi: 'पता पुस्तिका के नाम उपलब्ध नहीं हैं क्योंकि कंसोल Go पता पुस्तिका सेवा तक सुरक्षित रूप से नहीं पहुंच सकता। अलग-अलग परिनियोजन में PANEL_TRUST_SECRET और PANEL_TRUST_ALLOWED_HOSTS कॉन्फ़िगर करें।',
+    id: 'Nama buku alamat tidak tersedia karena konsol tidak dapat menjangkau layanan buku alamat Go dengan aman. Konfigurasikan PANEL_TRUST_SECRET dan PANEL_TRUST_ALLOWED_HOSTS untuk deployment terpisah.',
+    ja: 'アドレス帳名を利用できません。コンソールが Go アドレス帳サービスに安全に接続できないためです。分離構成では PANEL_TRUST_SECRET と PANEL_TRUST_ALLOWED_HOSTS を設定してください。',
+    ko: '콘솔이 Go 주소록 서비스에 안전하게 연결할 수 없어 주소록 이름을 사용할 수 없습니다. 분리 배포에서는 PANEL_TRUST_SECRET 및 PANEL_TRUST_ALLOWED_HOSTS를 구성하세요.',
+    th: 'ชื่อในสมุดที่อยู่ไม่พร้อมใช้งาน เนื่องจากคอนโซลไม่สามารถเข้าถึงบริการสมุดที่อยู่ Go ได้อย่างปลอดภัย ให้กำหนดค่า PANEL_TRUST_SECRET และ PANEL_TRUST_ALLOWED_HOSTS สำหรับการติดตั้งแบบแยกส่วน',
+    vi: 'Tên trong sổ địa chỉ không khả dụng vì bảng điều khiển không thể kết nối an toàn tới dịch vụ sổ địa chỉ Go. Hãy cấu hình PANEL_TRUST_SECRET và PANEL_TRUST_ALLOWED_HOSTS cho triển khai tách rời.',
+    zh: '地址簿名称不可用，因为控制台无法安全访问 Go 地址簿服务。对于拆分部署，请配置 PANEL_TRUST_SECRET 和 PANEL_TRUST_ALLOWED_HOSTS。',
+    'zh-TW': '通訊錄名稱無法使用，因為主控台無法安全連線至 Go 通訊錄服務。對於分離部署，請設定 PANEL_TRUST_SECRET 和 PANEL_TRUST_ALLOWED_HOSTS。',
+};
+
+const DISTRIBUTION_BY_LANG = {
+    en: {
+        distribution_title: 'Generic downloads and preconfigured clients',
+        distribution_body: 'The public portal serves generic, signed releases for pairing by QR or one-time code. A signed custom.txt configuration requires the Generator, an operator signing seed, and a client build containing the matching public key.',
+        distribution_warning: 'Do not copy a signing seed from a client release into this server. Generic binaries must be paired or rebuilt with your own signing key.',
+    },
+    pl: {
+        distribution_title: 'Wydania ogólne i klienci prekonfigurowani',
+        distribution_body: 'Publiczny portal udostępnia ogólne, podpisane wydania do parowania kodem QR lub jednorazowym. Podpisany custom.txt wymaga Generatora, seeda podpisującego operatora oraz klienta z pasującym kluczem publicznym.',
+        distribution_warning: 'Nie kopiuj seeda podpisującego z wydania klienta na ten serwer. Ogólne binaria należy parować albo zbudować z własnym kluczem.',
+    },
+    de: {
+        distribution_title: 'Generische Downloads und vorkonfigurierte Clients',
+        distribution_body: 'Das öffentliche Portal stellt generische, signierte Releases für die Kopplung per QR- oder Einmalcode bereit. Eine signierte custom.txt-Konfiguration erfordert den Generator, einen Signatur-Seed des Betreibers und einen Client mit passendem öffentlichen Schlüssel.',
+        distribution_warning: 'Kopieren Sie keinen Signatur-Seed aus einem Client-Release auf diesen Server. Generische Binärdateien müssen gekoppelt oder mit Ihrem eigenen Schlüssel neu gebaut werden.',
+    },
+    fr: {
+        distribution_title: 'Téléchargements génériques et clients préconfigurés',
+        distribution_body: "Le portail public fournit des versions génériques signées à associer par QR ou code à usage unique. Une configuration custom.txt signée nécessite le Générateur, la graine de signature de l'opérateur et un client contenant la clé publique correspondante.",
+        distribution_warning: "Ne copiez pas une graine de signature d'une version client sur ce serveur. Les binaires génériques doivent être appairés ou reconstruits avec votre propre clé.",
+    },
+    es: {
+        distribution_title: 'Descargas genéricas y clientes preconfigurados',
+        distribution_body: 'El portal público sirve versiones genéricas firmadas para emparejar mediante QR o código de un solo uso. Una configuración custom.txt firmada requiere el Generador, la semilla de firma del operador y un cliente con la clave pública correspondiente.',
+        distribution_warning: 'No copies una semilla de firma de una versión del cliente en este servidor. Los binarios genéricos deben emparejarse o reconstruirse con tu propia clave.',
+    },
+    it: {
+        distribution_title: 'Download generici e client preconfigurati',
+        distribution_body: 'Il portale pubblico distribuisce release generiche firmate da associare tramite QR o codice monouso. Una configurazione custom.txt firmata richiede il Generatore, il seed di firma dell’operatore e un client con la chiave pubblica corrispondente.',
+        distribution_warning: 'Non copiare su questo server un seed di firma da una release client. I binari generici devono essere associati o ricostruiti con la tua chiave.',
+    },
+    pt: {
+        distribution_title: 'Transferências genéricas e clientes pré-configurados',
+        distribution_body: 'O portal público disponibiliza versões genéricas assinadas para emparelhamento por QR ou código único. Uma configuração custom.txt assinada requer o Gerador, a semente de assinatura do operador e um cliente com a chave pública correspondente.',
+        distribution_warning: 'Não copie uma semente de assinatura de uma versão do cliente para este servidor. Os binários genéricos devem ser emparelhados ou reconstruídos com a sua própria chave.',
+    },
+    nl: {
+        distribution_title: 'Generieke downloads en vooraf geconfigureerde clients',
+        distribution_body: 'Het openbare portaal biedt generieke, ondertekende releases voor koppeling via QR- of eenmalige code. Een ondertekende custom.txt-configuratie vereist de Generator, een ondertekeningsseed van de beheerder en een client met de bijbehorende openbare sleutel.',
+        distribution_warning: 'Kopieer geen ondertekeningsseed uit een clientrelease naar deze server. Generieke binaries moeten worden gekoppeld of opnieuw gebouwd met uw eigen sleutel.',
+    },
+    cs: {
+        distribution_title: 'Obecná stažení a předkonfigurovaní klienti',
+        distribution_body: 'Veřejný portál poskytuje obecná podepsaná vydání pro spárování pomocí QR nebo jednorázového kódu. Podepsaná konfigurace custom.txt vyžaduje Generátor, podpisový seed operátora a klienta s odpovídajícím veřejným klíčem.',
+        distribution_warning: 'Nekopírujte podpisový seed z vydání klienta na tento server. Obecné binární soubory je nutné spárovat nebo znovu sestavit s vlastním klíčem.',
+    },
+    da: {
+        distribution_title: 'Generiske downloads og forudkonfigurerede klienter',
+        distribution_body: 'Den offentlige portal leverer generiske, signerede releases til parring med QR eller engangskode. En signeret custom.txt-konfiguration kræver Generatoren, operatørens signeringsseed og en klient med den matchende offentlige nøgle.',
+        distribution_warning: 'Kopiér ikke et signeringsseed fra en klientrelease til denne server. Generiske binære filer skal parres eller bygges igen med din egen nøgle.',
+    },
+    fi: {
+        distribution_title: 'Yleiset lataukset ja esikonfiguroidut asiakkaat',
+        distribution_body: 'Julkinen portaali tarjoaa yleisiä allekirjoitettuja julkaisuja QR- tai kertakäyttökoodilla paritettaviksi. Allekirjoitettu custom.txt vaatii Generaattorin, ylläpitäjän allekirjoitusavaimen ja asiakkaan, jossa on vastaava julkinen avain.',
+        distribution_warning: 'Älä kopioi asiakasjulkaisun allekirjoitusavainta tälle palvelimelle. Yleiset binäärit on paritettava tai rakennettava uudelleen omalla avaimellasi.',
+    },
+    hu: {
+        distribution_title: 'Általános letöltések és előre konfigurált kliensek',
+        distribution_body: 'A nyilvános portál általános, aláírt kiadásokat kínál QR- vagy egyszer használatos kóddal történő párosításhoz. Az aláírt custom.txt konfigurációhoz a Generátor, az üzemeltető aláírási seedje és a megfelelő nyilvános kulcsot tartalmazó kliens szükséges.',
+        distribution_warning: 'Ne másolja klienskiadás aláírási seedjét erre a szerverre. Az általános binárisokat párosítani vagy saját kulccsal újraépíteni kell.',
+    },
+    nb: {
+        distribution_title: 'Generiske nedlastinger og forhåndskonfigurerte klienter',
+        distribution_body: 'Den offentlige portalen tilbyr generiske, signerte utgivelser for paring med QR eller engangskode. En signert custom.txt-konfigurasjon krever Generatoren, operatørens signeringsseed og en klient med samsvarende offentlig nøkkel.',
+        distribution_warning: 'Ikke kopier en signeringsseed fra en klientutgivelse til denne serveren. Generiske binærfiler må pares eller bygges på nytt med din egen nøkkel.',
+    },
+    ro: {
+        distribution_title: 'Descărcări generice și clienți preconfigurați',
+        distribution_body: 'Portalul public oferă versiuni generice semnate pentru asociere prin QR sau cod de unică folosință. O configurație custom.txt semnată necesită Generatorul, seed-ul de semnare al operatorului și un client cu cheia publică potrivită.',
+        distribution_warning: 'Nu copiați pe acest server un seed de semnare dintr-o versiune de client. Binarele generice trebuie asociate sau reconstruite cu cheia proprie.',
+    },
+    sv: {
+        distribution_title: 'Generiska nedladdningar och förkonfigurerade klienter',
+        distribution_body: 'Den offentliga portalen tillhandahåller generiska, signerade utgåvor för parkoppling med QR- eller engångskod. En signerad custom.txt-konfiguration kräver Generatorn, operatörens signeringsseed och en klient med motsvarande offentlig nyckel.',
+        distribution_warning: 'Kopiera inte en signeringsseed från en klientutgåva till den här servern. Generiska binärer måste parkopplas eller byggas om med din egen nyckel.',
+    },
+    tr: {
+        distribution_title: 'Genel indirmeler ve önceden yapılandırılmış istemciler',
+        distribution_body: 'Genel portal, QR veya tek kullanımlık kodla eşleştirme için genel imzalı sürümler sunar. İmzalı custom.txt yapılandırması Generator, operatör imzalama çekirdeği ve eşleşen genel anahtarı içeren bir istemci derlemesi gerektirir.',
+        distribution_warning: 'Bir istemci sürümündeki imzalama çekirdeğini bu sunucuya kopyalamayın. Genel ikili dosyalar eşleştirilmeli veya kendi anahtarınızla yeniden oluşturulmalıdır.',
+    },
+    uk: {
+        distribution_title: 'Загальні завантаження та попередньо налаштовані клієнти',
+        distribution_body: 'Публічний портал надає загальні підписані релізи для спарювання через QR або одноразовий код. Підписана конфігурація custom.txt потребує Генератора, ключа підпису оператора та клієнта з відповідним відкритим ключем.',
+        distribution_warning: 'Не копіюйте ключ підпису з релізу клієнта на цей сервер. Загальні бінарні файли потрібно спарувати або перебудувати власним ключем.',
+    },
+    ar: {
+        distribution_title: 'التنزيلات العامة والعملاء المُعدّون مسبقًا',
+        distribution_body: 'يوفر البوابة العامة إصدارات عامة موقعة للاقتران عبر QR أو رمز لمرة واحدة. يتطلب custom.txt الموقع المولّد وبذرة توقيع المشغّل وعميلًا يحتوي على المفتاح العام المطابق.',
+        distribution_warning: 'لا تنسخ بذرة توقيع من إصدار عميل إلى هذا الخادم. يجب إقران الملفات الثنائية العامة أو إعادة بنائها بمفتاحك الخاص.',
+    },
+    hi: {
+        distribution_title: 'सामान्य डाउनलोड और पूर्व-कॉन्फ़िगर किए गए क्लाइंट',
+        distribution_body: 'सार्वजनिक पोर्टल QR या एकबारगी कोड से पेयरिंग के लिए सामान्य, हस्ताक्षरित रिलीज़ देता है। हस्ताक्षरित custom.txt कॉन्फ़िगरेशन के लिए जनरेटर, ऑपरेटर की साइनिंग सीड और संबंधित सार्वजनिक कुंजी वाला क्लाइंट बिल्ड चाहिए।',
+        distribution_warning: 'क्लाइंट रिलीज़ की साइनिंग सीड इस सर्वर पर कॉपी न करें। सामान्य बाइनरी को पेयर करना या अपनी कुंजी से फिर बनाना आवश्यक है।',
+    },
+    id: {
+        distribution_title: 'Unduhan generik dan klien yang telah dikonfigurasi',
+        distribution_body: 'Portal publik menyediakan rilis bertanda tangan generik untuk dipasangkan dengan QR atau kode sekali pakai. Konfigurasi custom.txt bertanda tangan memerlukan Generator, seed penandatangan operator, dan build klien dengan kunci publik yang cocok.',
+        distribution_warning: 'Jangan menyalin seed penandatangan dari rilis klien ke server ini. Biner generik harus dipasangkan atau dibangun ulang dengan kunci Anda sendiri.',
+    },
+    ja: {
+        distribution_title: '汎用ダウンロードと事前設定済みクライアント',
+        distribution_body: '公開ポータルは、QR またはワンタイムコードでペアリングする汎用の署名済みリリースを提供します。署名済み custom.txt には、Generator、運用者の署名シード、対応する公開鍵を含むクライアントビルドが必要です。',
+        distribution_warning: 'クライアントリリースの署名シードをこのサーバーにコピーしないでください。汎用バイナリはペアリングするか、独自の鍵で再ビルドする必要があります。',
+    },
+    ko: {
+        distribution_title: '일반 다운로드 및 사전 구성 클라이언트',
+        distribution_body: '공개 포털은 QR 또는 일회용 코드로 페어링할 수 있는 일반 서명 릴리스를 제공합니다. 서명된 custom.txt 구성에는 Generator, 운영자 서명 시드, 일치하는 공개 키가 포함된 클라이언트 빌드가 필요합니다.',
+        distribution_warning: '클라이언트 릴리스의 서명 시드를 이 서버에 복사하지 마세요. 일반 바이너리는 페어링하거나 자체 키로 다시 빌드해야 합니다.',
+    },
+    th: {
+        distribution_title: 'ดาวน์โหลดทั่วไปและไคลเอนต์ที่กำหนดค่าไว้ล่วงหน้า',
+        distribution_body: 'พอร์ทัลสาธารณะให้บริการรุ่นที่ลงนามทั่วไปสำหรับจับคู่ด้วย QR หรือรหัสใช้ครั้งเดียว custom.txt ที่ลงนามต้องใช้ Generator, seed สำหรับลงนามของผู้ดูแล และไคลเอนต์ที่มีคีย์สาธารณะตรงกัน',
+        distribution_warning: 'อย่าคัดลอก seed สำหรับลงนามจากรุ่นไคลเอนต์มายังเซิร์ฟเวอร์นี้ ไบนารีทั่วไปต้องจับคู่หรือสร้างใหม่ด้วยคีย์ของคุณเอง',
+    },
+    vi: {
+        distribution_title: 'Tải xuống chung và máy khách được cấu hình sẵn',
+        distribution_body: 'Cổng công khai cung cấp các bản phát hành chung đã ký để ghép nối bằng QR hoặc mã dùng một lần. Cấu hình custom.txt đã ký cần Generator, seed ký của quản trị viên và bản dựng máy khách chứa khóa công khai tương ứng.',
+        distribution_warning: 'Không sao chép seed ký từ bản phát hành máy khách vào máy chủ này. Các tệp nhị phân chung phải được ghép nối hoặc dựng lại bằng khóa riêng của bạn.',
+    },
+    zh: {
+        distribution_title: '通用下载与预配置客户端',
+        distribution_body: '公共门户提供通用的签名版本，可通过二维码或一次性代码配对。签名的 custom.txt 配置需要生成器、管理员签名种子，以及包含匹配公钥的客户端构建版本。',
+        distribution_warning: '不要将客户端版本中的签名种子复制到此服务器。通用二进制文件必须进行配对，或使用自己的密钥重新构建。',
+    },
+    'zh-TW': {
+        distribution_title: '通用下載與預先設定的用戶端',
+        distribution_body: '公開入口提供通用的簽章版本，可透過 QR 或一次性代碼配對。簽章的 custom.txt 設定需要產生器、管理員簽章種子，以及包含相符公開金鑰的用戶端建置版本。',
+        distribution_warning: '請勿將用戶端版本中的簽章種子複製到此伺服器。通用二進位檔必須配對，或使用自己的金鑰重新建置。',
+    },
+};
+
 const AGENTS_BY_LANG = {
     en: {
         nav: 'BetterDesk Agents',
@@ -881,6 +1202,11 @@ function patchFile(filePath, langKey) {
     data.dashboard.open_generator = pack.open;
     data.dashboard.generate_config = pack.hint;
     data.agents = pack.agents;
+    data.devices = data.devices || {};
+    Object.assign(data.devices, RESET_IDENTITY_BY_LANG[langKey] || RESET_IDENTITY_BY_LANG.en);
+    data.devices.address_book_alias_unavailable =
+        ADDRESS_BOOK_ALIAS_BY_LANG[langKey] || ADDRESS_BOOK_ALIAS_BY_LANG.en;
+    Object.assign(data.agents, DISTRIBUTION_BY_LANG[langKey] || DISTRIBUTION_BY_LANG.en);
     fs.writeFileSync(filePath, `${JSON.stringify(data, null, 4)}\n`, 'utf8');
 }
 

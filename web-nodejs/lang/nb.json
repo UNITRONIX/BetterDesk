@@ -488,7 +488,12 @@
     "tag_device_one": "enhet",
     "tag_device_many": "enheter",
     "tag_group_one": "dynamisk gruppe",
-    "tag_group_many": "dynamiske grupper"
+    "tag_group_many": "dynamiske grupper",
+    "reset_identity": "Tilbakestill enhetsidentitet",
+    "reset_identity_title": "Tilbakestill enhetsidentitet",
+    "reset_identity_confirm": "Tilbakestill enhet {id} slik at den kan registreres på nytt etter reinstallasjon? Serverposten slettes permanent.",
+    "reset_identity_success": "Enhetsidentiteten er tilbakestilt; enheten kan registreres på nytt",
+    "address_book_alias_unavailable": "Adresseboksnavn er ikke tilgjengelige fordi konsollen ikke kan nå Go-adresseboktjenesten på en sikker måte. Konfigurer PANEL_TRUST_SECRET og PANEL_TRUST_ALLOWED_HOSTS ved delt installasjon."
   },
   "keys": {
     "title": "Servernøkler",
@@ -4880,7 +4885,10 @@
     "pair_activate": "Koble til med kode",
     "pair_body": "Paring bruker en kort engangskode (gyldig i 10 minutter). Agentens QR kan fortsatt skannes fra Koble til med kode → Skann agent-QR.",
     "branding_link": "Klientmerking",
-    "branding_body": "Utseende (logo, farger, etiketter) lastes ved kjøring fra Klientmerking — det er ikke innebygd i installeren."
+    "branding_body": "Utseende (logo, farger, etiketter) lastes ved kjøring fra Klientmerking — det er ikke innebygd i installeren.",
+    "distribution_title": "Generiske nedlastinger og forhåndskonfigurerte klienter",
+    "distribution_body": "Den offentlige portalen tilbyr generiske, signerte utgivelser for paring med QR eller engangskode. En signert custom.txt-konfigurasjon krever Generatoren, operatørens signeringsseed og en klient med samsvarende offentlig nøkkel.",
+    "distribution_warning": "Ikke kopier en signeringsseed fra en klientutgivelse til denne serveren. Generiske binærfiler må pares eller bygges på nytt med din egen nøkkel."
   },
   "pairing": {
     "title": "Sammenkoblingskode",

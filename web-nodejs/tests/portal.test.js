@@ -67,6 +67,8 @@ describe('Public installer portal', () => {
         const app = buildApp();
         const page = await request(app).get('/portal');
         expect(page.status).toBe(200);
+        expect(page.text).toContain('generic, signed releases');
+        expect(page.text).toContain('Preconfigured signed clients require the server Generator');
         expect(page.text.match(/<script\b[^>]*>/gi)).toEqual(['<script src="/js/portal.js" defer>']);
         expect(page.text).not.toMatch(/\son\w+\s*=/i);
         const csp = page.headers['content-security-policy'];

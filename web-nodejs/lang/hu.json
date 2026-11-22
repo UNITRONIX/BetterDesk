@@ -488,7 +488,12 @@
     "tag_device_one": "eszköz",
     "tag_device_many": "eszköz",
     "tag_group_one": "dinamikus csoport",
-    "tag_group_many": "dinamikus csoport"
+    "tag_group_many": "dinamikus csoport",
+    "reset_identity": "Eszközazonosító visszaállítása",
+    "reset_identity_title": "Eszközazonosító visszaállítása",
+    "reset_identity_confirm": "Visszaállítja a(z) {id} eszközt, hogy újratelepítés után ismét regisztrálhasson? A szerverrekord végleg törlődik.",
+    "reset_identity_success": "Az eszközazonosító visszaállítva; az eszköz újra regisztrálható",
+    "address_book_alias_unavailable": "A címjegyzék nevei nem érhetők el, mert a konzol nem tud biztonságosan kapcsolódni a Go címjegyzék-szolgáltatásához. Megosztott telepítésnél állítsa be a PANEL_TRUST_SECRET és PANEL_TRUST_ALLOWED_HOSTS értéket."
   },
   "keys": {
     "title": "Szerverkulcsok",
@@ -4880,7 +4885,10 @@
     "pair_activate": "Párosítás kóddal",
     "pair_body": "A párosítás rövid, egyszer használatos kódot használ (10 percig érvényes). Az ügynök QR-kódja továbbra is beolvasható a Párosítás kóddal → Ügynök QR beolvasása menüből.",
     "branding_link": "Kliens branding",
-    "branding_body": "A megjelenés (logó, színek, címkék) futásidőben a Kliens brandingből töltődik — nincs beágyazva a telepítőbe."
+    "branding_body": "A megjelenés (logó, színek, címkék) futásidőben a Kliens brandingből töltődik — nincs beágyazva a telepítőbe.",
+    "distribution_title": "Általános letöltések és előre konfigurált kliensek",
+    "distribution_body": "A nyilvános portál általános, aláírt kiadásokat kínál QR- vagy egyszer használatos kóddal történő párosításhoz. Az aláírt custom.txt konfigurációhoz a Generátor, az üzemeltető aláírási seedje és a megfelelő nyilvános kulcsot tartalmazó kliens szükséges.",
+    "distribution_warning": "Ne másolja klienskiadás aláírási seedjét erre a szerverre. Az általános binárisokat párosítani vagy saját kulccsal újraépíteni kell."
   },
   "pairing": {
     "title": "Párosítási kód",
