@@ -38,10 +38,17 @@ concurrency:
 jobs:
   release-stable:
     # Skip the auto version-bump PR itself to avoid recursive bumps.
+    # Also skip docs/chore/skip-release merges — those must not mint a new
+    # stable minor (e.g. accidental 3.6.0 from a sponsors-only PR).
     if: |
       github.event.pull_request.merged == true &&
       !startsWith(github.event.pull_request.head.ref, 'release/v') &&
-      !contains(github.event.pull_request.title, '[version-bump]')
+      !contains(github.event.pull_request.title, '[version-bump]') &&
+      !contains(github.event.pull_request.title, '[skip-release]') &&
+      !startsWith(github.event.pull_request.title, 'docs(') &&
+      !startsWith(github.event.pull_request.title, 'docs:') &&
+      !contains(join(github.event.pull_request.labels.*.name, ','), 'skip-release') &&
+      !contains(join(github.event.pull_request.labels.*.name, ','), 'docs')
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:

@@ -16,6 +16,11 @@ BetterDesk uses two Git branches and automated product versioning across the rep
 3. On merge, CI bumps minor version, tags, and publishes a release.
 4. Merge **`main` → `dev`** so development continues from the new minor baseline (e.g. `3.1.0` → next dev commits `3.1.1`, `3.1.2`, …).
 
+**Do not** merge docs-only / sponsors-only PRs into `main` expecting a release.
+Titles starting with `docs(` / `docs:`, or carrying label `docs` / `skip-release`
+(or `[skip-release]` in the title), skip the stable version bump. Land those on
+`dev` first, or fold them into a real `dev` → `main` release.
+
 ```mermaid
 gitGraph
    commit id: "3.0.0"
