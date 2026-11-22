@@ -1,7 +1,8 @@
 <%
-    var _s = (typeof supporters !== 'undefined' && supporters) ? supporters : { honorary: [], individuals: [], links: {} };
+    var _s = (typeof supporters !== 'undefined' && supporters) ? supporters : { honorary: [], bronze: [], individuals: [], links: {} };
     var _links = _s.links || {};
     var _honorary = Array.isArray(_s.honorary) ? _s.honorary : [];
+    var _bronze = Array.isArray(_s.bronze) ? _s.bronze : [];
     var _individuals = Array.isArray(_s.individuals) ? _s.individuals : [];
 %>
 <div class="bd-help-overlay" id="bd-help-overlay" hidden></div>
@@ -36,6 +37,39 @@
                         <span class="bd-help-name"><%= item.name %></span>
                         <% } %>
                         <% if (item.role) { %><div class="bd-help-meta"><%= item.role %></div><% } %>
+                        <% if (item.blurb) { %><p class="bd-help-blurb"><%= item.blurb %></p><% } %>
+                    </div>
+                </li>
+                <% }); %>
+            </ul>
+        </section>
+        <% } %>
+
+        <% if (_bronze.length) { %>
+        <section class="bd-help-section">
+            <h3 class="bd-help-section-title"><%= _('help.panel.bronze') || 'Bronze Sponsors' %></h3>
+            <ul class="bd-help-list">
+                <% _bronze.forEach(function (item) { %>
+                <li class="bd-help-card bd-help-card--bronze">
+                    <% if (item.logo) { %>
+                    <a class="bd-help-logo-link" href="<%= item.url || '#' %>" target="_blank" rel="noopener noreferrer">
+                        <img class="bd-help-logo" src="<%= item.logo %>" alt="<%= item.name %>" width="160" height="auto" loading="lazy">
+                    </a>
+                    <% } else { %>
+                    <span class="material-icons bd-help-person-icon" aria-hidden="true">apartment</span>
+                    <% } %>
+                    <div class="bd-help-card-text">
+                        <% if (item.url) { %>
+                        <a class="bd-help-name" href="<%= item.url %>" target="_blank" rel="noopener noreferrer"><%= item.name %></a>
+                        <% } else { %>
+                        <span class="bd-help-name"><%= item.name %></span>
+                        <% } %>
+                        <% if (item.role) { %><div class="bd-help-meta"><%= item.role %></div><% } %>
+                        <% if (item.githubUrl) { %>
+                        <a class="bd-help-meta" href="<%= item.githubUrl %>" target="_blank" rel="noopener noreferrer">@<%= item.github || item.name %></a>
+                        <% } else if (item.github) { %>
+                        <span class="bd-help-meta">@<%= item.github %></span>
+                        <% } %>
                         <% if (item.blurb) { %><p class="bd-help-blurb"><%= item.blurb %></p><% } %>
                     </div>
                 </li>

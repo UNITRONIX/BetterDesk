@@ -28,6 +28,23 @@ Thank you, INSOLVE, for backing free and open remote-desktop software. 🙏
 
 ---
 
+## 🏢 Bronze Sponsors
+
+### betterde.sk ([@trybetterdesk](https://github.com/trybetterdesk))
+
+**[betterde.sk](https://betterde.sk)** is a **Bronze Sponsor** of BetterDesk via
+[GitHub Sponsors](https://github.com/sponsors/UNITRONIX) ($50 / month). We are
+grateful for the ongoing support and for believing in open, self-hostable
+remote-management software.
+
+- **Website:** [betterde.sk](https://betterde.sk)
+- **GitHub:** [@trybetterdesk](https://github.com/trybetterdesk)
+- **Tier:** Bronze Sponsor (Backer)
+
+Thank you, betterde.sk! 🙏
+
+---
+
 ## ☕ Individual Backers
 
 These supporters keep the project going through one-time and recurring donations.
@@ -208,4 +225,4 @@ belongs to the creator.
 
 ---
 
-*Last updated: 2026-10-12*
+*Last updated: 2026-11-22*

@@ -138,11 +138,16 @@
     background: var(--ux35-bg, var(--bg-primary, #0d1117));
 }
 
-.bd-help-card--person {
+.bd-help-card--person,
+.bd-help-card--bronze {
     flex-direction: row;
     align-items: center;
     gap: 10px;
     padding: 10px 12px;
+}
+
+.bd-help-card--bronze .bd-help-person-icon {
+    color: var(--ux35-primary, var(--accent-blue, #58a6ff));
 }
 
 .bd-help-person-icon {
