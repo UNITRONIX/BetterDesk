@@ -4,9 +4,12 @@
 # Every push to dev (except version-bump commits) bumps product version +0.0.1
 # across Tier 1/2 files via scripts/bump-version.js.
 #
-# After a successful bump push, explicitly dispatch docker-publish (tag=dev).
-# GITHUB_TOKEN branch pushes do not re-trigger other workflows, so relying on
-# the bump commit alone would never republish GHCR :dev (#401).
+# Branch protection on `dev` requires a pull request, so the bump lands via a
+# short-lived PR (squash merge) — same pattern as version-bump-main.yml.
+# Direct GITHUB_TOKEN pushes to `dev` are rejected by protection rules.
+#
+# After a successful bump merge, explicitly dispatch docker-publish (tag=dev).
+# GITHUB_TOKEN events do not re-trigger other workflows (#401).
 # =============================================================================
 
 name: Version Bump (dev)
@@ -17,6 +20,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
   actions: write
 
 concurrency:
@@ -26,12 +30,13 @@ concurrency:
 jobs:
   bump-patch:
     # Skip only real auto-bump commits (subject line), not feature messages that
-    # happen to mention the marker in the body.
+    # happen to mention the marker in the body. Squash-merged bump PRs keep the
+    # chore: bump subject so this filter prevents recursive bumps.
     if: |
       !startsWith(github.event.head_commit.message, 'chore: bump version') &&
       !startsWith(github.event.head_commit.message, 'chore: release version')
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -48,34 +53,70 @@ jobs:
           node scripts/bump-version.js --patch
           NEW_VERSION=$(cat VERSION | tr -d '\n')
           echo "version=${NEW_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "branch=chore/bump-dev-v${NEW_VERSION}" >> "$GITHUB_OUTPUT"
 
-      - name: Commit and push version bump
+      - name: Commit bump on temporary branch
         id: commit
         env:
           NEW_VERSION: ${{ steps.bump.outputs.version }}
+          BUMP_BRANCH: ${{ steps.bump.outputs.branch }}
         run: |
+          set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add $(node scripts/bump-version.js --list-paths)
           if git diff --cached --quiet; then
-            echo "No version files changed — skipping commit"
-            echo "pushed=false" >> "$GITHUB_OUTPUT"
+            echo "No version files changed — skipping"
+            echo "has_bump=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
+          git checkout -B "$BUMP_BRANCH"
           git commit -m "chore: bump version to ${NEW_VERSION} [version-bump]"
-          for attempt in 1 2 3 4 5; do
-            if git push; then
-              echo "pushed=true" >> "$GITHUB_OUTPUT"
-              exit 0
+          git push -u origin "HEAD:${BUMP_BRANCH}" --force
+          echo "has_bump=true" >> "$GITHUB_OUTPUT"
+
+      - name: Open and squash-merge bump PR into dev
+        id: merge
+        if: steps.commit.outputs.has_bump == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEW_VERSION: ${{ steps.bump.outputs.version }}
+          BUMP_BRANCH: ${{ steps.bump.outputs.branch }}
+        run: |
+          set -euo pipefail
+          if ! gh pr view "$BUMP_BRANCH" --json number >/dev/null 2>&1; then
+            BODY=$(printf '%s\n' \
+              "Automated patch version bump to ${NEW_VERSION} after a push to \`dev\`." \
+              "" \
+              "Squash-merge keeps the \`chore: bump version … [version-bump]\` subject so the" \
+              "next push does not recurse. Do not remove the \`[version-bump]\` marker.")
+            if ! gh pr create \
+              --base dev \
+              --head "$BUMP_BRANCH" \
+              --title "chore: bump version to ${NEW_VERSION} [version-bump]" \
+              --body "$BODY"; then
+              echo "::error::Could not open version-bump PR. Enable Settings → Actions → General → Workflow permissions → Allow GitHub Actions to create and approve pull requests. Branch ${BUMP_BRANCH} is pushed."
+              exit 1
             fi
-            echo "Push failed (attempt ${attempt}/5) — rebasing and retrying..."
-            git pull --rebase origin dev
-          done
-          echo "Version bump push failed after retries"
-          exit 1
+          else
+            echo "PR for ${BUMP_BRANCH} already exists"
+          fi
+
+          PR_URL=$(gh pr view "$BUMP_BRANCH" --json url -q .url)
+          echo "pr_url=${PR_URL}" >> "$GITHUB_OUTPUT"
+          echo "Waiting for required checks on ${PR_URL}..."
+          # Branch protection expects test-and-audit + gitleaks before merge.
+          if ! gh pr checks "$BUMP_BRANCH" --watch --fail-fast; then
+            echo "::error::Required checks failed on ${PR_URL}"
+            exit 1
+          fi
+
+          # Squash so the merge commit subject stays chore: bump … [version-bump].
+          gh pr merge "$BUMP_BRANCH" --squash --delete-branch
+          echo "merged=true" >> "$GITHUB_OUTPUT"
 
       - name: Trigger GHCR :dev image publish
-        if: steps.commit.outputs.pushed == 'true'
+        if: steps.merge.outputs.merged == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |

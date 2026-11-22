@@ -111,7 +111,7 @@ UPDATE_GITHUB_BRANCH=dev    # development
 
 | Workflow | Trigger | Action |
 |----------|---------|--------|
-| `version-bump-dev.yml` | Push to `dev` | Patch bump + commit `[version-bump]` |
+| `version-bump-dev.yml` | Push to `dev` | Patch bump via short-lived PR (squash `[version-bump]` into `dev`) |
 | `version-bump-main.yml` | PR merged to `main` | Minor bump, tag, GitHub Release |
 | `version-verify.yml` | Push/PR touching version files | Fail if files disagree |
 | `release-server.yml` | Tag `v*` | Go server binaries |

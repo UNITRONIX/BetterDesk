@@ -56,9 +56,23 @@ Moderate+ production vulnerabilities fail CI. Fix with dependency bumps or docum
 
 Dependabot PRs skip SARIF upload (GitHub permission limitation). Analysis still runs; push to `dev`/`main` uploads results. This is intentional in [`.github/workflows/codeql.yml`](../../.github/workflows/codeql.yml).
 
-### Version Bump (dev) — `failed to push some refs`
+### Version Bump (dev) — `GH006: Protected branch update failed`
 
-Concurrent pushes to `dev`. Workflow retries with `git pull --rebase`. If it persists, wait for the other push to finish and re-run the failed job.
+`dev` requires a pull request (and status checks). The bump workflow must **not**
+push commits with `GITHUB_TOKEN` straight onto `dev`. Current behaviour
+([`version-bump-dev.yml`](../../.github/workflows/version-bump-dev.yml)): open
+`chore/bump-dev-vX.Y.Z`, wait for checks, **squash-merge** into `dev`.
+
+If create/merge fails:
+
+1. Settings → Actions → General → Workflow permissions → enable **Allow GitHub Actions to create and approve pull requests**
+2. Confirm `dev` protection allows merge once `test-and-audit` + `gitleaks` are green (approving reviews optional on `dev` so the bot can land bumps without a second human account)
+
+### Version Bump (dev) — `failed to push some refs` (rebase loop)
+
+Concurrent pushes while an older direct-push bump still ran. Prefer the PR-based
+flow above. If a stale job is stuck, cancel it and re-run **Version Bump (dev)**
+on the latest `dev` tip.
 
 ### Release server — Go version mismatch
 
