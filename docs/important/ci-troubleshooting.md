@@ -58,15 +58,21 @@ Dependabot PRs skip SARIF upload (GitHub permission limitation). Analysis still 
 
 ### Version Bump (dev) — `GH006: Protected branch update failed`
 
-`dev` requires a pull request (and status checks). The bump workflow must **not**
-push commits with `GITHUB_TOKEN` straight onto `dev`. Current behaviour
-([`version-bump-dev.yml`](../../.github/workflows/version-bump-dev.yml)): open
-`chore/bump-dev-vX.Y.Z`, wait for checks, **squash-merge** into `dev`.
+`dev` requires a pull request. The bump workflow must **not** push
+`[version-bump]` commits with `GITHUB_TOKEN` straight onto `dev`. Current
+behaviour ([`version-bump-dev.yml`](../../.github/workflows/version-bump-dev.yml)):
+open `chore/bump-dev-vX.Y.Z`, then **squash-merge with `--admin`**.
+
+Pushes/PRs created by `GITHUB_TOKEN` do **not** start other workflows, so
+required checks never appear on the bump PR — waiting on `gh pr checks` would
+hang or fail immediately (`no checks reported`). Admin merge bypasses that.
 
 If create/merge fails:
 
 1. Settings → Actions → General → Workflow permissions → enable **Allow GitHub Actions to create and approve pull requests**
-2. Confirm `dev` protection allows merge once `test-and-audit` + `gitleaks` are green (approving reviews optional on `dev` so the bot can land bumps without a second human account)
+2. Confirm `dev` has `enforce_admins: false` (so merge `--admin` can bypass missing checks)
+3. Approving-review count on `dev` should be `0` so a second human account is not required for bumps
+4. Fallback: merge the open `chore/bump-dev-v*` PR manually (`gh pr merge --squash --admin`)
 
 ### Version Bump (dev) — `failed to push some refs` (rebase loop)
 
