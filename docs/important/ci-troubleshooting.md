@@ -2,6 +2,17 @@
 
 Quick map of CI workflows, common failures, and local commands that mirror branch protection checks.
 
+## Accidental stable release (e.g. 3.6.0 from a docs PR)
+
+Merging any non-`[version-bump]` PR into `main` used to always mint a **minor**
+release. That is wrong for sponsors/docs. Guard is in
+[`version-bump-main.yml`](../../.github/workflows/version-bump-main.yml)
+(`docs(` / `skip-release`).
+
+If a bad release already published: delete the GitHub Release + tag `vX.Y.Z` +
+branch `release/vX.Y.Z`, confirm Latest points back at the previous stable, then
+land the guard before re-enabling the workflow.
+
 ## Required checks (branch protection)
 
 | Workflow | What it enforces | Local mirror |
