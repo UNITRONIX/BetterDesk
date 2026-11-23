@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Added
+- **RdClient web — multi-monitor overview:** live thumbnails (correct aspect ratios) and **All monitors** mosaic via RustDesk `CaptureDisplays` multi-set + `VideoFrame.display` routing. Focus a monitor without dropping other preview streams; overview requires WebCodecs/HTTPS. Ships via panel update.
+
 ### Changed
 - _(none yet)_
 

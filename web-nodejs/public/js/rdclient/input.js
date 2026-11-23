@@ -467,6 +467,12 @@ class RDInput {
         const canvasY = e.clientY - rect.top;
 
         const pos = this.renderer.canvasToRemote(canvasX, canvasY);
+        if (!pos) return null;
+
+        // Mosaic hit-test already returns display-local coords; skip desktop bounds.
+        if (typeof pos.displayIdx === 'number') {
+            return pos;
+        }
 
         if (pos.x < 0 || pos.y < 0 ||
             pos.x > this.renderer.remoteWidth ||

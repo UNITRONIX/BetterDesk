@@ -53,6 +53,17 @@ class RDRenderer {
         this._pendingFrame = null;
         /** @type {boolean} */
         this._renderLoopActive = false;
+
+        /** @type {boolean} Composite all remote displays into one canvas */
+        this._mosaicMode = false;
+        /** @type {Array<{idx:number,x:number,y:number,width:number,height:number}>} */
+        this._mosaicLayout = [];
+        /** @type {Map<number, VideoFrame|Object>} */
+        this._mosaicPending = new Map();
+        /** @type {number} Focused display index (input + highlight) */
+        this._focusDisplay = 0;
+        /** @type {Function|null} (displayIdx:number) => void — mosaic click hit another display */
+        this.onDisplayHit = null;
     }
 
     /**
@@ -171,15 +182,90 @@ class RDRenderer {
     }
 
     /**
+     * Enable or disable all-monitors mosaic compositing.
+     * @param {boolean} enabled
+     * @param {Array<{idx:number,x:number,y:number,width:number,height:number}>} [layout]
+     */
+    setMosaicMode(enabled, layout) {
+        this._mosaicMode = !!enabled;
+        if (Array.isArray(layout)) {
+            this._mosaicLayout = layout.slice();
+            this._syncMosaicRemoteSize();
+        }
+        if (!this._mosaicMode) {
+            this._mosaicPending.forEach(function (frame) {
+                try { frame.close(); } catch (_) { /* ignore */ }
+            });
+            this._mosaicPending.clear();
+        } else {
+            this._updateTransform();
+        }
+    }
+
+    /**
+     * @param {number} idx
+     */
+    setFocusDisplay(idx) {
+        this._focusDisplay = idx | 0;
+    }
+
+    /**
+     * @returns {boolean}
+     */
+    isMosaicMode() {
+        return !!this._mosaicMode;
+    }
+
+    _syncMosaicRemoteSize() {
+        if (!this._mosaicLayout.length) return;
+        var minX = Infinity;
+        var minY = Infinity;
+        var maxX = -Infinity;
+        var maxY = -Infinity;
+        this._mosaicLayout.forEach(function (d) {
+            var x = d.x || 0;
+            var y = d.y || 0;
+            var w = d.width || 0;
+            var h = d.height || 0;
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+            maxX = Math.max(maxX, x + w);
+            maxY = Math.max(maxY, y + h);
+        });
+        if (!isFinite(minX) || !isFinite(minY)) return;
+        this._mosaicOriginX = minX;
+        this._mosaicOriginY = minY;
+        this.setRemoteSize(Math.max(1, maxX - minX), Math.max(1, maxY - minY));
+    }
+
+    /**
+     * Queue a frame for one display in mosaic mode.
+     * @param {number} displayIdx
+     * @param {VideoFrame|Object} frame
+     */
+    pushMosaicFrame(displayIdx, frame) {
+        var idx = displayIdx | 0;
+        var prev = this._mosaicPending.get(idx);
+        if (prev) {
+            try { prev.close(); } catch (_) { /* ignore */ }
+        }
+        this._mosaicPending.set(idx, frame);
+    }
+
+    /**
      * Convert canvas coordinates to remote display coordinates
      * @param {number} canvasX
      * @param {number} canvasY
-     * @returns {{ x: number, y: number }}
+     * @returns {{ x: number, y: number, displayIdx?: number }|null}
      */
     canvasToRemote(canvasX, canvasY) {
         const dpr = window.devicePixelRatio || 1;
         const px = canvasX * dpr;
         const py = canvasY * dpr;
+
+        if (this._mosaicMode && this._mosaicLayout.length) {
+            return this._canvasToRemoteMosaic(px, py);
+        }
 
         if (this.scaleMode === 'stretch') {
             return {
@@ -193,6 +279,35 @@ class RDRenderer {
             x: Math.round((px - offsetX) / scale),
             y: Math.round((py - offsetY) / scale)
         };
+    }
+
+    /**
+     * @param {number} px device pixels
+     * @param {number} py device pixels
+     * @returns {{ x: number, y: number, displayIdx: number }|null}
+     */
+    _canvasToRemoteMosaic(px, py) {
+        const { scale, offsetX, offsetY } = this.transform;
+        if (!scale) return null;
+        const deskX = (px - offsetX) / scale + (this._mosaicOriginX || 0);
+        const deskY = (py - offsetY) / scale + (this._mosaicOriginY || 0);
+
+        for (var i = 0; i < this._mosaicLayout.length; i++) {
+            var d = this._mosaicLayout[i];
+            var x = d.x || 0;
+            var y = d.y || 0;
+            var w = d.width || 0;
+            var h = d.height || 0;
+            if (deskX >= x && deskX < x + w && deskY >= y && deskY < y + h) {
+                var localX = Math.round(deskX - x);
+                var localY = Math.round(deskY - y);
+                if (d.idx !== this._focusDisplay && typeof this.onDisplayHit === 'function') {
+                    try { this.onDisplayHit(d.idx); } catch (_) { /* ignore */ }
+                }
+                return { x: localX, y: localY, displayIdx: d.idx };
+            }
+        }
+        return null;
     }
 
     /**
@@ -234,7 +349,12 @@ class RDRenderer {
     _renderTick() {
         if (!this._renderLoopActive) return;
 
-        if (this._pendingFrame) {
+        if (this._mosaicMode) {
+            if (this._mosaicPending.size > 0) {
+                this._fpsCount++;
+                this._renderMosaic();
+            }
+        } else if (this._pendingFrame) {
             // Count FPS only for genuinely new frames from the peer
             if (this._pendingFrame._isNew) {
                 this._fpsCount++;
@@ -252,6 +372,47 @@ class RDRenderer {
         }
 
         this._rafId = requestAnimationFrame(() => this._renderTick());
+    }
+
+    /**
+     * Composite every pending display frame into the virtual desktop layout.
+     */
+    _renderMosaic() {
+        this._syncMosaicRemoteSize();
+        const ctx = this.ctx;
+        const cw = this.canvas.width;
+        const ch = this.canvas.height;
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, 0, cw, ch);
+
+        const { scale, offsetX, offsetY } = this.transform;
+        const originX = this._mosaicOriginX || 0;
+        const originY = this._mosaicOriginY || 0;
+        const self = this;
+
+        this._mosaicLayout.forEach(function (d) {
+            var frame = self._mosaicPending.get(d.idx);
+            if (!frame) return;
+            var drawSource = frame._source || frame;
+            var dx = offsetX + ((d.x || 0) - originX) * scale;
+            var dy = offsetY + ((d.y || 0) - originY) * scale;
+            var dw = (d.width || frame.displayWidth || 0) * scale;
+            var dh = (d.height || frame.displayHeight || 0) * scale;
+            try {
+                ctx.drawImage(drawSource, dx, dy, dw, dh);
+            } catch (_) { /* frame may be closed */ }
+
+            if (d.idx === self._focusDisplay) {
+                ctx.strokeStyle = 'rgba(88, 166, 255, 0.9)';
+                ctx.lineWidth = Math.max(2, 2 * (window.devicePixelRatio || 1));
+                ctx.strokeRect(dx, dy, dw, dh);
+            }
+        });
+
+        this.framesRendered++;
+        if (this.showCursor && this.cursorImage) {
+            this._drawCursor(ctx);
+        }
     }
 
     /**

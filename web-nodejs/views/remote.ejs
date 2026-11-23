@@ -217,7 +217,7 @@
                         <button class="toolbar-btn" id="btn-monitors" title="${_('remote.monitors') || 'Monitors'}" style="display:none">
                             <span class="material-icons">desktop_windows</span>
                         </button>
-                        <div class="toolbar-dropdown-menu" id="monitors-menu">
+                        <div class="toolbar-dropdown-menu monitors-menu" id="monitors-menu">
                             <div class="dropdown-label">${_('remote.select_monitor') || 'Select Monitor'}</div>
                         </div>
                     </div>
@@ -488,6 +488,10 @@
             </div>
         </div>
         <canvas class="session-canvas" tabindex="0"></canvas>
+        <div class="monitor-picker-overlay session-monitor-overview" id="monitor-overview-panel" hidden>
+            <div class="monitor-picker-backdrop session-monitor-picker-backdrop"></div>
+            <div class="monitor-picker-grid session-monitor-thumbs" role="dialog" aria-modal="true" aria-label="${_('remote.monitor_overview') || 'Monitor overview'}"></div>
+        </div>
         <div class="chat-panel session-chat-panel" style="display:none;">
             <div class="chat-header">
                 <span>${_('remote.chat')}</span>

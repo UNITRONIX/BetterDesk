@@ -248,6 +248,10 @@
             this.chatPanel = panel.querySelector('.session-chat-panel');
             this.chatMessages = panel.querySelector('.session-chat-messages');
             this.chatInput = panel.querySelector('.session-chat-input');
+            this.monitorOverviewPanel = panel.querySelector('.session-monitor-overview');
+            this.monitorOverviewThumbs = panel.querySelector('.session-monitor-thumbs');
+            this.monitorPickerBackdrop = panel.querySelector('.session-monitor-picker-backdrop');
+            this.monitorPickerOpen = false;
             this.tfaOverlay = panel.querySelector('.session-2fa-overlay');
             this.tfaInput = panel.querySelector('.session-2fa-input');
             this.tfaError = panel.querySelector('.session-2fa-error');
@@ -1112,19 +1116,14 @@
 
         c.on('chat', (text) => addChatMessage(session, text, 'received'));
 
-        // CDAP transport: agent emits `monitors` after `monitor_list`. Show
-        // the toolbar dropdown on multi-display agents and refresh contents.
-        c.on('monitors', (list) => {
-            const btn = document.getElementById('btn-monitors');
-            if (btn) btn.style.display = (Array.isArray(list) && list.length > 1) ? '' : 'none';
+        // CDAP transport: agent emits `monitors` after `monitor_list`.
+        c.on('monitors', () => {
             if (isActive(session)) {
-                try { updateMonitorMenu(); } catch { /* menu not yet built */ }
+                try { refreshMonitorButton(session); } catch { /* not ready */ }
             }
         });
 
-        // Native RustDesk transport: the rdclient emits `peer_info` once the
-        // login completes. Reveal the monitors dropdown when the peer has more
-        // than one display OR supports virtual displays, then rebuild it.
+        // Native RustDesk transport: peer_info after login.
         c.on('peer_info', () => {
             if (isActive(session)) {
                 try { refreshMonitorButton(session); } catch { /* not ready */ }
@@ -1133,14 +1132,32 @@
         });
         c.on('display_switched', () => {
             if (isActive(session)) {
-                try { updateMonitorMenu(); } catch { /* menu not yet built */ }
+                try { refreshMonitorButton(session); } catch { /* not ready */ }
+            }
+        });
+        c.on('overview_changed', () => {
+            if (isActive(session)) {
+                try { refreshMonitorButton(session); } catch { /* not ready */ }
+            }
+        });
+        c.on('overview_unavailable', () => {
+            if (isActive(session)) {
+                showToast(t('remote.overview_webcodecs_required',
+                    'Monitor overview requires WebCodecs (HTTPS).'), 'warning');
             }
         });
         c.on('virtual_display_toggled', () => {
-            if (isActive(session)) {
-                try { updateMonitorMenu(); } catch { /* menu not yet built */ }
+            if (isActive(session) && session.monitorPickerOpen) {
+                try { syncMonitorOverviewPanel(session); } catch { /* ignore */ }
             }
         });
+
+        if (session.monitorPickerBackdrop) {
+            session.monitorPickerBackdrop.addEventListener('click', (e) => {
+                e.stopPropagation();
+                closeMonitorPicker(session);
+            });
+        }
 
         // Security events: show warnings for E2E encryption issues
         c.on('signature_warning', (msg) => {
@@ -1745,9 +1762,23 @@
 
     document.getElementById('btn-monitors')?.addEventListener('click', (e) => {
         e.stopPropagation();
-        closeAllDropdowns('monitors-menu');
-        updateMonitorMenu();
-        document.getElementById('monitors-menu')?.classList.toggle('open');
+        closeAllDropdowns();
+        const session = getActiveSession();
+        if (!session) return;
+        if (session.monitorPickerOpen) {
+            closeMonitorPicker(session);
+        } else {
+            openMonitorPicker(session);
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape') return;
+        const session = getActiveSession();
+        if (session && session.monitorPickerOpen) {
+            e.preventDefault();
+            closeMonitorPicker(session);
+        }
     });
 
     function refreshMonitorButton(session) {
@@ -1764,10 +1795,14 @@
                 : { supported: false };
         } catch { vd = { supported: false }; }
         const useStrip = monitors.length >= 2 && monitors.length <= 4;
-        const showDropdown = (monitors.length > 1 && !useStrip) || (vd && vd.supported);
-        btn.style.display = showDropdown ? '' : 'none';
+        // Show whenever there is at least one display or virtual-display support.
+        const showBtn = (monitors.length >= 1) || (vd && vd.supported);
+        btn.style.display = showBtn ? '' : 'none';
+        btn.classList.toggle('active', !!session.monitorPickerOpen);
         updateMonitorStrip(session, monitors, useStrip);
-        if (showDropdown) updateMonitorMenu();
+        if (session.monitorPickerOpen) {
+            syncMonitorOverviewPanel(session);
+        }
     }
 
     function updateMonitorStrip(session, monitors, useStrip) {
@@ -1787,7 +1822,7 @@
             const monitorLabel = t('remote.monitor_n', 'Monitor {{n}}')
                 .replace('{{n}}', String(monitorIndex));
             item.title = monitorLabel;
-            item.textContent = monitorLabel;
+            item.textContent = String(monitorIndex);
             item.addEventListener('click', function (e) {
                 e.stopPropagation();
                 session.client.switchMonitor(m.idx);
@@ -1795,10 +1830,190 @@
                     b.classList.remove('active');
                 });
                 item.classList.add('active');
-                updateMonitorMenu();
+                if (session.monitorPickerOpen) syncMonitorOverviewPanel(session);
             });
             strip.appendChild(item);
         });
+    }
+
+    function openMonitorPicker(session) {
+        session = session || getActiveSession();
+        if (!session || !session.client || !session.monitorOverviewPanel) return;
+        session.monitorPickerOpen = true;
+        const client = session.client;
+        const canOverview = typeof client.canUseMonitorOverview !== 'function'
+            || client.canUseMonitorOverview();
+        if (canOverview && typeof client.setOverviewMode === 'function') {
+            client.setOverviewMode(true);
+        } else if (!canOverview) {
+            showToast(t('remote.overview_webcodecs_required',
+                'Monitor overview requires WebCodecs (HTTPS).'), 'warning');
+        }
+        syncMonitorOverviewPanel(session);
+        refreshMonitorButton(session);
+    }
+
+    function closeMonitorPicker(session) {
+        session = session || getActiveSession();
+        if (!session) return;
+        session.monitorPickerOpen = false;
+        if (session.client && typeof session.client.setOverviewMode === 'function') {
+            // Leaving the picker drops multi-capture unless All monitors stays on.
+            if (!(typeof session.client.isAllMonitorsView === 'function'
+                && session.client.isAllMonitorsView())) {
+                session.client.setOverviewMode(false);
+            }
+        }
+        if (session.monitorOverviewPanel) session.monitorOverviewPanel.hidden = true;
+        if (session.client && typeof session.client.clearThumbnailCanvases === 'function') {
+            session.client.clearThumbnailCanvases();
+        }
+        if (session.monitorOverviewThumbs) session.monitorOverviewThumbs.innerHTML = '';
+        refreshMonitorButton(session);
+    }
+
+    /**
+     * Seed a thumbnail from the main session canvas (useful before live
+     * multi-capture frames arrive, or when only one display is reported).
+     */
+    function seedThumbFromMainCanvas(session, thumbCanvas, monitorIdx) {
+        if (!session || !session.canvas || !thumbCanvas) return;
+        const client = session.client;
+        const current = client && typeof client.getCurrentDisplay === 'function'
+            ? client.getCurrentDisplay()
+            : 0;
+        if (monitorIdx !== current) return;
+        try {
+            const src = session.canvas;
+            if (!src.width || !src.height) return;
+            const maxW = 480;
+            const scale = Math.min(1, maxW / src.width);
+            const tw = Math.max(1, Math.round(src.width * scale));
+            const th = Math.max(1, Math.round(src.height * scale));
+            thumbCanvas.width = tw;
+            thumbCanvas.height = th;
+            const ctx = thumbCanvas.getContext('2d');
+            if (ctx) ctx.drawImage(src, 0, 0, tw, th);
+        } catch (_) { /* ignore */ }
+    }
+
+    /**
+     * Centered floating grid of monitor tiles (+ optional virtual-display add).
+     */
+    function syncMonitorOverviewPanel(session) {
+        session = session || getActiveSession();
+        if (!session || !session.monitorOverviewPanel || !session.client) return;
+        if (!session.monitorPickerOpen || !isActive(session)) {
+            session.monitorOverviewPanel.hidden = true;
+            return;
+        }
+
+        const client = session.client;
+        const monitors = (typeof client.getMonitors === 'function' ? client.getMonitors() : []) || [];
+        session.monitorOverviewPanel.hidden = false;
+
+        const thumbs = session.monitorOverviewThumbs;
+        if (!thumbs) return;
+        thumbs.innerHTML = '';
+        if (typeof client.clearThumbnailCanvases === 'function') {
+            client.clearThumbnailCanvases();
+        }
+
+        monitors.forEach(function (m, i) {
+            const wrap = document.createElement('button');
+            wrap.type = 'button';
+            wrap.className = 'monitor-overview-thumb' + (m.current ? ' active' : '');
+            wrap.dataset.idx = String(m.idx);
+            const monitorIndex = typeof m.idx === 'number' ? m.idx : i;
+            const monitorLabel = t('remote.monitor_n', 'Monitor {{n}}')
+                .replace('{{n}}', String(monitorIndex));
+            const w = m.width || 16;
+            const h = m.height || 9;
+            wrap.style.aspectRatio = w + ' / ' + h;
+            wrap.title = monitorLabel + (w && h ? ' · ' + w + '\u00d7' + h : '');
+
+            const canvas = document.createElement('canvas');
+            canvas.className = 'monitor-overview-canvas';
+            canvas.setAttribute('aria-hidden', 'true');
+            wrap.appendChild(canvas);
+
+            const caption = document.createElement('span');
+            caption.className = 'monitor-overview-caption';
+            caption.textContent = monitorLabel
+                + (w && h ? ' · ' + w + '\u00d7' + h : '');
+            wrap.appendChild(caption);
+
+            if (typeof client.setThumbnailCanvas === 'function') {
+                client.setThumbnailCanvas(m.idx, canvas);
+            }
+            seedThumbFromMainCanvas(session, canvas, m.idx);
+
+            wrap.addEventListener('click', function (ev) {
+                ev.stopPropagation();
+                if (typeof client.focusDisplay === 'function'
+                    && (client.isOverviewMode && client.isOverviewMode())) {
+                    client.focusDisplay(m.idx);
+                } else if (typeof client.switchMonitor === 'function') {
+                    client.switchMonitor(m.idx);
+                }
+                closeMonitorPicker(session);
+                refreshMonitorButton(session);
+            });
+            thumbs.appendChild(wrap);
+        });
+
+        appendVirtualDisplayPlusTile(session, thumbs);
+    }
+
+    /**
+     * Plus tile to the right of monitor tiles — adds a virtual display when supported.
+     */
+    function appendVirtualDisplayPlusTile(session, thumbs) {
+        if (!thumbs || !session.client) return;
+        let vd = { supported: false };
+        try {
+            vd = (typeof session.client.getVirtualDisplaySupport === 'function')
+                ? session.client.getVirtualDisplaySupport()
+                : { supported: false };
+        } catch { vd = { supported: false }; }
+        if (!(vd && vd.supported)) return;
+
+        let canAdd = true;
+        let onAdd = null;
+        if (vd.impl === 'rustdesk_idd') {
+            const active = Array.isArray(vd.rustdeskDisplays) ? vd.rustdeskDisplays : [];
+            let next = 0;
+            for (let i = 1; i <= 4; i++) {
+                if (active.indexOf(i) === -1) { next = i; break; }
+            }
+            canAdd = next > 0;
+            onAdd = function () {
+                if (next > 0) session.client.toggleVirtualDisplay(next, true);
+            };
+        } else if (vd.impl === 'amyuni_idd') {
+            const count = (typeof vd.amyuniCount === 'number') ? vd.amyuniCount : 0;
+            canAdd = count < 4;
+            onAdd = function () {
+                session.client.toggleVirtualDisplay(0, true);
+            };
+        } else {
+            return;
+        }
+
+        const plus = document.createElement('button');
+        plus.type = 'button';
+        plus.className = 'monitor-overview-plus';
+        plus.disabled = !canAdd;
+        plus.title = t('remote.virtual_display', 'Virtual display');
+        plus.setAttribute('aria-label', t('remote.virtual_display', 'Virtual display'));
+        plus.innerHTML = '<span class="material-icons">add</span>';
+        plus.addEventListener('click', function (ev) {
+            ev.stopPropagation();
+            if (!canAdd || !onAdd) return;
+            onAdd();
+            setTimeout(function () { syncMonitorOverviewPanel(session); }, 500);
+        });
+        thumbs.appendChild(plus);
     }
 
     function updateWindowsSessionMenu(session) {
@@ -1865,10 +2080,109 @@
         menu.innerHTML = '';
         if (label) menu.appendChild(label);
 
+        const overviewOn = typeof session.client.isOverviewMode === 'function'
+            && session.client.isOverviewMode();
+        const allOn = typeof session.client.isAllMonitorsView === 'function'
+            && session.client.isAllMonitorsView();
+        const canOverview = typeof session.client.canUseMonitorOverview === 'function'
+            ? session.client.canUseMonitorOverview()
+            : true;
+
+        if (monitors.length >= 2) {
+            const overviewWrap = document.createElement('div');
+            overviewWrap.className = 'monitors-menu-overview-actions';
+
+            const overviewBtn = document.createElement('button');
+            overviewBtn.type = 'button';
+            overviewBtn.className = 'dropdown-item monitor-overview-toggle'
+                + (overviewOn ? ' active' : '');
+            overviewBtn.disabled = !canOverview && !overviewOn;
+            overviewBtn.innerHTML = '<span class="material-icons">grid_view</span> '
+                + escapeHtml(t('remote.monitor_overview', 'Monitor overview'));
+            overviewBtn.title = canOverview
+                ? ''
+                : t('remote.overview_webcodecs_required',
+                    'Monitor overview requires WebCodecs (HTTPS).');
+            overviewBtn.addEventListener('click', (ev) => {
+                ev.stopPropagation();
+                if (typeof session.client.setOverviewMode === 'function') {
+                    session.client.setOverviewMode(!overviewOn);
+                }
+                syncMonitorOverviewPanel(session);
+                updateMonitorMenu();
+                refreshMonitorButton(session);
+            });
+            overviewWrap.appendChild(overviewBtn);
+
+            const allBtn = document.createElement('button');
+            allBtn.type = 'button';
+            allBtn.className = 'dropdown-item monitor-all-toggle' + (allOn ? ' active' : '');
+            allBtn.disabled = !canOverview && !allOn;
+            allBtn.innerHTML = '<span class="material-icons">dashboard</span> '
+                + escapeHtml(t('remote.all_monitors', 'All monitors'));
+            allBtn.addEventListener('click', (ev) => {
+                ev.stopPropagation();
+                if (typeof session.client.setAllMonitorsView === 'function') {
+                    session.client.setAllMonitorsView(!allOn);
+                }
+                syncMonitorOverviewPanel(session);
+                updateMonitorMenu();
+                refreshMonitorButton(session);
+            });
+            overviewWrap.appendChild(allBtn);
+            menu.appendChild(overviewWrap);
+
+            const thumbGrid = document.createElement('div');
+            thumbGrid.className = 'monitors-menu-thumbs';
+            monitors.forEach((m, i) => {
+                const card = document.createElement('button');
+                card.type = 'button';
+                card.className = 'monitors-menu-thumb' + (m.current ? ' active' : '');
+                const monitorIndex = typeof m.idx === 'number' ? m.idx : i;
+                const monitorLabel = t('remote.monitor_n', 'Monitor {{n}}')
+                    .replace('{{n}}', String(monitorIndex));
+                const w = m.width || 16;
+                const h = m.height || 9;
+                card.style.aspectRatio = w + ' / ' + h;
+                card.title = monitorLabel;
+
+                const canvas = document.createElement('canvas');
+                canvas.className = 'monitors-menu-thumb-canvas';
+                card.appendChild(canvas);
+                const cap = document.createElement('span');
+                cap.className = 'monitors-menu-thumb-cap';
+                cap.textContent = monitorLabel;
+                card.appendChild(cap);
+
+                if (overviewOn && typeof session.client.setThumbnailCanvas === 'function') {
+                    // Prefer dock canvases when overview panel is open; menu
+                    // canvases still work if the dock is hidden.
+                    if (!session.monitorOverviewPanel
+                        || session.monitorOverviewPanel.hidden) {
+                        session.client.setThumbnailCanvas(m.idx, canvas);
+                    }
+                }
+
+                card.addEventListener('click', () => {
+                    if (typeof session.client.focusDisplay === 'function'
+                        && (overviewOn || allOn)) {
+                        session.client.focusDisplay(m.idx);
+                    } else {
+                        session.client.switchMonitor(m.idx);
+                    }
+                    refreshMonitorButton(session);
+                    updateMonitorMenu();
+                    syncMonitorOverviewPanel(session);
+                });
+                thumbGrid.appendChild(card);
+            });
+            menu.appendChild(thumbGrid);
+        }
+
         const listWrap = document.createElement('div');
         listWrap.className = 'monitors-menu-list';
 
-        // Physical monitors
+        // Physical monitors (text fallback / accessibility)
         monitors.forEach((m, i) => {
             const item = document.createElement('button');
             item.className = 'dropdown-item monitor-item' + (m.current ? ' active' : '');
@@ -1886,10 +2200,16 @@
                 res +
                 '</span>';
             item.addEventListener('click', () => {
-                session.client.switchMonitor(m.idx);
-                menu.querySelectorAll('.monitor-item').forEach(i => i.classList.remove('active'));
+                if (typeof session.client.focusDisplay === 'function'
+                    && (overviewOn || allOn)) {
+                    session.client.focusDisplay(m.idx);
+                } else {
+                    session.client.switchMonitor(m.idx);
+                }
+                menu.querySelectorAll('.monitor-item').forEach(el => el.classList.remove('active'));
                 item.classList.add('active');
                 refreshMonitorButton(session);
+                syncMonitorOverviewPanel(session);
             });
             listWrap.appendChild(item);
         });

@@ -1187,4 +1187,90 @@ class RDVideo {
     }
 }
 
+/**
+ * Per-display WebCodecs decoder pool for multi-monitor overview.
+ * Each remote display index gets its own RDVideo instance so async decode
+ * output cannot race across monitors. JMuxer / single-display sessions keep
+ * using the primary RDVideo on RDClient.
+ */
+// eslint-disable-next-line no-unused-vars
+class RDDisplayDecoderPool {
+    constructor() {
+        /** @type {Map<number, RDVideo>} */
+        this._slots = new Map();
+        /** @type {Function|null} (frame, displayIdx) => void */
+        this.onFrame = null;
+        /** @type {Function|null} (displayIdx) => void */
+        this.onNeedKeyframe = null;
+        /** @type {Function|null} */
+        this.onError = null;
+        /** @type {Function|null} */
+        this.onCodecFailed = null;
+        /** @type {boolean} */
+        this._backgroundMode = false;
+    }
+
+    /**
+     * @param {number} displayIdx
+     * @returns {RDVideo}
+     */
+    _ensureSlot(displayIdx) {
+        var idx = displayIdx | 0;
+        var slot = this._slots.get(idx);
+        if (slot) return slot;
+
+        var self = this;
+        slot = new RDVideo();
+        slot.setBackgroundMode(this._backgroundMode);
+        slot.onFrame = function (frame) {
+            if (self.onFrame) self.onFrame(frame, idx);
+            else frame.close();
+        };
+        slot.onError = function (err) {
+            if (self.onError) self.onError(err, idx);
+        };
+        slot.onNeedKeyframe = function () {
+            if (self.onNeedKeyframe) self.onNeedKeyframe(idx);
+        };
+        slot.onCodecFailed = function (codec, err) {
+            if (self.onCodecFailed) self.onCodecFailed(codec, err, idx);
+        };
+        this._slots.set(idx, slot);
+        return slot;
+    }
+
+    /**
+     * Decode one encoded frame for a specific display.
+     * @param {string} codec
+     * @param {Object} frameData
+     * @param {number} displayIdx
+     * @param {Object} [initOpts]
+     */
+    async decode(codec, frameData, displayIdx, initOpts) {
+        var slot = this._ensureSlot(displayIdx);
+        if (!slot.initialized || slot.currentCodec !== codec) {
+            await slot.init(codec, initOpts || {});
+        }
+        await slot.decode(frameData);
+    }
+
+    /**
+     * @param {boolean} enabled
+     */
+    setBackgroundMode(enabled) {
+        this._backgroundMode = !!enabled;
+        this._slots.forEach(function (slot) {
+            slot.setBackgroundMode(enabled);
+        });
+    }
+
+    close() {
+        this._slots.forEach(function (slot) {
+            try { slot.close(); } catch (_) { /* ignore */ }
+        });
+        this._slots.clear();
+    }
+}
+
 window.RDVideo = RDVideo;
+window.RDDisplayDecoderPool = RDDisplayDecoderPool;

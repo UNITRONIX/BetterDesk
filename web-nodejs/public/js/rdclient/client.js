@@ -13,7 +13,7 @@
  *   client.disconnect();
  */
 
-/* global RDConnection, RDProtocol, RDCrypto, RDVideo, RDAudio, RDRenderer, RDInput, RDFileConnection, RDClipboard, RDCliprdr, RDClipboardHub, RDPunchHoleResponse, RDConnectionParams, RDKeyboardEncoder */
+/* global RDConnection, RDProtocol, RDCrypto, RDVideo, RDDisplayDecoderPool, RDAudio, RDRenderer, RDInput, RDFileConnection, RDClipboard, RDCliprdr, RDClipboardHub, RDPunchHoleResponse, RDConnectionParams, RDKeyboardEncoder */
 
 // eslint-disable-next-line no-unused-vars
 class RDClient {
@@ -111,6 +111,18 @@ class RDClient {
         this._backgroundFps = 1;
         this._streamThrottledActive = null;
         this.video.getAudioContext = () => this.audio.audioCtx;
+
+        // Multi-monitor overview (RdClient web)
+        this._overviewMode = false;
+        this._allMonitorsView = false;
+        this._currentDisplay = 0;
+        this._displayDecoderPool = (typeof RDDisplayDecoderPool !== 'undefined')
+            ? new RDDisplayDecoderPool()
+            : null;
+        /** @type {Map<number, HTMLCanvasElement>} */
+        this._thumbnailCanvases = new Map();
+        /** @type {Function|null} (displayIdx, canvas) => void */
+        this.onThumbnailUpdated = null;
     }
 
     get state() { return this._state; }
@@ -1194,7 +1206,33 @@ class RDClient {
         const codec = this.proto.detectVideoCodec(videoFrame);
         if (!codec || codec === 'rgb' || codec === 'yuv') return;
 
-        // Initialize video decoder if needed
+        var displayIdx = (typeof videoFrame.display === 'number')
+            ? videoFrame.display
+            : this.getCurrentDisplay();
+        var multi = this._overviewMode || this._allMonitorsView;
+        var focusIdx = this.getCurrentDisplay();
+        var frames = this.proto.getEncodedFrames(videoFrame);
+
+        // Non-focus displays only decode while overview / all-monitors is active.
+        if (multi && displayIdx !== focusIdx && this._displayDecoderPool
+            && RDVideo.isSupported() && !this.video.fallbackMode) {
+            try {
+                for (const frame of frames) {
+                    await this._displayDecoderPool.decode(codec, frame, displayIdx);
+                }
+            } catch (err) {
+                this._emit('log', 'Display ' + displayIdx + ' decode: '
+                    + (err && err.message ? err.message : err));
+            }
+            return;
+        }
+
+        // Focus (or single-capture) path — primary RDVideo
+        if (!multi && displayIdx !== focusIdx) {
+            // Peer still sending another display; ignore until capture settles.
+            return;
+        }
+
         if (!this.video.initialized || this.video.currentCodec !== codec) {
             try {
                 await this.video.init(codec);
@@ -1205,8 +1243,6 @@ class RDClient {
             }
         }
 
-        // Decode each encoded frame
-        const frames = this.proto.getEncodedFrames(videoFrame);
         for (const frame of frames) {
             await this.video.decode(frame);
         }
@@ -1335,18 +1371,42 @@ class RDClient {
         // control sessions.
 
         // Initialize video decoder callbacks
-        this.video.onFrame = (frame) => this.renderer.pushFrame(frame);
+        this.video.onFrame = (frame) => this._onPrimaryDecodedFrame(frame);
         this.video.onError = (err) => this._emit('log', 'Video error: ' + (err && err.message ? err.message : err));
 
         // The decoder asks for a keyframe whenever it (re)configures or recovers
         // from an error; forward that as a refresh_video request to the peer.
         this.video.onNeedKeyframe = () => {
             if (this._state === 'streaming') {
-                this._sendPeerMessage(this.proto.buildMisc('refreshVideo', true));
+                this._refreshDisplayVideo(this.getCurrentDisplay());
             }
         };
         this.video.onCodecFailed = (failedCodec) => {
             this._handleCodecFallback(failedCodec);
+        };
+
+        if (this._displayDecoderPool) {
+            this._displayDecoderPool.onFrame = (frame, displayIdx) => {
+                this._onSecondaryDecodedFrame(frame, displayIdx);
+            };
+            this._displayDecoderPool.onNeedKeyframe = (displayIdx) => {
+                if (this._state === 'streaming') {
+                    this._refreshDisplayVideo(displayIdx);
+                }
+            };
+            this._displayDecoderPool.onError = (err, displayIdx) => {
+                this._emit('log', 'Display ' + displayIdx + ' video error: '
+                    + (err && err.message ? err.message : err));
+            };
+            this._displayDecoderPool.onCodecFailed = (failedCodec) => {
+                this._handleCodecFallback(failedCodec);
+            };
+        }
+
+        this.renderer.onDisplayHit = (displayIdx) => {
+            if (typeof displayIdx === 'number' && displayIdx !== this.getCurrentDisplay()) {
+                this.focusDisplay(displayIdx);
+            }
         };
 
         // Request keyframe on resize/fullscreen to fix blur
@@ -1650,7 +1710,12 @@ class RDClient {
 
         this.input.stop();
         this.renderer.stopRenderLoop();
+        this.renderer.setMosaicMode(false);
         this.video.close();
+        if (this._displayDecoderPool) this._displayDecoderPool.close();
+        this._overviewMode = false;
+        this._allMonitorsView = false;
+        this.clearThumbnailCanvases();
         this.audio.close();
         this.fileTransfer.disable();
         this.disconnectFileConnection();
@@ -1903,11 +1968,11 @@ class RDClient {
         return Math.floor((Date.now() - this._recordingStartTime) / 1000);
     }
 
-    // ---- Monitor Switching ----
+    // ---- Monitor Switching / Overview ----
 
     /**
      * Get list of available remote monitors.
-     * @returns {Array<{idx:number, name:string, width:number, height:number}>}
+     * @returns {Array<{idx:number, name:string, width:number, height:number, x:number, y:number}>}
      */
     getMonitors() {
         if (!this._peerInfo || !this._peerInfo.displays) return [];
@@ -1919,6 +1984,8 @@ class RDClient {
                 osName: d.name || '',
                 width: d.width || 0,
                 height: d.height || 0,
+                x: typeof d.x === 'number' ? d.x : 0,
+                y: typeof d.y === 'number' ? d.y : 0,
                 // A display positioned at the origin is the primary one.
                 primary: (d.x === 0 && d.y === 0),
                 current: (i === current)
@@ -1927,7 +1994,7 @@ class RDClient {
     }
 
     /**
-     * Index of the currently captured remote display.
+     * Index of the currently focused remote display.
      * @returns {number}
      */
     getCurrentDisplay() {
@@ -1938,26 +2005,246 @@ class RDClient {
         return 0;
     }
 
+    /** @returns {boolean} */
+    isOverviewMode() { return !!this._overviewMode; }
+
+    /** @returns {boolean} */
+    isAllMonitorsView() { return !!this._allMonitorsView; }
+
+    /**
+     * Whether live multi-monitor overview can run (WebCodecs required).
+     * @returns {boolean}
+     */
+    canUseMonitorOverview() {
+        return RDVideo.isSupported() && !(this.video && this.video.fallbackMode);
+    }
+
+    /**
+     * @returns {number[]}
+     */
+    _allDisplayIndices() {
+        var monitors = this.getMonitors();
+        if (!monitors.length) return [this.getCurrentDisplay()];
+        return monitors.map(function (m) { return m.idx; });
+    }
+
+    /**
+     * @param {number[]} indices
+     */
+    _sendCaptureDisplays(indices) {
+        if (this._state !== 'streaming') return;
+        var set = (indices && indices.length) ? indices.slice() : [this.getCurrentDisplay()];
+        this._sendPeerMessage(this.proto.buildMisc('captureDisplays', {
+            add: [],
+            sub: [],
+            set: set
+        }));
+    }
+
+    /**
+     * @param {number} displayIdx
+     */
+    _refreshDisplayVideo(displayIdx) {
+        if (this._state !== 'streaming') return;
+        if (typeof displayIdx === 'number') {
+            this._sendPeerMessage(this.proto.buildMisc('refreshVideoDisplay', displayIdx));
+        }
+        this._sendPeerMessage(this.proto.buildMisc('refreshVideo', true));
+    }
+
+    /**
+     * Apply mosaic layout from PeerInfo.displays onto the renderer.
+     */
+    _syncMosaicLayout() {
+        if (!this.renderer) return;
+        var layout = this.getMonitors().map(function (m) {
+            return {
+                idx: m.idx,
+                x: m.x,
+                y: m.y,
+                width: m.width,
+                height: m.height
+            };
+        });
+        this.renderer.setFocusDisplay(this.getCurrentDisplay());
+        this.renderer.setMosaicMode(this._allMonitorsView, layout);
+    }
+
+    /**
+     * Paint a decoded frame onto the thumbnail canvas for a display.
+     * @param {number} displayIdx
+     * @param {VideoFrame|Object} frame
+     */
+    _paintThumbnail(displayIdx, frame) {
+        if (!this._overviewMode && !this._allMonitorsView) return;
+        var canvas = this._thumbnailCanvases.get(displayIdx);
+        if (!canvas) return;
+        var srcW = frame.displayWidth || 0;
+        var srcH = frame.displayHeight || 0;
+        if (!srcW || !srcH) return;
+
+        var maxW = 320;
+        var scale = Math.min(1, maxW / srcW);
+        var tw = Math.max(1, Math.round(srcW * scale));
+        var th = Math.max(1, Math.round(srcH * scale));
+        if (canvas.width !== tw || canvas.height !== th) {
+            canvas.width = tw;
+            canvas.height = th;
+        }
+        var ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        try {
+            ctx.drawImage(frame._source || frame, 0, 0, tw, th);
+        } catch (_) { /* frame may be closed */ }
+        if (typeof this.onThumbnailUpdated === 'function') {
+            try { this.onThumbnailUpdated(displayIdx, canvas); } catch (_) { /* ignore */ }
+        }
+        this._emit('thumbnail_updated', displayIdx, canvas);
+    }
+
+    /**
+     * Bind a canvas element as the live thumbnail target for a display.
+     * @param {number} displayIdx
+     * @param {HTMLCanvasElement|null} canvas
+     */
+    setThumbnailCanvas(displayIdx, canvas) {
+        var idx = displayIdx | 0;
+        if (!canvas) {
+            this._thumbnailCanvases.delete(idx);
+            return;
+        }
+        this._thumbnailCanvases.set(idx, canvas);
+    }
+
+    /**
+     * Clear all thumbnail canvas bindings.
+     */
+    clearThumbnailCanvases() {
+        this._thumbnailCanvases.clear();
+    }
+
+    /**
+     * @param {VideoFrame|Object} frame
+     */
+    _onPrimaryDecodedFrame(frame) {
+        var displayIdx = this.getCurrentDisplay();
+        this._paintThumbnail(displayIdx, frame);
+        if (this._allMonitorsView) {
+            this.renderer.pushMosaicFrame(displayIdx, frame);
+            return;
+        }
+        this.renderer.pushFrame(frame);
+    }
+
+    /**
+     * @param {VideoFrame|Object} frame
+     * @param {number} displayIdx
+     */
+    _onSecondaryDecodedFrame(frame, displayIdx) {
+        this._paintThumbnail(displayIdx, frame);
+        if (this._allMonitorsView) {
+            this.renderer.pushMosaicFrame(displayIdx, frame);
+            return;
+        }
+        try { frame.close(); } catch (_) { /* ignore */ }
+    }
+
+    /**
+     * Enable live multi-monitor capture for thumbnails (WebCodecs only).
+     * @param {boolean} enabled
+     * @returns {boolean} Whether overview is active after the call
+     */
+    setOverviewMode(enabled) {
+        var want = !!enabled;
+        if (want && !this.canUseMonitorOverview()) {
+            this._emit('overview_unavailable', 'webcodecs');
+            return false;
+        }
+        if (this._overviewMode === want) return this._overviewMode;
+        this._overviewMode = want;
+        if (!want) {
+            this._allMonitorsView = false;
+            this._syncMosaicLayout();
+            if (this._displayDecoderPool) this._displayDecoderPool.close();
+            this._sendCaptureDisplays([this.getCurrentDisplay()]);
+            if (this.video) this.video._needKeyframe = true;
+            this._refreshDisplayVideo(this.getCurrentDisplay());
+        } else if (this._state === 'streaming') {
+            this._sendCaptureDisplays(this._allDisplayIndices());
+            this._allDisplayIndices().forEach((idx) => this._refreshDisplayVideo(idx));
+        }
+        this._emit('overview_changed', this._overviewMode, this._allMonitorsView);
+        return this._overviewMode;
+    }
+
+    /**
+     * Show all remote monitors composited on the main canvas.
+     * Implies overview multi-capture.
+     * @param {boolean} enabled
+     * @returns {boolean}
+     */
+    setAllMonitorsView(enabled) {
+        var want = !!enabled;
+        if (want && !this.canUseMonitorOverview()) {
+            this._emit('overview_unavailable', 'webcodecs');
+            return false;
+        }
+        if (want && !this._overviewMode) {
+            if (!this.setOverviewMode(true)) return false;
+        }
+        this._allMonitorsView = want;
+        this._syncMosaicLayout();
+        if (want && this._state === 'streaming') {
+            this._sendCaptureDisplays(this._allDisplayIndices());
+        }
+        this._emit('overview_changed', this._overviewMode, this._allMonitorsView);
+        return this._allMonitorsView;
+    }
+
+    /**
+     * Focus a monitor for the main view / input without leaving overview capture.
+     * @param {number} monitorIdx
+     */
+    focusDisplay(monitorIdx) {
+        if (this._state !== 'streaming') return;
+        var idx = monitorIdx | 0;
+        this._currentDisplay = idx;
+        this.renderer.setFocusDisplay(idx);
+        this._sendPeerMessage(this.proto.buildMisc('switchDisplay', {
+            display: idx,
+            width: 0,
+            height: 0
+        }));
+        if (this._overviewMode || this._allMonitorsView) {
+            // Keep capturing every display so thumbnails stay live.
+            this._sendCaptureDisplays(this._allDisplayIndices());
+        } else {
+            this._sendCaptureDisplays([idx]);
+        }
+        if (this.video) this.video._needKeyframe = true;
+        this._refreshDisplayVideo(idx);
+        this._emit('display_switched', idx);
+    }
+
     /**
      * Switch to a specific monitor (RustDesk-compatible).
-     * Sends a SwitchDisplay message followed by a CaptureDisplays message
-     * (matching the desktop client's software-render switch path), then
-     * forces a fresh keyframe.
+     * In overview / all-monitors mode this focuses without dropping other captures.
      * @param {number} monitorIdx - Monitor index
      */
     switchMonitor(monitorIdx) {
         if (this._state !== 'streaming') return;
+        if (this._overviewMode || this._allMonitorsView) {
+            this.focusDisplay(monitorIdx);
+            return;
+        }
         this._currentDisplay = monitorIdx;
+        this.renderer.setFocusDisplay(monitorIdx);
         this._sendPeerMessage(this.proto.buildMisc('switchDisplay', {
             display: monitorIdx,
             width: 0,
             height: 0
         }));
-        this._sendPeerMessage(this.proto.buildMisc('captureDisplays', {
-            add: [],
-            sub: [],
-            set: [monitorIdx]
-        }));
+        this._sendCaptureDisplays([monitorIdx]);
         if (this.video) this.video._needKeyframe = true;
         this.sendRefreshScreen();
         this._emit('display_switched', monitorIdx);
@@ -2378,12 +2665,18 @@ class RDClient {
         if (this.video.setBackgroundMode) {
             this.video.setBackgroundMode(true);
         }
+        if (this._displayDecoderPool && this._displayDecoderPool.setBackgroundMode) {
+            this._displayDecoderPool.setBackgroundMode(true);
+        }
         this.setCustomFps(this._backgroundFps || 1);
     }
 
     _resumeActiveStream() {
         if (this.video.setBackgroundMode) {
             this.video.setBackgroundMode(false);
+        }
+        if (this._displayDecoderPool && this._displayDecoderPool.setBackgroundMode) {
+            this._displayDecoderPool.setBackgroundMode(false);
         }
         this.renderer.startRenderLoop();
         const fps = this._getActiveStreamFps();

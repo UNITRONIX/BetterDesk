@@ -102,11 +102,17 @@ Recordings capture the canvas at 15 fps. Audio is included if active during the 
 For multi-monitor setups:
 
 1. Click the **Monitor** dropdown in the toolbar
-2. Select the desired display
+2. Select the desired display (list or thumbnail)
 3. The view switches to the selected monitor
 4. **Primary** indicator shows which monitor is the default
 
 Each monitor shows its resolution (e.g., `Monitor 1 (1920×1080) ★`).
+
+### Monitor overview (RdClient web)
+
+Click the **Monitors** toolbar button to open a **centered floating grid** of monitor tiles (no dialog chrome). One display → one centered tile; several → tiles side by side. Click a tile to focus that monitor.
+
+When virtual displays are supported, a **+** tile appears to the right of the monitors to add one. Esc or click the dimmed backdrop to close. On HTTPS/WebCodecs, opening the picker enables multi-capture so thumbnails stay live.
 
 ---
 
