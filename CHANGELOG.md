@@ -1,6 +1,18 @@
 ## [Unreleased]
 
 ### Fixed
+- **Updates generate a missing `PANEL_TRUST_SECRET` instead of leaving the panel
+  without the trust bridge.** The key was appended to `.env` from the template as an
+  empty value, so a fresh install or an update over an install that predates the
+  bridge left `PANEL_TRUST_SECRET=` blank. The console then could not sign panel
+  statements and the Agents page reported that address-book names were unavailable.
+  `mergeEnvFile` now fills empty auto-generated secrets after merging (never
+  overwriting a non-empty value), and the template carries a
+  `__PANEL_TRUST_SECRET__` placeholder so fresh installs get a real key. Co-located
+  console and Go need nothing else; only split deployments need
+  `PANEL_TRUST_ALLOWED_HOSTS`. Verify: on an install whose `.env` has a blank
+  `PANEL_TRUST_SECRET`, apply an update and confirm the key has a value and the Go
+  log shows `[panel-trust] enabled for panel-originated requests`.
 - **Relay advertisement now recognises the client's relay style instead of guessing.**
   A target that never reported its own relay was always sent a portless address, even
   when the initiator proved its fleet resolves a portless `relay-server` to the API

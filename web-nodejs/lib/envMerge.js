@@ -19,8 +19,14 @@ const PROTECTED_KEYS = new Set([
     'DB_PATH',
     'ORG_PEER_VAULT_KEY',
     'REMOTE_TARGET_VAULT_KEY',
+    'PANEL_TRUST_SECRET',
     'JWT_SECRET'
 ]);
+
+/** Secrets that must be non-empty for co-located panel ↔ Go features (address book, grouping). */
+const AUTO_GENERATED_SECRETS = [
+    { key: 'PANEL_TRUST_SECRET', bytes: 32, encoding: 'hex' },
+];
 
 /**
  * Parse .env content into ordered entries: { type: 'comment'|'blank'|'pair', key?, value?, raw? }
@@ -102,6 +108,11 @@ function buildEnvSubstitutions(opts = {}) {
         config.remoteTargetVaultKey,
         crypto.randomBytes(32).toString('base64url')
     );
+    const panelTrustSecret = pick(
+        'PANEL_TRUST_SECRET',
+        config.panelTrustSecret,
+        crypto.randomBytes(32).toString('hex')
+    );
 
     const goApiBase = `http://localhost:${goPort}/api`;
 
@@ -121,10 +132,30 @@ function buildEnvSubstitutions(opts = {}) {
         SESSION_SECRET: pick('SESSION_SECRET', config.sessionSecret, ''),
         ORG_PEER_VAULT_KEY: pick('ORG_PEER_VAULT_KEY', ''),
         REMOTE_TARGET_VAULT_KEY: remoteTargetVaultKey,
+        PANEL_TRUST_SECRET: panelTrustSecret,
         GUACD_ADDRESS: pick('GUACD_ADDRESS', '127.0.0.1:4822'),
         SSL_CERT_PATH: sslCert,
         SSL_KEY_PATH: sslKey
     };
+}
+
+/**
+ * Fill empty auto-generated secrets in .env content (never overwrite non-empty values).
+ * Needed when an earlier merge appended `PANEL_TRUST_SECRET=` with a blank value.
+ * @returns {{ content: string, filled: string[] }}
+ */
+function fillEmptyGeneratedSecrets(existingContent) {
+    let content = String(existingContent || '');
+    const map = parseEnvLines(content).map;
+    const filled = [];
+    for (const { key, bytes, encoding } of AUTO_GENERATED_SECRETS) {
+        const current = String(map.get(key) ?? '').trim();
+        if (current) continue;
+        const value = crypto.randomBytes(bytes).toString(encoding);
+        content = upsertEnvKey(content, key, value);
+        filled.push(key);
+    }
+    return { content, filled };
 }
 
 /**
@@ -228,18 +259,26 @@ function mergeEnvFile(opts) {
     const existing = fs.existsSync(targetPath) ? fs.readFileSync(targetPath, 'utf8') : '';
 
     if (freshInstall || !existing.trim()) {
-        const content = buildFreshEnv(templateRaw);
+        let content = buildFreshEnv(templateRaw);
+        const filledFresh = fillEmptyGeneratedSecrets(content);
+        content = filledFresh.content;
         fs.writeFileSync(targetPath, content, { mode: 0o600 });
-        return { mode: 'fresh', added: [...parseEnvLines(templateRaw).map.keys()] };
+        return {
+            mode: 'fresh',
+            added: [...parseEnvLines(templateRaw).map.keys()],
+            filled: filledFresh.filled
+        };
     }
 
-    const { content, added } = mergeEnv(existing, templateRaw);
-    fs.writeFileSync(targetPath, content, { mode: 0o600 });
-    return { mode: 'merge', added };
+    const { content: merged, added } = mergeEnv(existing, templateRaw);
+    const filledMerge = fillEmptyGeneratedSecrets(merged);
+    fs.writeFileSync(targetPath, filledMerge.content, { mode: 0o600 });
+    return { mode: 'merge', added, filled: filledMerge.filled };
 }
 
 module.exports = {
     PROTECTED_KEYS,
+    AUTO_GENERATED_SECRETS,
     parseEnvLines,
     applySubstitutions,
     buildEnvSubstitutions,
@@ -247,5 +286,6 @@ module.exports = {
     mergeEnv,
     buildFreshEnv,
     upsertEnvKey,
+    fillEmptyGeneratedSecrets,
     mergeEnvFile
 };
