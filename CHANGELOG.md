@@ -3,6 +3,13 @@
 ### Changed
 - _(none yet)_
 
+---
+
+## [3.5.280] — 2026-11-23
+
+### Changed
+- _(none yet)_
+
 ### Fixed
 - **RdClient web — multi-monitor mosaic no longer flickers and no longer leaves an empty band.** Combining non-adjacent monitors (e.g. 0 + 2) compacts the tiles edge-to-edge instead of reproducing the physical gap, and the stitched view only clears/repaints when a tile actually changes, so idle monitors keep their last picture. Entering a mosaic sends one `refreshVideoDisplay` per captured display instead of a global `refreshVideo` (which restarted every capturer), every display is decoded by its own pool slot (changing focus no longer re-initialises the primary decoder), and in-mosaic `switchDisplay` is throttled to one per gesture. Mouse input and the remote cursor are now mapped to absolute virtual-desktop coordinates, so clicking a tile reaches the right monitor.
 
@@ -5478,3 +5485,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.277]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.276...v3.5.277
 [3.5.278]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.277...v3.5.278
 [3.5.279]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.278...v3.5.279
+[3.5.280]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.279...v3.5.280
