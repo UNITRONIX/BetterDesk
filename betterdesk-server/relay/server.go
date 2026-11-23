@@ -253,6 +253,21 @@ func relayUUIDLogID(uuid string) string {
 	return uuid[:8]
 }
 
+// logPairTimeout reports which leg reached the relay.
+//
+// A timeout with exactly one leg means the other side never dialed at all — a
+// client configuration, transport or delivery problem, not a port mismatch. Both
+// legs dialing the same UUID always pair, because the pending map is keyed by
+// UUID alone and :21117 and the API-port sniff listener share this instance, so
+// a "port mismatch" is never a valid explanation for this log line.
+func logPairTimeout(uuid, arrivedLeg string) {
+	if arrivedLeg == "" {
+		arrivedLeg = "unknown"
+	}
+	log.Printf("[relay] Pair timeout for UUID %s — only one leg reached the relay (from %s); the peer never dialed",
+		relayUUIDLogID(uuid), arrivedLeg)
+}
+
 // SetBillingCallbacks registers hooks when relay sessions start/end (commercialization).
 func (s *Server) SetBillingCallbacks(onStart, onEnd func(uuid string)) {
 	s.onRelayStart = onStart
@@ -441,7 +456,7 @@ func (s *Server) pairIncomingConn(pc *pendingConn, uuid string) {
 			s.pending.Delete(uuid)
 			s.authorizations.Release(uuid)
 			pc.close()
-			log.Printf("[relay] Pair timeout for UUID %s", relayUUIDLogID(uuid))
+			logPairTimeout(uuid, pc.remoteAddr())
 		}
 	case <-s.ctx.Done():
 		if val, ok := s.pending.Load(uuid); ok && val.(*pendingConn) == pc {
@@ -597,6 +612,7 @@ func (s *Server) cleanupPending() {
 						s.authorizations.Release(key.(string))
 						pc.close()
 						close(pc.done)
+						logPairTimeout(key.(string), pc.remoteAddr())
 					}
 				}
 				return true

@@ -1,7 +1,26 @@
 ## [Unreleased]
 
-### Changed
-- _(none yet)_
+### Fixed
+- **Relay advertisement now recognises the client's relay style instead of guessing.**
+  A target that never reported its own relay was always sent a portless address, even
+  when the initiator proved its fleet resolves a portless `relay-server` to the API
+  port. The server now classifies the client value once (`classifyClientRelay`) and
+  uses it for both directions: the peer's own spelling still wins verbatim for the
+  target, and only when the target never reported does an initiator hint pointing at
+  *this* relay host select the API port instead of the bare host. Every previously
+  proven shape is unchanged (old 1.4.x portless/API-port clients, new 1.5.x explicit
+  `host:21117`, and the bare-host fallback from 3.5.250). Ships via panel update (Go
+  signal restart). Verify: connect to a target from a fleet whose clients report
+  `relay=host:21114` and watch `relay_to_target=` carry `:21114` while the initiator
+  still receives `host:21117`.
+- **`[relay] Pair timeout` now says which leg was missing.** A timeout with one leg
+  means the other side never dialed at all; both legs of the same UUID always pair
+  because the pending map is keyed by UUID alone and `:21117` and the API-port sniff
+  listener share one relay instance. The log line names the leg that did arrive, and
+  `/api/health/detail` now exposes `relay_total_relayed` plus
+  `relay_api_port_fallback_connections` (`RelayFallbackConnections` was counted but
+  never published), so operators can see whether any client actually uses the
+  API-port fallback.
 
 ---
 

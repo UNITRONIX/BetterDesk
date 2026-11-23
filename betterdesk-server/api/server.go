@@ -816,6 +816,10 @@ func (s *Server) handleHealthDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	if s.relay != nil {
 		payload["relay_active_sessions"] = s.relay.ActiveSessions.Load()
+		payload["relay_total_relayed"] = s.relay.TotalRelayed.Load()
+		// Non-zero means at least one client resolves a portless relay to the API
+		// port and is served by the sniff fallback (api/sniff_listener.go).
+		payload["relay_api_port_fallback_connections"] = RelayFallbackConnections.Load()
 	}
 	if s.billing != nil {
 		payload["billing_pending_relays"] = s.billing.PendingRelayCount()

@@ -1557,6 +1557,8 @@ func (s *Server) handleRequestRelay(msg *pb.RequestRelay, raddr *net.UDPAddr) {
 	log.Printf("[signal] RequestRelay from %s for target %s (uuid=%s, secure=%v, connType=%v)", raddr, targetID, relayUUID, msg.Secure, msg.ConnType)
 
 	relayServer := s.sanitizeClientRelayAddress(msg.RelayServer)
+	// Computed from the raw value: sanitize already rewrote it for the initiator.
+	relayHint := s.initiatorRelayHint(msg.RelayServer)
 
 	initiatorID, ok := s.requireAuthorizedInitiator(raddr, targetID, msg.GetToken(), 0)
 	if !ok {
@@ -1652,8 +1654,9 @@ func (s *Server) handleRequestRelay(msg *pb.RequestRelay, raddr *net.UDPAddr) {
 				Uuid:       relayUUID,
 				Id:         msg.Id,
 				// Target validates this against its own relay (see
-				// relayAdvertisedToTarget); prefer what it reported.
-				RelayServer:        relayAdvertisedToTarget(target, relayServer),
+				// relayAdvertisedToTarget); prefer what it reported, and fall
+				// back to the shape the initiator's fleet uses.
+				RelayServer:        relayAdvertisedToTarget(target, relayServer, relayHint),
 				ControlledContext:  msg.ControlledContext,
 				SwitchCode:         msg.SwitchCode,
 				Secure:             msg.Secure,
@@ -1727,6 +1730,8 @@ func (s *Server) handleRequestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr,
 	log.Printf("[signal] RequestRelay (TCP) from %s for target %s (uuid=%s, secure=%v, connType=%v)", raddr, targetID, relayUUID, msg.Secure, msg.ConnType)
 
 	relayServer := s.sanitizeClientRelayAddress(msg.RelayServer)
+	// Computed from the raw value: sanitize already rewrote it for the initiator.
+	relayHint := s.initiatorRelayHint(msg.RelayServer)
 
 	initiatorID, ok := s.requireAuthorizedInitiator(raddr, targetID, msg.GetToken(), 0)
 	if !ok {
@@ -1817,7 +1822,7 @@ func (s *Server) handleRequestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr,
 				// The target validates this against the relay it configured and
 				// silently drops a mismatch, so prefer the endpoint the target
 				// itself reported before falling back to the server's value.
-				RelayServer:        relayAdvertisedToTarget(target, relayServer),
+				RelayServer:        relayAdvertisedToTarget(target, relayServer, relayHint),
 				ControlledContext:  msg.ControlledContext,
 				SwitchCode:         msg.SwitchCode,
 				Secure:             msg.Secure,
@@ -2174,24 +2179,55 @@ func (s *Server) handleLocalAddr(msg *pb.LocalAddr, raddr *net.UDPAddr) {
 	s.completeLANAddr(msg, raddr)
 }
 
+// initiatorRelayHint classifies what the initiator reported about the same
+// client fleet, so a target that never reported its own relay can be given the
+// shape that fleet actually resolves.
+//
+// Only one inference is used: when the initiator reported a port owned by
+// another listener on this host (typically the API port), that generation maps a
+// portless `relay-server` onto that port, so the target is configured the same
+// way. Everything else — including a hint pointing at a different host — returns
+// relayShapePortless, which keeps the proven bare-host fallback.
+func (s *Server) initiatorRelayHint(clientRelay string) relayShapeInfo {
+	info := s.classifyClientRelay(clientRelay)
+	if info.shape != relayShapeServicePort {
+		return relayShapeInfo{shape: relayShapePortless}
+	}
+	// Only our own relay host can tell us anything about the fleet; a peer
+	// reporting some other server must not steer our advertisement.
+	cfgHost, _, err := net.SplitHostPort(s.getRelayServer())
+	if err != nil || !strings.EqualFold(strings.Trim(cfgHost, "[]"), info.host) {
+		return relayShapeInfo{shape: relayShapePortless}
+	}
+	return info
+}
+
 // relayAdvertisedToTarget returns the relay endpoint to put in a RequestRelay
 // sent to target.
 //
-// A RustDesk peer validates the incoming relay against its own configured value
-// with check_port(addr, RELAY_PORT) and silently drops any mismatch ("relay
-// server ... was not offered by this peer").
+// The target compares this value with its own configured relay through
+// check_port(addr, RELAY_PORT) and silently drops a mismatch ("relay server ...
+// was not offered by this peer"), so the only safe strategies are:
 //
-// So the peer's own value wins when we know it. When we do not, send the bare
-// host without a port: check_port() normalises both sides to RELAY_PORT, so a
-// portless value matches a client configured as either `host` or `host:21117`.
-// Production confirms this shape pairs — the peer that repeatedly established
-// sessions reported `85.14.70.12` with no port, while the one we sent
-// `85.14.70.12:21117` to never answered.
-func relayAdvertisedToTarget(target *peer.Entry, fallback string) string {
+//  1. Echo the peer's own spelling when it reported one (verbatim, never
+//     rewritten — see commit 40200e82).
+//  2. Otherwise send a shape that check_port() normalises identically for old
+//     and new clients. Bare host does that; a forced :21117 does not.
+//
+// hint carries what the initiator reported for the same fleet. It is only
+// applied when it is relayShapeServicePort for this server's own relay host —
+// initiatorRelayHint enforces that, so a peer reporting an unrelated server can
+// never steer what we advertise. In that case the target is configured the same
+// way as the initiator's fleet, so it must receive that port instead of a bare
+// host (that fleet never answered a portless request).
+func relayAdvertisedToTarget(target *peer.Entry, fallback string, hint relayShapeInfo) string {
 	if target != nil {
 		if reported := strings.TrimSpace(target.RelayServer); reported != "" {
 			return reported
 		}
+	}
+	if hint.shape == relayShapeServicePort && hint.host != "" && hint.port > 0 {
+		return net.JoinHostPort(hint.host, strconv.Itoa(hint.port))
 	}
 	// Drop the port so the peer's own check_port() decides, which is what a
 	// portless `relay-server` in its config produces.
@@ -2318,7 +2354,10 @@ func (s *Server) sendRelayResponse(target *peer.Entry, raddr *net.UDPAddr, msg *
 	// Keep the initiator's reachable server-selected relay separate from the
 	// target's peer-offered value; sending the former to the target can make
 	// newer clients silently drop the request and leave a relay timeout.
-	targetRelay := relayAdvertisedToTarget(target, relay)
+	//
+	// PunchHoleRequest carries no relay_server field, so this path has no fleet
+	// hint and keeps the proven bare-host fallback.
+	targetRelay := relayAdvertisedToTarget(target, relay, relayShapeInfo{shape: relayShapePortless})
 
 	// Sign the target's PK with server's Ed25519 key for E2E verification.
 	// Format: [64-byte Ed25519 signature][serialized IdPk protobuf] — NaCl combined mode.
@@ -2928,17 +2967,83 @@ func (s *Server) getRelayServer() string {
 	return fmt.Sprintf(":%d", s.cfg.RelayPort)
 }
 
+// relayShape classifies the relay endpoint string a client sent.
+//
+// The two directions of a relay session need different shapes, and this type is
+// the single place that decision is named (see docs/important/
+// console-backend-strangler.md and commits 6cdb2100 / 40200e82):
+//
+//   - initiator side (RelayResponse) trusts the server, so a canonical
+//     host:relay-port is what it dials;
+//   - target side (RequestRelay) validates against its own configuration, so it
+//     must receive its own spelling or a shape check_port() normalises the same
+//     way for every client generation.
+type relayShape int
+
+const (
+	// relayShapePortless is "host" or "" — check_port() maps it to RELAY_PORT.
+	relayShapePortless relayShape = iota
+	// relayShapeExplicitRelay is the healthy "host:21117" form.
+	relayShapeExplicitRelay
+	// relayShapeServicePort is a port owned by another listener on this host
+	// (API, signal, ws-relay). Old clients reach it because their client config
+	// resolved a portless relay to the API port.
+	relayShapeServicePort
+	// relayShapeCustom is any other port — honoured as given.
+	relayShapeCustom
+)
+
+// relayShapeInfo is a classified client relay value. host and port are filled
+// only when the client sent them, so callers can rebuild the same endpoint.
+type relayShapeInfo struct {
+	shape relayShape
+	host  string
+	port  int
+}
+
+// classifyClientRelay maps a client-supplied relay value onto its shape without
+// changing it. Unknown or unparsable values become relayShapePortless so the
+// caller falls back to the conservative path.
+func (s *Server) classifyClientRelay(clientRelay string) relayShapeInfo {
+	clientRelay = strings.TrimSpace(clientRelay)
+	if clientRelay == "" {
+		return relayShapeInfo{shape: relayShapePortless}
+	}
+	host, portStr, err := net.SplitHostPort(clientRelay)
+	if err != nil {
+		return relayShapeInfo{
+			shape: relayShapePortless,
+			host:  strings.Trim(clientRelay, "[]"),
+		}
+	}
+	port, convErr := strconv.Atoi(portStr)
+	if convErr != nil || port <= 0 || port > 65535 {
+		return relayShapeInfo{shape: relayShapePortless, host: strings.Trim(host, "[]")}
+	}
+	info := relayShapeInfo{host: strings.Trim(host, "[]"), port: port}
+	switch port {
+	case s.cfg.RelayPort:
+		info.shape = relayShapeExplicitRelay
+	case s.cfg.APIPort, s.cfg.SignalPort, s.cfg.WSRelayPort():
+		info.shape = relayShapeServicePort
+	default:
+		info.shape = relayShapeCustom
+	}
+	return info
+}
+
 // sanitizeClientRelayAddress validates a relay endpoint supplied by a client
 // (RequestRelay.RelayServer, PunchHoleSent.RelayServer) before it is echoed
-// back to either peer.
+// back to an initiator.
 //
-// RustDesk 1.4.8/1.4.9 clients that are configured with a bare `relay-server`
-// (no port) can send the *API* port instead — observed on production as
-// `relay=85.14.70.12:21114`. Advertising that back makes both peers dial the
-// HTTP API socket, which speaks no relay protocol: the first connection is
-// accepted by the API listener and the relay never pairs, so every session
-// ends in `[relay] Pair timeout`. Reject those endpoints and fall back to the
-// server-configured relay so old and new clients behave the same.
+// Initiator-bound values must be dialable, so they are normalised to a real
+// relay listener. RustDesk 1.4.8/1.4.9 clients configured with a bare
+// `relay-server` (no port) can report the *API* port — observed on production as
+// `relay=85.14.70.12:21114`. Handing that to an initiator makes it dial a socket
+// that is not always reachable as a relay, so it is rewritten to the relay port.
+//
+// Target-bound values never go through this function: they use
+// relayAdvertisedToTarget, which echoes the peer's own spelling verbatim.
 func (s *Server) sanitizeClientRelayAddress(clientRelay string) string {
 	configured := s.getRelayServer()
 	clientRelay = strings.TrimSpace(clientRelay)
@@ -2946,37 +3051,29 @@ func (s *Server) sanitizeClientRelayAddress(clientRelay string) string {
 		return configured
 	}
 
-	host, portStr, err := net.SplitHostPort(clientRelay)
-	if err != nil {
+	info := s.classifyClientRelay(clientRelay)
+
+	if info.shape == relayShapePortless {
 		// Host without a port — keep the host, add the relay port.
-		hostOnly := strings.Trim(clientRelay, "[]")
-		if hostOnly == "" {
+		if info.host == "" {
 			return configured
 		}
-		return net.JoinHostPort(hostOnly, strconv.Itoa(s.cfg.RelayPort))
-	}
-
-	port, convErr := strconv.Atoi(portStr)
-	if convErr != nil || port <= 0 || port > 65535 {
-		return configured
+		return net.JoinHostPort(info.host, strconv.Itoa(s.cfg.RelayPort))
 	}
 
 	// The configured relay host is authoritative: keep its advertised port even
 	// when the client reports a different one for the same host.
 	if cfgHost, _, splitErr := net.SplitHostPort(configured); splitErr == nil {
-		if strings.EqualFold(strings.Trim(cfgHost, "[]"), strings.Trim(host, "[]")) {
+		if strings.EqualFold(strings.Trim(cfgHost, "[]"), info.host) {
 			return configured
 		}
 	}
 
 	// Ports that belong to other listeners on this host are never a relay.
-	switch port {
-	case s.cfg.RelayPort:
-		return clientRelay
-	case s.cfg.APIPort, s.cfg.SignalPort, s.cfg.WSRelayPort():
+	if info.shape == relayShapeServicePort {
 		log.Printf("[signal] Ignoring client relay endpoint %s (port %d is not the relay); using %s",
-			clientRelay, port, net.JoinHostPort(host, strconv.Itoa(s.cfg.RelayPort)))
-		return net.JoinHostPort(host, strconv.Itoa(s.cfg.RelayPort))
+			clientRelay, info.port, net.JoinHostPort(info.host, strconv.Itoa(s.cfg.RelayPort)))
+		return net.JoinHostPort(info.host, strconv.Itoa(s.cfg.RelayPort))
 	}
 
 	return clientRelay

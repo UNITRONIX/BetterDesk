@@ -290,6 +290,89 @@ func TestRelayAcceptsTargetBeforeLateAuthorization(t *testing.T) {
 	waitRelayPairing(t, srv)
 }
 
+// Two legs of one UUID pair regardless of which listener they arrived on.
+//
+// This pins the premise behind the relay advertisement fixes: :21117 and the
+// API-port sniff fallback feed the SAME Server instance, and pairing is keyed by
+// UUID alone. A "port mismatch" therefore never explains a Pair timeout — a
+// timeout means the second leg never dialed.
+func TestRelayPairsLegsFromDifferentListeners(t *testing.T) {
+	cfg := config.DefaultConfig()
+	srv := New(cfg)
+	if err := srv.Start(t.Context()); err != nil {
+		t.Fatal(err)
+	}
+	defer srv.Stop()
+
+	const relayUUID = "mixed-listener-legs-uuid"
+	authorizeTestRelayPair(t, relayUUID)
+
+	// Two independent listeners feed the same Server, exactly like the relay
+	// port and the API sniff listener do in production.
+	legAddr := func() (string, net.Listener) {
+		ln, err := net.Listen("tcp", "127.0.0.1:0")
+		if err != nil {
+			t.Fatalf("listen: %v", err)
+		}
+		go func() {
+			for {
+				conn, err := ln.Accept()
+				if err != nil {
+					return
+				}
+				go srv.ServeConn(conn)
+			}
+		}()
+		return ln.Addr().String(), ln
+	}
+
+	addrA, lnA := legAddr()
+	defer lnA.Close()
+	addrB, lnB := legAddr()
+	defer lnB.Close()
+	if addrA == addrB {
+		t.Fatal("listeners must differ for this test to mean anything")
+	}
+
+	dial := func(addr, id string) net.Conn {
+		conn, err := net.DialTimeout("tcp", addr, 5*time.Second)
+		if err != nil {
+			t.Fatalf("dial %s: %v", addr, err)
+		}
+		req := &pb.RendezvousMessage{
+			Union: &pb.RendezvousMessage_RequestRelay{
+				RequestRelay: &pb.RequestRelay{Uuid: relayUUID, Id: id},
+			},
+		}
+		if err := codec.WriteRawProto(conn, req); err != nil {
+			t.Fatalf("write %s: %v", id, err)
+		}
+		return conn
+	}
+
+	connA := dial(addrA, "PEER_A")
+	defer connA.Close()
+	connB := dial(addrB, "PEER_B")
+	defer connB.Close()
+
+	waitRelayPairing(t, srv)
+
+	// Relayed bytes prove the pair is live, not merely counted.
+	payload := []byte("cross-listener")
+	if _, err := connA.Write(payload); err != nil {
+		t.Fatalf("write A->B: %v", err)
+	}
+	buf := make([]byte, len(payload))
+	connB.SetReadDeadline(time.Now().Add(5 * time.Second))
+	n, err := connB.Read(buf)
+	if err != nil {
+		t.Fatalf("read B: %v", err)
+	}
+	if string(buf[:n]) != string(payload) {
+		t.Fatalf("relayed bytes = %q, want %q", buf[:n], payload)
+	}
+}
+
 func TestRelayAuthWaitTimesOutAndReleasesCapacity(t *testing.T) {
 	srv := New(config.DefaultConfig())
 	srv.ctx, srv.cancel = context.WithCancel(context.Background())
