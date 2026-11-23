@@ -56,14 +56,31 @@ class RDRenderer {
 
         /** @type {boolean} Composite all remote displays into one canvas */
         this._mosaicMode = false;
-        /** @type {Array<{idx:number,x:number,y:number,width:number,height:number}>} */
+        /**
+         * Tiles in compact (no-gap) coordinates. `deskX`/`deskY` is the monitor's
+         * physical origin on the peer virtual desktop, needed for input mapping.
+         * @type {Array<{idx:number,x:number,y:number,width:number,height:number,deskX:number,deskY:number}>}
+         */
         this._mosaicLayout = [];
-        /** @type {Map<number, VideoFrame|Object>} */
-        this._mosaicPending = new Map();
+        /**
+         * Last decoded picture per display. Frames are painted here immediately
+         * (and closed), so a monitor that is momentarily idle keeps its last
+         * picture instead of becoming a black hole in the composite.
+         * @type {Map<number, {canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, width: number, height: number}>}
+         */
+        this._mosaicTiles = new Map();
+        /** @type {boolean} Mosaic needs a composite pass (avoid black-clear every RAF) */
+        this._mosaicDirty = false;
+        /** @type {boolean} Canvas bitmap must be cleared before the next composite */
+        this._mosaicNeedsClear = false;
         /** @type {number} Focused display index (input + highlight) */
         this._focusDisplay = 0;
-        /** @type {Function|null} (displayIdx:number) => void — mosaic click hit another display */
+        /** @type {Function|null} (displayIdx:number) => void — mosaic pointer hit another display */
         this.onDisplayHit = null;
+        /** @type {Function|null} Called after canvas bitmap resize — throttle keyframe storms */
+        this.onResizeRefresh = null;
+        /** @type {number} */
+        this._resizeRefreshTimer = 0;
     }
 
     /**
@@ -112,11 +129,36 @@ class RDRenderer {
         this.canvas.style.height = cssHeight;
 
         this._updateTransform();
-
-        // Request a keyframe after resize to avoid blurry/corrupted frames
-        if (this.onResizeRefresh) {
-            this.onResizeRefresh();
+        if (this._mosaicMode) {
+            this._mosaicNeedsClear = true;
+            this._mosaicDirty = true;
         }
+
+        // Debounce keyframe requests — OS chrome / focus changes often fire
+        // several resizes in a row and each refreshVideo flashes the stream.
+        if (this.onResizeRefresh) {
+            this._scheduleResizeRefresh();
+        }
+    }
+
+    /**
+     * Debounced keyframe request after a canvas bitmap resize.
+     * @private
+     */
+    _scheduleResizeRefresh() {
+        const fire = () => {
+            this._resizeRefreshTimer = 0;
+            if (this.onResizeRefresh) this.onResizeRefresh();
+        };
+        // Non-browser callers (tests, embedded shells) may lack timers.
+        if (typeof setTimeout !== 'function') {
+            fire();
+            return;
+        }
+        if (this._resizeRefreshTimer) {
+            clearTimeout(this._resizeRefreshTimer);
+        }
+        this._resizeRefreshTimer = setTimeout(fire, 180);
     }
 
     /**
@@ -184,29 +226,99 @@ class RDRenderer {
     /**
      * Enable or disable all-monitors mosaic compositing.
      * @param {boolean} enabled
-     * @param {Array<{idx:number,x:number,y:number,width:number,height:number}>} [layout]
+     * @param {Array<{idx:number,x:number,y:number,width:number,height:number,deskX?:number,deskY?:number}>} [layout]
      */
     setMosaicMode(enabled, layout) {
+        var wasMosaic = this._mosaicMode;
         this._mosaicMode = !!enabled;
         if (Array.isArray(layout)) {
-            this._mosaicLayout = layout.slice();
-            this._syncMosaicRemoteSize();
+            var layoutChanged = !this._sameMosaicLayout(layout);
+            this._mosaicLayout = layout.map(function (d) {
+                return {
+                    idx: d.idx | 0,
+                    x: d.x || 0,
+                    y: d.y || 0,
+                    width: d.width || 0,
+                    height: d.height || 0,
+                    deskX: typeof d.deskX === 'number' ? d.deskX : (d.x || 0),
+                    deskY: typeof d.deskY === 'number' ? d.deskY : (d.y || 0)
+                };
+            });
+            // Only the composite is sized from the layout. While disabled the
+            // remote size must keep following the single display frame.
+            if (this._mosaicMode) this._syncMosaicRemoteSize();
+            if (layoutChanged || !wasMosaic) {
+                // Tile buffers for displays that left the layout are useless now.
+                var keep = new Set(this._mosaicLayout.map(function (d) { return d.idx; }));
+                var tiles = this._mosaicTiles;
+                tiles.forEach(function (_tile, idx) {
+                    if (!keep.has(idx)) tiles.delete(idx);
+                });
+                this._mosaicNeedsClear = true;
+            }
         }
         if (!this._mosaicMode) {
-            this._mosaicPending.forEach(function (frame) {
-                try { frame.close(); } catch (_) { /* ignore */ }
-            });
-            this._mosaicPending.clear();
+            this._releaseMosaicTiles();
+            this._mosaicLayout = [];
+            this._mosaicDirty = false;
+            this._mosaicNeedsClear = false;
         } else {
+            // A frame queued for the single-monitor path would never be
+            // consumed while mosaic compositing is active.
+            if (!wasMosaic && this._pendingFrame) {
+                try { this._pendingFrame.close(); } catch (_) { /* ignore */ }
+                this._pendingFrame = null;
+            }
+            this._mosaicNeedsClear = true;
+            this._mosaicDirty = true;
             this._updateTransform();
         }
+    }
+
+    /**
+     * Compare a candidate layout with the active one.
+     * @param {Array<Object>} next
+     * @returns {boolean}
+     */
+    _sameMosaicLayout(next) {
+        if (!next || next.length !== this._mosaicLayout.length) return false;
+        for (var i = 0; i < next.length; i++) {
+            var a = next[i];
+            var b = this._mosaicLayout[i];
+            if (!b) return false;
+            if ((a.idx | 0) !== b.idx
+                || (a.x || 0) !== b.x || (a.y || 0) !== b.y
+                || (a.width || 0) !== b.width || (a.height || 0) !== b.height) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Drop every cached tile picture (leaving mosaic mode).
+     */
+    _releaseMosaicTiles() {
+        var tiles = this._mosaicTiles;
+        tiles.forEach(function (tile, idx) {
+            try {
+                if (tile.canvas) {
+                    tile.canvas.width = 0;
+                    tile.canvas.height = 0;
+                }
+            } catch (_) { /* ignore */ }
+            tiles.delete(idx);
+        });
     }
 
     /**
      * @param {number} idx
      */
     setFocusDisplay(idx) {
-        this._focusDisplay = idx | 0;
+        var next = idx | 0;
+        if (next === this._focusDisplay) return;
+        this._focusDisplay = next;
+        if (this._mosaicMode) this._mosaicDirty = true;
     }
 
     /**
@@ -235,21 +347,56 @@ class RDRenderer {
         if (!isFinite(minX) || !isFinite(minY)) return;
         this._mosaicOriginX = minX;
         this._mosaicOriginY = minY;
+        var prevW = this.remoteWidth;
+        var prevH = this.remoteHeight;
         this.setRemoteSize(Math.max(1, maxX - minX), Math.max(1, maxY - minY));
+        // A different virtual-desktop size invalidates the whole bitmap.
+        if (this.remoteWidth !== prevW || this.remoteHeight !== prevH) {
+            this._mosaicNeedsClear = true;
+            this._mosaicDirty = true;
+        }
     }
 
     /**
-     * Queue a frame for one display in mosaic mode.
+     * Paint one decoded frame into its tile buffer.
+     *
+     * Frames are copied immediately and closed, so the composite never depends
+     * on a frame being kept alive (holding `VideoFrame`s starved the GPU and
+     * left black holes when a monitor went idle).
+     *
      * @param {number} displayIdx
      * @param {VideoFrame|Object} frame
      */
     pushMosaicFrame(displayIdx, frame) {
         var idx = displayIdx | 0;
-        var prev = this._mosaicPending.get(idx);
-        if (prev) {
-            try { prev.close(); } catch (_) { /* ignore */ }
+        var src = frame && frame._source ? frame._source : frame;
+        var w = (frame && frame.displayWidth) || (src && src.width) || 0;
+        var h = (frame && frame.displayHeight) || (src && src.height) || 0;
+        try {
+            if (!src || !w || !h) return;
+            var tile = this._mosaicTiles.get(idx);
+            if (!tile) {
+                var canvas = document.createElement('canvas');
+                var ctx = canvas.getContext('2d');
+                if (!ctx) return;
+                tile = { canvas: canvas, ctx: ctx, width: 0, height: 0 };
+                this._mosaicTiles.set(idx, tile);
+            }
+            if (tile.canvas.width !== w || tile.canvas.height !== h) {
+                tile.canvas.width = w;
+                tile.canvas.height = h;
+            }
+            tile.width = w;
+            tile.height = h;
+            tile.ctx.drawImage(src, 0, 0, w, h);
+            this._mosaicDirty = true;
+        } catch (_) {
+            /* frame may be closed or tile buffer unavailable */
+        } finally {
+            if (frame && typeof frame.close === 'function' && !frame._source) {
+                try { frame.close(); } catch (_) { /* ignore */ }
+            }
         }
-        this._mosaicPending.set(idx, frame);
     }
 
     /**
@@ -282,6 +429,12 @@ class RDRenderer {
     }
 
     /**
+     * Map canvas pixels onto a mosaic tile.
+     *
+     * The composite uses compact (gap-free) tile coordinates, but the peer
+     * injects absolute virtual-desktop coordinates, so the hit-test result is
+     * translated back to the monitor's physical origin (`deskX`/`deskY`).
+     *
      * @param {number} px device pixels
      * @param {number} py device pixels
      * @returns {{ x: number, y: number, displayIdx: number }|null}
@@ -289,8 +442,8 @@ class RDRenderer {
     _canvasToRemoteMosaic(px, py) {
         const { scale, offsetX, offsetY } = this.transform;
         if (!scale) return null;
-        const deskX = (px - offsetX) / scale + (this._mosaicOriginX || 0);
-        const deskY = (py - offsetY) / scale + (this._mosaicOriginY || 0);
+        const tileX = (px - offsetX) / scale + (this._mosaicOriginX || 0);
+        const tileY = (py - offsetY) / scale + (this._mosaicOriginY || 0);
 
         for (var i = 0; i < this._mosaicLayout.length; i++) {
             var d = this._mosaicLayout[i];
@@ -298,13 +451,17 @@ class RDRenderer {
             var y = d.y || 0;
             var w = d.width || 0;
             var h = d.height || 0;
-            if (deskX >= x && deskX < x + w && deskY >= y && deskY < y + h) {
-                var localX = Math.round(deskX - x);
-                var localY = Math.round(deskY - y);
+            if (tileX >= x && tileX < x + w && tileY >= y && tileY < y + h) {
+                var localX = Math.round(tileX - x);
+                var localY = Math.round(tileY - y);
                 if (d.idx !== this._focusDisplay && typeof this.onDisplayHit === 'function') {
                     try { this.onDisplayHit(d.idx); } catch (_) { /* ignore */ }
                 }
-                return { x: localX, y: localY, displayIdx: d.idx };
+                return {
+                    x: Math.round((d.deskX || 0) + localX),
+                    y: Math.round((d.deskY || 0) + localY),
+                    displayIdx: d.idx
+                };
             }
         }
         return null;
@@ -350,9 +507,14 @@ class RDRenderer {
         if (!this._renderLoopActive) return;
 
         if (this._mosaicMode) {
-            if (this._mosaicPending.size > 0) {
+            // Composite only when something changed. The composite is rebuilt
+            // from cached tile pictures, so it never needs a pending frame to
+            // avoid black holes; the canvas is cleared only on layout/size
+            // changes instead of on every frame.
+            if (this._mosaicDirty) {
                 this._fpsCount++;
                 this._renderMosaic();
+                this._mosaicDirty = false;
             }
         } else if (this._pendingFrame) {
             // Count FPS only for genuinely new frames from the peer
@@ -375,15 +537,21 @@ class RDRenderer {
     }
 
     /**
-     * Composite every pending display frame into the virtual desktop layout.
+     * Composite every cached tile picture into the virtual desktop layout.
      */
     _renderMosaic() {
         this._syncMosaicRemoteSize();
         const ctx = this.ctx;
         const cw = this.canvas.width;
         const ch = this.canvas.height;
-        ctx.fillStyle = '#000000';
-        ctx.fillRect(0, 0, cw, ch);
+        // Clearing the whole bitmap is only required when the layout or the
+        // canvas size changed; doing it per frame is what made idle monitors
+        // flicker black.
+        if (this._mosaicNeedsClear) {
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, cw, ch);
+            this._mosaicNeedsClear = false;
+        }
 
         const { scale, offsetX, offsetY } = this.transform;
         const originX = this._mosaicOriginX || 0;
@@ -391,16 +559,15 @@ class RDRenderer {
         const self = this;
 
         this._mosaicLayout.forEach(function (d) {
-            var frame = self._mosaicPending.get(d.idx);
-            if (!frame) return;
-            var drawSource = frame._source || frame;
+            var tile = self._mosaicTiles.get(d.idx);
+            if (!tile) return;
             var dx = offsetX + ((d.x || 0) - originX) * scale;
             var dy = offsetY + ((d.y || 0) - originY) * scale;
-            var dw = (d.width || frame.displayWidth || 0) * scale;
-            var dh = (d.height || frame.displayHeight || 0) * scale;
+            var dw = (d.width || tile.width || 0) * scale;
+            var dh = (d.height || tile.height || 0) * scale;
             try {
-                ctx.drawImage(drawSource, dx, dy, dw, dh);
-            } catch (_) { /* frame may be closed */ }
+                ctx.drawImage(tile.canvas, dx, dy, dw, dh);
+            } catch (_) { /* tile buffer unavailable */ }
 
             if (d.idx === self._focusDisplay) {
                 ctx.strokeStyle = 'rgba(88, 166, 255, 0.9)';
@@ -515,6 +682,7 @@ class RDRenderer {
     updateCursorPosition(pos) {
         this.cursorPos.x = pos.x || 0;
         this.cursorPos.y = pos.y || 0;
+        if (this._mosaicMode && this.showCursor) this._mosaicDirty = true;
     }
 
     /**
@@ -524,12 +692,44 @@ class RDRenderer {
     _drawCursor(ctx) {
         const { scale, offsetX, offsetY } = this.transform;
 
-        const cx = offsetX + (this.cursorPos.x - this.cursorHotspot.x) * scale;
-        const cy = offsetY + (this.cursorPos.y - this.cursorHotspot.y) * scale;
+        var baseX = 0;
+        var baseY = 0;
+        if (this._mosaicMode && this._mosaicLayout.length) {
+            // Cursor position arrives in absolute virtual-desktop coordinates;
+            // the composite lays tiles out compacted, so translate into the
+            // tile that actually contains the pointer.
+            var hit = this._mosaicTileAt(this.cursorPos.x, this.cursorPos.y);
+            if (!hit) return;
+            baseX = (hit.x || 0) - (this._mosaicOriginX || 0) - (hit.deskX || 0);
+            baseY = (hit.y || 0) - (this._mosaicOriginY || 0) - (hit.deskY || 0);
+        }
+
+        const cx = offsetX + (this.cursorPos.x + baseX - this.cursorHotspot.x) * scale;
+        const cy = offsetY + (this.cursorPos.y + baseY - this.cursorHotspot.y) * scale;
         const cw = this.cursorImage.width * scale;
         const ch = this.cursorImage.height * scale;
 
         ctx.drawImage(this.cursorImage, cx, cy, cw, ch);
+    }
+
+    /**
+     * Find the mosaic tile containing a point given in desktop coordinates.
+     * @param {number} deskX
+     * @param {number} deskY
+     * @returns {Object|null}
+     */
+    _mosaicTileAt(deskX, deskY) {
+        var x = deskX || 0;
+        var y = deskY || 0;
+        for (var i = 0; i < this._mosaicLayout.length; i++) {
+            var d = this._mosaicLayout[i];
+            var ox = d.deskX || 0;
+            var oy = d.deskY || 0;
+            if (x >= ox && x < ox + (d.width || 0) && y >= oy && y < oy + (d.height || 0)) {
+                return d;
+            }
+        }
+        return null;
     }
 
     /**
@@ -557,6 +757,8 @@ class RDRenderer {
             this._pendingFrame.close();
             this._pendingFrame = null;
         }
+        this._mosaicMode = false;
+        this._releaseMosaicTiles();
         if (this.cursorImage) {
             this.cursorImage.close();
             this.cursorImage = null;

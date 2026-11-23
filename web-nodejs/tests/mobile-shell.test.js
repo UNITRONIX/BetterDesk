@@ -287,3 +287,119 @@ describe('RDRenderer mobile resize', () => {
         expect(refreshes).toBe(1);
     });
 });
+
+describe('RDRenderer mosaic compositing', () => {
+    function makeMosaicRenderer() {
+        let fills = 0;
+        let draws = 0;
+        const ctx = {
+            fillStyle: '',
+            strokeStyle: '',
+            lineWidth: 0,
+            fillRect() { fills++; },
+            strokeRect() {},
+            drawImage() { draws++; }
+        };
+        const sandbox = {
+            console,
+            window: { devicePixelRatio: 1 },
+            devicePixelRatio: 1,
+            requestAnimationFrame: () => 1,
+            cancelAnimationFrame: () => {},
+            performance: { now: () => 0 },
+            document: {
+                createElement: () => {
+                    const canvas = { width: 0, height: 0 };
+                    canvas.getContext = () => ({
+                        drawImage() {}
+                    });
+                    return canvas;
+                }
+            }
+        };
+        sandbox.window = sandbox;
+        const code = fs.readFileSync(
+            path.join(__dirname, '../public/js/rdclient/renderer.js'),
+            'utf8'
+        );
+        vm.runInNewContext(code, sandbox);
+        const canvas = {
+            width: 400,
+            height: 200,
+            style: {},
+            parentElement: null,
+            getContext: () => ctx
+        };
+        const renderer = new sandbox.RDRenderer(canvas);
+        renderer.setRemoteSize(1920, 1080);
+        return {
+            renderer,
+            getFills: () => fills,
+            getDraws: () => draws
+        };
+    }
+
+    const layout = [
+        { idx: 0, x: 0, y: 0, width: 1920, height: 1080, deskX: 0, deskY: 0 },
+        { idx: 2, x: 1920, y: 0, width: 1920, height: 1080, deskX: 3840, deskY: 0 }
+    ];
+
+    it('maps canvas points to absolute desktop coordinates', () => {
+        const { renderer } = makeMosaicRenderer();
+        renderer.setMosaicMode(true, layout);
+        renderer._updateTransform();
+
+        // Middle of the second tile (compacted at x=1920, physical x=3840).
+        const rect = { scale: renderer.transform.scale, ox: renderer.transform.offsetX };
+        const canvasX = (rect.ox + (1920 + 100) * rect.scale);
+        const canvasY = (renderer.transform.offsetY + 100 * rect.scale);
+        const pos = renderer._canvasToRemoteMosaic(canvasX, canvasY);
+
+        expect(pos).not.toBeNull();
+        expect(pos.displayIdx).toBe(2);
+        expect(pos.x).toBe(3940);
+        expect(pos.y).toBe(100);
+    });
+
+    it('does not clear or repaint the composite without new frames', () => {
+        const { renderer, getFills, getDraws } = makeMosaicRenderer();
+        renderer.setMosaicMode(true, layout);
+        renderer._mosaicNeedsClear = false;
+        renderer._mosaicDirty = false;
+
+        renderer._renderTick();
+
+        expect(getFills()).toBe(0);
+        expect(getDraws()).toBe(0);
+    });
+
+    it('keeps the last tile picture and clears only once', () => {
+        const { renderer, getFills, getDraws } = makeMosaicRenderer();
+        renderer.setMosaicMode(true, layout);
+
+        const frame = { displayWidth: 1920, displayHeight: 1080, close: () => {} };
+        renderer.pushMosaicFrame(0, frame);
+        renderer._renderMosaic();
+        const fillsAfterFirst = getFills();
+        const drawsAfterFirst = getDraws();
+        expect(drawsAfterFirst).toBeGreaterThan(0);
+
+        // A monitor that stops sending frames keeps its last picture.
+        renderer._mosaicDirty = true;
+        renderer._renderMosaic();
+        expect(getFills()).toBe(fillsAfterFirst);
+        expect(getDraws()).toBe(drawsAfterFirst * 2);
+    });
+
+    it('closes video frames it copies into tile buffers', () => {
+        const { renderer } = makeMosaicRenderer();
+        renderer.setMosaicMode(true, layout);
+        const close = jest.fn();
+        renderer.pushMosaicFrame(0, {
+            displayWidth: 1920,
+            displayHeight: 1080,
+            close
+        });
+        expect(close).toHaveBeenCalled();
+    });
+});

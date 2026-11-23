@@ -3,12 +3,15 @@
 ### Changed
 - _(none yet)_
 
+### Fixed
+- **RdClient web — multi-monitor mosaic no longer flickers and no longer leaves an empty band.** Combining non-adjacent monitors (e.g. 0 + 2) compacts the tiles edge-to-edge instead of reproducing the physical gap, and the stitched view only clears/repaints when a tile actually changes, so idle monitors keep their last picture. Entering a mosaic sends one `refreshVideoDisplay` per captured display instead of a global `refreshVideo` (which restarted every capturer), every display is decoded by its own pool slot (changing focus no longer re-initialises the primary decoder), and in-mosaic `switchDisplay` is throttled to one per gesture. Mouse input and the remote cursor are now mapped to absolute virtual-desktop coordinates, so clicking a tile reaches the right monitor.
+
 ---
 
 ## [3.5.279] — 2026-11-23
 
 ### Added
-- **RdClient web — multi-monitor overview:** live thumbnails (correct aspect ratios) and **All monitors** mosaic via RustDesk `CaptureDisplays` multi-set + `VideoFrame.display` routing. Focus a monitor without dropping other preview streams; overview requires WebCodecs/HTTPS. Ships via panel update.
+- **RdClient web — multi-monitor overview:** centered live thumbnail grid (aspect-correct), checkbox / Shift multi-select, **Combine selected** stitched view from peer display layout, and a **+** tile for virtual displays. Uses RustDesk `CaptureDisplays` multi-set + `VideoFrame.display`. Requires WebCodecs/HTTPS. Ships via panel update.
 
 ### Changed
 - _(none yet)_

@@ -115,10 +115,14 @@ class RDClient {
         // Multi-monitor overview (RdClient web)
         this._overviewMode = false;
         this._allMonitorsView = false;
+        /** @type {number[]|null} Selected displays for combined mosaic (physical layout) */
+        this._combinedIndices = null;
         this._currentDisplay = 0;
         this._displayDecoderPool = (typeof RDDisplayDecoderPool !== 'undefined')
             ? new RDDisplayDecoderPool()
             : null;
+        /** @type {number} Timestamp of the last mosaic switchDisplay sent */
+        this._lastMosaicSwitch = 0;
         /** @type {Map<number, HTMLCanvasElement>} */
         this._thumbnailCanvases = new Map();
         /** @type {Function|null} (displayIdx, canvas) => void */
@@ -1182,6 +1186,10 @@ class RDClient {
         this._processPeerInfo(info);
         this._emit('peer_info', info);
 
+        // Monitor geometry may have changed (hotplug, virtual display). Refresh
+        // the mosaic layout so tiles stay gap-free and input stays aligned.
+        if (this._isMosaicActive()) this._syncMosaicLayout();
+
         // If we got peer info without hash challenge, session can start
         if (this._state === 'waiting_password') {
             // Some devices don't require password
@@ -1209,20 +1217,26 @@ class RDClient {
         var displayIdx = (typeof videoFrame.display === 'number')
             ? videoFrame.display
             : this.getCurrentDisplay();
-        var multi = this._overviewMode || this._allMonitorsView;
+        var multi = this._needsMultiCapture();
         var focusIdx = this.getCurrentDisplay();
         var frames = this.proto.getEncodedFrames(videoFrame);
+        var inMosaic = this._isMosaicActive() && this._mosaicIncludes(displayIdx);
 
-        // Non-focus displays only decode while overview / all-monitors is active.
-        if (multi && displayIdx !== focusIdx && this._displayDecoderPool
+        // Multi-capture modes decode EVERY display in the per-display pool,
+        // including the focused one. Routing the focus monitor through the
+        // primary decoder made changing focus re-initialise it with another
+        // resolution (keyframe drop => visible flash).
+        if (multi && this._displayDecoderPool
             && RDVideo.isSupported() && !this.video.fallbackMode) {
-            try {
-                for (const frame of frames) {
-                    await this._displayDecoderPool.decode(codec, frame, displayIdx);
+            if (this._overviewMode || inMosaic) {
+                try {
+                    for (const frame of frames) {
+                        await this._displayDecoderPool.decode(codec, frame, displayIdx);
+                    }
+                } catch (err) {
+                    this._emit('log', 'Display ' + displayIdx + ' decode: '
+                        + (err && err.message ? err.message : err));
                 }
-            } catch (err) {
-                this._emit('log', 'Display ' + displayIdx + ' decode: '
-                    + (err && err.message ? err.message : err));
             }
             return;
         }
@@ -1230,6 +1244,11 @@ class RDClient {
         // Focus (or single-capture) path — primary RDVideo
         if (!multi && displayIdx !== focusIdx) {
             // Peer still sending another display; ignore until capture settles.
+            return;
+        }
+        // Soft fallback (MSE/JMuxer) can hold only one stream. Never mux
+        // another display into it — drop instead of corrupting the picture.
+        if (multi && this.video.fallbackMode && displayIdx !== focusIdx) {
             return;
         }
 
@@ -1403,15 +1422,24 @@ class RDClient {
             };
         }
 
+        // Mosaic hover: local focus only. Peer switchDisplay on every move
+        // flashes the remote encode pipeline; engage on press/drag instead.
         this.renderer.onDisplayHit = (displayIdx) => {
-            if (typeof displayIdx === 'number' && displayIdx !== this.getCurrentDisplay()) {
-                this.focusDisplay(displayIdx);
+            if (typeof displayIdx === 'number') {
+                this.setInputDisplay(displayIdx, { peerSwitch: false });
+            }
+        };
+        this.input.onDisplayEngage = (displayIdx) => {
+            if (typeof displayIdx === 'number') {
+                this.setInputDisplay(displayIdx, { peerSwitch: true });
             }
         };
 
-        // Request keyframe on resize/fullscreen to fix blur
+        // Request a keyframe on resize/fullscreen to fix blur. In mosaic modes
+        // only the focused display is refreshed — a global refresh restarts
+        // every capturer and visibly flickers the whole stitched view.
         this.renderer.onResizeRefresh = () => {
-            this._sendPeerMessage(this.proto.buildMisc('refreshVideo', true));
+            this._refreshDisplayVideo(this.getCurrentDisplay());
         };
 
         // Signal CSS when remote cursor data is available (hide local crosshair)
@@ -1715,6 +1743,7 @@ class RDClient {
         if (this._displayDecoderPool) this._displayDecoderPool.close();
         this._overviewMode = false;
         this._allMonitorsView = false;
+        this._combinedIndices = null;
         this.clearThumbnailCanvases();
         this.audio.close();
         this.fileTransfer.disable();
@@ -2011,6 +2040,18 @@ class RDClient {
     /** @returns {boolean} */
     isAllMonitorsView() { return !!this._allMonitorsView; }
 
+    /** @returns {boolean} Combined mosaic of a selected subset is active */
+    isCombinedView() {
+        return !!(this._combinedIndices && this._combinedIndices.length >= 2);
+    }
+
+    /** @returns {number[]} Indices in the active combined mosaic (empty if none) */
+    getCombinedDisplays() {
+        return (this._combinedIndices && this._combinedIndices.length)
+            ? this._combinedIndices.slice()
+            : [];
+    }
+
     /**
      * Whether live multi-monitor overview can run (WebCodecs required).
      * @returns {boolean}
@@ -2028,6 +2069,39 @@ class RDClient {
         return monitors.map(function (m) { return m.idx; });
     }
 
+    /** @returns {boolean} */
+    _isMosaicActive() {
+        return this.isCombinedView() || !!this._allMonitorsView;
+    }
+
+    /**
+     * @param {number} displayIdx
+     * @returns {boolean}
+     */
+    _mosaicIncludes(displayIdx) {
+        if (this.isCombinedView()) {
+            return this._combinedIndices.indexOf(displayIdx | 0) !== -1;
+        }
+        if (this._allMonitorsView) return true;
+        return false;
+    }
+
+    /** @returns {boolean} */
+    _needsMultiCapture() {
+        return !!this._overviewMode || this._isMosaicActive();
+    }
+
+    /**
+     * Capture set for the current mode (overview thumbs and/or mosaic).
+     * @returns {number[]}
+     */
+    _activeCaptureIndices() {
+        if (this._overviewMode) return this._allDisplayIndices();
+        if (this.isCombinedView()) return this._combinedIndices.slice();
+        if (this._allMonitorsView) return this._allDisplayIndices();
+        return [this.getCurrentDisplay()];
+    }
+
     /**
      * @param {number[]} indices
      */
@@ -2042,32 +2116,115 @@ class RDClient {
     }
 
     /**
-     * @param {number} displayIdx
+     * Request a fresh keyframe for one display.
+     *
+     * In multi-capture modes (overview / mosaic) this sends ONLY the
+     * per-display request. The global `refreshVideo` makes the peer refresh
+     * every capturer, which flickers all tiles at once.
+     *
+     * @param {number} [displayIdx]
      */
     _refreshDisplayVideo(displayIdx) {
         if (this._state !== 'streaming') return;
         if (typeof displayIdx === 'number') {
             this._sendPeerMessage(this.proto.buildMisc('refreshVideoDisplay', displayIdx));
         }
+        if (this._needsMultiCapture()) return;
         this._sendPeerMessage(this.proto.buildMisc('refreshVideo', true));
     }
 
     /**
+     * Build a gap-free tile layout from the peer display geometry.
+     *
+     * Monitors are grouped into rows by vertical overlap, then packed
+     * left-to-right / top-to-bottom, so combining non-adjacent monitors (0 + 2)
+     * no longer renders a dead band where the middle monitor used to be.
+     * `deskX`/`deskY` keep the physical origin, which input mapping needs.
+     *
+     * @param {Array<{idx:number,x:number,y:number,width:number,height:number}>} monitors
+     * @returns {Array<{idx:number,x:number,y:number,width:number,height:number,deskX:number,deskY:number}>}
+     */
+    static buildCompactMosaicLayout(monitors) {
+        var list = (monitors || []).filter(function (m) {
+            return m && (m.width | 0) > 0 && (m.height | 0) > 0;
+        }).map(function (m) {
+            return {
+                idx: m.idx | 0,
+                x: m.x || 0,
+                y: m.y || 0,
+                width: m.width | 0,
+                height: m.height | 0
+            };
+        });
+        if (!list.length) return [];
+
+        list.sort(function (a, b) {
+            if (a.y !== b.y) return a.y - b.y;
+            if (a.x !== b.x) return a.x - b.x;
+            return a.idx - b.idx;
+        });
+
+        // Group displays into rows: a display joins the current row when it
+        // overlaps it vertically by at least 30% of the shorter height.
+        var rows = [];
+        list.forEach(function (d) {
+            var row = rows.length ? rows[rows.length - 1] : null;
+            var overlaps = false;
+            if (row) {
+                var overlap = Math.min(row.bottom, d.y + d.height) - Math.max(row.top, d.y);
+                overlaps = overlap >= Math.min(row.height, d.height) * 0.3;
+            }
+            if (!overlaps) {
+                rows.push({ top: d.y, bottom: d.y + d.height, height: d.height, items: [d] });
+                return;
+            }
+            row.bottom = Math.max(row.bottom, d.y + d.height);
+            row.height = Math.max(row.height, d.height);
+            row.items.push(d);
+        });
+
+        var layout = [];
+        var cursorY = 0;
+        rows.forEach(function (row) {
+            row.items.sort(function (a, b) {
+                if (a.x !== b.x) return a.x - b.x;
+                return a.idx - b.idx;
+            });
+            var cursorX = 0;
+            row.items.forEach(function (d) {
+                layout.push({
+                    idx: d.idx,
+                    x: cursorX,
+                    y: cursorY,
+                    width: d.width,
+                    height: d.height,
+                    deskX: d.x,
+                    deskY: d.y
+                });
+                cursorX += d.width;
+            });
+            cursorY += row.height;
+        });
+        return layout;
+    }
+
+    /**
      * Apply mosaic layout from PeerInfo.displays onto the renderer.
+     * Tiles are compacted (no empty bands); input keeps physical origins.
      */
     _syncMosaicLayout() {
         if (!this.renderer) return;
-        var layout = this.getMonitors().map(function (m) {
-            return {
-                idx: m.idx,
-                x: m.x,
-                y: m.y,
-                width: m.width,
-                height: m.height
-            };
-        });
+        var active = this._isMosaicActive();
+        var selected = this.isCombinedView()
+            ? this._combinedIndices.slice()
+            : null;
+        var monitors = this.getMonitors()
+            .filter(function (m) {
+                return !selected || selected.indexOf(m.idx) !== -1;
+            });
+        var layout = RDClient.buildCompactMosaicLayout(monitors);
         this.renderer.setFocusDisplay(this.getCurrentDisplay());
-        this.renderer.setMosaicMode(this._allMonitorsView, layout);
+        this.renderer.setMosaicMode(active, layout);
     }
 
     /**
@@ -2076,7 +2233,7 @@ class RDClient {
      * @param {VideoFrame|Object} frame
      */
     _paintThumbnail(displayIdx, frame) {
-        if (!this._overviewMode && !this._allMonitorsView) return;
+        if (!this._overviewMode && !this._isMosaicActive()) return;
         var canvas = this._thumbnailCanvases.get(displayIdx);
         if (!canvas) return;
         var srcW = frame.displayWidth || 0;
@@ -2125,12 +2282,15 @@ class RDClient {
 
     /**
      * @param {VideoFrame|Object} frame
+     * @param {number} [displayIdx] display the frame belongs to (pool path)
      */
-    _onPrimaryDecodedFrame(frame) {
-        var displayIdx = this.getCurrentDisplay();
-        this._paintThumbnail(displayIdx, frame);
-        if (this._allMonitorsView) {
-            this.renderer.pushMosaicFrame(displayIdx, frame);
+    _onPrimaryDecodedFrame(frame, displayIdx) {
+        var idx = (typeof displayIdx === 'number')
+            ? displayIdx
+            : this.getCurrentDisplay();
+        this._paintThumbnail(idx, frame);
+        if (this._isMosaicActive() && this._mosaicIncludes(idx)) {
+            this.renderer.pushMosaicFrame(idx, frame);
             return;
         }
         this.renderer.pushFrame(frame);
@@ -2142,8 +2302,15 @@ class RDClient {
      */
     _onSecondaryDecodedFrame(frame, displayIdx) {
         this._paintThumbnail(displayIdx, frame);
-        if (this._allMonitorsView) {
+        if (this._isMosaicActive() && this._mosaicIncludes(displayIdx)) {
             this.renderer.pushMosaicFrame(displayIdx, frame);
+            return;
+        }
+        // Overview (thumbnails only): the focused monitor still feeds the main
+        // canvas, because every display is decoded by the pool in that mode.
+        if (this._overviewMode && !this._isMosaicActive()
+            && displayIdx === this.getCurrentDisplay()) {
+            this.renderer.pushFrame(frame);
             return;
         }
         try { frame.close(); } catch (_) { /* ignore */ }
@@ -2163,23 +2330,24 @@ class RDClient {
         if (this._overviewMode === want) return this._overviewMode;
         this._overviewMode = want;
         if (!want) {
-            this._allMonitorsView = false;
-            this._syncMosaicLayout();
-            if (this._displayDecoderPool) this._displayDecoderPool.close();
-            this._sendCaptureDisplays([this.getCurrentDisplay()]);
-            if (this.video) this.video._needKeyframe = true;
-            this._refreshDisplayVideo(this.getCurrentDisplay());
+            if (!this._isMosaicActive()) {
+                if (this._displayDecoderPool) this._displayDecoderPool.close();
+                this._sendCaptureDisplays([this.getCurrentDisplay()]);
+                if (this.video) this.video._needKeyframe = true;
+                this._refreshDisplayVideo(this.getCurrentDisplay());
+            } else if (this._state === 'streaming') {
+                this._sendCaptureDisplays(this._activeCaptureIndices());
+            }
         } else if (this._state === 'streaming') {
             this._sendCaptureDisplays(this._allDisplayIndices());
             this._allDisplayIndices().forEach((idx) => this._refreshDisplayVideo(idx));
         }
-        this._emit('overview_changed', this._overviewMode, this._allMonitorsView);
+        this._emit('overview_changed', this._overviewMode, this._isMosaicActive());
         return this._overviewMode;
     }
 
     /**
      * Show all remote monitors composited on the main canvas.
-     * Implies overview multi-capture.
      * @param {boolean} enabled
      * @returns {boolean}
      */
@@ -2189,25 +2357,142 @@ class RDClient {
             this._emit('overview_unavailable', 'webcodecs');
             return false;
         }
-        if (want && !this._overviewMode) {
-            if (!this.setOverviewMode(true)) return false;
+        if (want) {
+            this._combinedIndices = null;
+            this._allMonitorsView = true;
+            this._syncMosaicLayout();
+            if (this._state === 'streaming') {
+                this._sendCaptureDisplays(this._allDisplayIndices());
+                this._allDisplayIndices().forEach((idx) => this._refreshDisplayVideo(idx));
+            }
+        } else {
+            this._allMonitorsView = false;
+            this._syncMosaicLayout();
+            if (!this._overviewMode && this._state === 'streaming') {
+                if (this._displayDecoderPool) this._displayDecoderPool.close();
+                this._sendCaptureDisplays([this.getCurrentDisplay()]);
+                if (this.video) this.video._needKeyframe = true;
+                this._refreshDisplayVideo(this.getCurrentDisplay());
+            }
         }
-        this._allMonitorsView = want;
-        this._syncMosaicLayout();
-        if (want && this._state === 'streaming') {
-            this._sendCaptureDisplays(this._allDisplayIndices());
-        }
-        this._emit('overview_changed', this._overviewMode, this._allMonitorsView);
+        this._emit('overview_changed', this._overviewMode, this._isMosaicActive());
         return this._allMonitorsView;
     }
 
     /**
-     * Focus a monitor for the main view / input without leaving overview capture.
+     * Combine selected remote displays into one stitched view using peer x/y layout.
+     * @param {number[]} indices
+     * @returns {boolean}
+     */
+    setCombinedDisplays(indices) {
+        var list = Array.isArray(indices)
+            ? indices.map(function (n) { return n | 0; }).filter(function (n, i, a) {
+                return a.indexOf(n) === i;
+            })
+            : [];
+        if (list.length < 2) {
+            this.clearCombinedDisplays();
+            return false;
+        }
+        if (!this.canUseMonitorOverview()) {
+            this._emit('overview_unavailable', 'webcodecs');
+            return false;
+        }
+        this._allMonitorsView = false;
+        this._combinedIndices = list;
+        if (list.indexOf(this.getCurrentDisplay()) === -1) {
+            this._currentDisplay = list[0];
+        }
+        this._syncMosaicLayout();
+        if (this._state === 'streaming') {
+            // No switchDisplay here: the focused display is already captured and
+            // input is mapped to absolute desktop coordinates across the mosaic.
+            this._sendCaptureDisplays(list);
+            list.forEach((idx) => this._refreshDisplayVideo(idx));
+        }
+        this._emit('overview_changed', this._overviewMode, true);
+        this._emit('display_switched', this.getCurrentDisplay());
+        return true;
+    }
+
+    /**
+     * Leave combined / all-monitors mosaic and return to single-display focus.
+     */
+    clearCombinedDisplays() {
+        var wasMosaic = this._isMosaicActive();
+        this._combinedIndices = null;
+        this._allMonitorsView = false;
+        this._syncMosaicLayout();
+        if (wasMosaic && !this._overviewMode && this._state === 'streaming') {
+            if (this._displayDecoderPool) this._displayDecoderPool.close();
+            this._sendCaptureDisplays([this.getCurrentDisplay()]);
+            if (this.video) this.video._needKeyframe = true;
+            this._refreshDisplayVideo(this.getCurrentDisplay());
+        } else if (this._overviewMode && this._state === 'streaming') {
+            this._sendCaptureDisplays(this._allDisplayIndices());
+        }
+        this._emit('overview_changed', this._overviewMode, this._isMosaicActive());
+    }
+
+    /**
+     * Retarget keyboard/mouse to a display inside an active mosaic without
+     * dropping CaptureDisplays or leaving the combined view.
+     * @param {number} monitorIdx
+     * @param {{ peerSwitch?: boolean }} [opts] peerSwitch defaults true
+     */
+    setInputDisplay(monitorIdx, opts) {
+        if (this._state !== 'streaming') return;
+        var idx = monitorIdx | 0;
+        if (this._isMosaicActive() && !this._mosaicIncludes(idx)) return;
+        if (idx === this.getCurrentDisplay()) return;
+        this._currentDisplay = idx;
+        if (this.renderer && typeof this.renderer.setFocusDisplay === 'function') {
+            this.renderer.setFocusDisplay(idx);
+        }
+        // In a mosaic the pointer is already mapped to absolute desktop
+        // coordinates, so the peer does not need a switch for routing. It is
+        // still sent on an explicit engage (click/drag) for peers that rely on
+        // the active display (macOS Retina scaling, whiteboard cursor), but
+        // throttled: a switch re-subscribes the capture service and re-emits
+        // display_changed, which is what made tiles flash while working.
+        var peerSwitch = !opts || opts.peerSwitch !== false;
+        if (peerSwitch) {
+            var sendSwitch = true;
+            if (this._isMosaicActive()) {
+                // One switch per 500 ms burst; the pointer is absolutely
+                // mapped, so the peer does not need to follow every engage.
+                var now = Date.now();
+                var lastAt = this._lastMosaicSwitch || 0;
+                if (now - lastAt < 500) {
+                    sendSwitch = false;
+                } else {
+                    this._lastMosaicSwitch = now;
+                }
+            }
+            if (sendSwitch) {
+                this._sendPeerMessage(this.proto.buildMisc('switchDisplay', {
+                    display: idx,
+                    width: 0,
+                    height: 0
+                }));
+            }
+        }
+        // Keep existing capture set (combined / overview / all).
+    }
+
+    /**
+     * Focus a single monitor for the main view (exits combined mosaic).
      * @param {number} monitorIdx
      */
     focusDisplay(monitorIdx) {
         if (this._state !== 'streaming') return;
         var idx = monitorIdx | 0;
+        // Single-monitor focus exits a combined mosaic.
+        if (this._isMosaicActive()) {
+            this._combinedIndices = null;
+            this._allMonitorsView = false;
+            this._syncMosaicLayout();
+        }
         this._currentDisplay = idx;
         this.renderer.setFocusDisplay(idx);
         this._sendPeerMessage(this.proto.buildMisc('switchDisplay', {
@@ -2215,8 +2500,7 @@ class RDClient {
             width: 0,
             height: 0
         }));
-        if (this._overviewMode || this._allMonitorsView) {
-            // Keep capturing every display so thumbnails stay live.
+        if (this._overviewMode) {
             this._sendCaptureDisplays(this._allDisplayIndices());
         } else {
             this._sendCaptureDisplays([idx]);
@@ -2228,12 +2512,12 @@ class RDClient {
 
     /**
      * Switch to a specific monitor (RustDesk-compatible).
-     * In overview / all-monitors mode this focuses without dropping other captures.
+     * In overview mode this focuses without dropping other captures.
      * @param {number} monitorIdx - Monitor index
      */
     switchMonitor(monitorIdx) {
         if (this._state !== 'streaming') return;
-        if (this._overviewMode || this._allMonitorsView) {
+        if (this._overviewMode || this._isMosaicActive()) {
             this.focusDisplay(monitorIdx);
             return;
         }

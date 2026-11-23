@@ -110,9 +110,13 @@ Each monitor shows its resolution (e.g., `Monitor 1 (1920×1080) ★`).
 
 ### Monitor overview (RdClient web)
 
-Click the **Monitors** toolbar button to open a **centered floating grid** of monitor tiles (no dialog chrome). One display → one centered tile; several → tiles side by side. Click a tile to focus that monitor.
+Click the **Monitors** toolbar button to open a **centered floating grid** of monitor tiles (no dialog chrome). One display → one centered tile; several → tiles side by side.
 
-When virtual displays are supported, a **+** tile appears to the right of the monitors to add one. Esc or click the dimmed backdrop to close. On HTTPS/WebCodecs, opening the picker enables multi-capture so thumbnails stay live.
+- **Click** a tile → focus that single monitor.
+- **Checkbox** or **Shift+click** → multi-select; with two or more selected, tap **Combine selected** to stitch them into one view. Tiles are packed edge-to-edge in their physical row/column order, so skipping a monitor in the middle (e.g. 0 + 2) does not leave a black gap. Mouse and keyboard input follow the tile you click; the remote cursor stays aligned with the stitched layout.
+- When virtual displays are supported, a **+** tile adds one.
+
+Esc or click the dimmed backdrop to close. On HTTPS/WebCodecs, opening the picker enables multi-capture so thumbnails stay live.
 
 ---
 

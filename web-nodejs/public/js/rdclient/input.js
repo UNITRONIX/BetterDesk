@@ -56,6 +56,11 @@ class RDInput {
         this._composing = false;
         /** @type {Set<string>} Physical codes suppressed while awaiting compositionend */
         this._deadCodes = new Set();
+        /**
+         * Mosaic: peer switchDisplay when pointer engages a display (press/drag).
+         * @type {Function|null} (displayIdx:number) => void
+         */
+        this.onDisplayEngage = null;
     }
 
     /**
@@ -178,6 +183,11 @@ class RDInput {
         const pos = this._getRemotePosition(e);
         if (!pos) return;
 
+        // Dragging across mosaic tiles: switch peer display with the pointer.
+        if (e.buttons && typeof pos.displayIdx === 'number' && this.onDisplayEngage) {
+            try { this.onDisplayEngage(pos.displayIdx); } catch (_) { /* ignore */ }
+        }
+
         this.sendMessage({
             mouseEvent: {
                 mask: 0,
@@ -195,6 +205,10 @@ class RDInput {
 
         const pos = this._getRemotePosition(e);
         if (!pos) return;
+
+        if (typeof pos.displayIdx === 'number' && this.onDisplayEngage) {
+            try { this.onDisplayEngage(pos.displayIdx); } catch (_) { /* ignore */ }
+        }
 
         let button = 0;
         switch (e.button) {

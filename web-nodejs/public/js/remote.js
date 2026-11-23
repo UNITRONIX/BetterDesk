@@ -252,6 +252,9 @@
             this.monitorOverviewThumbs = panel.querySelector('.session-monitor-thumbs');
             this.monitorPickerBackdrop = panel.querySelector('.session-monitor-picker-backdrop');
             this.monitorPickerOpen = false;
+            /** @type {Set<number>} Multi-select in the monitor picker */
+            this.monitorSelection = new Set();
+            this.monitorSelectAnchor = null;
             this.tfaOverlay = panel.querySelector('.session-2fa-overlay');
             this.tfaInput = panel.querySelector('.session-2fa-input');
             this.tfaError = panel.querySelector('.session-2fa-error');
@@ -1858,9 +1861,11 @@
         if (!session) return;
         session.monitorPickerOpen = false;
         if (session.client && typeof session.client.setOverviewMode === 'function') {
-            // Leaving the picker drops multi-capture unless All monitors stays on.
-            if (!(typeof session.client.isAllMonitorsView === 'function'
-                && session.client.isAllMonitorsView())) {
+            const keepMulti = (typeof session.client.isCombinedView === 'function'
+                    && session.client.isCombinedView())
+                || (typeof session.client.isAllMonitorsView === 'function'
+                    && session.client.isAllMonitorsView());
+            if (!keepMulti) {
                 session.client.setOverviewMode(false);
             }
         }
@@ -1870,6 +1875,33 @@
         }
         if (session.monitorOverviewThumbs) session.monitorOverviewThumbs.innerHTML = '';
         refreshMonitorButton(session);
+    }
+
+    function getMonitorSelection(session) {
+        if (!session.monitorSelection) session.monitorSelection = new Set();
+        return session.monitorSelection;
+    }
+
+    function sortedMonitorSelection(session) {
+        return Array.from(getMonitorSelection(session)).sort(function (a, b) { return a - b; });
+    }
+
+    function applyCombinedMonitorSelection(session) {
+        if (!session || !session.client) return;
+        const selected = sortedMonitorSelection(session);
+        if (selected.length < 2) {
+            showToast(t('remote.combine_monitors_hint',
+                'Select two or more monitors (checkbox or Shift+click), then combine.'), 'warning');
+            return;
+        }
+        if (typeof session.client.setCombinedDisplays !== 'function') return;
+        const ok = session.client.setCombinedDisplays(selected);
+        if (ok) {
+            showToast(t('remote.combine_monitors_applied',
+                'Combined {{n}} monitors').replace('{{n}}', String(selected.length)), 'success');
+            closeMonitorPicker(session);
+            refreshMonitorButton(session);
+        }
     }
 
     /**
@@ -1898,7 +1930,7 @@
     }
 
     /**
-     * Centered floating grid of monitor tiles (+ optional virtual-display add).
+     * Centered floating grid of monitor tiles (+ multi-select + virtual-display add).
      */
     function syncMonitorOverviewPanel(session) {
         session = session || getActiveSession();
@@ -1919,10 +1951,24 @@
             client.clearThumbnailCanvases();
         }
 
+        const selection = getMonitorSelection(session);
+        // Drop stale indices after hotplug / virtual display changes.
+        const validIdx = new Set(monitors.map(function (m) { return m.idx; }));
+        Array.from(selection).forEach(function (idx) {
+            if (!validIdx.has(idx)) selection.delete(idx);
+        });
+
+        const hint = document.createElement('div');
+        hint.className = 'monitor-picker-hint';
+        hint.textContent = t('remote.combine_monitors_hint',
+            'Select two or more monitors (checkbox or Shift+click), then combine.');
+        thumbs.appendChild(hint);
+
         monitors.forEach(function (m, i) {
-            const wrap = document.createElement('button');
-            wrap.type = 'button';
-            wrap.className = 'monitor-overview-thumb' + (m.current ? ' active' : '');
+            const wrap = document.createElement('div');
+            wrap.className = 'monitor-overview-thumb'
+                + (m.current ? ' active' : '')
+                + (selection.has(m.idx) ? ' selected' : '');
             wrap.dataset.idx = String(m.idx);
             const monitorIndex = typeof m.idx === 'number' ? m.idx : i;
             const monitorLabel = t('remote.monitor_n', 'Monitor {{n}}')
@@ -1931,6 +1977,28 @@
             const h = m.height || 9;
             wrap.style.aspectRatio = w + ' / ' + h;
             wrap.title = monitorLabel + (w && h ? ' · ' + w + '\u00d7' + h : '');
+
+            const check = document.createElement('label');
+            check.className = 'monitor-overview-check';
+            check.title = t('remote.select_for_combine', 'Select for combined view');
+            const input = document.createElement('input');
+            input.type = 'checkbox';
+            input.checked = selection.has(m.idx);
+            input.addEventListener('click', function (ev) {
+                ev.stopPropagation();
+            });
+            input.addEventListener('change', function (ev) {
+                ev.stopPropagation();
+                if (input.checked) {
+                    selection.add(m.idx);
+                    session.monitorSelectAnchor = m.idx;
+                } else {
+                    selection.delete(m.idx);
+                }
+                syncMonitorOverviewPanel(session);
+            });
+            check.appendChild(input);
+            wrap.appendChild(check);
 
             const canvas = document.createElement('canvas');
             canvas.className = 'monitor-overview-canvas';
@@ -1950,8 +2018,34 @@
 
             wrap.addEventListener('click', function (ev) {
                 ev.stopPropagation();
-                if (typeof client.focusDisplay === 'function'
-                    && (client.isOverviewMode && client.isOverviewMode())) {
+                if (ev.shiftKey) {
+                    // Shift+click: toggle or range-select from anchor.
+                    if (session.monitorSelectAnchor != null
+                        && session.monitorSelectAnchor !== m.idx) {
+                        const a = Math.min(session.monitorSelectAnchor, m.idx);
+                        const b = Math.max(session.monitorSelectAnchor, m.idx);
+                        monitors.forEach(function (mm) {
+                            if (mm.idx >= a && mm.idx <= b) selection.add(mm.idx);
+                        });
+                    } else if (selection.has(m.idx)) {
+                        selection.delete(m.idx);
+                    } else {
+                        selection.add(m.idx);
+                        session.monitorSelectAnchor = m.idx;
+                    }
+                    if (!selection.has(m.idx) && session.monitorSelectAnchor === m.idx) {
+                        session.monitorSelectAnchor = null;
+                    } else if (selection.has(m.idx)) {
+                        session.monitorSelectAnchor = m.idx;
+                    }
+                    syncMonitorOverviewPanel(session);
+                    return;
+                }
+
+                // Plain click: focus one monitor (clears multi-select).
+                selection.clear();
+                session.monitorSelectAnchor = null;
+                if (typeof client.focusDisplay === 'function') {
                     client.focusDisplay(m.idx);
                 } else if (typeof client.switchMonitor === 'function') {
                     client.switchMonitor(m.idx);
@@ -1961,6 +2055,20 @@
             });
             thumbs.appendChild(wrap);
         });
+
+        if (selection.size >= 2) {
+            const combine = document.createElement('button');
+            combine.type = 'button';
+            combine.className = 'monitor-overview-combine';
+            combine.innerHTML = '<span class="material-icons">view_column</span>'
+                + '<span>' + escapeHtml(t('remote.combine_monitors', 'Combine selected'))
+                + ' (' + selection.size + ')</span>';
+            combine.addEventListener('click', function (ev) {
+                ev.stopPropagation();
+                applyCombinedMonitorSelection(session);
+            });
+            thumbs.appendChild(combine);
+        }
 
         appendVirtualDisplayPlusTile(session, thumbs);
     }
