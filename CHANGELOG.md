@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.279] — 2026-11-23
+
 ### Added
 - **RdClient web — multi-monitor overview:** live thumbnails (correct aspect ratios) and **All monitors** mosaic via RustDesk `CaptureDisplays` multi-set + `VideoFrame.display` routing. Focus a monitor without dropping other preview streams; overview requires WebCodecs/HTTPS. Ships via panel update.
 
@@ -5467,3 +5474,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.276]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.275...v3.5.276
 [3.5.277]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.276...v3.5.277
 [3.5.278]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.277...v3.5.278
+[3.5.279]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.278...v3.5.279
