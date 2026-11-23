@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.278] — 2026-11-23
+
 ### Fixed
 - **Updates generate a missing `PANEL_TRUST_SECRET` instead of leaving the panel
   without the trust bridge.** The key was appended to `.env` from the template as an
@@ -5456,3 +5463,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.275]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.274...v3.5.275
 [3.5.276]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.275...v3.5.276
 [3.5.277]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.276...v3.5.277
+[3.5.278]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.277...v3.5.278
