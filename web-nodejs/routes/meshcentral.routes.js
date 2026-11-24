@@ -5,7 +5,7 @@
 const express = require('express');
 const router = express.Router();
 const { requireAuth, requirePermission } = require('../middleware/auth');
-const { rdClientPageLimiter } = require('../middleware/rateLimiter');
+const { rdClientPageLimiter, meshActionLimiter } = require('../middleware/rateLimiter');
 const { proxyToGo } = require('../lib/goApiProxy');
 const betterdeskApi = require('../services/betterdeskApi');
 const db = require('../services/database');
@@ -97,19 +97,19 @@ router.post('/api/mesh/devices/:id/desktop', rdClientPageLimiter, async (req, re
     }));
 });
 
-router.post('/api/mesh/devices/:id/terminal', requireAuth, requirePermission('mesh.terminal'), async (req, res) => {
+router.post('/api/mesh/devices/:id/terminal', meshActionLimiter, requireAuth, requirePermission('mesh.terminal'), async (req, res) => {
     const id = req.params.id;
     if (await rejectIfMeshDeviceOutOfScope(req, res, id)) return;
     return proxyToGo(betterdeskApi.apiClient, req, res, 'POST', () => `/mesh/devices/${encodeURIComponent(id)}/terminal`);
 });
 
-router.post('/api/mesh/devices/:id/files', requireAuth, requirePermission('mesh.files'), async (req, res) => {
+router.post('/api/mesh/devices/:id/files', meshActionLimiter, requireAuth, requirePermission('mesh.files'), async (req, res) => {
     const id = req.params.id;
     if (await rejectIfMeshDeviceOutOfScope(req, res, id)) return;
     return proxyToGo(betterdeskApi.apiClient, req, res, 'POST', () => `/mesh/devices/${encodeURIComponent(id)}/files`);
 });
 
-router.post('/api/mesh/devices/:id/share', requireAuth, requirePermission('device.connect'), async (req, res) => {
+router.post('/api/mesh/devices/:id/share', meshActionLimiter, requireAuth, requirePermission('device.connect'), async (req, res) => {
     const id = req.params.id;
     if (await rejectIfMeshDeviceOutOfScope(req, res, id)) return;
     return proxyToGo(betterdeskApi.apiClient, req, res, 'POST', () => `/mesh/devices/${encodeURIComponent(id)}/share`, req.body);
@@ -122,19 +122,19 @@ router.get('/api/mesh/share/validate', rdClientPageLimiter, async (req, res) => 
     });
 });
 
-router.post('/api/mesh/devices/:id/tcp', requireAuth, requirePermission('device.connect'), async (req, res) => {
+router.post('/api/mesh/devices/:id/tcp', meshActionLimiter, requireAuth, requirePermission('device.connect'), async (req, res) => {
     const id = req.params.id;
     if (await rejectIfMeshDeviceOutOfScope(req, res, id)) return;
     return proxyToGo(betterdeskApi.apiClient, req, res, 'POST', () => `/mesh/devices/${encodeURIComponent(id)}/tcp`, req.body);
 });
 
-router.post('/api/mesh/devices/:id/udp', requireAuth, requirePermission('device.connect'), async (req, res) => {
+router.post('/api/mesh/devices/:id/udp', meshActionLimiter, requireAuth, requirePermission('device.connect'), async (req, res) => {
     const id = req.params.id;
     if (await rejectIfMeshDeviceOutOfScope(req, res, id)) return;
     return proxyToGo(betterdeskApi.apiClient, req, res, 'POST', () => `/mesh/devices/${encodeURIComponent(id)}/udp`, req.body);
 });
 
-router.post('/api/mesh/devices/:id/power', requireAuth, requirePermission('mesh.power'), async (req, res) => {
+router.post('/api/mesh/devices/:id/power', meshActionLimiter, requireAuth, requirePermission('mesh.power'), async (req, res) => {
     const id = req.params.id;
     if (await rejectIfMeshDeviceOutOfScope(req, res, id)) return;
     return proxyToGo(betterdeskApi.apiClient, req, res, 'POST', () => `/mesh/devices/${encodeURIComponent(id)}/power`, req.body);
@@ -158,7 +158,7 @@ router.get('/api/session/recordings', requireAuth, requirePermission('device.vie
     return proxyToGo(betterdeskApi.apiClient, req, res, 'GET', '/session/recordings');
 });
 
-router.post('/api/mesh/devices/:id/exec', requireAuth, requirePermission('device.connect'), async (req, res) => {
+router.post('/api/mesh/devices/:id/exec', meshActionLimiter, requireAuth, requirePermission('device.connect'), async (req, res) => {
     const id = req.params.id;
     if (await rejectIfMeshDeviceOutOfScope(req, res, id)) return;
     return proxyToGo(betterdeskApi.apiClient, req, res, 'POST', () => `/mesh/devices/${encodeURIComponent(id)}/exec`, req.body);

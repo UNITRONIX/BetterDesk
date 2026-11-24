@@ -3,6 +3,12 @@
 ### Changed
 - _(none yet)_
 
+### Fixed
+- **MeshCentral action rate limiting:** terminal, files, share, TCP, UDP, power,
+  and exec proxy routes now use a dedicated per-user/IP limiter to prevent
+  unbounded bursts of remote actions. The default is 60 requests per minute
+  and can be adjusted with `MESH_ACTION_RATE_LIMIT_MAX`.
+
 ---
 
 ## [3.5.281] — 2026-11-24

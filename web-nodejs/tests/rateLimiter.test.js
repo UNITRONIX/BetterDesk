@@ -8,7 +8,8 @@ const {
     isPanelPreferenceWrite,
     resolveApiPath,
     PANEL_POLL_PATHS,
-    PANEL_READ_PATHS
+    PANEL_READ_PATHS,
+    meshActionLimiter
 } = require('../middleware/rateLimiter');
 
 describe('rateLimiter panel poll paths', () => {
@@ -91,5 +92,11 @@ describe('rateLimiter panel poll paths', () => {
             baseUrl: '/api',
             originalUrl: '/api/settings/branding'
         })).toBe(true);
+    });
+});
+
+describe('MeshCentral action rate limiter', () => {
+    it('exports a dedicated limiter for remote device actions', () => {
+        expect(meshActionLimiter).toEqual(expect.any(Function));
     });
 });

@@ -223,6 +223,30 @@ const rdClientPageLimiter = rateLimit({
 });
 
 /**
+ * MeshCentral device-action limiter.
+ *
+ * These routes trigger remote operations or create share/tunnel state. Keep
+ * the budget separate from page loads so a burst of UI navigation cannot
+ * exhaust the action budget, and key authenticated requests to the account
+ * before falling back to the client IP for unauthenticated traffic.
+ */
+const meshActionLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: parseInt(process.env.MESH_ACTION_RATE_LIMIT_MAX, 10) || 60,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+        success: false,
+        error: 'Too many MeshCentral action requests. Please slow down.'
+    },
+    keyGenerator: (req) => {
+        const userId = req.session && (req.session.userId || req.session.user?.id);
+        if (userId) return `mesh-action:${userId}`;
+        return defaultKeyGenerator(req);
+    }
+});
+
+/**
  * Strict rate limiter for login attempts
  */
 const loginLimiter = rateLimit({
@@ -309,6 +333,7 @@ module.exports = {
     panelReadLimiter,
     panelPreferenceLimiter,
     rdClientPageLimiter,
+    meshActionLimiter,
     loginLimiter,
     passwordChangeLimiter,
     uploadLimiter,
