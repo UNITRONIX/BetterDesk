@@ -13,9 +13,10 @@ var embeddedAssets embed.FS
 
 // CoreAssets holds BetterCore (AGPL) pushed to MeshAgent after handshake.
 type CoreAssets struct {
-	CoreModule     []byte
-	CoreModuleHash []byte // 48-byte SHA-384
-	Version        string
+	CoreModule        []byte // raw JavaScript served by /bettercore.js
+	CoreModulePayload []byte // four-byte module prefix followed by JavaScript
+	CoreModuleHash    []byte // SHA-384 of CoreModulePayload
+	Version           string
 }
 
 // LoadCoreAssets reads meshcore from disk override or embedded bundle.
@@ -25,11 +26,14 @@ func LoadCoreAssets(version string, assetsDir string) (*CoreAssets, error) {
 	if err != nil {
 		return nil, fmt.Errorf("meshcore: %w", err)
 	}
-	h := sha512.Sum384(core)
+	payload := make([]byte, 4+len(core))
+	copy(payload[4:], core)
+	h := sha512.Sum384(payload)
 	return &CoreAssets{
-		CoreModule:     core,
-		CoreModuleHash: h[:],
-		Version:        version,
+		CoreModule:        core,
+		CoreModulePayload: payload,
+		CoreModuleHash:    h[:],
+		Version:           version,
 	}, nil
 }
 
@@ -42,12 +46,16 @@ func readAsset(path, embedName string) ([]byte, error) {
 	return embeddedAssets.ReadFile(embedName)
 }
 
-// BuildCoreModulePacket returns cmd 10 binary packet with core JS.
-func BuildCoreModulePacket(core []byte) []byte {
-	pkt := make([]byte, 4+len(core))
+// BuildCoreModulePacket returns a MeshCommand_CoreModule packet.
+func BuildCoreModulePacket(hash, payload []byte) []byte {
+	if len(hash) != sha384Size || len(payload) < 4 {
+		return nil
+	}
+	pkt := make([]byte, 4+len(hash)+len(payload))
 	binaryPutU16(pkt, 0, cmdCoreModule)
 	binaryPutU16(pkt, 2, 0)
-	copy(pkt[4:], core)
+	copy(pkt[4:4+len(hash)], hash)
+	copy(pkt[4+len(hash):], payload)
 	return pkt
 }
 

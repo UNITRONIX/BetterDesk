@@ -130,13 +130,21 @@ func (ac *AgentConn) handleBinary(ctx context.Context, data []byte) error {
 	switch cmd {
 	case cmdCoreModuleHash:
 		// Agent reports hash — respond with core or CoreOk
-		if len(data) >= 2+sha384Size {
+		if len(data) < 4 {
+			return fmt.Errorf("mesh: short core hash packet")
+		}
+		if len(data) >= 4+sha384Size {
 			agentHash := data[4 : 4+sha384Size]
 			if bytesEqual(agentHash, ac.gw.assets.CoreModuleHash) {
 				return ac.sendBinary(ctx, BuildCoreOkPacket())
 			}
+		} else if len(data) != 4 {
+			return fmt.Errorf("mesh: short core hash packet")
 		}
-		return ac.sendBinary(ctx, BuildCoreModulePacket(ac.gw.assets.CoreModule))
+		return ac.sendBinary(ctx, BuildCoreModulePacket(
+			ac.gw.assets.CoreModuleHash,
+			ac.gw.assets.CoreModulePayload,
+		))
 	default:
 		if cmd >= 10 {
 			// post-auth binary — forward to logging only
@@ -157,9 +165,10 @@ func (ac *AgentConn) handleAuthBinary(ctx context.Context, cmd uint16, data []by
 		ac.agentNonce = append([]byte(nil), data[50:98]...)
 
 		webHash := ac.webHash
-		if g := ac.gw.webHash; len(g) == sha384Size {
-			// validate agent saw our web cert when we have one
-			if !bytesEqual(webHash, g) {
+		if pins := ac.gw.webHashes; pins != nil {
+			// Validate the agent saw the configured public web certificate.
+			if !bytesEqual(webHash, pins.Certificate) &&
+				!bytesEqual(webHash, pins.PublicKey) {
 				log.Printf("[mesh] agent web cert hash mismatch from %s", ac.clientIP)
 				return fmt.Errorf("bad web cert hash")
 			}
@@ -179,8 +188,8 @@ func (ac *AgentConn) handleAuthBinary(ctx context.Context, cmd uint16, data []by
 			return err
 		}
 
-		// AuthVerify: cmd2 + certLen + cert + signature(serverHash+serverNonce)
-		sig, err := ac.gw.creds.SignServerAuth(webHash, ac.serverNonce)
+		// AuthVerify: cmd2 + certLen + cert + signature(webHash+agentNonce+serverNonce)
+		sig, err := ac.gw.creds.SignServerAuth(webHash, ac.agentNonce, ac.serverNonce)
 		if err != nil {
 			return err
 		}

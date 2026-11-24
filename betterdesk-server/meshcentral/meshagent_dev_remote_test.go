@@ -113,7 +113,7 @@ func devRemoteConnectAgent(t *testing.T, env devRemoteInteropEnv) (*devRemoteAge
 
 	resp1 := readCmd(cmdAuthRequest)
 	serverNonce := append([]byte(nil), resp1[50:98]...)
-	_ = readCmd(cmdAuthVerify)
+	verifyServerAuthPacket(t, readCmd(cmdAuthVerify), webHash, agentNonce, serverNonce)
 
 	sig := signAgent(agentKey, webHash, serverNonce, agentNonce)
 	agentVerify := make([]byte, 4+len(agentCert)+len(sig))

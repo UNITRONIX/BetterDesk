@@ -575,8 +575,8 @@ func main() {
 			}
 			if webCertPath != "" {
 				if certBytes, readErr := os.ReadFile(webCertPath); readErr == nil {
-					if h := meshcentral.WebCertHash(certBytes); len(h) > 0 {
-						meshGw.SetWebCertHash(h)
+					if hashes := meshcentral.ParseWebCertHashes(certBytes); hashes != nil {
+						meshGw.SetWebCertHashes(hashes)
 						log.Printf("[mesh] web cert hash loaded from %s", webCertPath)
 					} else {
 						log.Printf("[mesh] warning: could not parse web cert at %s — web hash validation skipped", webCertPath)

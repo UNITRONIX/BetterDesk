@@ -11,6 +11,14 @@
 - _(none yet)_
 
 ### Fixed
+- **MeshAgent interoperability (#530):** server authentication now signs the full
+  `webHash + agentNonce + serverNonce` transcript; Windows PKCS#7 agent signatures
+  are verified strictly alongside raw RSA signatures; CoreModule cmd 10 now carries
+  the MeshCentral hash and four-byte payload prefix; and proxy TLS pinning accepts
+  the full leaf DER hash or the legacy SPKI hash from the configured certificate.
+  Short cmd 11 packets are rejected safely. Stock Windows agents behind a TLS
+  proxy no longer need `nocertstore=1`, and successful verification includes
+  CoreModule loading.
 - **RdClient web — multi-monitor mosaic no longer flickers and no longer leaves an empty band.** Combining non-adjacent monitors (e.g. 0 + 2) compacts the tiles edge-to-edge instead of reproducing the physical gap, and the stitched view only clears/repaints when a tile actually changes, so idle monitors keep their last picture. Entering a mosaic sends one `refreshVideoDisplay` per captured display instead of a global `refreshVideo` (which restarted every capturer), every display is decoded by its own pool slot (changing focus no longer re-initialises the primary decoder), and in-mosaic `switchDisplay` is throttled to one per gesture. Mouse input and the remote cursor are now mapped to absolute virtual-desktop coordinates, so clicking a tile reaches the right monitor.
 
 ---

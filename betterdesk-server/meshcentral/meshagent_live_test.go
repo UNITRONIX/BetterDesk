@@ -58,20 +58,37 @@ func TestMeshAgentLiveConnect(t *testing.T) {
 	})
 
 	deadline := time.Now().Add(120 * time.Second)
-	for gw.ActiveAgentCount() == 0 && time.Now().Before(deadline) {
+	var authenticated, coreStable bool
+	for (!authenticated || !coreStable) && time.Now().Before(deadline) {
 		time.Sleep(500 * time.Millisecond)
+		gw.agents.Range(func(_, value any) bool {
+			ac, ok := value.(*AgentConn)
+			if ok && ac.authenticated {
+				authenticated = true
+				coreStable = ac.coreStable
+			}
+			return !(authenticated && coreStable)
+		})
 	}
-	if gw.ActiveAgentCount() != 1 {
+	if !authenticated || !coreStable {
 		// One retry after brief pause (CI download/network flake)
 		time.Sleep(3 * time.Second)
-		for gw.ActiveAgentCount() == 0 && time.Now().Before(deadline) {
+		for (!authenticated || !coreStable) && time.Now().Before(deadline) {
 			time.Sleep(500 * time.Millisecond)
+			gw.agents.Range(func(_, value any) bool {
+				ac, ok := value.(*AgentConn)
+				if ok && ac.authenticated {
+					authenticated = true
+					coreStable = ac.coreStable
+				}
+				return !(authenticated && coreStable)
+			})
 		}
 	}
-	if gw.ActiveAgentCount() != 1 {
+	if !authenticated || !coreStable {
 		if data, err := os.ReadFile(logPath); err == nil && len(data) > 0 {
 			t.Logf("meshagent log:\n%s", string(data))
 		}
-		t.Fatalf("live meshagent did not register within timeout (count=%d)", gw.ActiveAgentCount())
+		t.Fatalf("live meshagent did not authenticate and load core within timeout (authenticated=%t coreStable=%t)", authenticated, coreStable)
 	}
 }

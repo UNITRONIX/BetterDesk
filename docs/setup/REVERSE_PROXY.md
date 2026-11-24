@@ -366,7 +366,7 @@ See [RustDesk Client Deployment](RUSTDESK_CLIENT_DEPLOYMENT.md).
 
 - Panel HTTP, Web Remote (`/ws/rendezvous`, `/ws/relay`), operator chat, MeshAgent `.ashx` paths → proxy to `:5000`
 - RustDesk WSS (optional) → proxy `/ws/id` → `:21118`; native `/ws/relay` → `:21119` only when Web Remote is not needed on that hostname (path collision)
-MeshAgent web-cert pin: when Go still has `TLS_CERT` (or you keep signal TLS), set **`MESH_WEB_CERT_FILE`** to the public certificate the agent sees on `:443` (e.g. Let's Encrypt fullchain). See [MeshAgent onboarding](../features/MESHAGENT_ONBOARDING.md#behind-an-external-reverse-proxy-nginx--npm--caddy). Do not confuse this with `MESH_AGENT_CERT_FILE` (`.msh` `ServerID`).
+MeshAgent web-cert pin: when Go still has `TLS_CERT` (or you keep signal TLS), set **`MESH_WEB_CERT_FILE`** to the public certificate the agent sees on `:443` (e.g. Let's Encrypt fullchain). BetterDesk accepts the full leaf DER hash and the legacy SPKI hash derived from that same certificate. See [MeshAgent onboarding](../features/MESHAGENT_ONBOARDING.md#behind-an-external-reverse-proxy-nginx--npm--caddy). Do not confuse this with `MESH_AGENT_CERT_FILE` (`.msh` `ServerID`).
 
 ### Must reach the host directly (not HTTP reverse proxy)
 
@@ -419,7 +419,7 @@ BetterDesk LE files under `/opt/rustdesk/ssl/` are unused in external-proxy mode
 | `AlertReceived(UnrecognisedName)` | TLS cert hostname mismatch | Fix cert on proxy for client hostname |
 | Double TLS / protocol error | Proxy uses `https://` upstream | Upstream must be `http://127.0.0.1:…` unless Enterprise TLS on Go |
 | Panel works but clients timeout | Firewall | Open 21116 UDP/TCP, 21117 TCP |
-| MeshAgent `bad web cert hash` | Agent sees proxy LE cert; Go hashes different `TLS_CERT` | Set `MESH_WEB_CERT_FILE` to the public fullchain, or unset `TLS_CERT` / `MESH_WEB_CERT_FILE` to skip validation |
+| MeshAgent `bad web cert hash` | Agent sees proxy LE cert; Go hashes a different certificate | Set `MESH_WEB_CERT_FILE` to the public leaf/fullchain mounted in the Go container; do not disable pin validation as the normal fix |
 ### Diagnostic commands
 
 ```bash

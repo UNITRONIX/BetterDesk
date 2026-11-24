@@ -32,7 +32,7 @@ type Gateway struct {
 	cookies   *CookieCodec
 	creds     *AgentCredentials
 	assets    *CoreAssets
-	webHash   []byte // SHA-384 of TLS web cert (48 bytes)
+	webHashes *WebCertHashes // accepted SHA-384 pins for the configured TLS leaf
 
 	agents    sync.Map // peerID -> *AgentConn
 	relays    sync.Map // relayID -> *relaySession (non-KVM)
@@ -89,10 +89,22 @@ func (g *Gateway) SetJWTManager(jm *auth.JWTManager) { g.jwt = jm }
 // SetVersion sets build version for logs.
 func (g *Gateway) SetVersion(v string) { g.version = v }
 
-// SetWebCertHash sets SHA-384 hash of the public TLS certificate (48 bytes).
+// SetWebCertHash sets the legacy SPKI-only web certificate pin.
 func (g *Gateway) SetWebCertHash(hash []byte) {
 	if len(hash) == sha384Size {
-		g.webHash = append([]byte(nil), hash...)
+		g.webHashes = &WebCertHashes{PublicKey: append([]byte(nil), hash...)}
+	}
+}
+
+// SetWebCertHashes sets the accepted pins derived from one configured leaf cert.
+func (g *Gateway) SetWebCertHashes(hashes *WebCertHashes) {
+	if hashes == nil {
+		g.webHashes = nil
+		return
+	}
+	g.webHashes = &WebCertHashes{
+		Certificate: append([]byte(nil), hashes.Certificate...),
+		PublicKey:   append([]byte(nil), hashes.PublicKey...),
 	}
 }
 

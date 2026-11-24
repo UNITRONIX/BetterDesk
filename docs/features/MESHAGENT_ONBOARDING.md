@@ -48,23 +48,24 @@ The MeshCentral compatibility layer is **enabled by default** on full and minima
 
 ## Behind an external reverse proxy (Nginx / NPM / Caddy)
 
-TLS usually terminates at the proxy. MeshAgent hashes the **public TLS cert** it sees on `MeshServer` and BetterDesk compares that to a configured web cert hash.
+TLS usually terminates at the proxy. MeshAgent hashes the **public TLS cert** it sees on `MeshServer` and BetterDesk compares that to pins derived from the configured web certificate. Current agents may send either the full leaf-certificate DER hash or the older SPKI public-key hash; BetterDesk accepts only those two values from the same configured leaf.
 
 | Variable | Role |
 |----------|------|
 | `MESH_WEB_CERT_FILE` | Preferred: path to the public cert agents see (e.g. LE `fullchain.pem`). Used for mesh web-hash only. |
 | `TLS_CERT` | Fallback source for web-hash when `MESH_WEB_CERT_FILE` is unset (also used for Go signal/relay TLS). |
-| *(neither set)* | Web-hash validation is **skipped** (typical native “external reverse proxy” install). |
+| *(neither set)* | Web-hash validation is skipped (legacy external-proxy fallback; configure the public cert when agent pinning is required). |
 
 **Do not** put `mesh_agent_server.pem` in `MESH_WEB_CERT_FILE` — that is `ServerID`, not the web TLS pin.
 
 Preferred proxy path: `wss://host/agent.ashx` → panel `:5000` (`.ashx` WebSocket proxy to Go). Direct proxy to `:21114` works if Upgrade headers are set, but still requires a matching web cert hash when validation is enabled.
 
-If logs show `bad web cert hash` / `agent web cert hash mismatch`: mount the proxy’s leaf/fullchain into the Go container and set `MESH_WEB_CERT_FILE`, or unset both `MESH_WEB_CERT_FILE` and `TLS_CERT` to skip the check.
+If logs show `bad web cert hash` / `agent web cert hash mismatch`: mount the proxy’s leaf/fullchain into the Go container and set `MESH_WEB_CERT_FILE`. Do not use `nocertstore=1` or disable web-hash validation as the normal fix.
 
 ## Verify
 
-- Device appears in **Devices** with `device_type: mesh_agent` and online status when connected.
+- Device appears in **Devices** with `device_type: mesh_agent` and online status after authentication and CoreModule loading.
+- Terminal, files, and desktop sessions open without a CoreModule resend loop.
 - Remote desktop: open `/remote/:deviceId` — transport auto-selects `mesh`.
 - API: `GET /api/peers/{id}` includes `mesh_connected: true` and `mesh_node_id`.
 

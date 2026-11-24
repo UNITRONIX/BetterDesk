@@ -1,6 +1,7 @@
 package meshcentral
 
 import (
+	"bytes"
 	"context"
 	"crypto"
 	"crypto/rand"
@@ -108,6 +109,26 @@ func signAgent(key *rsa.PrivateKey, webHash, serverNonce, agentNonce []byte) []b
 	return sig
 }
 
+func verifyServerAuthPacket(t *testing.T, packet, webHash, agentNonce, serverNonce []byte) {
+	t.Helper()
+	if len(packet) < 4 {
+		t.Fatal("short server auth verify packet")
+	}
+	certLen := int(binary.BigEndian.Uint16(packet[2:4]))
+	if len(packet) <= 4+certLen {
+		t.Fatal("server auth verify packet has no signature")
+	}
+	cert, err := x509.ParseCertificate(packet[4 : 4+certLen])
+	if err != nil {
+		t.Fatal(err)
+	}
+	data := append(append(append([]byte{}, webHash...), agentNonce...), serverNonce...)
+	sum := sha512.Sum384(data)
+	if err := rsa.VerifyPKCS1v15(cert.PublicKey.(*rsa.PublicKey), crypto.SHA384, sum[:], packet[4+certLen:]); err != nil {
+		t.Fatalf("server signature does not match MeshAgent transcript: %v", err)
+	}
+}
+
 func buildAuthInfoPacket(meshRaw []byte, hostname string) []byte {
 	if len(meshRaw) < 48 {
 		padded := make([]byte, 48)
@@ -173,7 +194,8 @@ func TestAgentHandshakeInterop(t *testing.T) {
 	resp1 := readWSBinaryCmd(ctx, conn, cmdAuthRequest)
 	serverNonce := append([]byte(nil), resp1[50:98]...)
 
-	_ = readWSBinaryCmd(ctx, conn, cmdAuthVerify)
+	serverVerify := readWSBinaryCmd(ctx, conn, cmdAuthVerify)
+	verifyServerAuthPacket(t, serverVerify, webHash, agentNonce, serverNonce)
 
 	sig := signAgent(agentKey, webHash, serverNonce, agentNonce)
 	agentVerify := make([]byte, 4+len(agentCert)+len(sig))
@@ -196,20 +218,16 @@ func TestAgentHandshakeInterop(t *testing.T) {
 	_ = readWSBinaryCmd(ctx, conn, cmdCoreModuleHash)
 
 	deadline := time.Now().Add(5 * time.Second)
-	for gw.ActiveAgentCount() == 0 && time.Now().Before(deadline) {
-		time.Sleep(50 * time.Millisecond)
-	}
-	if gw.ActiveAgentCount() != 1 {
-		t.Fatalf("expected 1 active agent, got %d", gw.ActiveAgentCount())
-	}
-
 	peerID := ""
-	gw.agents.Range(func(key, _ any) bool {
-		peerID, _ = key.(string)
-		return false
-	})
+	for peerID == "" && time.Now().Before(deadline) {
+		time.Sleep(50 * time.Millisecond)
+		gw.agents.Range(func(key, _ any) bool {
+			peerID, _ = key.(string)
+			return false
+		})
+	}
 	if peerID == "" {
-		t.Fatal("missing peer id")
+		t.Fatal("agent did not complete authenticated registration")
 	}
 	if gw.MeshNodeID(peerID) != nodeID {
 		t.Fatalf("node id mismatch: got %s want %s", gw.MeshNodeID(peerID), nodeID)
@@ -219,17 +237,28 @@ func TestAgentHandshakeInterop(t *testing.T) {
 	coreHashPkt := make([]byte, 4+sha384Size)
 	binary.BigEndian.PutUint16(coreHashPkt[0:2], cmdCoreModuleHash)
 	binary.BigEndian.PutUint16(coreHashPkt[2:4], 0)
-	copy(coreHashPkt[4:], gw.assets.CoreModuleHash)
 	if err := conn.Write(ctx, websocket.MessageBinary, coreHashPkt); err != nil {
 		t.Fatal(err)
 	}
 
-	resp5 := readWSBinaryCmdAny(ctx, conn, []uint16{cmdCoreOk, cmdCoreModule})
-	cmd := readU16(resp5, 0)
-	if cmd == cmdCoreModule {
-		if len(resp5) < 4 || string(resp5[4:]) != string(gw.assets.CoreModule) {
-			t.Fatal("core module payload mismatch")
-		}
+	resp5 := readWSBinaryCmd(ctx, conn, cmdCoreModule)
+	if len(resp5) != 4+sha384Size+len(gw.assets.CoreModulePayload) {
+		t.Fatalf("unexpected core module packet length %d", len(resp5))
+	}
+	if !bytes.Equal(resp5[4:4+sha384Size], gw.assets.CoreModuleHash) {
+		t.Fatal("core module hash mismatch")
+	}
+	if !bytes.Equal(resp5[4+sha384Size:], gw.assets.CoreModulePayload) {
+		t.Fatal("core module payload mismatch")
+	}
+
+	if err := conn.Write(ctx, websocket.MessageBinary, coreHashPkt[:4+sha384Size-1]); err != nil {
+		t.Fatal(err)
+	}
+	shortCtx, shortCancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer shortCancel()
+	if _, _, err := conn.Read(shortCtx); err == nil {
+		t.Fatal("short core hash packet must close the connection")
 	}
 }
 
@@ -275,6 +304,14 @@ func TestBetterCoreAssetEmbedded(t *testing.T) {
 	}
 	if len(assets.CoreModuleHash) != sha384Size {
 		t.Fatalf("hash len %d", len(assets.CoreModuleHash))
+	}
+	if len(assets.CoreModulePayload) != len(assets.CoreModule)+4 ||
+		!bytes.Equal(assets.CoreModulePayload[:4], []byte{0, 0, 0, 0}) ||
+		!bytes.Equal(assets.CoreModulePayload[4:], assets.CoreModule) {
+		t.Fatal("core wire payload must contain a four-byte prefix followed by raw core")
+	}
+	if !bytes.Equal(assets.CoreModuleHash, sha384Raw(assets.CoreModulePayload)) {
+		t.Fatal("core hash must cover the exact wire payload")
 	}
 }
 
