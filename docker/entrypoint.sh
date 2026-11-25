@@ -9,7 +9,7 @@ ensure_betterdesk_user
 
 echo "========================================"
 echo "  BetterDesk All-in-One Container"
-echo "  Version: ${BETTERDESK_IMAGE_VERSION:-3.5.284}"
+echo "  Version: ${BETTERDESK_IMAGE_VERSION:-3.5.285}"
 echo "========================================"
 echo ""
 echo "Components:"
