@@ -82,13 +82,57 @@ router.get('/api/panel/security-audit/overview', requireAuth, requirePermission(
     if (!health.tls) score -= 10;
     score = Math.max(0, Math.min(100, score));
 
+    const tlsEnabled = !!health.tls;
+    const loginThreshold = 10;
     const checks = [
-      { id: 'tls_api', name: 'API TLS', pass: !!health.tls },
-      { id: 'api_key_age', name: 'API Key Rotation (< 90 days)', pass: oldKeys.length === 0 },
-      { id: 'failed_logins', name: 'Low Failed Login Rate', pass: failedLogins < 10 },
-      { id: 'no_bans', name: 'No Active Bans', pass: bans === 0 },
-      { id: 'audit_log', name: 'Audit Logging', pass: auditRes.status === 'fulfilled' },
-      { id: 'blocklist', name: 'Blocklist Available', pass: blocklistRes.status === 'fulfilled' }
+      {
+        id: 'tls_api',
+        pass: tlsEnabled,
+        measured: { enabled: tlsEnabled }
+      },
+      {
+        id: 'api_key_age',
+        pass: oldKeys.length === 0,
+        measured: {
+          old_keys: oldKeys.length,
+          total_keys: keyList.length,
+          threshold_days: 90
+        }
+      },
+      {
+        id: 'failed_logins',
+        pass: failedLogins < loginThreshold,
+        measured: {
+          count: failedLogins,
+          threshold: loginThreshold,
+          window_hours: 24
+        }
+      },
+      {
+        id: 'no_bans',
+        pass: bans === 0,
+        measured: { count: bans }
+      },
+      {
+        id: 'audit_log',
+        pass: auditRes.status === 'fulfilled',
+        measured: {
+          reachable: auditRes.status === 'fulfilled',
+          reason: auditRes.status === 'rejected'
+            ? String(auditRes.reason?.message || auditRes.reason || 'unreachable')
+            : null
+        }
+      },
+      {
+        id: 'blocklist',
+        pass: blocklistRes.status === 'fulfilled',
+        measured: {
+          reachable: blocklistRes.status === 'fulfilled',
+          reason: blocklistRes.status === 'rejected'
+            ? String(blocklistRes.reason?.message || blocklistRes.reason || 'unreachable')
+            : null
+        }
+      }
     ];
 
     const forwardedProto = String(req.headers['x-forwarded-proto'] || '')

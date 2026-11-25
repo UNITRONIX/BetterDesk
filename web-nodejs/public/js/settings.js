@@ -48,7 +48,6 @@
         }
 
         loadAuditLog();
-        loadServerInfo();
         initMeshSettingsSection();
         initDeviceScopeSection();
         initAvailabilityHistorySection();
@@ -421,7 +420,9 @@
         // Deep links: UX 3.6 navigation points at ?tab=<name>, older links and
         // in-page state use the #hash form. Both map to the same tab.
         const requestedTab = new URLSearchParams(window.location.search).get('tab');
-        const hash = requestedTab || window.location.hash.replace('#', '');
+        const rawHash = window.location.hash.replace(/^#/, '');
+        const sectionHashes = new Set(['public-endpoints', 'public-endpoints-section']);
+        const hash = requestedTab || (sectionHashes.has(rawHash) ? 'general' : rawHash);
         if (['general', 'branding', 'server', 'backup', 'updates', 'auth', 'advanced', 'email', 'time'].includes(hash)) {
             const tabName = hash === 'server' ? 'general' : hash;
             const tab = document.querySelector(`.settings-shell-tab[data-tab="${tabName}"], .settings-tab[data-tab="${tabName}"]`);
@@ -429,9 +430,15 @@
                 tab.click();
                 // Clear ?tab= once applied so later hash navigation still works
                 // and switching tabs does not keep stale query state.
-                if (requestedTab) {
+                if (requestedTab && !sectionHashes.has(rawHash)) {
                     window.history.replaceState(null, '', window.location.pathname + '#' + tab.dataset.tab);
                 }
+            }
+        }
+        if (sectionHashes.has(rawHash)) {
+            const section = document.getElementById('public-endpoints-section');
+            if (section && typeof section.scrollIntoView === 'function') {
+                setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
             }
         }
     }
@@ -522,10 +529,19 @@
         await refreshTimeSyncStatus();
     }
 
+    function tClock(key, fallback) {
+        const full = 'commercialization.clock.' + key;
+        const val = _(full);
+        if (!val || val === full) return fallback || key;
+        return val;
+    }
+
     async function refreshTimeSyncStatus() {
+        const badge = document.getElementById('time-clock-badge');
+        const detail = document.getElementById('time-clock-detail');
+        const badgeIcon = document.getElementById('time-clock-badge-icon');
         try {
             const st = await Utils.api('/api/panel/billing/timesync/status');
-            const detail = document.getElementById('time-clock-detail');
             const offsetEl = document.getElementById('time-clock-offset');
             const ntpServerEl = document.getElementById('time-clock-ntp-server');
             const osSyncEl = document.getElementById('time-clock-os-sync');
@@ -533,19 +549,24 @@
             const synced = !!st.synced;
             if (detail) {
                 detail.textContent = synced
-                    ? (typeof __ === 'function' ? __('commercialization.clock.synced_detail') : 'Clock synchronized for billing')
-                    : (typeof __ === 'function' ? __('commercialization.clock.unsynced') : 'Server clock is not synchronized');
+                    ? tClock('synced_detail', 'Clock synchronized for billing')
+                    : tClock('unsynced', 'Server clock is not synchronized — billable sessions may be blocked');
             }
+            if (badge) badge.dataset.state = synced ? 'ok' : 'warn';
+            if (badgeIcon) badgeIcon.textContent = synced ? 'check_circle' : 'warning';
             if (offsetEl) offsetEl.textContent = st.offset_ms != null ? `${st.offset_ms} ms` : '—';
             if (ntpServerEl) ntpServerEl.textContent = st.ntp_server || '—';
             if (osSyncEl) {
-                if (st.os_clock_synced === true) osSyncEl.textContent = typeof __ === 'function' ? __('commercialization.clock.os_yes') : 'Yes';
-                else if (st.os_clock_synced === false) osSyncEl.textContent = typeof __ === 'function' ? __('commercialization.clock.os_no') : 'No';
+                if (st.os_clock_synced === true) osSyncEl.textContent = tClock('os_yes', 'Yes');
+                else if (st.os_clock_synced === false) osSyncEl.textContent = tClock('os_no', 'No');
                 else osSyncEl.textContent = '—';
             }
             if (lastErrorEl) lastErrorEl.textContent = st.last_error || '—';
         } catch (e) {
             console.warn('[settings] timesync status', e);
+            if (detail) detail.textContent = e.message || tClock('unsynced', 'Server clock is not synchronized');
+            if (badge) badge.dataset.state = 'error';
+            if (badgeIcon) badgeIcon.textContent = 'error';
         }
     }
 
@@ -553,6 +574,78 @@
         const custom = (document.getElementById('time-billing-timezone-custom')?.value || '').trim();
         if (custom) return custom;
         return document.getElementById('time-billing-timezone')?.value || 'UTC';
+    }
+
+    function collectTimeClockPayload() {
+        return {
+            ntp_servers: document.getElementById('time-clock-ntp-servers')?.value || '',
+            max_skew_ms: Number(document.getElementById('time-clock-max-skew')?.value || 2000),
+            require_synced_clock: document.getElementById('time-clock-require-sync')?.checked !== false,
+            trust_os_ntp: document.getElementById('time-clock-trust-os')?.checked !== false,
+            billing_timezone: resolveSelectedTimezone()
+        };
+    }
+
+    async function saveTimeClockSettings() {
+        if (!_timeClockDockerMode) {
+            const ok = await settingsConfirmCritical({
+                title: tSettings('time.save_title', 'Save time settings'),
+                message: tClock(
+                    'save_restart',
+                    'Save NTP settings and restart the BetterDesk Go server? Active sessions may disconnect briefly.'
+                ),
+                confirmLabel: tSettings('time.save', 'Save'),
+                icon: 'schedule'
+            });
+            if (!ok) return;
+        }
+
+        const saveBtns = [
+            document.getElementById('time-save-clock-settings-btn'),
+            document.getElementById('time-save-timezone-btn')
+        ].filter(Boolean);
+        saveBtns.forEach((btn) => { btn.disabled = true; });
+
+        try {
+            const result = await Utils.api('/api/panel/billing/clock/settings', {
+                method: 'PUT',
+                body: collectTimeClockPayload()
+            });
+            if (result.dockerMode) _timeClockDockerMode = true;
+            if (result.settings) {
+                fillTimezoneSelect(result.settings.billing_timezone || resolveSelectedTimezone(), _timeCommonZones);
+                const custom = document.getElementById('time-billing-timezone-custom');
+                if (custom && result.settings.billing_timezone) {
+                    const zones = Array.from(document.getElementById('time-billing-timezone')?.options || [])
+                        .map((o) => o.value);
+                    custom.value = zones.includes(result.settings.billing_timezone)
+                        ? ''
+                        : result.settings.billing_timezone;
+                }
+                const serversEl = document.getElementById('time-clock-ntp-servers');
+                const skewEl = document.getElementById('time-clock-max-skew');
+                const requireEl = document.getElementById('time-clock-require-sync');
+                const trustEl = document.getElementById('time-clock-trust-os');
+                if (serversEl) serversEl.value = result.settings.ntp_servers || '';
+                if (skewEl) skewEl.value = result.settings.max_skew_ms || 2000;
+                if (requireEl) requireEl.checked = result.settings.require_synced_clock !== false;
+                if (trustEl) trustEl.checked = result.settings.trust_os_ntp !== false;
+            }
+            if (result.restartRequired && typeof showRestartPrompt === 'function') {
+                showRestartPrompt(result.restartRequired);
+            } else {
+                Notifications.success(
+                    result.dockerMode
+                        ? tClock('saved_hot_reload', 'Clock settings saved.')
+                        : tSettings('time.saved', 'Time settings saved.')
+                );
+            }
+            await refreshTimeSyncStatus();
+        } catch (e) {
+            Notifications.error(e.message || 'Save failed');
+        } finally {
+            saveBtns.forEach((btn) => { btn.disabled = false; });
+        }
     }
 
     function initTimeSettingsTab() {
@@ -572,55 +665,26 @@
         });
 
         document.getElementById('time-timesync-check-btn')?.addEventListener('click', async () => {
+            const btn = document.getElementById('time-timesync-check-btn');
+            if (btn) btn.disabled = true;
             try {
                 await Utils.api('/api/panel/billing/timesync/check', { method: 'POST' });
-                Notifications.success(typeof __ === 'function' ? __('commercialization.clock.checked') : 'Clock check completed');
+                Notifications.success(tClock('checked', 'Clock check completed'));
                 await refreshTimeSyncStatus();
             } catch (e) {
                 Notifications.error(e.message || 'Clock check failed');
+            } finally {
+                if (btn) btn.disabled = false;
             }
         });
 
-        document.getElementById('time-save-clock-settings-btn')?.addEventListener('click', async () => {
-            if (!_timeClockDockerMode) {
-                const ok = await settingsConfirmCritical({
-                    title: tSettings('time.save_title', 'Save time settings'),
-                    message: typeof __ === 'function'
-                        ? __('commercialization.clock.save_restart')
-                        : 'Save NTP settings and restart the BetterDesk Go server? Active sessions may disconnect briefly.',
-                    confirmLabel: tSettings('time.save', 'Save'),
-                    icon: 'schedule'
-                });
-                if (!ok) return;
-            }
-            try {
-                const result = await Utils.api('/api/panel/billing/clock/settings', {
-                    method: 'PUT',
-                    body: {
-                        ntp_servers: document.getElementById('time-clock-ntp-servers')?.value || '',
-                        max_skew_ms: Number(document.getElementById('time-clock-max-skew')?.value || 2000),
-                        require_synced_clock: document.getElementById('time-clock-require-sync')?.checked !== false,
-                        trust_os_ntp: document.getElementById('time-clock-trust-os')?.checked !== false,
-                        billing_timezone: resolveSelectedTimezone()
-                    }
-                });
-                if (result.dockerMode) _timeClockDockerMode = true;
-                if (result.settings) {
-                    fillTimezoneSelect(result.settings.billing_timezone || resolveSelectedTimezone(), _timeCommonZones);
-                }
-                if (result.restartRequired && typeof showRestartPrompt === 'function') {
-                    showRestartPrompt(result.restartRequired);
-                } else {
-                    Notifications.success(
-                        result.dockerMode
-                            ? (typeof __ === 'function' ? __('commercialization.clock.saved_hot_reload') : 'Clock settings saved.')
-                            : tSettings('time.saved', 'Time settings saved.')
-                    );
-                }
-                await refreshTimeSyncStatus();
-            } catch (e) {
-                Notifications.error(e.message || 'Save failed');
-            }
+        document.getElementById('time-save-timezone-btn')?.addEventListener('click', () => {
+            saveTimeClockSettings();
+        });
+
+        document.getElementById('time-clock-settings-form')?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            saveTimeClockSettings();
         });
     }
 
@@ -803,50 +867,6 @@
         }
     }
     
-    /**
-     * Load server info
-     */
-    async function loadServerInfo() {
-        try {
-            const data = await Utils.api('/api/settings/info');
-            
-            document.getElementById('db-path').textContent = data.paths?.database || '-';
-            document.getElementById('uptime').textContent = formatUptime(data.server?.uptime);
-
-            const goVerEl = document.getElementById('go-server-version');
-            if (goVerEl) {
-                const goVer = data.goServer?.version;
-                goVerEl.textContent = goVer ? `v${goVer}` : '-';
-                if (goVer && goVer === 'dev' && data.app?.version && data.app.version !== 'dev') {
-                    goVerEl.title = typeof _ === 'function' ? _('settings.go_server_version_dev_hint') : '';
-                } else {
-                    goVerEl.title = '';
-                }
-            }
-            
-        } catch (error) {
-            console.error('Failed to load server info:', error);
-        }
-    }
-    
-    /**
-     * Format uptime in human-readable format
-     */
-    function formatUptime(seconds) {
-        if (!seconds || seconds < 0) return '-';
-        
-        const days = Math.floor(seconds / 86400);
-        const hours = Math.floor((seconds % 86400) / 3600);
-        const minutes = Math.floor((seconds % 3600) / 60);
-        
-        const parts = [];
-        if (days > 0) parts.push(`${days}d`);
-        if (hours > 0) parts.push(`${hours}h`);
-        if (minutes > 0 || parts.length === 0) parts.push(`${minutes}m`);
-        
-        return parts.join(' ');
-    }
-
     // ==================== Device scope default ====================
 
     function initDeviceScopeSection() {
@@ -854,6 +874,7 @@
         if (!form) return;
 
         const warningEl = document.getElementById('device-scope-warning');
+        let savedMode = 'open';
 
         function updateWarning() {
             const restricted = document.getElementById('device-scope-restricted')?.checked;
@@ -864,6 +885,7 @@
             try {
                 const data = await Utils.api('/api/settings/device-scope');
                 const mode = data.mode === 'restricted' ? 'restricted' : 'open';
+                savedMode = mode;
                 const openEl = document.getElementById('device-scope-open');
                 const restrictedEl = document.getElementById('device-scope-restricted');
                 if (openEl) openEl.checked = mode === 'open';
@@ -882,6 +904,22 @@
             e.preventDefault();
             const selected = form.querySelector('input[name="device_scope_mode"]:checked');
             const mode = selected ? selected.value : 'open';
+            const restricted = mode === 'restricted';
+            const modeChanged = mode !== savedMode;
+
+            const confirmed = await settingsConfirmCritical({
+                title: _('settings.device_scope_confirm_title'),
+                message: restricted
+                    ? _('settings.device_scope_confirm_restricted')
+                    : _('settings.device_scope_confirm_open'),
+                confirmLabel: _('settings.device_scope_save'),
+                icon: restricted ? 'warning' : 'visibility',
+                danger: restricted
+            });
+            if (!confirmed) return;
+
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if (submitBtn) submitBtn.disabled = true;
             try {
                 await Utils.api('/api/settings/device-scope', {
                     method: 'POST',
@@ -889,8 +927,31 @@
                 });
                 Notifications.success(_('settings.device_scope_saved'));
                 updateWarning();
+                await loadDeviceScopeSetting();
+
+                // Optional restart only when the default actually changed.
+                if (!modeChanged) return;
+                const wantRestart = await settingsConfirmCritical({
+                    title: _('settings.device_scope_restart_title'),
+                    message: _('settings.device_scope_restart_message'),
+                    confirmLabel: tSettings('restart_confirm', 'Restart services'),
+                    cancelLabel: _('settings.device_scope_restart_later'),
+                    icon: 'restart_alt',
+                    danger: true
+                });
+                if (wantRestart) {
+                    const pending = await Utils.api('/api/settings/device-scope/restart', {
+                        method: 'POST'
+                    });
+                    if (pending?.id) {
+                        _restartPending = pending;
+                        await confirmPendingRestart();
+                    }
+                }
             } catch (err) {
                 Notifications.error(err.message || _('errors.server_error'));
+            } finally {
+                if (submitBtn) submitBtn.disabled = false;
             }
         });
 

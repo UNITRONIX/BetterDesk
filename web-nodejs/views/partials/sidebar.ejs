@@ -174,7 +174,8 @@
                 <span class="sidebar-link-text"><%= _('nav.scaling') || 'Scaling' %></span>
             </a>
             <% } %>
-            <% if (hasPermission('device.view')) { %>
+            <% /* Cross-platform page kept; intentionally hidden from legacy nav (see consoleNav navHidden). */ %>
+            <% if (false && hasPermission('device.view')) { %>
             <a href="/cross-platform" class="sidebar-link <%= currentPage === 'cross-platform' ? 'active' : '' %>">
                 <span class="material-icons" aria-hidden="true">devices</span>
                 <span class="sidebar-link-text"><%= _('nav.cross_platform') || 'Cross-Platform' %></span>

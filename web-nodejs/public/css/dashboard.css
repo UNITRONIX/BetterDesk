@@ -778,11 +778,77 @@
 }
 
 .client-config-card {
+    position: relative;
     padding: var(--space-lg);
     border: none;
     background:
         linear-gradient(135deg, rgba(88, 166, 255, 0.12), transparent 42%),
         var(--surface-glass-bg-secondary, var(--bg-secondary));
+}
+
+.client-config-body {
+    position: relative;
+    z-index: 0;
+}
+
+.client-config-card.is-endpoints-locked .client-config-body {
+    filter: blur(5px);
+    opacity: 0.55;
+    pointer-events: none;
+    user-select: none;
+}
+
+.client-config-lock {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-lg);
+    background: color-mix(in srgb, var(--bg-primary, var(--bg, #0d1117)) 42%, transparent);
+    border-radius: inherit;
+}
+
+.client-config-lock[hidden] {
+    display: none !important;
+}
+
+.client-config-lock-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-sm);
+    max-width: 420px;
+    padding: var(--space-lg);
+    text-align: center;
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-lg);
+    background: var(--bg-secondary, rgba(22, 27, 34, 0.92));
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+}
+
+.client-config-lock-panel > .material-icons {
+    font-size: 32px;
+    color: var(--accent-blue, #58a6ff);
+}
+
+.client-config-lock-title {
+    margin: 0;
+    font-size: var(--font-size-md, 1rem);
+    font-weight: 650;
+    color: var(--text-primary);
+}
+
+.client-config-lock-text {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    line-height: 1.45;
+}
+
+.client-config-lock-panel .btn {
+    margin-top: var(--space-xs);
 }
 
 .client-config-header {

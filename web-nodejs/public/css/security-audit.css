@@ -32,7 +32,31 @@
 
 /* Checks grid */
 .secaudit-checks-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
-.secaudit-check { display: flex; align-items: center; gap: 10px; background: var(--bg-secondary); border: 1px solid var(--border-primary); border-radius: 6px; padding: 10px 14px; font-size: 13px; }
+.secaudit-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: 6px;
+  padding: 10px 14px;
+  font: inherit;
+  font-size: 13px;
+  text-align: start;
+  color: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.secaudit-check:hover,
+.secaudit-check:focus-visible {
+  border-color: var(--accent-blue, #58a6ff);
+  background: var(--bg-hover, rgba(255, 255, 255, 0.04));
+  outline: none;
+}
+.secaudit-check:focus-visible {
+  box-shadow: 0 0 0 2px var(--accent-blue, #58a6ff);
+}
 .secaudit-check-icon { font-size: 20px; flex-shrink: 0; }
 .secaudit-check-icon.pass { color: #3fb950; }
 .secaudit-check-icon.fail { color: #f85149; }
@@ -42,6 +66,11 @@
 .secaudit-check-badge.pass { background: rgba(63,185,80,.15); color: #3fb950; }
 .secaudit-check-badge.fail { background: rgba(248,81,73,.15); color: #f85149; }
 .secaudit-check-badge.warn { background: rgba(210,153,34,.15); color: #d29922; }
+.secaudit-check-detail { display: flex; flex-direction: column; gap: 14px; }
+.secaudit-check-detail-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.secaudit-check-detail-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.04em; }
+.secaudit-check-detail-block { display: flex; flex-direction: column; gap: 6px; }
+.secaudit-check-detail-text { margin: 0; color: var(--text-primary); line-height: 1.45; }
 
 /* TLS grid */
 .secaudit-tls-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }

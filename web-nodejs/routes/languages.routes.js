@@ -23,11 +23,14 @@ function safeLangFilePath(code) {
 }
 
 /**
- * Recursively flatten nested JSON object into dot-notation keys
+ * Recursively flatten nested JSON object into dot-notation keys.
+ * Skip root `meta` / `_meta` so locale filebookkeeping does not inflate
+ * translation key counts or mark languages as having "extra" keys.
  */
 function flattenKeys(obj, prefix = '') {
     const result = new Map();
     for (const [key, value] of Object.entries(obj)) {
+        if (!prefix && (key === 'meta' || key === '_meta')) continue;
         const fullKey = prefix ? `${prefix}.${key}` : key;
         if (value && typeof value === 'object' && !Array.isArray(value)) {
             for (const [k, v] of flattenKeys(value, fullKey)) {

@@ -12,19 +12,19 @@
     <div class="fleet-tabs">
         <button class="fleet-tab ${activeTab === 'resources' ? 'active' : ''}" data-tab="resources" data-bd-call="Fleet.switchTab" data-bd-args='["resources"]'>
             <span class="material-icons">dns</span>
-            <span>${ typeof req !== 'undefined' ? req.t('fleet.tab_resources') : 'Resources' }</span>
+            <span>` + _('fleet.tab_resources') + `</span>
         </button>
         <button class="fleet-tab ${activeTab === 'tasks' ? 'active' : ''}" data-tab="tasks" data-bd-call="Fleet.switchTab" data-bd-args='["tasks"]'>
             <span class="material-icons">schedule_send</span>
-            <span>${ typeof req !== 'undefined' ? req.t('fleet.tab_tasks') : 'Tasks' }</span>
+            <span>` + _('fleet.tab_tasks') + `</span>
         </button>
         <button class="fleet-tab ${activeTab === 'builder' ? 'active' : ''}" data-tab="builder" data-bd-call="Fleet.switchTab" data-bd-args='["builder"]'>
             <span class="material-icons">account_tree</span>
-            <span>${ typeof req !== 'undefined' ? req.t('fleet.tab_builder') : 'Workflow Builder' }</span>
+            <span>` + _('fleet.tab_builder') + `</span>
         </button>
         <button class="fleet-tab ${activeTab === 'compliance' ? 'active' : ''}" data-tab="compliance" data-bd-call="Fleet.switchTab" data-bd-args='["compliance"]'>
             <span class="material-icons">verified_user</span>
-            <span>${ typeof req !== 'undefined' ? req.t('fleet.tab_compliance') : 'Compliance' }</span>
+            <span>` + _('fleet.tab_compliance') + `</span>
         </button>
     </div>
 

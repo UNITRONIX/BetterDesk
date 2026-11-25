@@ -700,16 +700,23 @@
 }
 
 .ux36-page .settings-search .form-input {
+    flex: 1;
+    min-width: 0;
     border: 0;
     background: transparent;
+    box-shadow: none;
     min-height: var(--control-h);
     padding-inline: 0;
     font-size: var(--text-base);
 }
 
 .ux36-page .settings-search .form-input:focus,
-.ux36-page .settings-search .form-input:focus-within {
+.ux36-page .settings-search .form-input:focus-within,
+.ux36-page .settings-search .form-input:focus-visible {
     outline: none;
+    border: 0;
+    box-shadow: none;
+    background: transparent;
 }
 
 .ux36-page .settings-search > .material-icons {

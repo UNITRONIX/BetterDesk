@@ -66,6 +66,15 @@ describe('dashboard agent pairing UI', () => {
         expect(html).not.toContain('activate-agent-qr-btn');
     });
 
+    test('client-config card has a locked overlay CTA for missing public endpoints', () => {
+        expect(html).toContain('id="client-config-lock"');
+        expect(html).toContain('id="client-config-lock-settings-btn"');
+        expect(html).toContain(en.dashboard.client_config_endpoints_required_title);
+        expect(html).toContain('/settings?tab=general#public-endpoints-section');
+        expect(fs.readFileSync(path.join(CONSOLE_ROOT, 'public', 'js', 'dashboard.js'), 'utf8'))
+            .toContain('public_endpoints_configured');
+    });
+
     test('pairing-code dialog renders with generate, copy and QR fallback', () => {
         expect(html).toContain('id="dashboard-pair-code-modal"');
         expect(html).toContain('id="dashboard-pair-code-generate"');

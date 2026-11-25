@@ -259,9 +259,7 @@ body.app-page.ux35-page {
 
 .ux35-sidebar-section {
     padding: 6px 0;
-    border-bottom: 1px solid var(--ux35-border);
 }
-.ux35-sidebar-section:last-of-type { border-bottom: none; }
 
 .ux35-sidebar-heading {
     font-size: 10px;
@@ -631,6 +629,43 @@ body.app-page.ux35-page {
 }
 .ux35-page .ux35-content :is(.form-input, .form-select, .form-textarea) {
     background: var(--bg-tertiary);
+}
+
+/* Icon+chrome search rows own the border/background. Nested inputs must stay
+   transparent or they paint a second box inside the field (settings search,
+   page filters, panel/tickets/registrations toolbars). */
+.ux35-page .ux35-content .settings-search .form-input,
+.ux35-page .ux35-content .page-filters .search-wrapper .form-input,
+.ux35-page .ux35-content .page-filters .search-wrapper input[type="text"],
+.ux35-page .ux35-content .panel-actions .search-wrapper .form-input,
+.ux35-page .ux35-content .panel-actions .search-wrapper input[type="text"],
+.ux35-page .ux35-content .registrations-filters .search-wrapper .form-input,
+.ux35-page .ux35-content .tickets-page .search-wrapper .form-input,
+.ux35-page .ux35-content .inventory-page .search-wrapper .form-input {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+.ux35-page .ux35-content .settings-search .form-input:focus,
+.ux35-page .ux35-content .settings-search .form-input:focus-visible,
+.ux35-page .ux35-content .page-filters .search-wrapper .form-input:focus,
+.ux35-page .ux35-content .page-filters .search-wrapper .form-input:focus-visible,
+.ux35-page .ux35-content .page-filters .search-wrapper input[type="text"]:focus,
+.ux35-page .ux35-content .page-filters .search-wrapper input[type="text"]:focus-visible,
+.ux35-page .ux35-content .panel-actions .search-wrapper .form-input:focus,
+.ux35-page .ux35-content .panel-actions .search-wrapper .form-input:focus-visible,
+.ux35-page .ux35-content .panel-actions .search-wrapper input[type="text"]:focus,
+.ux35-page .ux35-content .panel-actions .search-wrapper input[type="text"]:focus-visible,
+.ux35-page .ux35-content .registrations-filters .search-wrapper .form-input:focus,
+.ux35-page .ux35-content .registrations-filters .search-wrapper .form-input:focus-visible,
+.ux35-page .ux35-content .tickets-page .search-wrapper .form-input:focus,
+.ux35-page .ux35-content .tickets-page .search-wrapper .form-input:focus-visible,
+.ux35-page .ux35-content .inventory-page .search-wrapper .form-input:focus,
+.ux35-page .ux35-content .inventory-page .search-wrapper .form-input:focus-visible {
+    outline: none;
+    border: none;
+    box-shadow: none;
 }
 
 /* Light mode: stronger field borders (low-contrast gray-on-white fix) */

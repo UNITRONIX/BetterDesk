@@ -47,7 +47,8 @@ const SECTIONS = [
             { page: 'inventory', section: 'devices', perm: 'device.view', href: '/inventory', label: 'nav.inventory', icon: 'inventory_2', keywords: 'hardware software assets' },
             { page: 'network', section: 'network', href: '/network', label: 'nav.network', icon: 'lan', keywords: 'ping monitor latency targets checks' },
             { page: 'fleet', section: 'fleet', href: '/fleet', label: 'nav.fleet', icon: 'hub', keywords: 'fleet bulk tasks workflows compliance' },
-            { page: 'cross-platform', section: 'cross-platform', href: '/cross-platform', label: 'nav.cross_platform', icon: 'devices_other', keywords: 'cross-platform matrix features os' },
+            // Kept in the catalog / route map, but hidden from sidebar + search until re-enabled.
+            { page: 'cross-platform', section: 'cross-platform', href: '/cross-platform', label: 'nav.cross_platform', icon: 'devices_other', keywords: 'cross-platform matrix features os', navHidden: true },
             { page: 'cdap', section: 'cdap', href: '/cdap', label: 'nav.cdap', icon: 'developer_board', keywords: 'cdap iot scada sensors gateway devices' },
         ],
     },
@@ -209,7 +210,7 @@ function buildNav({ t, allows, can, role, currentPage, currentTab, activateAgent
 
     const sections = SECTIONS.map((section) => {
         const pages = section.pages
-            .filter((p) => (!p.when || p.when(ctx)) && (!p.perm || canDo(p.perm)) && allow(p))
+            .filter((p) => !p.navHidden && (!p.when || p.when(ctx)) && (!p.perm || canDo(p.perm)) && allow(p))
             .map((p) => {
                 const item = resolvePage(p, translate, key);
                 if (item.active) activePage = item;
@@ -245,7 +246,7 @@ function buildSearchPages({ t, allows, can, role }) {
     const out = [];
     SECTIONS.forEach((section) => {
         section.pages
-            .filter((p) => (!p.when || p.when(ctx)) && (!p.perm || canDo(p.perm)) && allow(p))
+            .filter((p) => !p.navHidden && (!p.when || p.when(ctx)) && (!p.perm || canDo(p.perm)) && allow(p))
             .forEach((p) => {
                 out.push({
                     text: translate(p.label),

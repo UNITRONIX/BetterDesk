@@ -688,6 +688,9 @@
             };
             const roleIcon = roleIcons[user.role] || 'person';
             const roleLabelKey = 'users.role_' + user.role;
+            const roleDescKey = 'users.role_desc_' + user.role;
+            const roleDesc = _(roleDescKey);
+            const roleTitle = (roleDesc && roleDesc !== roleDescKey) ? roleDesc : _(roleLabelKey);
             const provider = (user.auth_provider || 'local').toLowerCase();
             const providerLabel = _('users.provider_' + provider) || provider;
             return `
@@ -705,7 +708,7 @@
                 </td>
                 <td>${user.email ? Utils.escapeHtml(user.email) : '<span class="text-muted">—</span>'}</td>
                 <td>
-                    <span class="role-badge ${String(user.role || '').replace(/[^a-z0-9_-]/gi, '')}">
+                    <span class="role-badge ${String(user.role || '').replace(/[^a-z0-9_-]/gi, '')}" title="${Utils.escapeHtml(roleTitle)}">
                         ${Utils.escapeHtml(_(roleLabelKey))}
                     </span>
                 </td>

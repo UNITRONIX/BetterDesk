@@ -207,6 +207,18 @@ async function rollbackChange(change) {
         }
         return;
     }
+    case 'db-setting': {
+        const database = require('./database');
+        if (!descriptor.key || typeof descriptor.key !== 'string') {
+            throw new Error('db_setting_rollback_invalid');
+        }
+        await database.setSetting(descriptor.key, String(descriptor.previousValue ?? ''));
+        if (descriptor.afterRestore === 'device-scope-cache') {
+            const deviceGroupService = require('./deviceGroupService');
+            deviceGroupService.invalidateDeviceScopeDefaultCache();
+        }
+        return;
+    }
     default:
         throw new Error('unknown_restart_rollback');
     }

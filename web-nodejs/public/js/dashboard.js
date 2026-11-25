@@ -52,8 +52,16 @@
     let clientConfigKeyRevealHandler = null;
     let publicKeyVisible = false;
     let clientConfig = null;
+    let clientConfigEndpointsConfigured = true;
     const pendingRequests = new Map();
     const PUBLIC_KEY_MASK = '••••••••••••••••••••••••';
+    const FAKE_CLIENT_CONFIG = Object.freeze({
+        host: '203.0.113.10',
+        server_id: '203.0.113.10',
+        relay_server: '203.0.113.10:21117',
+        api_url: 'https://api.example.com:21114',
+        public_key: 'FAKESECRET_g1h2i3j4k5l6m7n8o9p0'
+    });
     
     // Tips pool — rotated daily
     const TIPS = [
@@ -211,6 +219,7 @@
         clientConfigKeyRevealHandler = null;
         publicKeyVisible = false;
         clientConfig = null;
+        clientConfigEndpointsConfigured = true;
         initialized = false;
     }
 
@@ -421,6 +430,46 @@
         return getStoredClientHost();
     }
 
+    function setClientConfigEndpointsGate(configured) {
+        clientConfigEndpointsConfigured = Boolean(configured);
+        const card = findById('client-config-card') || rootEl.querySelector?.('.client-config-card');
+        const lock = findById('client-config-lock');
+        if (card) {
+            card.classList.toggle('is-endpoints-locked', !clientConfigEndpointsConfigured);
+            card.setAttribute('aria-busy', clientConfigEndpointsConfigured ? 'false' : 'true');
+        }
+        if (lock) lock.hidden = clientConfigEndpointsConfigured;
+
+        const interactive = rootEl.querySelectorAll?.(
+            '#client-config-card .client-config-tool, #client-config-card .client-config-copy, #client-config-card .client-config-reveal, #client-config-host-input, #apply-client-host-btn'
+        ) || [];
+        interactive.forEach((el) => {
+            el.disabled = !clientConfigEndpointsConfigured;
+            if (!clientConfigEndpointsConfigured) {
+                el.setAttribute('aria-disabled', 'true');
+            } else {
+                el.removeAttribute('aria-disabled');
+            }
+        });
+    }
+
+    function renderLockedClientConfigPlaceholders() {
+        if (clientConfigHostInput) clientConfigHostInput.value = FAKE_CLIENT_CONFIG.host;
+        setText('client-config-server-id', FAKE_CLIENT_CONFIG.server_id);
+        setText('client-config-relay-server', FAKE_CLIENT_CONFIG.relay_server);
+        setText('client-config-api-url', FAKE_CLIENT_CONFIG.api_url);
+        const keyEl = findById('client-config-public-key');
+        if (keyEl) {
+            keyEl.textContent = PUBLIC_KEY_MASK;
+            keyEl.classList.add('is-masked');
+            keyEl.removeAttribute('data-raw');
+        }
+        const revealBtn = clientConfigKeyRevealButton || findById('client-config-key-reveal');
+        if (revealBtn) revealBtn.disabled = true;
+        syncPublicKeyRevealButton();
+        setClientConfigEndpointsGate(false);
+    }
+
     async function loadClientConfig(options = {}) {
         const hostOverride = resolveClientHostOverride();
         const query = hostOverride ? `?host=${encodeURIComponent(hostOverride)}` : '';
@@ -428,6 +477,14 @@
         try {
             const data = await fetchApi(`/api/dashboard/client-config${query}`);
             clientConfig = data || {};
+            const configured = clientConfig.public_endpoints_configured === true
+                || clientConfig.env_override_active === true;
+
+            if (!configured) {
+                clientConfig = { ...clientConfig, public_endpoints_configured: false };
+                renderLockedClientConfigPlaceholders();
+                return;
+            }
 
             if (clientConfigHostInput && !hostOverride && clientConfig.client_server_host) {
                 clientConfigHostInput.value = clientConfig.client_server_host;
@@ -444,15 +501,13 @@
             setText('client-config-api-url', clientConfig.api_url || '-');
             renderPublicKeyField(clientConfig.public_key || '', false);
             updateClientHostControls(clientConfig);
+            setClientConfigEndpointsGate(true);
             // The pairing modal may have opened before the client config arrived.
             if (pairCodeModal && !pairCodeModal.hidden) fillPairCodeHost();
         } catch (err) {
             console.error('Client config load error:', err);
             clientConfig = null;
-            setText('client-config-server-id', window.location.hostname || '-');
-            setText('client-config-relay-server', window.location.hostname || '-');
-            setText('client-config-api-url', '-');
-            renderPublicKeyField('', false, _('errors.load_key_failed'));
+            renderLockedClientConfigPlaceholders();
         }
     }
 
@@ -547,6 +602,10 @@
     }
 
     async function copyClientConfigField(elementId, button) {
+        if (!clientConfigEndpointsConfigured) {
+            Notifications.warning(_('dashboard.client_config_endpoints_required_text'));
+            return;
+        }
         const el = elementId ? findById(elementId) : null;
         let value = el?.textContent?.trim();
 
@@ -566,7 +625,14 @@
         Notifications.success(_('common.copied'));
     }
 
+    function requireConfiguredClientEndpoints() {
+        if (clientConfigEndpointsConfigured) return true;
+        Notifications.warning(_('dashboard.client_config_endpoints_required_text'));
+        return false;
+    }
+
     async function copyFullClientConfig() {
+        if (!requireConfiguredClientEndpoints()) return;
         if (!clientConfig) {
             Notifications.warning(_('dashboard.config_not_ready'));
             return;
@@ -585,6 +651,7 @@
     }
 
     async function copyDeployConfigString() {
+        if (!requireConfiguredClientEndpoints()) return;
         const value = clientConfig?.deploy_config_string?.trim();
         if (!value) {
             Notifications.warning(_('dashboard.deploy_string_not_ready'));
@@ -622,6 +689,7 @@ Start-Process -FilePath $RustDesk -ArgumentList @('--config', $CfgString) -Wait 
     }
 
     function showIntuneScriptModal() {
+        if (!requireConfiguredClientEndpoints()) return;
         if (!clientConfig?.deploy_config_string) {
             Notifications.warning(_('dashboard.deploy_string_not_ready'));
             return;
@@ -652,6 +720,7 @@ Start-Process -FilePath $RustDesk -ArgumentList @('--config', $CfgString) -Wait 
     }
 
     function showClientConfigQr() {
+        if (!requireConfiguredClientEndpoints()) return;
         if (!clientConfig?.qr) {
             Notifications.warning(_('keys.no_qr'));
             return;

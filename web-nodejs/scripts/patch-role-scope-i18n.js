@@ -12,7 +12,7 @@ const patches = {
     pl: {
         users: {
             role_operator: 'Operator zdalny',
-            role_pro: 'Licencja Pro (tylko API klienta)',
+            role_pro: 'API Pro',
             role_hint: 'Rola serwerowa. Operatorzy zdalni łączą się zdalnie i mogą zmieniać własne hasło. Viewer ma tylko odczyt (bez Web Client). Licencja Pro aktywuje RustDesk Pro przez API klienta — bez dostępu do panelu. Role organizacji konfigurujesz osobno.',
             scope_hint: 'Ogranicz widoczność urządzeń: przypisz grupy użytkowników, foldery i/lub urządzenia bezpośrednio. Bez ograniczeń operatorzy i viewerzy widzą wszystkie urządzenia (chyba że włączono tryb restricted w Ustawieniach).',
             role_desc_viewer: 'Tylko odczyt w panelu: lista urządzeń, audyt, metryki. Bez Web Remote Desktop.',

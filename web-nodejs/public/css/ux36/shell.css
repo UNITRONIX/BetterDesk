@@ -555,6 +555,10 @@
     padding: 0 var(--space-2) var(--space-3);
 }
 
+.ux35-sidebar-section {
+    border-bottom: none;
+}
+
 .ux35-sidebar-section + .ux35-sidebar-section {
     margin-top: var(--space-1);
 }
@@ -731,15 +735,23 @@
 
 .ux35-sidebar-user {
     display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 0 var(--space-2);
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+}
+
+.ux35-sidebar-user-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.25;
 }
 
 .ux35-sidebar-user-name {
     font-weight: 600;
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .ux35-sidebar-user-role,

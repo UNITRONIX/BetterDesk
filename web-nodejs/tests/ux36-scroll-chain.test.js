@@ -127,6 +127,7 @@ describe('UX 3.6 shell scroll chain', () => {
         // The row owns the focus state; the input inside it draws nothing.
         assert.match(pagesCss, /\.ux36-page \.settings-search:focus-within\s*\{[^}]*border-color:\s*var\(--accent\)/);
         assert.match(pagesCss, /\.ux36-page \.settings-search \.form-input:focus[\s\S]{0,120}?outline:\s*none/);
+        assert.match(pagesCss, /\.ux36-page \.settings-search \.form-input\s*\{[^}]*background:\s*transparent/);
     });
 
     it('keeps the icon font rule out of page layout', () => {

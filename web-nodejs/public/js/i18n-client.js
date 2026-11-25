@@ -65,6 +65,8 @@
      */
     window._ = translate;
     window.t = translate;
+    // Legacy double-underscore alias used by some page scripts (e.g. settings clock).
+    window.__ = translate;
     
     /**
      * Get current language code

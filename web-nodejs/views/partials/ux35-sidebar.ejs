@@ -102,7 +102,8 @@
                 <span><%= _('nav.scaling') || 'Scaling' %></span>
             </a>
             <% } %>
-            <% if (hasSectionAccess('cross-platform')) { %>
+            <% /* Cross-platform page kept; intentionally hidden from UX35 nav (see consoleNav navHidden). */ %>
+            <% if (false && hasSectionAccess('cross-platform')) { %>
             <a href="/cross-platform" class="ux35-sidebar-item <%= currentPage === 'cross-platform' ? 'active' : '' %>">
                 <span class="material-icons" aria-hidden="true">devices</span>
                 <span><%= _('nav.cross_platform') || 'Cross-Platform' %></span>

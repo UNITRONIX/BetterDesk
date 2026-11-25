@@ -5,6 +5,7 @@
 
   let activeTab = 'overview';
   let eventsPage = 0;
+  let overviewChecks = [];
   const PAGE_SIZE = 25;
 
   /* ── Tab switching ── */
@@ -41,23 +42,25 @@
       // Stats
       const stats = d.stats || {};
       setText('stat-failed-logins', stats.failed_logins ?? '—');
-      setText('stat-bans', stats.active_bans ?? '—');
+      setText('stat-bans', stats.bans ?? stats.active_bans ?? '—');
       setText('stat-api-keys', stats.api_keys ?? '—');
       setText('stat-old-keys', stats.old_keys ?? '—');
 
-      // Checks
+      // Checks — clickable boxes open measured result + remediation
       const checksGrid = document.getElementById('checks-grid');
       const checks = d.checks || [];
-      checksGrid.innerHTML = checks.map(c => {
+      overviewChecks = checks;
+      checksGrid.innerHTML = checks.map((c, index) => {
         const passed = c.pass ?? c.passed;
         const cls = passed ? 'pass' : (c.warn ? 'warn' : 'fail');
         const icon = passed ? 'check_circle' : (c.warn ? 'warning' : 'error');
         const badge = passed ? _('security_audit.pass') : (c.warn ? _('security_audit.warning') : _('security_audit.fail'));
-        return `<div class="secaudit-check">
-          <span class="material-icons secaudit-check-icon ${cls}">${icon}</span>
-          <span class="secaudit-check-name">${esc(c.name)}</span>
+        const name = checkLabel(c);
+        return `<button type="button" class="secaudit-check" data-check-index="${index}" data-bd-call="SecurityAudit.openCheckDetail" data-bd-args="[${index}]" aria-label="${esc(name)}">
+          <span class="material-icons secaudit-check-icon ${cls}" aria-hidden="true">${icon}</span>
+          <span class="secaudit-check-name">${esc(name)}</span>
           <span class="secaudit-check-badge ${cls}">${badge}</span>
-        </div>`;
+        </button>`;
       }).join('');
 
       // TLS
@@ -254,6 +257,83 @@
     return ua.length > 64 ? ua.slice(0, 61) + '…' : ua;
   }
 
+  /* ── Check detail modal ── */
+  function checkLabel(check) {
+    const id = check?.id || '';
+    const key = `security_audit.check_${id}_name`;
+    const translated = _(key);
+    if (translated && translated !== key) return translated;
+    return check?.name || id || _('security_audit.check_detail_title');
+  }
+
+  function checkResultText(check) {
+    const id = check?.id || '';
+    const passed = !!(check?.pass ?? check?.passed);
+    const measured = check?.measured || {};
+    const key = `security_audit.check_${id}_result_${passed ? 'ok' : 'fail'}`;
+    const translated = _(key, measured);
+    if (translated && translated !== key) return translated;
+    return passed
+      ? _('security_audit.check_detail_ok_note')
+      : _('security_audit.check_detail_result');
+  }
+
+  function checkFixText(check) {
+    const id = check?.id || '';
+    const passed = !!(check?.pass ?? check?.passed);
+    if (passed) return _('security_audit.check_detail_ok_note');
+    const key = `security_audit.check_${id}_fix`;
+    const translated = _(key, check?.measured || {});
+    if (translated && translated !== key) return translated;
+    return _('security_audit.check_detail_fix');
+  }
+
+  function openCheckDetail(index) {
+    const check = overviewChecks[Number(index)];
+    if (!check) return;
+    const passed = !!(check.pass ?? check.passed);
+    const warn = !!check.warn && !passed;
+    const cls = passed ? 'pass' : (warn ? 'warn' : 'fail');
+    const status = passed
+      ? _('security_audit.pass')
+      : (warn ? _('security_audit.warning') : _('security_audit.fail'));
+    const name = checkLabel(check);
+    const result = checkResultText(check);
+    const fix = checkFixText(check);
+
+    const content = `
+      <div class="secaudit-check-detail">
+        <div class="secaudit-check-detail-row">
+          <span class="secaudit-check-detail-label">${esc(_('security_audit.check_detail_status'))}</span>
+          <span class="secaudit-check-badge ${cls}">${esc(status)}</span>
+        </div>
+        <div class="secaudit-check-detail-block">
+          <div class="secaudit-check-detail-label">${esc(_('security_audit.check_detail_result'))}</div>
+          <p class="secaudit-check-detail-text">${esc(result)}</p>
+        </div>
+        <div class="secaudit-check-detail-block">
+          <div class="secaudit-check-detail-label">${esc(_('security_audit.check_detail_fix'))}</div>
+          <p class="secaudit-check-detail-text">${esc(fix)}</p>
+        </div>
+      </div>`;
+
+    if (window.Modal && typeof Modal.show === 'function') {
+      Modal.show({
+        title: name,
+        content,
+        size: 'medium',
+        buttons: [{
+          label: _('security_audit.check_detail_close') || _('common.close'),
+          class: 'btn-primary',
+          icon: 'check',
+          onClick: () => Modal.close()
+        }]
+      });
+      return;
+    }
+    window.alert(`${name}\n\n${status}\n${result}\n\n${fix}`);
+  }
+
   /* ── Helpers ── */
   function setText(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
   function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
@@ -293,7 +373,7 @@
     else if (activeTab === 'sessions') loadSessions();
   }
 
-  window.SecurityAudit = { init, switchTab, loadEvents, filterEvents, goPage, loadSessions };
+  window.SecurityAudit = { init, switchTab, loadEvents, filterEvents, goPage, loadSessions, openCheckDetail };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 })();

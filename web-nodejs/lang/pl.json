@@ -235,7 +235,10 @@
     "activate_agent_submitting": "Aktywowanie urządzenia…",
     "activate_agent_success": "Agent został pomyślnie aktywowany.",
     "open_agents": "Agenci BetterDesk",
-    "agents_hint": "Skąd wziąć agentów Support (tylko incoming)"
+    "agents_hint": "Skąd wziąć agentów Support (tylko incoming)",
+    "client_config_endpoints_required_title": "Wymagane publiczne endpointy klienta",
+    "client_config_endpoints_required_text": "Ustaw publiczny serwer ID, relay i URL API w Ustawieniach, zanim skopiujesz konfigurację klienta.",
+    "client_config_endpoints_required_cta": "Otwórz ustawienia publicznych endpointów"
   },
   "devices": {
     "title": "Urządzenia",
@@ -812,7 +815,7 @@
     },
     "public_endpoints_title": "Publiczne endpointy klienta",
     "public_endpoints_desc": "Hostname i URL API używane przez klientów RustDesk. Konfiguracja na pulpicie, kody QR i deploy string.",
-    "public_endpoints_hint": "Ustaw, gdy hostname konsoli różni się od ID/relay/API (reverse proxy / osobne DNS). Puste = auto-wykrywanie.",
+    "public_endpoints_hint": "Ustaw te wartości ręcznie dla klientów RustDesk (serwer ID, relay, URL API). Wymagane, gdy hostname konsoli różni się od ID/relay/API (reverse proxy / osobne DNS). Nie zostawiaj pustych pól — nie ma auto-wykrywania.",
     "public_endpoints_server_id": "Publiczny serwer ID",
     "public_endpoints_server_id_placeholder": "np. remote.example.com",
     "public_endpoints_relay": "Publiczny serwer relay",
@@ -900,8 +903,15 @@
       "save": "Zapisz ustawienia czasu",
       "save_title": "Zapisz ustawienia czasu",
       "saved": "Ustawienia czasu zapisane.",
-      "commercialization_link": "Otwórz Komercjalizację → Pakiety"
-    }
+      "commercialization_link": "Otwórz Komercjalizację → Pakiety",
+      "save_includes_ntp": "Zapis obejmuje także opcje NTP / zegara z panelu poniżej."
+    },
+    "device_scope_confirm_title": "Zapisać domyślną widoczność urządzeń?",
+    "device_scope_confirm_open": "Użytkownicy bez roli admin i bez grantów folderów, grup lub urządzeń zobaczą wszystkie urządzenia (tryb otwarty / legacy). Kontynuować i zapisać?",
+    "device_scope_confirm_restricted": "Tryb ograniczony: użytkownicy bez roli admin i bez grantów folderów, grup lub urządzeń zobaczą pustą listę. Kontynuować i zapisać?",
+    "device_scope_restart_title": "Zrestartować usługi?",
+    "device_scope_restart_message": "Domyślna widoczność została zapisana. Zrestartuj teraz usługi BetterDesk, aby wszystkie komponenty ją przeładowały, albo kontynuuj później bez restartu.",
+    "device_scope_restart_later": "Później"
   },
   "audit": {
     "time": "Czas",
@@ -1246,7 +1256,7 @@
     "role_admin": "Administrator",
     "role_operator": "Operator zdalny",
     "role_viewer": "Obserwator",
-    "role_pro": "Licencja Pro (tylko API klienta)",
+    "role_pro": "API Pro",
     "role_super_admin": "Super Admin",
     "role_server_admin": "Admin serwera",
     "role_global_admin": "Admin globalny",
@@ -3870,7 +3880,37 @@
     "reason_idle": "Limit bezczynności",
     "reason_max_age": "Maksymalny czas życia",
     "reason_revoked": "Unieważniona",
-    "reason_destroyed": "Usunięta"
+    "reason_destroyed": "Usunięta",
+    "check_detail_title": "Wynik kontroli bezpieczeństwa",
+    "check_detail_status": "Status",
+    "check_detail_result": "Wynik testu",
+    "check_detail_fix": "Jak naprawić",
+    "check_detail_ok_note": "Ta kontrola nie wymaga działań.",
+    "check_detail_close": "Zamknij",
+    "check_tls_api_name": "API TLS",
+    "check_tls_api_result_ok": "TLS jest włączony na API Go (health.tls=true).",
+    "check_tls_api_result_fail": "TLS jest wyłączony na API Go (health.tls=false).",
+    "check_tls_api_fix": "Włącz TLS przed API Go (reverse proxy) albo certyfikaty TLS na serwerze Go, zrestartuj usługi i ponów kontrolę.",
+    "check_api_key_age_name": "Rotacja kluczy API (< 90 dni)",
+    "check_api_key_age_result_ok": "Wszystkie klucze API ({total_keys}) są młodsze niż {threshold_days} dni.",
+    "check_api_key_age_result_fail": "{old_keys} z {total_keys} kluczy API jest starszych niż {threshold_days} dni.",
+    "check_api_key_age_fix": "Otwórz Klucze i zrotuj lub wymień klucze starsze niż 90 dni. W produkcji preferuj krótsze cykle rotacji.",
+    "check_failed_logins_name": "Niski wskaźnik nieudanych logowań",
+    "check_failed_logins_result_ok": "{count} nieudanych logowań w ciągu {window_hours} h (próg: {threshold}).",
+    "check_failed_logins_result_fail": "{count} nieudanych logowań w ciągu {window_hours} h przekracza próg {threshold}.",
+    "check_failed_logins_fix": "Przejrzyj Zdarzenia audytu, zbadaj źródłowe IP, włącz 2FA i w razie potrzeby użyj blocklisty.",
+    "check_no_bans_name": "Brak aktywnych blokad",
+    "check_no_bans_result_ok": "Brak aktywnych wpisów blocklisty.",
+    "check_no_bans_result_fail": "Aktywne wpisy blocklisty: {count}.",
+    "check_no_bans_fix": "Przejrzyj aktywne blokady/blocklistę, zbadaj pierwotne incydenty i usuń nieaktualne wpisy, gdy jest to bezpieczne.",
+    "check_audit_log_name": "Rejestrowanie audytu",
+    "check_audit_log_result_ok": "API zdarzeń audytu jest dostępne.",
+    "check_audit_log_result_fail": "Nie udało się wczytać zdarzeń audytu z serwera Go.",
+    "check_audit_log_fix": "Upewnij się, że serwer Go działa i konsola ma do niego dostęp. Sprawdź /audit/events oraz logi usług.",
+    "check_blocklist_name": "Blocklista dostępna",
+    "check_blocklist_result_ok": "API blocklisty jest dostępne.",
+    "check_blocklist_result_fail": "Nie udało się wczytać blocklisty z serwera Go.",
+    "check_blocklist_fix": "Upewnij się, że serwer Go działa i endpoint blocklisty odpowiada. Sprawdź health usług oraz sieć między konsolą a Go."
   },
   "languages": {
     "title": "Zarządzanie językami",
@@ -4483,7 +4523,7 @@
       "started": "Start",
       "ended": "Koniec",
       "report": "Raport",
-      "complete_report": "Complete report"
+      "complete_report": "Uzupełnij raport"
     },
     "reports": {
       "session": "Sesja",
@@ -4596,18 +4636,18 @@
       "closed": "Zamknięty"
     },
     "preview": {
-      "title": "Package preview",
-      "open": "Month preview",
-      "company": "Company",
-      "devices": "Devices",
-      "used": "Used",
-      "remaining": "Remaining",
-      "overage": "Overage",
-      "month_total": "Month total",
-      "timezone": "Billing timezone",
-      "prev_month": "Older month",
-      "next_month": "Newer month",
-      "hint": "Right-click a package row for preview. Month history is kept when usage resets."
+      "title": "Podgląd pakietu",
+      "open": "Podgląd miesiąca",
+      "company": "Firma",
+      "devices": "Urządzenia",
+      "used": "Wykorzystane",
+      "remaining": "Pozostało",
+      "overage": "Nadwyżka",
+      "month_total": "Suma miesiąca",
+      "timezone": "Strefa czasowa rozliczeń",
+      "prev_month": "Wcześniejszy miesiąc",
+      "next_month": "Nowszy miesiąc",
+      "hint": "Kliknij prawym przyciskiem wiersz pakietu, aby zobaczyć podgląd. Historia miesięcy jest zachowywana przy resetowaniu zużycia."
     }
   },
   "remote_dashboard": {

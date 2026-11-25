@@ -6,8 +6,11 @@
     let clockDockerMode = false;
 
     function t(key, fallback) {
-        if (typeof window.__ === 'function') {
-            const val = window.__(key);
+        const translate = typeof window._ === 'function'
+            ? window._
+            : (typeof window.t === 'function' ? window.t : null);
+        if (translate) {
+            const val = translate(key);
             if (val && val !== key) return val;
         }
         return fallback !== undefined ? fallback : key;

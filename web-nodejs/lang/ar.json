@@ -10,7 +10,7 @@
     "lang": "ar",
     "name": "Arabic",
     "native_name": "العربية",
-    "direction": "ltr"
+    "direction": "rtl"
   },
   "common": {
     "loading": "تحميل...",
@@ -242,7 +242,10 @@
     "activate_agent_submitting": "جارٍ تفعيل الجهاز…",
     "activate_agent_success": "تم تفعيل الوكيل بنجاح.",
     "open_agents": "وكلاء BetterDesk",
-    "agents_hint": "من أين تحصل على وكلاء Support للاتصالات الواردة فقط"
+    "agents_hint": "من أين تحصل على وكلاء Support للاتصالات الواردة فقط",
+    "client_config_endpoints_required_title": "نقاط نهاية العميل العامة مطلوبة",
+    "client_config_endpoints_required_text": "عيّن خادم ID والترحيل ورابط API في الإعدادات قبل نسخ إعدادات العميل.",
+    "client_config_endpoints_required_cta": "فتح نقاط النهاية العامة"
   },
   "devices": {
     "title": "الأجهزة",
@@ -819,7 +822,7 @@
     },
     "public_endpoints_title": "نقاط نهاية العملاء العامة",
     "public_endpoints_desc": "اسم المضيف وURL API الذي يستخدمه عملاء RustDesk للوصول إلى هذا الخادم. يُستخدم في إعداد العميل في لوحة التحكم ورمز QR وسلاسل النشر.",
-    "public_endpoints_hint": "اضبطها عندما يختلف اسم مضيف لوحة الويب عن خادم ID أو الترحيل أو API (proxy عكسي / DNS منفصل). اتركها فارغة للاكتشاف التلقائي.",
+    "public_endpoints_hint": "اضبط هذه القيم يدويًا لعملاء RustDesk (خادم ID والترحيل ورابط API). مطلوب عندما يختلف اسم مضيف لوحة الويب عن ID/الترحيل/API (proxy عكسي / DNS منفصل). لا تتركها فارغة — لا يوجد اكتشاف تلقائي.",
     "public_endpoints_server_id": "خادم ID العام",
     "public_endpoints_server_id_placeholder": "مثال remote.example.com",
     "public_endpoints_relay": "خادم الترحيل العام",
@@ -907,8 +910,15 @@
       "save": "حفظ إعدادات الوقت",
       "save_title": "حفظ إعدادات الوقت",
       "saved": "تم حفظ إعدادات الوقت.",
-      "commercialization_link": "فتح التسويق → الحزم"
-    }
+      "commercialization_link": "فتح التسويق → الحزم",
+      "save_includes_ntp": "الحفظ يكتب أيضًا خيارات NTP / الساعة من اللوحة أدناه."
+    },
+    "device_scope_confirm_title": "حفظ إعداد ظهور الأجهزة الافتراضي؟",
+    "device_scope_confirm_open": "سيشاهد المستخدمون غير المسؤولين بدون صلاحيات مجلدات أو مجموعات أو أجهزة كل الأجهزة (الوضع المفتوح / السابق). المتابعة والحفظ؟",
+    "device_scope_confirm_restricted": "الوضع المقيد: سيرى المستخدمون غير المسؤولين بدون صلاحيات مجلدات أو مجموعات أو أجهزة قائمة فارغة. المتابعة والحفظ؟",
+    "device_scope_restart_title": "إعادة تشغيل الخدمات؟",
+    "device_scope_restart_message": "تم حفظ إعداد الظهور. أعد تشغيل خدمات BetterDesk الآن ليُحمّلها كل مكوّن، أو تابع لاحقًا دون إعادة التشغيل.",
+    "device_scope_restart_later": "لاحقًا"
   },
   "audit": {
     "time": "Time",
@@ -1280,7 +1290,7 @@
     "tip_viewer_role": "Use Viewer for read-only monitoring; Remote Operator for users who need to connect",
     "tip_operator_role": "Use operator role for users who need to manage devices but not users",
     "tip_audit_logs": "قم بمراجعة سجلات التدقيق بانتظام بحثًا عن أي نشاط مشبوه",
-    "role_pro": "Pro License (client API only)",
+    "role_pro": "API Pro",
     "role_super_admin": "Super Admin",
     "role_server_admin": "مشرف الخادم",
     "role_global_admin": "المشرف العالمي",
@@ -3792,7 +3802,37 @@
     "reason_idle": "مهلة الخمول",
     "reason_max_age": "العمر الأقصى",
     "reason_revoked": "مُلغاة",
-    "reason_destroyed": "مُدمَّرة"
+    "reason_destroyed": "مُدمَّرة",
+    "check_detail_title": "نتيجة فحص الأمان",
+    "check_detail_status": "الحالة",
+    "check_detail_result": "نتيجة الاختبار",
+    "check_detail_fix": "كيفية الإصلاح",
+    "check_detail_ok_note": "لا يلزم أي إجراء لهذا الفحص.",
+    "check_detail_close": "إغلاق",
+    "check_tls_api_name": "API TLS",
+    "check_tls_api_result_ok": "TLS مفعّل على واجهة Go (health.tls=true).",
+    "check_tls_api_result_fail": "TLS معطّل على واجهة Go (health.tls=false).",
+    "check_tls_api_fix": "فعّل TLS أمام واجهة Go (بروكسي عكسي) أو شهادات خادم Go، ثم أعد التشغيل وأعد الفحص.",
+    "check_api_key_age_name": "تدوير مفاتيح API (< 90 يومًا)",
+    "check_api_key_age_result_ok": "كل مفاتيح API البالغ عددها {total_keys} أحدث من {threshold_days} يومًا.",
+    "check_api_key_age_result_fail": "{old_keys} من {total_keys} مفاتيح API أقدم من {threshold_days} يومًا.",
+    "check_api_key_age_fix": "افتح المفاتيح وبدّل أو استبدل المفاتيح الأقدم من 90 يومًا.",
+    "check_failed_logins_name": "معدل فشل تسجيل دخول منخفض",
+    "check_failed_logins_result_ok": "{count} محاولات فاشلة خلال {window_hours} ساعة (الحد: {threshold}).",
+    "check_failed_logins_result_fail": "{count} محاولات فاشلة خلال {window_hours} ساعة تتجاوز الحد {threshold}.",
+    "check_failed_logins_fix": "راجع أحداث التدقيق وعناوين IP المصدر، وفعّل 2FA، واستخدم قائمة الحظر عند الحاجة.",
+    "check_no_bans_name": "لا حظر نشط",
+    "check_no_bans_result_ok": "لا إدخالات نشطة في قائمة الحظر.",
+    "check_no_bans_result_fail": "إدخالات قائمة الحظر النشطة: {count}.",
+    "check_no_bans_fix": "راجع الحظر النشط، حقّق في الحوادث، وأزل الإدخالات القديمة عند الأمان.",
+    "check_audit_log_name": "تسجيل التدقيق",
+    "check_audit_log_result_ok": "واجهة أحداث التدقيق متاحة.",
+    "check_audit_log_result_fail": "تعذّر تحميل أحداث التدقيق من خادم Go.",
+    "check_audit_log_fix": "تأكد أن خادم Go يعمل وأن اللوحة تصل إلى واجهته.",
+    "check_blocklist_name": "قائمة الحظر متاحة",
+    "check_blocklist_result_ok": "واجهة قائمة الحظر متاحة.",
+    "check_blocklist_result_fail": "تعذّر تحميل قائمة الحظر من خادم Go.",
+    "check_blocklist_fix": "تأكد أن خادم Go يعمل وأن نقطة نهاية قائمة الحظر تستجيب."
   },
   "languages": {
     "title": "إدارة اللغة",

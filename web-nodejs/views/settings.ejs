@@ -145,48 +145,6 @@
                 </div>
             </div>
             
-            <!-- Server Information Section -->
-            <div class="settings-panel">
-                <div class="settings-panel-header">
-                    <h2 class="settings-panel-title">
-                        <span class="material-icons" aria-hidden="true">info</span>
-                        ${_('settings.server_info')}
-                    </h2>
-                </div>
-                <div class="settings-panel-body">
-                    <div class="server-info-grid">
-                        <div class="server-info-item">
-                            <span class="server-info-label">
-                                <span class="material-icons" aria-hidden="true">tag</span>
-                                ${_('settings.version')}
-                            </span>
-                            <span class="server-info-value">v${appVersion}</span>
-                        </div>
-                        <div class="server-info-item">
-                            <span class="server-info-label">
-                                <span class="material-icons" aria-hidden="true">dns</span>
-                                ${_('settings.go_server_version')}
-                            </span>
-                            <span class="server-info-value" id="go-server-version">-</span>
-                        </div>
-                        <div class="server-info-item">
-                            <span class="server-info-label">
-                                <span class="material-icons" aria-hidden="true">storage</span>
-                                ${_('settings.database')}
-                            </span>
-                            <span class="server-info-value" id="db-path">-</span>
-                        </div>
-                        <div class="server-info-item">
-                            <span class="server-info-label">
-                                <span class="material-icons" aria-hidden="true">schedule</span>
-                                ${_('settings.uptime')}
-                            </span>
-                            <span class="server-info-value" id="uptime">-</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             ${canServerConfig ? `
             <div class="settings-panel" id="device-scope-settings-panel">
                 <div class="settings-panel-header">
@@ -1352,11 +1310,13 @@
                             </div>
                         </div>
 
-                        <div class="form-group toggle-group" style="display:flex;align-items:center;gap:12px;margin-top:8px;">
-                            <input type="checkbox" id="agent-show-powered" class="toggle-switch" checked>
-                            <div>
-                                <label class="form-label" for="agent-show-powered" style="margin-bottom:0;cursor:pointer;">${_('branding.agent_show_powered')}</label>
-                                <small class="form-hint" style="display:block;margin-top:2px;">${_('branding.agent_show_powered_hint')}</small>
+                        <div class="settings-row" style="margin-top:8px;">
+                            <div class="settings-row-label">
+                                <label class="form-label" for="agent-show-powered">${_('branding.agent_show_powered')}</label>
+                                <p class="settings-row-hint">${_('branding.agent_show_powered_hint')}</p>
+                            </div>
+                            <div class="settings-row-control">
+                                <input type="checkbox" id="agent-show-powered" class="toggle-switch" checked>
                             </div>
                         </div>
                     </div>
@@ -1493,11 +1453,13 @@
                                    placeholder="© 2026 Your Company. All rights reserved.">
                             <small class="form-hint">${_('branding.footer_text_hint')}</small>
                         </div>
-                        <div class="form-group toggle-group" style="display:flex;align-items:center;gap:12px;">
-                            <input type="checkbox" id="show-powered" class="toggle-switch" checked>
-                            <div>
-                                <label class="form-label" for="show-powered" style="margin-bottom:0;cursor:pointer;">${_('branding.show_powered')}</label>
-                                <small class="form-hint" style="display:block;margin-top:2px;">${_('branding.show_powered_hint')}</small>
+                        <div class="settings-row">
+                            <div class="settings-row-label">
+                                <label class="form-label" for="show-powered">${_('branding.show_powered')}</label>
+                                <p class="settings-row-hint">${_('branding.show_powered_hint')}</p>
+                            </div>
+                            <div class="settings-row-control">
+                                <input type="checkbox" id="show-powered" class="toggle-switch" checked>
                             </div>
                         </div>
                     </form>
@@ -1736,11 +1698,13 @@
                 <div class="settings-panel-body">
                     <form class="settings-form" id="ldap-form" style="max-width: 700px;">
                         <!-- Enable toggle -->
-                        <div class="form-group" style="display: flex; align-items: center; gap: 12px;">
-                            <input type="checkbox" id="ldap-enabled" class="toggle-switch">
-                            <div>
-                                <label class="form-label" for="ldap-enabled" style="margin-bottom: 0; cursor: pointer;">${_('settings.ldap_enabled')}</label>
-                                <small class="form-hint" style="display: block; margin-top: 2px;">${_('settings.ldap_enabled_hint')}</small>
+                        <div class="settings-row">
+                            <div class="settings-row-label">
+                                <label class="form-label" for="ldap-enabled">${_('settings.ldap_enabled')}</label>
+                                <p class="settings-row-hint">${_('settings.ldap_enabled_hint')}</p>
+                            </div>
+                            <div class="settings-row-control">
+                                <input type="checkbox" id="ldap-enabled" class="toggle-switch">
                             </div>
                         </div>
 
@@ -1759,16 +1723,16 @@
                                 </div>
                             </div>
 
-                            <div class="form-group" style="display: flex; gap: 24px; flex-wrap: wrap;">
-                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <div class="form-group" style="display: flex; flex-direction: row; gap: 24px; flex-wrap: wrap; align-items: center;">
+                                <label class="toggle-row" style="gap: 8px; cursor: pointer;">
                                     <input type="checkbox" id="ldap-use-tls" class="toggle-switch">
                                     <span>${_('settings.ldap_use_tls')}</span>
                                 </label>
-                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <label class="toggle-row" style="gap: 8px; cursor: pointer;">
                                     <input type="checkbox" id="ldap-start-tls" class="toggle-switch">
                                     <span>${_('settings.ldap_start_tls')}</span>
                                 </label>
-                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <label class="toggle-row" style="gap: 8px; cursor: pointer;">
                                     <input type="checkbox" id="ldap-skip-tls-verify" class="toggle-switch">
                                     <span>${_('settings.ldap_skip_verify')}</span>
                                 </label>
@@ -1783,11 +1747,13 @@
                             <!-- Bind mode -->
                             <h3 class="settings-subsection-title">${_('settings.ldap_bind_mode')}</h3>
 
-                            <div class="form-group" style="display: flex; align-items: center; gap: 12px;">
-                                <input type="checkbox" id="ldap-direct-bind" class="toggle-switch">
-                                <div>
-                                    <label class="form-label" for="ldap-direct-bind" style="margin-bottom: 0; cursor: pointer;">${_('settings.ldap_direct_bind')}</label>
-                                    <small class="form-hint" style="display: block; margin-top: 2px;">${_('settings.ldap_direct_bind_hint')}</small>
+                            <div class="settings-row">
+                                <div class="settings-row-label">
+                                    <label class="form-label" for="ldap-direct-bind">${_('settings.ldap_direct_bind')}</label>
+                                    <p class="settings-row-hint">${_('settings.ldap_direct_bind_hint')}</p>
+                                </div>
+                                <div class="settings-row-control">
+                                    <input type="checkbox" id="ldap-direct-bind" class="toggle-switch">
                                 </div>
                             </div>
 
@@ -1905,11 +1871,13 @@
                 <div class="settings-panel-body">
                     <form class="settings-form" id="oidc-form" style="max-width: 700px;">
                         <!-- Enable toggle -->
-                        <div class="form-group" style="display: flex; align-items: center; gap: 12px;">
-                            <input type="checkbox" id="oidc-enabled" class="toggle-switch">
-                            <div>
-                                <label class="form-label" for="oidc-enabled" style="margin-bottom: 0; cursor: pointer;">${_('settings.oidc_enabled')}</label>
-                                <small class="form-hint" style="display: block; margin-top: 2px;">${_('settings.oidc_enabled_hint')}</small>
+                        <div class="settings-row">
+                            <div class="settings-row-label">
+                                <label class="form-label" for="oidc-enabled">${_('settings.oidc_enabled')}</label>
+                                <p class="settings-row-hint">${_('settings.oidc_enabled_hint')}</p>
+                            </div>
+                            <div class="settings-row-control">
+                                <input type="checkbox" id="oidc-enabled" class="toggle-switch">
                             </div>
                         </div>
 
@@ -1964,20 +1932,20 @@
                                 <input type="text" id="oidc-scopes" class="form-input" placeholder="openid profile email" style="max-width: 500px;">
                             </div>
 
-                            <div class="form-group" style="display: flex; gap: 24px; flex-wrap: wrap;">
-                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <div class="form-group" style="display: flex; flex-direction: row; gap: 24px; flex-wrap: wrap; align-items: center;">
+                                <label class="toggle-row" style="gap: 8px; cursor: pointer;">
                                     <input type="checkbox" id="oidc-use-pkce" class="toggle-switch">
                                     <span>${_('settings.oidc_use_pkce')}</span>
                                 </label>
-                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <label class="toggle-row" style="gap: 8px; cursor: pointer;">
                                     <input type="checkbox" id="oidc-auto-discovery" class="toggle-switch" checked>
                                     <span>${_('settings.oidc_auto_discovery')}</span>
                                 </label>
-                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <label class="toggle-row" style="gap: 8px; cursor: pointer;">
                                     <input type="checkbox" id="oidc-allow-signup" class="toggle-switch" checked>
                                     <span>${_('settings.oidc_allow_signup')}</span>
                                 </label>
-                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <label class="toggle-row" style="gap: 8px; cursor: pointer;">
                                     <input type="checkbox" id="oidc-prefer-sso" class="toggle-switch">
                                     <span>${_('settings.oidc_prefer_sso')}</span>
                                 </label>
@@ -2140,9 +2108,13 @@
                 </div>
                 <div class="settings-panel-body">
                     <form class="settings-form" id="scheduled-backup-form">
-                        <div class="form-group" style="display:flex;align-items:center;gap:12px;">
-                            <input type="checkbox" id="scheduled-backup-enabled" class="toggle-switch">
-                            <label class="form-label" for="scheduled-backup-enabled">${_('backup.schedule_enabled')}</label>
+                        <div class="settings-row">
+                            <div class="settings-row-label">
+                                <label class="form-label" for="scheduled-backup-enabled">${_('backup.schedule_enabled')}</label>
+                            </div>
+                            <div class="settings-row-control">
+                                <input type="checkbox" id="scheduled-backup-enabled" class="toggle-switch">
+                            </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
@@ -2567,7 +2539,12 @@
                             <span class="material-icons" aria-hidden="true">my_location</span>
                             ${_('settings.time.detect_os')}
                         </button>
+                        <button type="button" class="btn btn-primary" id="time-save-timezone-btn">
+                            <span class="material-icons" aria-hidden="true">save</span>
+                            ${_('settings.time.save')}
+                        </button>
                     </div>
+                    <p class="form-hint">${_('settings.time.save_includes_ntp')}</p>
                 </div>
             </div>
             <div class="settings-panel">
@@ -2578,35 +2555,69 @@
                     </h2>
                     <p class="settings-panel-desc">${_('settings.time.ntp_desc')}</p>
                 </div>
-                <div class="settings-panel-body">
-                    <p id="time-clock-detail" class="text-muted"></p>
-                    <dl class="clock-status-grid settings-time-status-grid">
-                        <div><dt>${_('commercialization.clock.status_offset')}</dt><dd id="time-clock-offset">—</dd></div>
-                        <div><dt>${_('commercialization.clock.status_server')}</dt><dd id="time-clock-ntp-server">—</dd></div>
-                        <div><dt>${_('commercialization.clock.status_os')}</dt><dd id="time-clock-os-sync">—</dd></div>
-                        <div><dt>${_('commercialization.clock.status_error')}</dt><dd id="time-clock-last-error">—</dd></div>
-                    </dl>
-                    <button type="button" class="btn btn-secondary" id="time-timesync-check-btn">${_('commercialization.clock.check_now')}</button>
-                    <form id="time-clock-settings-form" class="settings-form" style="margin-top: 1rem;">
-                        <label class="form-label">${_('commercialization.clock.ntp_servers')}
-                            <textarea id="time-clock-ntp-servers" class="form-control" rows="2" placeholder="pool.ntp.org,time.google.com"></textarea>
-                        </label>
-                        <p class="text-muted form-hint">${_('commercialization.clock.ntp_servers_hint')}</p>
-                        <label class="form-label">${_('commercialization.clock.max_skew_ms')}
-                            <input type="number" id="time-clock-max-skew" class="form-control" min="100" max="600000" step="100" value="2000">
-                        </label>
+                <div class="settings-panel-body settings-time-ntp-body">
+                    <section class="settings-time-status" aria-labelledby="time-clock-detail">
+                        <div class="settings-time-status-header">
+                            <div class="settings-time-status-badge" id="time-clock-badge" data-state="unknown">
+                                <span class="material-icons" aria-hidden="true" id="time-clock-badge-icon">schedule</span>
+                                <span id="time-clock-detail">${_('common.loading')}</span>
+                            </div>
+                            <button type="button" class="btn btn-secondary btn-sm" id="time-timesync-check-btn">
+                                <span class="material-icons" aria-hidden="true">sync</span>
+                                ${_('commercialization.clock.check_now')}
+                            </button>
+                        </div>
+                        <dl class="settings-time-status-grid">
+                            <div class="settings-time-status-item">
+                                <dt>${_('commercialization.clock.status_offset')}</dt>
+                                <dd id="time-clock-offset">—</dd>
+                            </div>
+                            <div class="settings-time-status-item">
+                                <dt>${_('commercialization.clock.status_server')}</dt>
+                                <dd id="time-clock-ntp-server">—</dd>
+                            </div>
+                            <div class="settings-time-status-item">
+                                <dt>${_('commercialization.clock.status_os')}</dt>
+                                <dd id="time-clock-os-sync">—</dd>
+                            </div>
+                            <div class="settings-time-status-item">
+                                <dt>${_('commercialization.clock.status_error')}</dt>
+                                <dd id="time-clock-last-error">—</dd>
+                            </div>
+                        </dl>
+                    </section>
+
+                    <hr class="settings-time-divider" aria-hidden="true">
+
+                    <form id="time-clock-settings-form" class="settings-form settings-time-form">
                         <div class="form-group">
-                            <label><input type="checkbox" id="time-clock-require-sync"> ${_('commercialization.clock.require_sync')}</label>
+                            <label class="form-label" for="time-clock-ntp-servers">${_('commercialization.clock.ntp_servers')}</label>
+                            <textarea id="time-clock-ntp-servers" class="form-input form-textarea" rows="3" placeholder="pool.ntp.org,time.google.com,time.cloudflare.com"></textarea>
+                            <p class="form-hint">${_('commercialization.clock.ntp_servers_hint')}</p>
                         </div>
                         <div class="form-group">
-                            <label><input type="checkbox" id="time-clock-trust-os"> ${_('commercialization.clock.trust_os')}</label>
+                            <label class="form-label" for="time-clock-max-skew">${_('commercialization.clock.max_skew_ms')}</label>
+                            <input type="number" id="time-clock-max-skew" class="form-input" min="100" max="600000" step="100" value="2000">
                         </div>
-                        <p class="text-muted form-hint">${_('commercialization.clock.trust_os_hint')}</p>
+                        <div class="form-group settings-time-checks">
+                            <label class="checkbox-row">
+                                <input type="checkbox" id="time-clock-require-sync">
+                                <span>${_('commercialization.clock.require_sync')}</span>
+                            </label>
+                            <label class="checkbox-row">
+                                <input type="checkbox" id="time-clock-trust-os">
+                                <span>${_('commercialization.clock.trust_os')}</span>
+                            </label>
+                            <p class="form-hint">${_('commercialization.clock.trust_os_hint')}</p>
+                        </div>
                         <div class="form-actions">
-                            <button type="button" class="btn btn-primary" id="time-save-clock-settings-btn">${_('settings.time.save')}</button>
+                            <button type="submit" class="btn btn-primary" id="time-save-clock-settings-btn">
+                                <span class="material-icons" aria-hidden="true">save</span>
+                                ${_('settings.time.save')}
+                            </button>
                         </div>
                     </form>
-                    <p class="form-hint" style="margin-top:1rem;">
+                    <p class="form-hint settings-time-footer-link">
                         <a href="/commercialization?tab=packages">${_('settings.time.commercialization_link')}</a>
                     </p>
                 </div>

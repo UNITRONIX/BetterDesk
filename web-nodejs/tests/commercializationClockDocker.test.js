@@ -105,6 +105,7 @@ describe('commercialization Docker clock settings', () => {
 
         expect(source).toContain('_timeClockDockerMode');
         expect(source).toContain('if (!_timeClockDockerMode)');
-        expect(source).toContain('commercialization.clock.saved_hot_reload');
+        expect(source).toContain("tClock('saved_hot_reload'");
+        expect(source).toContain('saveTimeClockSettings');
     });
 });

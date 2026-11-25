@@ -60,8 +60,21 @@ describe('security audit overview API', () => {
             relay: null,
         }));
         expect(response.body.checks).toEqual(expect.arrayContaining([
-            expect.objectContaining({ id: 'tls_api', pass: true }),
-            expect.objectContaining({ id: 'no_bans', pass: false }),
+            expect.objectContaining({
+                id: 'tls_api',
+                pass: true,
+                measured: expect.objectContaining({ enabled: true }),
+            }),
+            expect.objectContaining({
+                id: 'api_key_age',
+                pass: false,
+                measured: expect.objectContaining({ old_keys: 1, total_keys: 1, threshold_days: 90 }),
+            }),
+            expect.objectContaining({
+                id: 'no_bans',
+                pass: false,
+                measured: expect.objectContaining({ count: 2 }),
+            }),
         ]));
     });
 });

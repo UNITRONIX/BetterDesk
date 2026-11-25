@@ -228,6 +228,43 @@ router.post('/api/settings/device-scope', requireAuth, requirePermission('server
     }
 });
 
+/**
+ * POST /api/settings/device-scope/restart — optional service restart after the
+ * visibility default was already saved. Rollback keeps the saved mode (no-op
+ * restore) so a failed restart does not wipe the operator's choice.
+ */
+router.post('/api/settings/device-scope/restart', requireAuth, requirePermission('server.config'), async (req, res) => {
+    try {
+        const stored = await db.getSetting('device_scope_default');
+        const currentMode = stored && String(stored).toLowerCase() === 'restricted' ? 'restricted' : 'open';
+        const pendingExisting = restartCoordinator.getPending(req);
+        if (pendingExisting && pendingExisting.phase === 'pending') {
+            return res.json({ success: true, data: pendingExisting });
+        }
+
+        const pending = restartCoordinator.registerChange(req, {
+            key: 'device-scope-default',
+            label: req.t('settings.device_scope_title'),
+            rollback: {
+                type: 'db-setting',
+                key: 'device_scope_default',
+                previousValue: currentMode,
+                afterRestore: 'device-scope-cache'
+            }
+        });
+        await db.logAction(
+            req.session.userId,
+            'device_scope_restart_queued',
+            `Queued service restart after device scope default (${currentMode})`,
+            req.ip
+        );
+        res.json({ success: true, data: pending });
+    } catch (err) {
+        console.error('Device scope restart queue error:', err);
+        res.status(err.statusCode || 500).json({ success: false, error: err.message || req.t('errors.server_error') });
+    }
+});
+
 const AVAIL_HISTORY_ENABLED_KEY = 'availability_history_enabled';
 const AVAIL_HISTORY_RETENTION_KEY = 'availability_history_retention_days';
 const AVAIL_HISTORY_DEFAULT_RETENTION = 30;
