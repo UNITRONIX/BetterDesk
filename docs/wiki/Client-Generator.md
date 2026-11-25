@@ -30,7 +30,9 @@ client loads branding at runtime from the Console **Client Branding API**.
    its DLLs and `data/` directory.
 5. On first start, the generic agent shows **Connect BetterDesk Support**. Enter
    the BetterDesk HTTPS address (local IP or public); it downloads the server
-   public key and can show a pairing QR (`type: betterdesk-agent-pairing`).
+   public key and can show a pairing QR (`type: betterdesk-agent-pairing`). If
+   the server uses a self-signed certificate, review the warning and choose
+   **Accept self-signed certificate** only when you trust that server.
 6. In **Główne → Pair agent** an operator with `enrollment.approve` enters the
    short one-time code (10 minutes, single use) and the server address. The QR
    scanner is still reachable from that dialog (**Scan agent QR**) for agents
