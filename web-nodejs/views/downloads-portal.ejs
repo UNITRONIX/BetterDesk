@@ -60,6 +60,20 @@
             text-align: center;
             padding: 40px;
         }
+        .portal-instructions {
+            max-width: 720px;
+            margin: 0 auto 28px;
+            padding: 16px 20px;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+            background: rgba(255,255,255,0.03);
+            color: #c9d1d9;
+            text-align: left;
+            line-height: 1.5;
+            font-size: 14px;
+        }
+        .portal-instructions strong { color: #e6edf3; }
+        .portal-instructions ol { margin: 8px 0 0 20px; }
     </style>
 </head>
 <body>
@@ -69,6 +83,19 @@
             <p>Install the lightweight agent on your device to enable remote support.</p>
             <p>These generic, signed releases are paired with your server by QR code or one-time code.
                 Preconfigured signed clients require the server Generator and a matching client build.</p>
+        </div>
+        <div class="portal-instructions">
+            <strong>Windows portable package:</strong>
+            download the ZIP, extract the entire archive into one folder, and run
+            <code>betterdesk.exe</code> from that folder. Do not copy the EXE out on
+            its own. On first start, enter this BetterDesk HTTPS address in the
+            <strong>Connect BetterDesk Support</strong> window, then ask an administrator
+            to pair the agent by QR code or one-time code.
+            <ol>
+                <li>Download the package matching your Windows architecture.</li>
+                <li>Extract all files before starting the agent.</li>
+                <li>Connect it to this server and complete pairing.</li>
+            </ol>
         </div>
         <div class="portal-grid" id="installer-grid">
             <div class="portal-empty">Loading available installers…</div>
