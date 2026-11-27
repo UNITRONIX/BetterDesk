@@ -33,30 +33,31 @@ Your data stays on **your** server — the project does not run vendor analytics
 
 ## Why BetterDesk
 
-<table>
-  <tr>
-    <td width="50%">
-      <img src="docs/assets/readme/feature-self-hosted.png" alt="Self-hosted — your data stays on your server" width="100%">
-      <p><strong>Self-hosted &amp; private</strong> — run the server yourself; no seat licences and no vendor cloud analytics.</p>
-    </td>
-    <td width="50%">
-      <img src="docs/assets/readme/feature-web-console.png" alt="Manage your fleet in the browser" width="100%">
-      <p><strong>Web console</strong> — manage devices, users, policies, and panel updates in the browser on port <code>:5000</code>.</p>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%">
-      <img src="docs/assets/readme/feature-remote-support.png" alt="Remote support you control" width="100%">
-      <p><strong>Remote support you control</strong> — Web Remote in the browser, stock RustDesk clients, and Support Agents from BetterDesk-Client.</p>
-    </td>
-    <td width="50%">
-      <img src="docs/assets/readme/feature-easy-deploy.png" alt="Deploy in minutes" width="100%">
-      <p><strong>Deploy in minutes</strong> — Linux/Windows installers or one Docker all-in-one container.</p>
-    </td>
-  </tr>
-</table>
+### Self-hosted & private
 
-More capability detail: [Web Console](https://github.com/UNITRONIX/BetterDesk/wiki/Web-Console) · [Web Remote](https://github.com/UNITRONIX/BetterDesk/wiki/Web-Remote) · [Client setup](https://github.com/UNITRONIX/BetterDesk/wiki/Client-Setup).
+<img src="docs/assets/readme/feature-self-hosted.png" alt="Your data stays on your server" width="100%">
+
+Run the server yourself — no seat licences and no vendor cloud analytics. Your data stays on your infrastructure.
+
+### Web console
+
+<img src="docs/assets/readme/feature-web-console.png" alt="Manage your fleet in the browser" width="100%">
+
+Manage devices, users, policies, and panel updates in the browser on port `:5000`.
+
+### Remote support you control
+
+<img src="docs/assets/readme/feature-remote-support.png" alt="Remote support you control" width="100%">
+
+Web Remote in the browser, stock RustDesk clients, and Support Agents from BetterDesk-Client.
+
+### Deploy in minutes
+
+<img src="docs/assets/readme/feature-easy-deploy.png" alt="Deploy in minutes" width="100%">
+
+Linux/Windows installers or one Docker all-in-one container.
+
+More detail: [Web Console](https://github.com/UNITRONIX/BetterDesk/wiki/Web-Console) · [Web Remote](https://github.com/UNITRONIX/BetterDesk/wiki/Web-Remote) · [Client setup](https://github.com/UNITRONIX/BetterDesk/wiki/Client-Setup).
 
 ---
 
