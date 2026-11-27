@@ -21,7 +21,8 @@ class RDFileConnection {
         this.conn = new RDConnection({ deviceId: this.deviceId });
         this.proto = opts.proto || new RDProtocol();
         this.crypto = new RDCrypto();
-        this._state = 'idle'; // idle | connecting | authenticating | ready | error | disconnected
+        // idle | connecting | authenticating | waiting_2fa | ready | error | disconnected
+        this._state = 'idle';
         this._listeners = {};
         this._rendezvousDecoder = null;
         this._relayConfirmReceived = false;
@@ -197,22 +198,28 @@ class RDFileConnection {
 
     _waitForLogin(password) {
         return new Promise((resolve, reject) => {
-            this._loginResolve = resolve;
-            this._loginReject = reject;
-            const timeout = setTimeout(() => {
-                reject(new Error('File transfer login timeout (30s)'));
-            }, 30000);
-
+            let timeout;
             const done = () => {
                 clearTimeout(timeout);
                 this._loginResolve = null;
                 this._loginReject = null;
+                this._extend2FATimeout = null;
             };
-
-            const origResolve = resolve;
-            const origReject = reject;
-            this._loginResolve = () => { done(); origResolve(); };
-            this._loginReject = (e) => { done(); origReject(e); };
+            this._loginResolve = () => { done(); resolve(); };
+            this._loginReject = (e) => { done(); reject(e); };
+            this._extend2FATimeout = () => {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => {
+                    if (this._loginReject) {
+                        this._loginReject(new Error('File transfer 2FA timeout (120s)'));
+                    }
+                }, 120000);
+            };
+            timeout = setTimeout(() => {
+                if (this._loginReject) {
+                    this._loginReject(new Error('File transfer login timeout (30s)'));
+                }
+            }, 30000);
 
             // If password provided upfront, authenticate when hash arrives or immediately after signedId
             this._pendingPassword = password;
@@ -234,7 +241,9 @@ class RDFileConnection {
     }
 
     submit2FA(code) {
+        if (this._state !== 'waiting_2fa') return;
         this._sendPeerMessageRaw(this.proto.buildAuth2FA(String(code || '').trim()));
+        this._setState('authenticating');
     }
 
     sendMessage(msgObj) {
@@ -520,10 +529,14 @@ class RDFileConnection {
         if (resp.error && resp.error.length > 0) {
             const errLower = (resp.error || '').toLowerCase();
             if (errLower.includes('wrong 2fa') || errLower.includes('invalid 2fa')) {
+                this._setState('waiting_2fa');
+                if (this._extend2FATimeout) this._extend2FATimeout();
                 this._emit('2fa_error', resp.error);
                 return;
             }
             if (errLower.includes('2fa required') || errLower.includes('totp')) {
+                this._setState('waiting_2fa');
+                if (this._extend2FATimeout) this._extend2FATimeout();
                 this._emit('2fa_required');
                 return;
             }

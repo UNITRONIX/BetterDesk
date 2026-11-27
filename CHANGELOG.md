@@ -1,7 +1,13 @@
 ## [Unreleased]
 
 ### Changed
-- _(none yet)_
+- **Web Remote file-transfer 2FA:** route challenges and Verify submissions to
+  the dedicated file relay while preserving desktop authentication events.
+  Reuse a recently accepted desktop OTP once within a 15-second memory-only
+  window, with manual fallback on rejection or a missing reply. Clean up OTP
+  waits and restore the file modal without disrupting the desktop session.
+  Report, event-separation design, and live v3.5.4 verification supplied by the
+  submitting contributor; implementation and tests were AI-assisted.
 
 ---
 
