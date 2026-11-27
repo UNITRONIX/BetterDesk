@@ -1,6 +1,13 @@
 ## [Unreleased]
 
 ### Changed
+- _(none yet)_
+
+---
+
+## [3.5.286] — 2026-11-27
+
+### Changed
 - **Console UX 3.6 beta retired:** the top-bar “science BETA” shell toggle and
   Settings → General console-interface switcher are removed. The panel always
   renders UX 3.5; stale `bd_ui_shell=ux36` cookies and `?ui=ux36` links resolve
@@ -5562,3 +5569,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.283]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.282...v3.5.283
 [3.5.284]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.283...v3.5.284
 [3.5.285]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.284...v3.5.285
+[3.5.286]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.285...v3.5.286
