@@ -2209,7 +2209,22 @@
     "no_alerts": "Hälytyksiä ei laukaistu",
     "no_commands": "Ei lähetetty komentoja",
     "id_payload_required": "Laitetunnus ja hyötykuorma vaaditaan",
-    "no_commands_sent": "Mitään komentoja ei ole vielä lähetetty"
+    "no_commands_sent": "Mitään komentoja ei ole vielä lähetetty",
+    "scope_devices": "Kohdelaitteet",
+    "scope_all_hint": "Ei valintaa = kaikki laitteet. Valitse yksi tai useampi rajauksena.",
+    "scope_selected": "{count} valittu",
+    "scope_search": "Hae laitteita…",
+    "scope_status": "Tila",
+    "scope_status_all": "Kaikki tilat",
+    "scope_status_online": "Online",
+    "scope_status_offline": "Offline",
+    "scope_select_visible": "Valitse näkyvät",
+    "scope_clear": "Tyhjennä valinta",
+    "scope_no_match": "Ei vastaavia laitteita",
+    "scope_tags": "Tunnisteet",
+    "scope_loading": "Ladataan laitteita…",
+    "notify_emails_placeholder": "ops@example.com, päivystys@example.com",
+    "notify_emails_hint": "Valinnainen. Tyhjä = Asetukset → Sähköposti → Hälytyssähköposti. Hälytykset näkyvät myös kellossa ja toastissa."
   },
   "file_transfer": {
     "title": "Tiedoston siirto",
@@ -4244,7 +4259,8 @@
     "mark_all_read": "Merkitse kaikki luetuiksi",
     "see_all": "Katso kaikki avunpyynnöt",
     "help_request": "Apupyyntö",
-    "just_now": "just now"
+    "just_now": "just now",
+    "automation_alert": "Automaatiohälytys"
   },
   "accessibility": {
     "title": "Accessibility",

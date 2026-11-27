@@ -2209,7 +2209,22 @@
     "no_alerts": "Ingen varsler utløst",
     "no_commands": "Ingen kommandoer sendt",
     "id_payload_required": "Enhets-ID og nyttelast kreves",
-    "no_commands_sent": "Ingen kommandoer er sendt ennå"
+    "no_commands_sent": "Ingen kommandoer er sendt ennå",
+    "scope_devices": "Målenheter",
+    "scope_all_hint": "Ingen valg = alle enheter. Velg én eller flere for å begrense omfanget.",
+    "scope_selected": "{count} valgt",
+    "scope_search": "Søk enheter…",
+    "scope_status": "Status",
+    "scope_status_all": "Alle statuser",
+    "scope_status_online": "Online",
+    "scope_status_offline": "Offline",
+    "scope_select_visible": "Velg synlige",
+    "scope_clear": "Tøm valg",
+    "scope_no_match": "Ingen samsvarende enheter",
+    "scope_tags": "Tagger",
+    "scope_loading": "Laster enheter…",
+    "notify_emails_placeholder": "ops@example.com, vakt@example.com",
+    "notify_emails_hint": "Valgfritt. Tomt = Innstillinger → E-post → Varsel-e-post. Varsler vises også i klokken og som toast."
   },
   "file_transfer": {
     "title": "Filoverføring",
@@ -4244,7 +4259,8 @@
     "mark_all_read": "Merk alt som lest",
     "see_all": "Se alle hjelpeforespørsler",
     "help_request": "Hjelpeforespørsel",
-    "just_now": "just now"
+    "just_now": "just now",
+    "automation_alert": "Automatiseringsvarsel"
   },
   "accessibility": {
     "title": "Accessibility",

@@ -55,6 +55,10 @@ const VALID_COMMAND_TYPES = ['shell', 'powershell', 'script', 'restart_service',
 const { requireAuth, requirePermission } = require('../middleware/auth');
 
 const { requireDeviceToken } = require('../middleware/deviceAuth');
+const {
+    normalizeScopeFromBody,
+    enrichRuleScope,
+} = require('../lib/alertRuleScope');
 
 // ===========================================================================
 //  Alert Rules
@@ -66,7 +70,7 @@ const { requireDeviceToken } = require('../middleware/deviceAuth');
 router.get('/rules', requireAuth, async (req, res) => {
     try {
         const adapter = getAdapter();
-        const rules = await adapter.getAlertRules();
+        const rules = (await adapter.getAlertRules()).map(enrichRuleScope);
         res.json({ rules, total: rules.length });
     } catch (err) {
         console.error('[Automation] Rules list error:', err.message);
@@ -80,7 +84,7 @@ router.get('/rules', requireAuth, async (req, res) => {
 router.post('/rules', requireAuth, requirePermission('server.config'), async (req, res) => {
     try {
         const { name, description, condition_type, condition_op, condition_value,
-            severity, scope_device_id, cooldown_secs, notify_emails } = req.body;
+            severity, cooldown_secs, notify_emails } = req.body;
 
         if (!name || !name.trim()) {
             return res.status(400).json({ error: 'Rule name is required' });
@@ -100,7 +104,7 @@ router.post('/rules', requireAuth, requirePermission('server.config'), async (re
             condition_op: condition_op || 'gt',
             condition_value: condition_value ?? 0,
             severity: VALID_SEVERITIES.includes(severity) ? severity : 'warning',
-            scope_device_id: scope_device_id || null,
+            scope_device_id: normalizeScopeFromBody(req.body) ?? null,
             cooldown_secs: cooldown_secs || 300,
             notify_emails: notify_emails || '',
             created_by: req.session.user.username,
@@ -111,7 +115,7 @@ router.post('/rules', requireAuth, requirePermission('server.config'), async (re
         } catch (_) { /* ignore */ }
 
         console.log(`[Automation] Alert rule created: ${name}`);
-        res.status(201).json({ success: true, rule });
+        res.status(201).json({ success: true, rule: enrichRuleScope(rule) });
     } catch (err) {
         console.error('[Automation] Rule create error:', err.message);
         res.status(500).json({ error: 'Internal server error' });
@@ -126,7 +130,7 @@ router.get('/rules/:id(\\d+)', requireAuth, async (req, res) => {
         const adapter = getAdapter();
         const rule = await adapter.getAlertRuleById(+req.params.id);
         if (!rule) return res.status(404).json({ error: 'Rule not found' });
-        res.json(rule);
+        res.json(enrichRuleScope(rule));
     } catch (err) {
         console.error('[Automation] Rule get error:', err.message);
         res.status(500).json({ error: 'Internal server error' });
@@ -136,7 +140,7 @@ router.get('/rules/:id(\\d+)', requireAuth, async (req, res) => {
 /**
  * PATCH /api/automation/rules/:id — Update alert rule.
  */
-router.patch('/rules/:id(\d+)', requireAuth, requirePermission('server.config'), async (req, res) => {
+router.patch('/rules/:id(\\d+)', requireAuth, requirePermission('server.config'), async (req, res) => {
     try {
         const adapter = getAdapter();
         const rule = await adapter.getAlertRuleById(+req.params.id);
@@ -144,7 +148,7 @@ router.patch('/rules/:id(\d+)', requireAuth, requirePermission('server.config'),
 
         const updates = {};
         const { name, description, enabled, condition_type, condition_op, condition_value,
-            severity, scope_device_id, cooldown_secs, notify_emails } = req.body;
+            severity, cooldown_secs, notify_emails } = req.body;
 
         if (name !== undefined) updates.name = name.trim();
         if (description !== undefined) updates.description = description;
@@ -163,7 +167,8 @@ router.patch('/rules/:id(\d+)', requireAuth, requirePermission('server.config'),
         }
         if (condition_value !== undefined) updates.condition_value = condition_value;
         if (severity !== undefined) updates.severity = severity;
-        if (scope_device_id !== undefined) updates.scope_device_id = scope_device_id;
+        const normalizedScope = normalizeScopeFromBody(req.body);
+        if (normalizedScope !== undefined) updates.scope_device_id = normalizedScope;
         if (cooldown_secs !== undefined) updates.cooldown_secs = cooldown_secs;
         if (notify_emails !== undefined) updates.notify_emails = notify_emails;
 
@@ -180,7 +185,7 @@ router.patch('/rules/:id(\d+)', requireAuth, requirePermission('server.config'),
 /**
  * DELETE /api/automation/rules/:id — Delete alert rule.
  */
-router.delete('/rules/:id(\d+)', requireAuth, requirePermission('server.config'), async (req, res) => {
+router.delete('/rules/:id(\\d+)', requireAuth, requirePermission('server.config'), async (req, res) => {
     try {
         const adapter = getAdapter();
         const rule = await adapter.getAlertRuleById(+req.params.id);

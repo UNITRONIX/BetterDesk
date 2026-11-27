@@ -2209,7 +2209,22 @@
     "no_alerts": "Không có cảnh báo nào được kích hoạt",
     "no_commands": "Không có lệnh nào được gửi",
     "id_payload_required": "Cần có ID thiết bị và tải trọng",
-    "no_commands_sent": "Chưa có lệnh nào được gửi"
+    "no_commands_sent": "Chưa có lệnh nào được gửi",
+    "scope_devices": "Thiết bị đích",
+    "scope_all_hint": "Không chọn = tất cả thiết bị. Chọn một hoặc nhiều để giới hạn phạm vi.",
+    "scope_selected": "Đã chọn {count}",
+    "scope_search": "Tìm thiết bị…",
+    "scope_status": "Trạng thái",
+    "scope_status_all": "Tất cả trạng thái",
+    "scope_status_online": "Trực tuyến",
+    "scope_status_offline": "Ngoại tuyến",
+    "scope_select_visible": "Chọn đang hiện",
+    "scope_clear": "Xóa lựa chọn",
+    "scope_no_match": "Không có thiết bị phù hợp",
+    "scope_tags": "Thẻ",
+    "scope_loading": "Đang tải thiết bị…",
+    "notify_emails_placeholder": "ops@example.com, oncall@example.com",
+    "notify_emails_hint": "Tùy chọn. Để trống = Cài đặt → Email → Alert email. Cảnh báo cũng hiện ở chuông và toast."
   },
   "file_transfer": {
     "title": "Truyền tệp",
@@ -4244,7 +4259,8 @@
     "mark_all_read": "Đánh dấu tất cả đã đọc",
     "see_all": "Xem tất cả yêu cầu trợ giúp",
     "help_request": "Yêu cầu trợ giúp",
-    "just_now": "just now"
+    "just_now": "just now",
+    "automation_alert": "Cảnh báo tự động hóa"
   },
   "accessibility": {
     "title": "Accessibility",

@@ -2216,7 +2216,22 @@
     "no_alerts": "Brak wyzwolonych alertów",
     "no_commands": "Brak wysłanych poleceń",
     "id_payload_required": "ID urządzenia i payload są wymagane",
-    "no_commands_sent": "Nie wysłano jeszcze żadnych poleceń"
+    "no_commands_sent": "Nie wysłano jeszcze żadnych poleceń",
+    "scope_devices": "Urządzenia docelowe",
+    "scope_all_hint": "Brak zaznaczenia oznacza wszystkie urządzenia. Zaznacz jedno lub więcej, aby ograniczyć zakres.",
+    "scope_selected": "Wybrano: {count}",
+    "scope_search": "Szukaj urządzeń…",
+    "scope_status": "Status",
+    "scope_status_all": "Wszystkie statusy",
+    "scope_status_online": "Online",
+    "scope_status_offline": "Offline",
+    "scope_select_visible": "Zaznacz widoczne",
+    "scope_clear": "Wyczyść zaznaczenie",
+    "scope_no_match": "Brak pasujących urządzeń",
+    "scope_tags": "Tagi",
+    "scope_loading": "Ładowanie urządzeń…",
+    "notify_emails_placeholder": "ops@example.com, dyżur@example.com",
+    "notify_emails_hint": "Opcjonalne. Puste pole = Ustawienia → E-mail → Alert email. Alerty trafiają też do dzwoneczka i toastów w panelu."
   },
   "file_transfer": {
     "title": "Przesyłanie plików",
@@ -2733,7 +2748,8 @@
     "mark_all_read": "Oznacz wszystkie jako przeczytane",
     "see_all": "Zobacz wszystkie prośby o pomoc",
     "help_request": "Prośba o pomoc",
-    "just_now": "przed chwilą"
+    "just_now": "przed chwilą",
+    "automation_alert": "Alert automatyzacji"
   },
   "desktop": {
     "switch_mode": "Tryb pulpitu",

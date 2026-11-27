@@ -2209,7 +2209,22 @@
     "no_alerts": "Ingen advarsler udløst",
     "no_commands": "Ingen kommandoer sendt",
     "id_payload_required": "Enheds-id og nyttelast er påkrævet",
-    "no_commands_sent": "Ingen kommandoer er blevet sendt endnu"
+    "no_commands_sent": "Ingen kommandoer er blevet sendt endnu",
+    "scope_devices": "Målenheder",
+    "scope_all_hint": "Ingen valg = alle enheder. Vælg en eller flere for at begrænse omfanget.",
+    "scope_selected": "{count} valgt",
+    "scope_search": "Søg enheder…",
+    "scope_status": "Status",
+    "scope_status_all": "Alle statusser",
+    "scope_status_online": "Online",
+    "scope_status_offline": "Offline",
+    "scope_select_visible": "Vælg synlige",
+    "scope_clear": "Ryd valg",
+    "scope_no_match": "Ingen matchende enheder",
+    "scope_tags": "Tags",
+    "scope_loading": "Indlæser enheder…",
+    "notify_emails_placeholder": "ops@example.com, vagt@example.com",
+    "notify_emails_hint": "Valgfrit. Tomt = Indstillinger → E-mail → Alert-e-mail. Alarmer vises også i klokken og som toast."
   },
   "file_transfer": {
     "title": "Filoverførsel",
@@ -4244,7 +4259,8 @@
     "mark_all_read": "Marker alt som læst",
     "see_all": "Se alle anmodninger om hjælp",
     "help_request": "Hjælp anmodning",
-    "just_now": "just now"
+    "just_now": "just now",
+    "automation_alert": "Automatiseringsalarm"
   },
   "accessibility": {
     "title": "Accessibility",

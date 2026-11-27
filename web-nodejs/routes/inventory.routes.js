@@ -173,13 +173,25 @@ router.post('/telemetry', requireDeviceToken, async (req, res) => {
         if (!requireTokenDeviceMatch(req, res, device_id)) return;
 
         const adapter = getAdapter();
-        await adapter.upsertTelemetry(device_id, {
+        const telemetry = {
             cpu_usage_percent: cpu_usage_percent ?? 0,
             memory_used_bytes: memory_used_bytes ?? 0,
             memory_total_bytes: memory_total_bytes ?? 0,
             uptime_secs: uptime_secs ?? 0,
             timestamp: timestamp || new Date().toISOString(),
-        });
+        };
+        await adapter.upsertTelemetry(device_id, telemetry);
+
+        // Fire alert rules without blocking the agent response.
+        try {
+            const { evaluateTelemetry } = require('../services/alertRulesEngine');
+            evaluateTelemetry(device_id, {
+                ...telemetry,
+                disk_usage_percent: req.body.disk_usage_percent,
+                disk_used_bytes: req.body.disk_used_bytes,
+                disk_total_bytes: req.body.disk_total_bytes,
+            }).catch((err) => console.error('[Telemetry] Alert eval failed:', err.message));
+        } catch (_) { /* engine optional at boot */ }
 
         res.json({ success: true });
     } catch (err) {

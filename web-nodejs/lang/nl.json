@@ -2203,7 +2203,22 @@
     "no_alerts": "Geen geactiveerde waarschuwingen",
     "no_commands": "Geen commando's verzonden",
     "id_payload_required": "Apparaat-ID en payload zijn vereist",
-    "no_commands_sent": "Nog geen commando's verzonden"
+    "no_commands_sent": "Nog geen commando's verzonden",
+    "scope_devices": "Doelapparaten",
+    "scope_all_hint": "Geen selectie = alle apparaten. Selecteer er een of meer om het bereik te beperken.",
+    "scope_selected": "{count} geselecteerd",
+    "scope_search": "Apparaten zoeken…",
+    "scope_status": "Status",
+    "scope_status_all": "Alle statussen",
+    "scope_status_online": "Online",
+    "scope_status_offline": "Offline",
+    "scope_select_visible": "Selecteer zichtbare",
+    "scope_clear": "Selectie wissen",
+    "scope_no_match": "Geen overeenkomende apparaten",
+    "scope_tags": "Tags",
+    "scope_loading": "Apparaten laden…",
+    "notify_emails_placeholder": "ops@example.com, piket@example.com",
+    "notify_emails_hint": "Optioneel. Leeg = Instellingen → E-mail → Alert-e-mail. Meldingen verschijnen ook in de bel en als toast."
   },
   "file_transfer": {
     "title": "Bestandsoverdracht",
@@ -4238,7 +4253,8 @@
     "mark_all_read": "Alles als gelezen markeren",
     "see_all": "Alle hulpverzoeken bekijken",
     "help_request": "Hulpverzoek",
-    "just_now": "just now"
+    "just_now": "just now",
+    "automation_alert": "Automatiseringsmelding"
   },
   "accessibility": {
     "title": "Toegankelijkheid",

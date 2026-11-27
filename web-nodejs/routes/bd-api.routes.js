@@ -1095,6 +1095,7 @@ router.delete('/help-requests/:id', requireDeviceAuth, requireOperatorRole, asyn
 
 const { requireAuth, requestHasPermission } = require('../middleware/auth');
 const { listRegistrationNotifications } = require('../services/registrationNotifications');
+const { listAutomationAlertNotifications } = require('../services/alertNotifications');
 
 function sessionUserId(req) {
     return req.session?.userId ?? req.session?.user?.id ?? null;
@@ -1153,7 +1154,8 @@ router.get('/notifications', requireAuth, async (req, res) => {
             .sort((a, b) => b.created_at - a.created_at)
             .map(r => helpRequestToNotif(r, readIds))
         const registrationItems = await getRegistrationNotifications(req, readIds);
-        const allItems = [...helpItems, ...registrationItems]
+        const automationItems = await listAutomationAlertNotifications(readIds);
+        const allItems = [...helpItems, ...registrationItems, ...automationItems]
             .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at));
         const items = allItems
             .filter(n => (unreadOnly ? !n.read : true))
@@ -1206,9 +1208,11 @@ router.post('/notifications/read-all', doubleCsrfProtection, requireAuth, async 
             .map(normalizeHelpRequest)
             .filter(Boolean);
         const registrationItems = await getRegistrationNotifications(req, new Set());
+        const automationItems = await listAutomationAlertNotifications(new Set());
         await db.markAllNotificationsRead(userId, [
             ...requests.map((r) => r.id),
             ...registrationItems.map((item) => item.id),
+            ...automationItems.map((item) => item.id),
         ]);
 
         res.json({ success: true });

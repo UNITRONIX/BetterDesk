@@ -2209,7 +2209,22 @@
     "no_alerts": "ไม่มีการแจ้งเตือนเกิดขึ้น",
     "no_commands": "ไม่มีการส่งคำสั่ง",
     "id_payload_required": "ต้องมีรหัสอุปกรณ์และเพย์โหลด",
-    "no_commands_sent": "ยังไม่มีการส่งคำสั่งใดๆ"
+    "no_commands_sent": "ยังไม่มีการส่งคำสั่งใดๆ",
+    "scope_devices": "อุปกรณ์เป้าหมาย",
+    "scope_all_hint": "ไม่เลือก = ทุกอุปกรณ์ เลือกหนึ่งหรือหลายรายการเพื่อจำกัดขอบเขต",
+    "scope_selected": "เลือกแล้ว {count}",
+    "scope_search": "ค้นหาอุปกรณ์…",
+    "scope_status": "สถานะ",
+    "scope_status_all": "ทุกสถานะ",
+    "scope_status_online": "ออนไลน์",
+    "scope_status_offline": "ออฟไลน์",
+    "scope_select_visible": "เลือกที่แสดง",
+    "scope_clear": "ล้างการเลือก",
+    "scope_no_match": "ไม่พบอุปกรณ์ที่ตรงกัน",
+    "scope_tags": "แท็ก",
+    "scope_loading": "กำลังโหลดอุปกรณ์…",
+    "notify_emails_placeholder": "ops@example.com, oncall@example.com",
+    "notify_emails_hint": "ไม่บังคับ ว่าง = การตั้งค่า → อีเมล → Alert email การแจ้งเตือนจะขึ้นที่กระดิ่งและ toast ด้วย"
   },
   "file_transfer": {
     "title": "การถ่ายโอนไฟล์",
@@ -4244,7 +4259,8 @@
     "mark_all_read": "ทำเครื่องหมายว่าอ่านแล้วทั้งหมด",
     "see_all": "ดูคำขอความช่วยเหลือทั้งหมด",
     "help_request": "ขอความช่วยเหลือ",
-    "just_now": "just now"
+    "just_now": "just now",
+    "automation_alert": "การแจ้งเตือนอัตโนมัติ"
   },
   "accessibility": {
     "title": "Accessibility",

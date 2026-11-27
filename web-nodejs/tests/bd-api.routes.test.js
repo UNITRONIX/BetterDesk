@@ -13,6 +13,10 @@ jest.mock('../services/betterdeskApi', () => ({
     getEnrollmentPending: jest.fn(),
 }));
 
+jest.mock('../services/alertNotifications', () => ({
+    listAutomationAlertNotifications: jest.fn().mockResolvedValue([]),
+}));
+
 jest.mock('../services/database', () => ({
     shouldRejectRenamedPeerRegistration: jest.fn(),
     getRenamedPeerId: jest.fn(),
@@ -29,6 +33,7 @@ jest.mock('../services/database', () => ({
 
 const db = require('../services/database');
 const betterdeskApi = require('../services/betterdeskApi');
+const { listAutomationAlertNotifications } = require('../services/alertNotifications');
 const bdApiRoutes = require('../routes/bd-api.routes');
 
 describe('BD-API register rename guard', () => {
@@ -136,6 +141,7 @@ describe('BD-API notification center', () => {
             success: true,
             data: [],
         });
+        listAutomationAlertNotifications.mockResolvedValue([]);
     });
 
     it('merges LAN and managed enrollment requests and reports the full unread count', async () => {
@@ -223,6 +229,9 @@ describe('BD-API notification center', () => {
             success: true,
             data: [{ id: 'help-1', created_at: '2026-08-23T11:00:00.000Z' }],
         });
+        listAutomationAlertNotifications.mockResolvedValue([{
+            id: 'automation:alert:3',
+        }]);
 
         const csrf = await getCsrfCredentials();
         const res = await request(app)
@@ -234,6 +243,27 @@ describe('BD-API notification center', () => {
         expect(db.markAllNotificationsRead).toHaveBeenCalledWith(1, [
             'help-1',
             'registration:lan:9',
+            'automation:alert:3',
         ]);
+    });
+
+    it('includes automation alerts in the notification center', async () => {
+        listAutomationAlertNotifications.mockResolvedValue([{
+            id: 'automation:alert:11',
+            title: 'Idle too long',
+            message: 'idle_duration = 90',
+            icon: 'error',
+            link: '/automation?tab=alerts',
+            read: false,
+            created_at: '2026-11-27T12:00:00.000Z',
+            kind: 'automation_alert',
+        }]);
+
+        const res = await request(app).get('/api/bd/notifications');
+
+        expect(res.status).toBe(200);
+        expect(res.body.unread_count).toBe(1);
+        expect(res.body.items[0].kind).toBe('automation_alert');
+        expect(res.body.items[0].link).toBe('/automation?tab=alerts');
     });
 });

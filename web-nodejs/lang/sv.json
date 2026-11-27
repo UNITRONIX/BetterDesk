@@ -2209,7 +2209,22 @@
     "no_alerts": "Inga varningar har utlösts",
     "no_commands": "Inga kommandon skickade",
     "id_payload_required": "Enhets-ID och nyttolast krävs",
-    "no_commands_sent": "Inga kommandon har skickats ännu"
+    "no_commands_sent": "Inga kommandon har skickats ännu",
+    "scope_devices": "Målenheter",
+    "scope_all_hint": "Inget val = alla enheter. Välj en eller flera för att begränsa omfattningen.",
+    "scope_selected": "{count} valda",
+    "scope_search": "Sök enheter…",
+    "scope_status": "Status",
+    "scope_status_all": "Alla statusar",
+    "scope_status_online": "Online",
+    "scope_status_offline": "Offline",
+    "scope_select_visible": "Markera synliga",
+    "scope_clear": "Rensa markering",
+    "scope_no_match": "Inga matchande enheter",
+    "scope_tags": "Taggar",
+    "scope_loading": "Läser in enheter…",
+    "notify_emails_placeholder": "ops@example.com, jour@example.com",
+    "notify_emails_hint": "Valfritt. Tomt = Inställningar → E-post → Larm-e-post. Larm syns också i klockan och som toast."
   },
   "file_transfer": {
     "title": "Filöverföring",
@@ -4244,7 +4259,8 @@
     "mark_all_read": "Markera allt som läst",
     "see_all": "Se alla hjälpförfrågningar",
     "help_request": "Begäran om hjälp",
-    "just_now": "just now"
+    "just_now": "just now",
+    "automation_alert": "Automatiseringslarm"
   },
   "accessibility": {
     "title": "Accessibility",

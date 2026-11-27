@@ -2216,7 +2216,22 @@
     "no_alerts": "Aucune alerte déclenchée",
     "no_commands": "Aucune commande envoyée",
     "id_payload_required": "Device ID and payload are required",
-    "no_commands_sent": "Aucune commande envoyée pour le moment"
+    "no_commands_sent": "Aucune commande envoyée pour le moment",
+    "scope_devices": "Appareils cibles",
+    "scope_all_hint": "Aucune sélection = tous les appareils. Sélectionnez-en un ou plusieurs pour limiter la portée.",
+    "scope_selected": "{count} sélectionné(s)",
+    "scope_search": "Rechercher des appareils…",
+    "scope_status": "État",
+    "scope_status_all": "Tous les états",
+    "scope_status_online": "En ligne",
+    "scope_status_offline": "Hors ligne",
+    "scope_select_visible": "Sélectionner visibles",
+    "scope_clear": "Effacer la sélection",
+    "scope_no_match": "Aucun appareil correspondant",
+    "scope_tags": "Tags",
+    "scope_loading": "Chargement des appareils…",
+    "notify_emails_placeholder": "ops@example.com, astreinte@example.com",
+    "notify_emails_hint": "Facultatif. Vide = Paramètres → E-mail → E-mail d’alerte. Les alertes apparaissent aussi dans la cloche et en toast."
   },
   "file_transfer": {
     "title": "Tableau de bord",
@@ -2733,7 +2748,8 @@
     "mark_all_read": "Alle als gelesen markieren",
     "see_all": "Alle Hilfeanfragen anzeigen",
     "help_request": "Hilfeanfrage",
-    "just_now": "just now"
+    "just_now": "just now",
+    "automation_alert": "Alerte d'automatisation"
   },
   "desktop": {
     "switch_mode": "Desktop Mode",

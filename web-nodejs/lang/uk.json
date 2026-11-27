@@ -2209,7 +2209,22 @@
     "no_alerts": "Жодне сповіщення не активовано",
     "no_commands": "Команди не надіслано",
     "id_payload_required": "Необхідні ідентифікатор пристрою та корисне навантаження",
-    "no_commands_sent": "Команди ще не надіслано"
+    "no_commands_sent": "Команди ще не надіслано",
+    "scope_devices": "Цільові пристрої",
+    "scope_all_hint": "Без вибору = усі пристрої. Виберіть один або кілька, щоб обмежити область.",
+    "scope_selected": "Вибрано: {count}",
+    "scope_search": "Пошук пристроїв…",
+    "scope_status": "Статус",
+    "scope_status_all": "Усі статуси",
+    "scope_status_online": "Онлайн",
+    "scope_status_offline": "Офлайн",
+    "scope_select_visible": "Вибрати видимі",
+    "scope_clear": "Очистити вибір",
+    "scope_no_match": "Немає відповідних пристроїв",
+    "scope_tags": "Теги",
+    "scope_loading": "Завантаження пристроїв…",
+    "notify_emails_placeholder": "ops@example.com, oncall@example.com",
+    "notify_emails_hint": "Необов’язково. Порожньо = Налаштування → Email → Alert email. Сповіщення також у дзвіночку та toast."
   },
   "file_transfer": {
     "title": "Передача файлів",
@@ -4244,7 +4259,8 @@
     "mark_all_read": "Позначити все прочитане",
     "see_all": "Переглянути всі запити на допомогу",
     "help_request": "Прохання про допомогу",
-    "just_now": "just now"
+    "just_now": "just now",
+    "automation_alert": "Сповіщення автоматизації"
   },
   "accessibility": {
     "title": "Доступність",

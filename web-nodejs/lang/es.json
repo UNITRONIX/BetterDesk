@@ -2203,7 +2203,22 @@
     "no_alerts": "No se han activado alertas",
     "no_commands": "No se han enviado comandos",
     "id_payload_required": "Se requieren ID de dispositivo y payload",
-    "no_commands_sent": "Aún no se han enviado comandos"
+    "no_commands_sent": "Aún no se han enviado comandos",
+    "scope_devices": "Dispositivos de destino",
+    "scope_all_hint": "Sin selección = todos los dispositivos. Elija uno o más para limitar el alcance.",
+    "scope_selected": "{count} seleccionados",
+    "scope_search": "Buscar dispositivos…",
+    "scope_status": "Estado",
+    "scope_status_all": "Todos los estados",
+    "scope_status_online": "En línea",
+    "scope_status_offline": "Desconectado",
+    "scope_select_visible": "Seleccionar visibles",
+    "scope_clear": "Borrar selección",
+    "scope_no_match": "No hay dispositivos coincidentes",
+    "scope_tags": "Etiquetas",
+    "scope_loading": "Cargando dispositivos…",
+    "notify_emails_placeholder": "ops@example.com, guardia@example.com",
+    "notify_emails_hint": "Opcional. Vacío = Ajustes → Correo → Email de alerta. Las alertas también van al timbre y toast del panel."
   },
   "file_transfer": {
     "title": "Panel",
@@ -4238,7 +4253,8 @@
     "mark_all_read": "Marcar todo como leído",
     "see_all": "Ver todas las solicitudes de ayuda",
     "help_request": "Solicitud de ayuda",
-    "just_now": "just now"
+    "just_now": "just now",
+    "automation_alert": "Alerta de automatización"
   },
   "accessibility": {
     "title": "Accesibilidad",

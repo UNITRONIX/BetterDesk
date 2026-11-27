@@ -2209,7 +2209,22 @@
     "no_alerts": "कोई अलर्ट ट्रिगर नहीं हुआ",
     "no_commands": "कोई आदेश नहीं भेजा गया",
     "id_payload_required": "डिवाइस आईडी और पेलोड आवश्यक हैं",
-    "no_commands_sent": "अभी तक कोई आदेश नहीं भेजा गया है"
+    "no_commands_sent": "अभी तक कोई आदेश नहीं भेजा गया है",
+    "scope_devices": "लक्षित डिवाइस",
+    "scope_all_hint": "कोई चयन नहीं = सभी डिवाइस। दायरा सीमित करने के लिए एक या अधिक चुनें।",
+    "scope_selected": "{count} चयनित",
+    "scope_search": "डिवाइस खोजें…",
+    "scope_status": "स्थिति",
+    "scope_status_all": "सभी स्थितियाँ",
+    "scope_status_online": "ऑनलाइन",
+    "scope_status_offline": "ऑफ़लाइन",
+    "scope_select_visible": "दिखाई देने वाले चुनें",
+    "scope_clear": "चयन साफ़ करें",
+    "scope_no_match": "कोई मेल खाता डिवाइस नहीं",
+    "scope_tags": "टैग",
+    "scope_loading": "डिवाइस लोड हो रहे हैं…",
+    "notify_emails_placeholder": "ops@example.com, oncall@example.com",
+    "notify_emails_hint": "वैकल्पिक। खाली = सेटिंग्स → ईमेल → Alert email। अलर्ट घंटी और टोस्ट में भी दिखेंगे।"
   },
   "file_transfer": {
     "title": "दस्तावेज हस्तांतरण",
@@ -4244,7 +4259,8 @@
     "mark_all_read": "सभी को पढ़ा दिखाएं",
     "see_all": "सभी सहायता अनुरोध देखें",
     "help_request": "मदद अनुरोध",
-    "just_now": "just now"
+    "just_now": "just now",
+    "automation_alert": "स्वचालन अलर्ट"
   },
   "accessibility": {
     "title": "पहुंच योग्यता",

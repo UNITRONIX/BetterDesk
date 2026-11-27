@@ -2203,7 +2203,22 @@
     "no_alerts": "Keine Alarme ausgelöst",
     "no_commands": "Keine Befehle gesendet",
     "id_payload_required": "Geräte-ID und Payload sind erforderlich",
-    "no_commands_sent": "Noch keine Befehle gesendet"
+    "no_commands_sent": "Noch keine Befehle gesendet",
+    "scope_devices": "Zielgeräte",
+    "scope_all_hint": "Keine Auswahl = alle Geräte. Wählen Sie ein oder mehrere Geräte, um den Umfang einzuschränken.",
+    "scope_selected": "{count} ausgewählt",
+    "scope_search": "Geräte suchen…",
+    "scope_status": "Status",
+    "scope_status_all": "Alle Status",
+    "scope_status_online": "Online",
+    "scope_status_offline": "Offline",
+    "scope_select_visible": "Sichtbare auswählen",
+    "scope_clear": "Auswahl löschen",
+    "scope_no_match": "Keine passenden Geräte",
+    "scope_tags": "Tags",
+    "scope_loading": "Geräte werden geladen…",
+    "notify_emails_placeholder": "ops@example.com, bereitschaft@example.com",
+    "notify_emails_hint": "Optional. Leer = Einstellungen → E-Mail → Alert-E-Mail. Alarme erscheinen auch in der Glocke und als Toast."
   },
   "file_transfer": {
     "title": "Dashboard",
@@ -4238,7 +4253,8 @@
     "mark_all_read": "Alle als gelesen markieren",
     "see_all": "Alle Hilfeanfragen anzeigen",
     "help_request": "Hilfeanfrage",
-    "just_now": "just now"
+    "just_now": "just now",
+    "automation_alert": "Automatisierungsalarm"
   },
   "accessibility": {
     "title": "Barrierefreiheit",

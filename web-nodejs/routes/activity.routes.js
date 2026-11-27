@@ -86,6 +86,12 @@ router.post('/activity', requireDeviceToken, requireTokenDeviceMatch, async (req
             reported_at: timestamp || new Date().toISOString(),
         });
 
+        try {
+            const { evaluateActivity } = require('../services/alertRulesEngine');
+            evaluateActivity(device_id, { idle_seconds: idle_seconds ?? 0 })
+                .catch((err) => console.error('[Activity] Alert eval failed:', err.message));
+        } catch (_) { /* engine optional at boot */ }
+
         console.log(`[Activity] Received ${sessions?.length || 0} sessions from ${device_id} (idle: ${idle_seconds ?? 0}s)`);
         res.json({ success: true });
     } catch (err) {

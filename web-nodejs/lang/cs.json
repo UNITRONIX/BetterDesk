@@ -2203,7 +2203,22 @@
     "no_alerts": "Nebyla spuštěna žádná upozornění",
     "no_commands": "Nebyly odeslány žádné příkazy",
     "id_payload_required": "ID zařízení a payload jsou povinné",
-    "no_commands_sent": "Zatím nebyly odeslány žádné příkazy"
+    "no_commands_sent": "Zatím nebyly odeslány žádné příkazy",
+    "scope_devices": "Cílová zařízení",
+    "scope_all_hint": "Bez výběru = všechna zařízení. Vyberte jedno nebo více pro omezení rozsahu.",
+    "scope_selected": "Vybráno: {count}",
+    "scope_search": "Hledat zařízení…",
+    "scope_status": "Stav",
+    "scope_status_all": "Všechny stavy",
+    "scope_status_online": "Online",
+    "scope_status_offline": "Offline",
+    "scope_select_visible": "Vybrat viditelné",
+    "scope_clear": "Vymazat výběr",
+    "scope_no_match": "Žádná odpovídající zařízení",
+    "scope_tags": "Štítky",
+    "scope_loading": "Načítání zařízení…",
+    "notify_emails_placeholder": "ops@example.com, pohotovost@example.com",
+    "notify_emails_hint": "Volitelné. Prázdné = Nastavení → E-mail → Alert e-mail. Upozornění se zobrazí i ve zvonku a toastu."
   },
   "file_transfer": {
     "title": "Přenos souborů",
@@ -4238,7 +4253,8 @@
     "mark_all_read": "Označit vše jako přečtené",
     "see_all": "Zobrazit všechny žádosti o pomoc",
     "help_request": "Žádost o pomoc",
-    "just_now": "právě teď"
+    "just_now": "právě teď",
+    "automation_alert": "Automatizační upozornění"
   },
   "accessibility": {
     "title": "Usnadnění",

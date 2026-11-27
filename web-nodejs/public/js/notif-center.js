@@ -181,6 +181,49 @@
         }
     }
 
+    function pulseBell() {
+        if (dom && dom.btn) {
+            dom.btn.classList.remove('notif-pulse');
+            void dom.btn.offsetWidth;
+            dom.btn.classList.add('notif-pulse');
+        }
+    }
+
+    function pushLiveItem(item) {
+        const existingIndex = state.items.findIndex((entry) => String(entry.id) === String(item.id));
+        if (existingIndex >= 0) {
+            state.items.splice(existingIndex, 1);
+        } else {
+            state.unreadCount += 1;
+        }
+        state.items.unshift(item);
+        if (state.items.length > MAX_ITEMS) {
+            state.items = state.items.slice(0, MAX_ITEMS);
+        }
+        updateBadge();
+        renderList();
+        pulseBell();
+    }
+
+    function showToastForAlert(item) {
+        try {
+            const severity = String(item.severity || '').toLowerCase();
+            const type = severity === 'critical' ? 'error' : (severity === 'info' ? 'info' : 'warning');
+            if (window.Notifications && typeof window.Notifications.show === 'function') {
+                window.Notifications.show({
+                    type,
+                    title: item.title || _('notifications.automation_alert'),
+                    message: item.message || '',
+                    duration: 8000,
+                });
+            } else if (window.Notifications && typeof window.Notifications[type] === 'function') {
+                window.Notifications[type](item.message || item.title || '');
+            }
+        } catch {
+            // Toast is best-effort.
+        }
+    }
+
     function onHelpRequestEvent(payload) {
         try {
             const item = {
@@ -192,27 +235,27 @@
                 read: false,
                 created_at: payload.timestamp || new Date().toISOString(),
             };
-            // Insert at top, cap list.
-            const existingIndex = state.items.findIndex((entry) => String(entry.id) === String(item.id));
-            if (existingIndex >= 0) {
-                state.items.splice(existingIndex, 1);
-            } else {
-                state.unreadCount += 1;
-            }
-            state.items.unshift(item);
-            if (state.items.length > MAX_ITEMS) {
-                state.items = state.items.slice(0, MAX_ITEMS);
-            }
-            updateBadge();
-            renderList();
+            pushLiveItem(item);
+        } catch {
+            // Ignore malformed payloads.
+        }
+    }
 
-            // Subtle badge pulse for real-time feedback.
-            if (dom && dom.btn) {
-                dom.btn.classList.remove('notif-pulse');
-                // Force reflow so the class re-application restarts the animation.
-                void dom.btn.offsetWidth;
-                dom.btn.classList.add('notif-pulse');
-            }
+    function onAutomationAlertEvent(payload) {
+        try {
+            const item = {
+                id: payload.id || (`automation:alert:${payload.alert_id || Date.now()}`),
+                title: payload.title || _('notifications.automation_alert'),
+                message: payload.message || '',
+                icon: payload.icon || 'notifications_active',
+                link: payload.link || '/automation?tab=alerts',
+                read: false,
+                created_at: payload.created_at || new Date().toISOString(),
+                severity: payload.severity || 'warning',
+                kind: 'automation_alert',
+            };
+            pushLiveItem(item);
+            showToastForAlert(item);
         } catch {
             // Ignore malformed payloads.
         }
@@ -223,6 +266,8 @@
             const payload = event.detail || {};
             if (payload.type === 'help_request') {
                 onHelpRequestEvent(payload);
+            } else if (payload.type === 'automation_alert') {
+                onAutomationAlertEvent(payload);
             } else if (payload.type === 'registration_pending' ||
                 payload.type === 'registration_changed') {
                 // The API is the source of truth for read state and the

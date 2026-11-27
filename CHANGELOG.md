@@ -1,7 +1,18 @@
 ## [Unreleased]
 
 ### Changed
-- _(none yet)_
+- **Automation alerts reach the panel:** firing a rule writes Alert History, pushes
+  a live toast + navbar bell item (`/automation?tab=alerts`), and emails
+  `notify_emails` or the Settings → Email alert address. Telemetry/activity
+  uploads and a 60s offline sweep feed the engine.
+- **Automation rule target devices:** the single device dropdown is replaced by a
+  wide modal panel with a searchable, filterable multi-select device table
+  (status + tags). Empty selection still means all devices; multiple IDs are
+  stored in `scope_device_id` (JSON array) and honored by the alert engine.
+
+### Fixed
+- **Automation rule PATCH/DELETE 404:** Express routes used `'\d+'` instead of
+  `'\\d+'`, so `/api/automation/rules/:id` never matched numeric IDs.
 
 ---
 
@@ -25,7 +36,6 @@
 - **UX 3.5 topbar + sidebar (dark):** chrome background is near-black
   (`#05070a`) instead of the previous mid `#161b22` surface — top bar and
   sidebar share the same dark chrome, without a hairline under the topbar.
-
 - **Sidebar search:** the menu filter also suggests destinations from the
   console search index (settings tabs, users, folders/tags intents, etc.) and
   Ctrl+K global search is available again on UX 3.5.

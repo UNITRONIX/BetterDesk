@@ -2216,7 +2216,22 @@
     "no_alerts": "暫無告警觸發",
     "no_commands": "暫無已發送的命令",
     "id_payload_required": "設備 ID 和命令內容爲必填項",
-    "no_commands_sent": "尚未發送任何命令"
+    "no_commands_sent": "尚未發送任何命令",
+    "scope_devices": "目標裝置",
+    "scope_all_hint": "未選取表示套用至所有裝置。選取一或多台以限制範圍。",
+    "scope_selected": "已選取 {count} 台",
+    "scope_search": "搜尋裝置…",
+    "scope_status": "狀態",
+    "scope_status_all": "全部狀態",
+    "scope_status_online": "線上",
+    "scope_status_offline": "離線",
+    "scope_select_visible": "選取可見項目",
+    "scope_clear": "清除選取",
+    "scope_no_match": "沒有符合的裝置",
+    "scope_tags": "標籤",
+    "scope_loading": "正在載入裝置…",
+    "notify_emails_placeholder": "ops@example.com, oncall@example.com",
+    "notify_emails_hint": "選填。留空則使用 設定 → 電子郵件 → 警示信箱。警示也會出現在鈴鐺與 Toast。"
   },
   "file_transfer": {
     "title": "文件傳輸",
@@ -2733,7 +2748,8 @@
     "mark_all_read": "全部標記爲已讀",
     "see_all": "查看所有求助請求",
     "help_request": "求助請求",
-    "just_now": "剛剛"
+    "just_now": "剛剛",
+    "automation_alert": "自動化警示"
   },
   "desktop": {
     "switch_mode": "桌面模式",

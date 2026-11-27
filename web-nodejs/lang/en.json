@@ -2262,7 +2262,22 @@
     "no_alerts": "No alerts triggered",
     "no_commands": "No commands sent",
     "id_payload_required": "Device ID and payload are required",
-    "no_commands_sent": "No commands have been sent yet"
+    "no_commands_sent": "No commands have been sent yet",
+    "scope_devices": "Target devices",
+    "scope_all_hint": "Leave none selected to apply the rule to all devices. Select one or more devices to limit the scope.",
+    "scope_selected": "{count} selected",
+    "scope_search": "Search devices…",
+    "scope_status": "Status",
+    "scope_status_all": "All statuses",
+    "scope_status_online": "Online",
+    "scope_status_offline": "Offline",
+    "scope_select_visible": "Select visible",
+    "scope_clear": "Clear selection",
+    "scope_no_match": "No matching devices",
+    "scope_tags": "Tags",
+    "scope_loading": "Loading devices…",
+    "notify_emails_placeholder": "ops@example.com, oncall@example.com",
+    "notify_emails_hint": "Optional. Leave empty to use Settings → Email → Alert email. Alerts also appear in the panel bell and toast."
   },
   "file_transfer": {
     "title": "File Transfer",
@@ -2779,7 +2794,8 @@
     "mark_all_read": "Mark all read",
     "see_all": "See all help requests",
     "help_request": "Help request",
-    "just_now": "just now"
+    "just_now": "just now",
+    "automation_alert": "Automation alert"
   },
   "desktop": {
     "switch_mode": "Desktop Mode",

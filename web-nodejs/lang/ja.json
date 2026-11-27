@@ -2203,7 +2203,22 @@
     "no_alerts": "アラートは発生していません",
     "no_commands": "送信されたコマンドはありません",
     "id_payload_required": "デバイスIDとペイロードは必須です",
-    "no_commands_sent": "コマンドはまだ送信されていません"
+    "no_commands_sent": "コマンドはまだ送信されていません",
+    "scope_devices": "対象デバイス",
+    "scope_all_hint": "未選択は全デバイス対象。1台以上選択すると対象を限定します。",
+    "scope_selected": "{count} 件選択",
+    "scope_search": "デバイスを検索…",
+    "scope_status": "状態",
+    "scope_status_all": "すべての状態",
+    "scope_status_online": "オンライン",
+    "scope_status_offline": "オフライン",
+    "scope_select_visible": "表示中を選択",
+    "scope_clear": "選択を解除",
+    "scope_no_match": "一致するデバイスがありません",
+    "scope_tags": "タグ",
+    "scope_loading": "デバイスを読み込み中…",
+    "notify_emails_placeholder": "ops@example.com, oncall@example.com",
+    "notify_emails_hint": "任意。空欄の場合は設定 → メール → アラートメール。ベルとトーストにも表示されます。"
   },
   "file_transfer": {
     "title": "ファイル転送",
@@ -4238,7 +4253,8 @@
     "mark_all_read": "すべて既読としてマークする",
     "see_all": "すべてのヘルプリクエストを表示",
     "help_request": "ヘルプリクエスト",
-    "just_now": "just now"
+    "just_now": "just now",
+    "automation_alert": "自動化アラート"
   },
   "accessibility": {
     "title": "アクセシビリティ",

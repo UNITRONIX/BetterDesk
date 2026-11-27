@@ -2209,7 +2209,22 @@
     "no_alerts": "Tidak ada peringatan yang dipicu",
     "no_commands": "Tidak ada perintah yang dikirim",
     "id_payload_required": "ID perangkat dan payload diperlukan",
-    "no_commands_sent": "Belum ada perintah yang dikirim"
+    "no_commands_sent": "Belum ada perintah yang dikirim",
+    "scope_devices": "Perangkat target",
+    "scope_all_hint": "Tanpa pilihan = semua perangkat. Pilih satu atau lebih untuk membatasi cakupan.",
+    "scope_selected": "{count} dipilih",
+    "scope_search": "Cari perangkat…",
+    "scope_status": "Status",
+    "scope_status_all": "Semua status",
+    "scope_status_online": "Online",
+    "scope_status_offline": "Offline",
+    "scope_select_visible": "Pilih yang terlihat",
+    "scope_clear": "Hapus pilihan",
+    "scope_no_match": "Tidak ada perangkat yang cocok",
+    "scope_tags": "Tag",
+    "scope_loading": "Memuat perangkat…",
+    "notify_emails_placeholder": "ops@example.com, oncall@example.com",
+    "notify_emails_hint": "Opsional. Kosong = Pengaturan → Email → Alert email. Peringatan juga muncul di lonceng dan toast."
   },
   "file_transfer": {
     "title": "Pemindahan Berkas",
@@ -4244,7 +4259,8 @@
     "mark_all_read": "Tandai semua telah dibaca",
     "see_all": "Lihat semua permintaan bantuan",
     "help_request": "Permintaan bantuan",
-    "just_now": "just now"
+    "just_now": "just now",
+    "automation_alert": "Peringatan otomatisasi"
   },
   "accessibility": {
     "title": "Accessibility",

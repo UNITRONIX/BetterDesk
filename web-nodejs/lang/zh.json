@@ -2203,7 +2203,22 @@
     "no_alerts": "暂无告警触发",
     "no_commands": "暂无已发送的命令",
     "id_payload_required": "设备 ID 和命令内容为必填项",
-    "no_commands_sent": "尚未发送任何命令"
+    "no_commands_sent": "尚未发送任何命令",
+    "scope_devices": "目标设备",
+    "scope_all_hint": "不选择表示应用于全部设备。选择一台或多台以限制范围。",
+    "scope_selected": "已选择 {count} 台",
+    "scope_search": "搜索设备…",
+    "scope_status": "状态",
+    "scope_status_all": "全部状态",
+    "scope_status_online": "在线",
+    "scope_status_offline": "离线",
+    "scope_select_visible": "选择可见项",
+    "scope_clear": "清除选择",
+    "scope_no_match": "没有匹配的设备",
+    "scope_tags": "标签",
+    "scope_loading": "正在加载设备…",
+    "notify_emails_placeholder": "ops@example.com, oncall@example.com",
+    "notify_emails_hint": "可选。留空则使用 设置 → 邮件 → 告警邮箱。警报也会出现在铃铛和 Toast 中。"
   },
   "file_transfer": {
     "title": "文件传输",
@@ -2720,7 +2735,8 @@
     "mark_all_read": "全部标记为已读",
     "see_all": "查看所有求助请求",
     "help_request": "求助请求",
-    "just_now": "刚刚"
+    "just_now": "刚刚",
+    "automation_alert": "自动化警报"
   },
   "desktop": {
     "switch_mode": "桌面模式",

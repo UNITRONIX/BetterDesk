@@ -2203,7 +2203,22 @@
     "no_alerts": "Nenhum alerta acionado",
     "no_commands": "Nenhum comando enviado",
     "id_payload_required": "ID do dispositivo e payload são obrigatórios",
-    "no_commands_sent": "Ainda não foram enviados comandos"
+    "no_commands_sent": "Ainda não foram enviados comandos",
+    "scope_devices": "Dispositivos de destino",
+    "scope_all_hint": "Nenhuma seleção = todos os dispositivos. Selecione um ou mais para limitar o escopo.",
+    "scope_selected": "{count} selecionados",
+    "scope_search": "Pesquisar dispositivos…",
+    "scope_status": "Estado",
+    "scope_status_all": "Todos os estados",
+    "scope_status_online": "Online",
+    "scope_status_offline": "Offline",
+    "scope_select_visible": "Selecionar visíveis",
+    "scope_clear": "Limpar seleção",
+    "scope_no_match": "Nenhum dispositivo correspondente",
+    "scope_tags": "Tags",
+    "scope_loading": "A carregar dispositivos…",
+    "notify_emails_placeholder": "ops@example.com, plantao@example.com",
+    "notify_emails_hint": "Opcional. Vazio = Definições → Email → Email de alerta. Os alertas também aparecem no sino e toast do painel."
   },
   "file_transfer": {
     "title": "Transferência de ficheiros",
@@ -4238,7 +4253,8 @@
     "mark_all_read": "Marcar tudo como lido",
     "see_all": "Ver todas as solicitações de ajuda",
     "help_request": "Solicitação de ajuda",
-    "just_now": "just now"
+    "just_now": "just now",
+    "automation_alert": "Alerta de automação"
   },
   "accessibility": {
     "title": "Acessibilidade",

@@ -2209,7 +2209,22 @@
     "no_alerts": "Hiçbir uyarı tetiklenmedi",
     "no_commands": "Hiçbir komut gönderilmedi",
     "id_payload_required": "Cihaz kimliği ve yük gerekli",
-    "no_commands_sent": "Henüz herhangi bir komut gönderilmedi"
+    "no_commands_sent": "Henüz herhangi bir komut gönderilmedi",
+    "scope_devices": "Hedef cihazlar",
+    "scope_all_hint": "Seçim yok = tüm cihazlar. Kapsamı sınırlamak için bir veya daha fazla seçin.",
+    "scope_selected": "{count} seçildi",
+    "scope_search": "Cihaz ara…",
+    "scope_status": "Durum",
+    "scope_status_all": "Tüm durumlar",
+    "scope_status_online": "Çevrimiçi",
+    "scope_status_offline": "Çevrimdışı",
+    "scope_select_visible": "Görünenleri seç",
+    "scope_clear": "Seçimi temizle",
+    "scope_no_match": "Eşleşen cihaz yok",
+    "scope_tags": "Etiketler",
+    "scope_loading": "Cihazlar yükleniyor…",
+    "notify_emails_placeholder": "ops@example.com, nobet@example.com",
+    "notify_emails_hint": "İsteğe bağlı. Boş = Ayarlar → E-posta → Uyarı e-postası. Uyarılar zil ve toast’ta da görünür."
   },
   "file_transfer": {
     "title": "Dosya Aktarımı",
@@ -4244,7 +4259,8 @@
     "mark_all_read": "Tümünü okundu olarak işaretle",
     "see_all": "Tüm yardım isteklerini görün",
     "help_request": "Yardım isteği",
-    "just_now": "just now"
+    "just_now": "just now",
+    "automation_alert": "Otomasyon uyarısı"
   },
   "accessibility": {
     "title": "Erişilebilirlik",

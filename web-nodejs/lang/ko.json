@@ -2203,7 +2203,22 @@
     "no_alerts": "발생한 경고가 없습니다",
     "no_commands": "전송된 명령이 없습니다",
     "id_payload_required": "장치 ID 및 페이로드가 필요합니다",
-    "no_commands_sent": "아직 명령이 전송되지 않았습니다."
+    "no_commands_sent": "아직 명령이 전송되지 않았습니다.",
+    "scope_devices": "대상 장치",
+    "scope_all_hint": "선택 없음 = 모든 장치. 하나 이상 선택하면 범위가 제한됩니다.",
+    "scope_selected": "{count}개 선택됨",
+    "scope_search": "장치 검색…",
+    "scope_status": "상태",
+    "scope_status_all": "모든 상태",
+    "scope_status_online": "온라인",
+    "scope_status_offline": "오프라인",
+    "scope_select_visible": "보이는 항목 선택",
+    "scope_clear": "선택 지우기",
+    "scope_no_match": "일치하는 장치 없음",
+    "scope_tags": "태그",
+    "scope_loading": "장치 로드 중…",
+    "notify_emails_placeholder": "ops@example.com, oncall@example.com",
+    "notify_emails_hint": "선택 사항. 비우면 설정 → 이메일 → 알림 이메일. 종과 토스트에도 표시됩니다."
   },
   "file_transfer": {
     "title": "파일 전송",
@@ -4238,7 +4253,8 @@
     "mark_all_read": "모두 읽은 것으로 표시",
     "see_all": "모든 도움 요청 보기",
     "help_request": "도움 요청",
-    "just_now": "just now"
+    "just_now": "just now",
+    "automation_alert": "자동화 알림"
   },
   "accessibility": {
     "title": "접근성",

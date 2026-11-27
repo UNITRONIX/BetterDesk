@@ -2209,7 +2209,22 @@
     "no_alerts": "Nincsenek riasztások",
     "no_commands": "Nem küldtek parancsokat",
     "id_payload_required": "Eszközazonosító és hasznos teher szükséges",
-    "no_commands_sent": "Még nem küldtek parancsot"
+    "no_commands_sent": "Még nem küldtek parancsot",
+    "scope_devices": "Céleszközök",
+    "scope_all_hint": "Nincs kijelölés = minden eszköz. Jelöljön ki egyet vagy többet a hatókör korlátozásához.",
+    "scope_selected": "{count} kiválasztva",
+    "scope_search": "Eszközök keresése…",
+    "scope_status": "Állapot",
+    "scope_status_all": "Minden állapot",
+    "scope_status_online": "Online",
+    "scope_status_offline": "Offline",
+    "scope_select_visible": "Láthatók kijelölése",
+    "scope_clear": "Kijelölés törlése",
+    "scope_no_match": "Nincs megfelelő eszköz",
+    "scope_tags": "Címkék",
+    "scope_loading": "Eszközök betöltése…",
+    "notify_emails_placeholder": "ops@example.com, ugyelet@example.com",
+    "notify_emails_hint": "Opcionális. Üres = Beállítások → E-mail → Riasztási e-mail. A riasztások a harangban és toastban is megjelennek."
   },
   "file_transfer": {
     "title": "Fájlátvitel",
@@ -4244,7 +4259,8 @@
     "mark_all_read": "Jelölje meg az összeset olvasottnak",
     "see_all": "Tekintse meg az összes segítségkérést",
     "help_request": "Segítségkérés",
-    "just_now": "just now"
+    "just_now": "just now",
+    "automation_alert": "Automatizálási riasztás"
   },
   "accessibility": {
     "title": "Accessibility",

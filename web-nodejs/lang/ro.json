@@ -2209,7 +2209,22 @@
     "no_alerts": "Nu au fost declanșate alerte",
     "no_commands": "Nu au fost trimise comenzi",
     "id_payload_required": "ID-ul dispozitivului și sarcina utilă sunt necesare",
-    "no_commands_sent": "Nu au fost trimise încă comenzi"
+    "no_commands_sent": "Nu au fost trimise încă comenzi",
+    "scope_devices": "Dispozitive țintă",
+    "scope_all_hint": "Nicio selecție = toate dispozitivele. Selectați unul sau mai multe pentru a limita domeniul.",
+    "scope_selected": "{count} selectate",
+    "scope_search": "Caută dispozitive…",
+    "scope_status": "Stare",
+    "scope_status_all": "Toate stările",
+    "scope_status_online": "Online",
+    "scope_status_offline": "Offline",
+    "scope_select_visible": "Selectează vizibile",
+    "scope_clear": "Șterge selecția",
+    "scope_no_match": "Niciun dispozitiv potrivit",
+    "scope_tags": "Etichete",
+    "scope_loading": "Se încarcă dispozitivele…",
+    "notify_emails_placeholder": "ops@example.com, garda@example.com",
+    "notify_emails_hint": "Opțional. Gol = Setări → Email → Email alertă. Alertele apar și în clopoțel și ca toast."
   },
   "file_transfer": {
     "title": "Transfer de fișiere",
@@ -4244,7 +4259,8 @@
     "mark_all_read": "Marcați toate citite",
     "see_all": "Vedeți toate cererile de ajutor",
     "help_request": "Cerere de ajutor",
-    "just_now": "just now"
+    "just_now": "just now",
+    "automation_alert": "Alertă de automatizare"
   },
   "accessibility": {
     "title": "Accessibility",

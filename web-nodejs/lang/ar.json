@@ -2210,7 +2210,22 @@
     "no_alerts": "لم يتم تشغيل أي تنبيهات",
     "no_commands": "لم يتم إرسال أي أوامر",
     "id_payload_required": "مطلوب معرف الجهاز والحمولة",
-    "no_commands_sent": "لم يتم إرسال أي أوامر حتى الآن"
+    "no_commands_sent": "لم يتم إرسال أي أوامر حتى الآن",
+    "scope_devices": "الأجهزة المستهدفة",
+    "scope_all_hint": "بدون تحديد = كل الأجهزة. حدد جهازًا واحدًا أو أكثر لتقييد النطاق.",
+    "scope_selected": "تم تحديد {count}",
+    "scope_search": "البحث عن الأجهزة…",
+    "scope_status": "الحالة",
+    "scope_status_all": "كل الحالات",
+    "scope_status_online": "متصل",
+    "scope_status_offline": "غير متصل",
+    "scope_select_visible": "تحديد الظاهر",
+    "scope_clear": "مسح التحديد",
+    "scope_no_match": "لا توجد أجهزة مطابقة",
+    "scope_tags": "العلامات",
+    "scope_loading": "جارٍ تحميل الأجهزة…",
+    "notify_emails_placeholder": "ops@example.com, oncall@example.com",
+    "notify_emails_hint": "اختياري. فارغ = الإعدادات → البريد → Alert email. تظهر التنبيهات أيضًا في الجرس والتنبيهات المنبثقة."
   },
   "file_transfer": {
     "title": "نقل الملفات",
@@ -4245,7 +4260,8 @@
     "mark_all_read": "وضع علامة على كل قراءة",
     "see_all": "شاهد جميع طلبات المساعدة",
     "help_request": "طلب مساعدة",
-    "just_now": "just now"
+    "just_now": "just now",
+    "automation_alert": "تنبيه الأتمتة"
   },
   "accessibility": {
     "title": "إمكانية الوصول",

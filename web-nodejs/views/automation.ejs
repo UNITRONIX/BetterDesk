@@ -122,15 +122,15 @@
 
             <!-- Rule Modal -->
             <div class="modal-overlay" id="rule-modal" style="display: none;">
-                <div class="modal">
+                <div class="modal rule-modal">
                     <div class="modal-header">
                         <h3 id="rule-modal-title">${_('automation.create_rule')}</h3>
                         <button class="btn-icon modal-close" data-modal="rule-modal">
                             <span class="material-icons">close</span>
                         </button>
                     </div>
-                    <div class="modal-body">
-                        <form id="rule-form">
+                    <div class="modal-body rule-modal-body">
+                        <form id="rule-form" class="rule-form-pane">
                             <input type="hidden" id="rule-id">
                             <div class="form-group">
                                 <label>${_('automation.rule_name')} *</label>
@@ -179,13 +179,56 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label>${_('automation.scope_device')}</label>
-                                <input type="text" class="form-input" id="rule-device" placeholder="${_('automation.scope_all')}">
+                                <label>${_('automation.notify_emails')}</label>
+                                <input type="text" class="form-input" id="rule-notify-emails"
+                                    placeholder="${_('automation.notify_emails_placeholder')}"
+                                    autocomplete="off">
+                                <p class="form-hint">${_('automation.notify_emails_hint')}</p>
                             </div>
                             <div class="form-group">
                                 <label><input type="checkbox" id="rule-enabled" checked> ${_('automation.enabled')}</label>
                             </div>
                         </form>
+                        <aside class="rule-devices-pane" aria-label="${_('automation.scope_devices')}">
+                            <div class="rule-devices-header">
+                                <h4>${_('automation.scope_devices')}</h4>
+                                <span class="rule-devices-count" id="rule-device-selected-count">${_('automation.scope_all')}</span>
+                            </div>
+                            <p class="form-hint rule-devices-hint">${_('automation.scope_all_hint')}</p>
+                            <div class="rule-devices-toolbar">
+                                <input type="search" class="form-input" id="rule-device-search"
+                                    placeholder="${_('automation.scope_search')}" autocomplete="off">
+                                <select class="form-input" id="rule-device-status" aria-label="${_('automation.scope_status')}">
+                                    <option value="" selected>${_('automation.scope_status_all')}</option>
+                                    <option value="online">${_('automation.scope_status_online')}</option>
+                                    <option value="offline">${_('automation.scope_status_offline')}</option>
+                                </select>
+                            </div>
+                            <div class="rule-device-tags" id="rule-device-tags" hidden></div>
+                            <div class="rule-devices-actions">
+                                <label class="rule-devices-select-visible">
+                                    <input type="checkbox" id="rule-device-select-visible">
+                                    ${_('automation.scope_select_visible')}
+                                </label>
+                                <button type="button" class="btn btn-sm btn-secondary" id="rule-device-clear">${_('automation.scope_clear')}</button>
+                            </div>
+                            <div class="rule-devices-table-wrap">
+                                <table class="rule-devices-table">
+                                    <thead>
+                                        <tr>
+                                            <th class="col-check"></th>
+                                            <th>${_('inventory.device_id')}</th>
+                                            <th>${_('devices.hostname')}</th>
+                                            <th>${_('devices.status')}</th>
+                                            <th>${_('automation.scope_tags')}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="rule-devices-body">
+                                        <tr class="loading-row"><td colspan="5">${_('automation.scope_loading')}</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </aside>
                     </div>
                     <div class="modal-footer">
                         <button class="btn btn-secondary modal-close" data-modal="rule-modal">${_('common.cancel')}</button>

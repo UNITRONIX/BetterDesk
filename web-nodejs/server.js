@@ -774,6 +774,14 @@ async function startServer() {
             console.log(`  ║   Client API: disabled — use :${config.apiPort} proxy or Go :${config.goApiPort}`.padEnd(53) + '║');
         }
         
+        // ============ Automation alert engine ============
+        try {
+            const { startAlertEngine } = require('./services/alertRulesEngine');
+            startAlertEngine(60 * 1000);
+        } catch (err) {
+            console.warn('[server] Alert engine disabled:', err.message);
+        }
+
         // ============ Periodic Housekeeping ============
         const housekeepingInterval = setInterval(async () => {
             await authService.cleanupHousekeeping();
