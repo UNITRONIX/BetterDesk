@@ -15,6 +15,10 @@ Self-hosted RustDesk-compatible server (Go) plus a Node.js web console.
 
 One binary replaces `hbbs` + `hbbr`. The panel handles devices, users, updates, and browser remote. Optional CDAP covers IoT and custom agents.
 
+> [!IMPORTANT]
+> **Official BetterDesk repository:** [`github.com/UNITRONIX/BetterDesk`](https://github.com/UNITRONIX/BetterDesk) by [@UNITRONIX](https://github.com/UNITRONIX).
+> Prefer this repo, its GitHub Releases, and GHCR images (`ghcr.io/unitronix/betterdesk`). Other similarly named projects are not this product.
+
 > [!WARNING]
 > The Tauri **MGMT** and **Agent** desktop apps are alpha. For production use the **web console** and a normal **RustDesk** client. See [[Alpha Software Notice]].
 
@@ -74,11 +78,17 @@ Deep dive in the repo: [docs/](https://github.com/UNITRONIX/BetterDesk/tree/dev/
 
 ## Ports (short)
 
-```
-Clients  → :21116 signal, :21117 relay, :21121 Client API (Go; optional Node proxy)
-Panel    → :5000 console, :21114 admin REST (often localhost)
-Optional → :21122 CDAP, :21118/:21119 WebSocket signal/relay
-```
+| Port | Role |
+|------|------|
+| 21116 TCP+UDP | Signal |
+| 21117 TCP | Relay |
+| 21121 | RustDesk Client API (Go; optional Node proxy) |
+| 21114 | Admin REST (usually localhost) |
+| 5000 | Web console |
+| 21118 / 21119 | WebSocket signal / relay (optional) |
+| 21122 | CDAP (optional) |
+
+Firewall and reverse-proxy notes: [[Configuration]] · [[TLS / SSL Certificates|TLS-SSL]] · [[Docker]].
 
 ---
 

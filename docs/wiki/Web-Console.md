@@ -2,16 +2,14 @@
 
 The BetterDesk Web Console is a Node.js (Express.js) management panel accessible at **http://your-server:5000**.
 
-The console ships with **UX 3.5** as its default layout (full-list sidebar + solid topbar — not glass).
-An optional **UX 3.6 beta** groups the sidebar into Devices / Support / People / Activity / Settings and
-adds the list-first Devices and per-topic Settings layouts; it is enabled per browser in
-**Settings → General → Console interface**. See [[UX 3.5|UX-3.5]].
+The console ships **UX 3.5** as its only layout (full-list sidebar + solid topbar — not glass).
+The former UX 3.6 beta switch is retired; see [[UX 3.5|UX-3.5]].
 
 ---
 
 ## Visual preview
 
-The following screenshots show the current UX 3.5 panel in the dark theme and English locale. All device names, IDs, notes, and network values are fictional test data.
+The following screenshots show the current UX 3.5 panel in the dark theme and English locale. Device names such as `BD-DEMO-*` are fictional seed data for documentation only.
 
 <table>
   <tr>
@@ -24,11 +22,11 @@ The following screenshots show the current UX 3.5 panel in the dark theme and En
   </tr>
   <tr>
     <td><img src="https://raw.githubusercontent.com/UNITRONIX/BetterDesk/dev/screenshots/generated/devices-list-dark.png" alt="BetterDesk devices list" width="100%"></td>
-    <td><img src="https://raw.githubusercontent.com/UNITRONIX/BetterDesk/dev/screenshots/generated/device-details-dark.png" alt="BetterDesk device details" width="100%"></td>
+    <td><img src="https://raw.githubusercontent.com/UNITRONIX/BetterDesk/dev/screenshots/generated/remote-dark.png" alt="BetterDesk remote desktop" width="100%"></td>
   </tr>
   <tr>
     <td align="center">Devices</td>
-    <td align="center">Device details</td>
+    <td align="center">Remote Desktop</td>
   </tr>
   <tr>
     <td colspan="2"><img src="https://raw.githubusercontent.com/UNITRONIX/BetterDesk/dev/screenshots/generated/settings-updates-dark.png" alt="BetterDesk settings updates" width="100%"></td>
@@ -38,7 +36,7 @@ The following screenshots show the current UX 3.5 panel in the dark theme and En
   </tr>
 </table>
 
-The source files are kept in [`screenshots/generated/`](../../screenshots/generated/) in the repository.
+Source files: [`screenshots/generated/`](../../screenshots/generated/). Marketing banners used on the GitHub README live under [`docs/assets/readme/`](../../docs/assets/readme/).
 
 ---
 
@@ -46,7 +44,7 @@ The source files are kept in [`screenshots/generated/`](../../screenshots/genera
 
 Overview cards: device counts, online status, server uptime, versions.
 
-OS-style **Desktop Mode** is not loaded anymore. Use UX 3.5 or [[UX 3.6 beta|UX-3.5]]. Old notes: [[Desktop Dashboard|Desktop-Dashboard]].
+OS-style **Desktop Mode** is not loaded anymore. Use [[UX 3.5|UX-3.5]]. Old notes: [[Desktop Dashboard|Desktop-Dashboard]].
 
 ---
 
@@ -165,7 +163,7 @@ Manage console users and roles. See [[User Management|User-Management]] and [[Or
 
 ## Login screen
 
-UX 3.5 and UX 3.6 use the standard panel login (username / password / optional TOTP). The old Windows 11-style desktop login is retired with Desktop Mode.
+UX 3.5 uses the standard panel login (username / password / optional TOTP). The old Windows 11-style desktop login is retired with Desktop Mode.
 
 ---
 

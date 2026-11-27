@@ -1,78 +1,31 @@
-# Screenshots Placeholder
+# Screenshots
 
-This directory contains screenshots of BetterDesk Console for documentation purposes.
+Console screenshots for the README and wiki live in [`generated/`](generated/).
 
-## Required Screenshots
+## Current set (UX 3.5 dark)
 
-For the README.md, please add the following screenshots:
+| File | View |
+|------|------|
+| `login-dark.png` | Sign-in |
+| `dashboard-dark.png` | Dashboard |
+| `devices-list-dark.png` | Devices list (list-first rail) |
+| `device-details-dark.png` | Devices detail / selected row view |
+| `remote-dark.png` | Remote Desktop client |
+| `settings-updates-dark.png` | Settings → Updates |
 
-1. **dashboard.png** - Main dashboard view showing:
-   - Navigation bar with logo and stats
-   - Four statistics cards (Total, Active, Inactive, With Notes)
-   - Device list table
-   - Search functionality
+Use **fictional** device names (e.g. `BD-DEMO-*`) so real hostnames never appear in docs.
 
-2. **devices-list.png** - Device management view showing:
-   - Horizontal folder chips bar (scrollable pills)
-   - Unified toolbar with search, segmented filters, column toggle
-   - Slim table with status dot, device ID, hostname, platform
-   - Kebab context menu (⋮) per row
+## Capture locally
 
-3. **device-details.png** - Device details modal showing:
-   - Device ID
-   - UUID
-   - Public Key
-   - Status badge
-   - Note
-   - Created timestamp
-   - Additional metadata
-
-4. **mobile-view.png** - Mobile responsive view (≤600px) showing:
-   - Card-style device rows (CSS grid 2-column layout)
-   - Bottom sheet kebab menu with backdrop overlay
-   - Compact folder chips (icon-only at ≤400px)
-   - Touch-friendly controls with larger tap targets
-
-## How to Create Screenshots
-
-### Using the Demo App
+1. Run the web console (`web-nodejs`) and, for a populated Devices list, the Go server with a shared SQLite DB.
+2. Seed demo peers into the Go `peers` table (status `ONLINE`/`OFFLINE`, hostnames, platforms).
+3. Capture at **1920×1080** dark theme / English:
 
 ```bash
-cd web
-python3 app_demo.py
+# requires Playwright Chromium in .tmp-playwright (gitignored)
+node scripts/capture-readme-screens.mjs
 ```
 
-Then open `http://localhost:5001` in your browser.
+Env overrides: `BD_URL`, `BD_USER`, `BD_PASS`.
 
-### Taking Screenshots
-
-**Recommended Settings**:
-- Browser: Chrome/Firefox (latest version)
-- Window Size: 1920x1080 (for desktop) / 375x667 (for mobile)
-- Zoom: 100%
-- Theme: Dark mode enabled
-
-**Tools**:
-- Built-in browser screenshot (F12 → ... → Screenshot)
-- macOS: Cmd+Shift+4
-- Windows: Win+Shift+S
-- Linux: Flameshot, GNOME Screenshot
-
-### File Naming Convention
-
-Use lowercase with hyphens:
-- `dashboard.png`
-- `devices-list.png`
-- `device-details.png`
-- `mobile-view.png`
-
-### Image Requirements
-
-- Format: PNG
-- Max size: 2MB per image
-- Compression: Optimized (use TinyPNG or similar)
-- DPI: 72 (web)
-
-## Privacy Note
-
-The demo app (`app_demo.py`) generates fake data to protect real device information in screenshots.
+Marketing hero / feature banners: [`docs/assets/readme/`](../docs/assets/readme/).
