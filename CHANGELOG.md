@@ -1,6 +1,13 @@
 ## [Unreleased]
 
 ### Changed
+- _(none yet)_
+
+---
+
+## [3.5.287] — 2026-11-27
+
+### Changed
 - **Automation alerts reach the panel:** firing a rule writes Alert History, pushes
   a live toast + navbar bell item (`/automation?tab=alerts`), and emails
   `notify_emails` or the Settings → Email alert address. Telemetry/activity
@@ -5580,3 +5587,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.284]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.283...v3.5.284
 [3.5.285]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.284...v3.5.285
 [3.5.286]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.285...v3.5.286
+[3.5.287]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.286...v3.5.287
