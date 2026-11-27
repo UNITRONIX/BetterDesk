@@ -9,7 +9,7 @@ The former UX 3.6 beta switch is retired; see [[UX 3.5|UX-3.5]].
 
 ## Visual preview
 
-The following screenshots show the current UX 3.5 panel in the dark theme and English locale. All device names, IDs, notes, and network values are fictional test data.
+The following screenshots show the current UX 3.5 panel in the dark theme and English locale. Device names such as `BD-DEMO-*` are fictional seed data for documentation only.
 
 <table>
   <tr>
@@ -22,11 +22,11 @@ The following screenshots show the current UX 3.5 panel in the dark theme and En
   </tr>
   <tr>
     <td><img src="https://raw.githubusercontent.com/UNITRONIX/BetterDesk/dev/screenshots/generated/devices-list-dark.png" alt="BetterDesk devices list" width="100%"></td>
-    <td><img src="https://raw.githubusercontent.com/UNITRONIX/BetterDesk/dev/screenshots/generated/device-details-dark.png" alt="BetterDesk device details" width="100%"></td>
+    <td><img src="https://raw.githubusercontent.com/UNITRONIX/BetterDesk/dev/screenshots/generated/remote-dark.png" alt="BetterDesk remote desktop" width="100%"></td>
   </tr>
   <tr>
     <td align="center">Devices</td>
-    <td align="center">Device details</td>
+    <td align="center">Remote Desktop</td>
   </tr>
   <tr>
     <td colspan="2"><img src="https://raw.githubusercontent.com/UNITRONIX/BetterDesk/dev/screenshots/generated/settings-updates-dark.png" alt="BetterDesk settings updates" width="100%"></td>
@@ -36,7 +36,7 @@ The following screenshots show the current UX 3.5 panel in the dark theme and En
   </tr>
 </table>
 
-The source files are kept in [`screenshots/generated/`](../../screenshots/generated/) in the repository.
+Source files: [`screenshots/generated/`](../../screenshots/generated/). Marketing banners used on the GitHub README live under [`docs/assets/readme/`](../../docs/assets/readme/).
 
 ---
 

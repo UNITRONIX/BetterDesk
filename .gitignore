@@ -81,6 +81,7 @@ web-nodejs/data/
 *.temp
 .tmp-*
 .tmp-dep-test/
+.tmp-playwright/
 /tmp/
 .cache/
 
