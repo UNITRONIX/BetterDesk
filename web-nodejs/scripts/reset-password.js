@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
  * BetterDesk Console - Password Reset Script
+ * (docs PR CI path trigger — ignore)
  * Usage: node reset-password.js <new-password> [username]
  * 
  * Resets the password for a user. If username is not provided, defaults to 'admin'.
