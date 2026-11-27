@@ -14,22 +14,24 @@ const { PANEL_ACCESS_CATALOG } = require('../lib/panelAccessCatalog');
 
 describe('UX 3.6 beta shell contract', () => {
     describe('shell resolver', () => {
-        it('defaults to UX 3.5 and accepts only known shells', () => {
+        it('always resolves to UX 3.5 (retired beta is ignored)', () => {
             assert.strictEqual(uiShell.resolveShell({}), 'ux35');
             assert.strictEqual(uiShell.resolveShell({ query: {}, cookies: {} }), 'ux35');
-            assert.strictEqual(uiShell.resolveShell({ query: { ui: 'ux36' } }), 'ux36');
-            assert.strictEqual(uiShell.resolveShell({ query: {}, cookies: { bd_ui_shell: 'ux36' } }), 'ux36');
+            assert.strictEqual(uiShell.resolveShell({ query: { ui: 'ux36' } }), 'ux35');
+            assert.strictEqual(uiShell.resolveShell({ query: {}, cookies: { bd_ui_shell: 'ux36' } }), 'ux35');
+            assert.deepStrictEqual(uiShell.SUPPORTED_SHELLS, ['ux35']);
+            assert.strictEqual(uiShell.isBetaShell('ux36'), false);
         });
 
         it('ignores removed and malformed values instead of failing', () => {
-            ['classic', 'ux34', '', 'constructor', '__proto__', 'UX36<script>'].forEach((value) => {
+            ['classic', 'ux34', 'ux36', '', 'constructor', '__proto__', 'UX36<script>'].forEach((value) => {
                 assert.strictEqual(uiShell.normalizeShell(value), null, value);
             });
             assert.strictEqual(uiShell.resolveShell({ query: { ui: 'classic' } }), 'ux35');
-            assert.strictEqual(uiShell.resolveShell({ cookies: { bd_ui_shell: '  UX36  ' } }), 'ux36');
+            assert.strictEqual(uiShell.resolveShell({ cookies: { bd_ui_shell: '  UX36  ' } }), 'ux35');
         });
 
-        it('serves the beta cookie without marking it httpOnly', () => {
+        it('serves the shell cookie without marking it httpOnly', () => {
             const opts = uiShell.shellCookieOptions(true);
             assert.strictEqual(opts.httpOnly, false);
             assert.strictEqual(opts.secure, true);
@@ -154,19 +156,17 @@ describe('UX 3.6 beta shell contract', () => {
     });
 
     describe('layout and assets', () => {
-        it('renders the grouped sidebar and its own design system for UX 3.6 only', () => {
+        it('loads only the UX 3.5 console shell (UX 3.6 beta disconnected)', () => {
             const layout = read('views', 'layouts', 'main.ejs');
-            assert.match(layout, /include\(isBetaShell \? '\.\.\/partials\/ux36-topbar' : '\.\.\/partials\/ux35-topbar'\)/);
-            assert.match(layout, /include\(isBetaShell \? '\.\.\/partials\/ux36-sidebar' : '\.\.\/partials\/ux35-sidebar'\)/);
-            // The contributor's design system, loaded for the beta only.
-            ['palette', 'tokens', 'base', 'components', 'legacy-bridge', 'shell', 'pages'].forEach((sheet) => {
-                assert.match(layout, new RegExp(`/css/ux36/${sheet}\\.css`), `missing ${sheet}.css`);
-            });
-            // Shared chrome (switch + badge) loads in both shells.
-            assert.match(layout, /\/css\/ux36\/shared-chrome\.css/);
-            // UX 3.5 assets stay shared, never forked.
+            assert.match(layout, /include\('\.\.\/partials\/ux35-topbar'\)/);
+            assert.match(layout, /include\('\.\.\/partials\/ux35-sidebar'\)/);
+            assert.doesNotMatch(layout, /ux36-topbar|ux36-sidebar/);
+            assert.doesNotMatch(layout, /\/css\/ux36\//);
+            assert.doesNotMatch(layout, /\/js\/ux36-shell\.js/);
+            assert.match(layout, /\/js\/ui-search\.js/);
             assert.match(layout, /\/css\/ux35-tokens\.css/);
             assert.match(layout, /\/js\/ux35-shell\.js/);
+            assert.match(layout, /const shell = 'ux35'/);
         });
 
         it('keeps the sidebar partial accessible and permission-driven', () => {
@@ -198,7 +198,7 @@ describe('UX 3.6 beta shell contract', () => {
             assert.match(sidebar, /bd_ux35_sidebar_scroll/);
         });
 
-        it('renders the global search trigger and loads its controller', () => {
+        it('loads global search on UX 3.5 and keeps retired UX 3.6 search chrome on disk', () => {
             const topbar = read('views', 'partials', 'ux36-topbar.ejs');
             assert.match(topbar, /data-global-search/);
             assert.match(topbar, /id="ux36-search-trigger"/);
@@ -206,27 +206,22 @@ describe('UX 3.6 beta shell contract', () => {
 
             const layout = read('views', 'layouts', 'main.ejs');
             assert.match(layout, /\/js\/ui-search\.js/);
-            // The index and the capability flags are rendered per session.
             assert.match(layout, /searchPages:/);
             assert.match(layout, /searchCaps:/);
 
             const client = read('public', 'js', 'ui-search.js');
             assert.ok(client.includes('window.BetterDesk.searchPages'));
-            // Pages are searched from the server index, never through an API.
             assert.ok(client.includes('window.BetterDesk.searchPages) || []'));
             assert.ok(client.includes('e.ctrlKey || e.metaKey'));
         });
 
-        it('offers the shell switch in the topbar of both shells, with a beta badge', () => {
+        it('does not offer a shell switch in the UX 3.5 topbar', () => {
             const topbar = read('views', 'partials', 'ux35-topbar.ejs');
-            // Always the same control; only its target/icon/label flips.
-            assert.match(topbar, /id="ui-shell-toggle"/);
-            assert.match(topbar, /data-target-shell=/);
-            assert.match(topbar, /ux36-beta-chip/);
-            // The switch is a plain settings action, never a competing shell switch widget.
+            assert.doesNotMatch(topbar, /id="ui-shell-toggle"/);
+            assert.doesNotMatch(topbar, /ux36-shell-toggle|ux36-beta-chip|data-target-shell/);
             assert.doesNotMatch(topbar, /data-ui-shell-switch/);
 
-            const render = (uiShellBeta) => ejs.render(topbar, {
+            const html = ejs.render(topbar, {
                 _: (key) => key,
                 appName: 'BetterDesk',
                 branding: {},
@@ -234,53 +229,29 @@ describe('UX 3.6 beta shell contract', () => {
                 availableLanguageList: [],
                 lang: 'en',
                 currentPage: 'dashboard',
-                uiShellBeta,
+                uiShellBeta: false,
             }, { filename: path.join(root, 'views', 'partials', 'ux35-topbar.ejs') });
-
-            // UX 3.5: offers the beta, so it carries the BETA badge.
-            const stable = render(false);
-            assert.match(stable, /data-target-shell="ux36"/);
-            assert.match(stable, /ux36-beta-chip/);
-
-            // UX 3.6: the same button goes back, and no beta badge is needed.
-            const beta = render(true);
-            assert.match(beta, /data-target-shell="ux35"/);
-            assert.doesNotMatch(beta, /ux36-beta-chip/);
+            assert.doesNotMatch(html, /science|BETA|ui-shell-toggle/);
+            assert.match(html, /id="refresh-btn"/);
         });
 
-        it('skips the beta palette when the operator uses custom colours', () => {
-            const layout = read('views', 'layouts', 'main.ejs');
-            assert.match(layout, /branding\.themeMode !== 'custom'/);
-        });
-
-        it('exposes the shell switch through a CSRF-protected endpoint', () => {
+        it('keeps the preference API CSRF-protected and UX 3.5-only', () => {
             const routes = read('routes', 'ui-shell.routes.js');
             assert.match(routes, /router\.post\('\/api\/ui-shell', requireAuth/);
             assert.match(routes, /SUPPORTED_SHELLS\.join/);
-            assert.match(routes, /res\.cookie\(SHELL_COOKIE, shell/);
+            assert.match(routes, /writeUx35Cookie|SHELL_UX35/);
 
-            // The client bridge owns the request, because the toggle renders in
-            // both shells (ux36-shell.js only adds beta-specific behaviour).
             const client = read('public', 'js', 'ui-shell.js');
             assert.match(client, /X-CSRF-Token/);
-            assert.match(client, /window\.location\.reload\(\)/);
-            assert.match(client, /initTopbarToggle/);
-            assert.match(client, /initSidebarSwitch/);
-            assert.match(client, /initSettingsChoice/);
-
-            const beta = read('public', 'js', 'ux36-shell.js');
-            assert.doesNotMatch(beta, /fetch\('\/api\/ui-shell'/);
+            assert.match(client, /var SUPPORTED = \['ux35'\]/);
+            assert.doesNotMatch(client, /initTopbarToggle|initSidebarSwitch|initSettingsChoice/);
         });
 
-        it('offers the beta choice in Settings without touching branding logic', () => {
+        it('removes the console interface switcher from Settings', () => {
             const settingsView = read('views', 'settings.ejs');
-            assert.match(settingsView, /id="ux36-shell-panel"/);
-            assert.match(settingsView, /name="ui-shell" value="ux36"/);
-            assert.match(settingsView, /ux36\.credits/);
-            // Credit links must point at the contributor and the design threads.
-            assert.match(settingsView, /href="https:\/\/github\.com\/rathlinus"/);
-            assert.match(settingsView, /issues\/493/);
-            assert.match(settingsView, /pull\/495/);
+            assert.doesNotMatch(settingsView, /id="ux36-shell-panel"/);
+            assert.doesNotMatch(settingsView, /name="ui-shell"/);
+            assert.doesNotMatch(settingsView, /ux36\.credits/);
         });
     });
 

@@ -379,6 +379,7 @@
       "gpu": "Graphics Card"
     },
     "tags": "Tags",
+    "tags_badge": "{count} etiquetas",
     "filter_by_tags": "Filtrar por etiquetas",
     "no_tags": "No tags",
     "all_groups": "Todos los grupos",
@@ -4836,8 +4837,8 @@
     "switch_to_classic": "Cambiar a la interfaz clásica",
     "beta_badge": "BETA",
     "beta_tooltip": "Diseño de consola en beta — opcional; la interfaz clásica sigue siendo la predeterminada.",
-    "filter_menu": "Filter menu",
-    "filter_menu_placeholder": "Search menu…"
+    "filter_menu": "Buscar en la consola",
+    "filter_menu_placeholder": "Buscar páginas, ajustes…"
   },
   "help": {
     "panel": {
@@ -4966,7 +4967,9 @@
     "new_code": "Nuevo código",
     "client_address": "Dirección del servidor para el cliente",
     "host_unknown": "Consulte a su administrador",
-    "unavailable": "No hay código disponible"
+    "unavailable": "No hay código disponible",
+    "actor_console": "Consola",
+    "actor_api_key": "Clave API: {{name}}"
   },
   "ux36": {
     "beta_badge": "BETA",

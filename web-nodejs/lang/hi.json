@@ -385,6 +385,7 @@
     "display_name_placeholder": "कस्टम नाम (होस्टनाम को ओवरराइड करता है)",
     "note_placeholder": "इस डिवाइस के बारे में नोट्स",
     "tags": "Tags",
+    "tags_badge": "{count} टैग",
     "filter_by_tags": "टैग द्वारा फ़िल्टर करें",
     "no_tags": "No tags",
     "all_groups": "सभी समूह",
@@ -4842,8 +4843,8 @@
     "switch_to_classic": "क्लासिक UI पर स्विच करें",
     "beta_badge": "बीटा",
     "beta_tooltip": "बीटा कंसोल लेआउट — वैकल्पिक; क्लासिक UI डिफ़ॉल्ट रहता है।",
-    "filter_menu": "Filter menu",
-    "filter_menu_placeholder": "Search menu…"
+    "filter_menu": "कंसोल खोजें",
+    "filter_menu_placeholder": "पृष्ठ, सेटिंग खोजें…"
   },
   "help": {
     "panel": {
@@ -4972,7 +4973,9 @@
     "new_code": "नया कोड",
     "client_address": "क्लाइंट के लिए सर्वर पता",
     "host_unknown": "अपने व्यवस्थापक से पूछें",
-    "unavailable": "कोई कोड उपलब्ध नहीं"
+    "unavailable": "कोई कोड उपलब्ध नहीं",
+    "actor_console": "कंसोल",
+    "actor_api_key": "API कुंजी: {{name}}"
   },
   "ux36": {
     "beta_badge": "BETA",

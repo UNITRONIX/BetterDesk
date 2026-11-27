@@ -379,6 +379,7 @@
     "display_name_placeholder": "사용자 정의 이름(호스트 이름 재정의)",
     "note_placeholder": "이 장치에 대한 참고 사항",
     "tags": "Tags",
+    "tags_badge": "태그 {count}개",
     "filter_by_tags": "태그로 필터링",
     "no_tags": "No tags",
     "all_groups": "모든 그룹",
@@ -4836,8 +4837,8 @@
     "switch_to_classic": "클래식 UI로 전환",
     "beta_badge": "베타",
     "beta_tooltip": "베타 콘솔 레이아웃 — 선택 사항이며 기본값은 클래식 UI입니다.",
-    "filter_menu": "Filter menu",
-    "filter_menu_placeholder": "Search menu…"
+    "filter_menu": "콘솔 검색",
+    "filter_menu_placeholder": "페이지·설정 검색…"
   },
   "help": {
     "panel": {
@@ -4966,7 +4967,9 @@
     "new_code": "새 코드",
     "client_address": "클라이언트에 입력할 서버 주소",
     "host_unknown": "관리자에게 문의하세요",
-    "unavailable": "사용 가능한 코드 없음"
+    "unavailable": "사용 가능한 코드 없음",
+    "actor_console": "콘솔",
+    "actor_api_key": "API 키: {{name}}"
   },
   "ux36": {
     "beta_badge": "BETA",

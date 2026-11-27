@@ -385,6 +385,7 @@
     "display_name_placeholder": "Brugerdefineret navn (tilsidesætter værtsnavn)",
     "note_placeholder": "Bemærkninger om denne enhed",
     "tags": "Tags",
+    "tags_badge": "{count} tags",
     "filter_by_tags": "Filtrer efter tags",
     "no_tags": "Ingen tags",
     "all_groups": "Alle grupper",
@@ -4842,8 +4843,8 @@
     "switch_to_classic": "Skift til klassisk UI",
     "beta_badge": "BETA",
     "beta_tooltip": "Beta-konsollayout — valgfrit; klassisk UI forbliver standard.",
-    "filter_menu": "Filter menu",
-    "filter_menu_placeholder": "Search menu…"
+    "filter_menu": "Søg i konsollen",
+    "filter_menu_placeholder": "Søg sider, indstillinger…"
   },
   "help": {
     "panel": {
@@ -4972,7 +4973,9 @@
     "new_code": "Ny kode",
     "client_address": "Serveradresse til klienten",
     "host_unknown": "Spørg din administrator",
-    "unavailable": "Ingen kode tilgængelig"
+    "unavailable": "Ingen kode tilgængelig",
+    "actor_console": "Konsol",
+    "actor_api_key": "API-nøgle: {{name}}"
   },
   "ux36": {
     "beta_badge": "BETA",

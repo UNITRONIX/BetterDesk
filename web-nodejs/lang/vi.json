@@ -385,6 +385,7 @@
     "display_name_placeholder": "Tên tùy chỉnh (ghi đè tên máy chủ)",
     "note_placeholder": "Lưu ý về thiết bị này",
     "tags": "Tags",
+    "tags_badge": "{count} thẻ",
     "filter_by_tags": "Lọc theo thẻ",
     "no_tags": "No tags",
     "all_groups": "Tất cả các nhóm",
@@ -4842,8 +4843,8 @@
     "switch_to_classic": "Chuyển sang giao diện cổ điển",
     "beta_badge": "BETA",
     "beta_tooltip": "Bố cục console Beta — tùy chọn; giao diện cổ điển vẫn là mặc định.",
-    "filter_menu": "Filter menu",
-    "filter_menu_placeholder": "Search menu…"
+    "filter_menu": "Tìm trong console",
+    "filter_menu_placeholder": "Tìm trang, cài đặt…"
   },
   "help": {
     "panel": {
@@ -4972,7 +4973,9 @@
     "new_code": "Mã mới",
     "client_address": "Địa chỉ máy chủ cho ứng dụng",
     "host_unknown": "Hỏi quản trị viên",
-    "unavailable": "Không có mã khả dụng"
+    "unavailable": "Không có mã khả dụng",
+    "actor_console": "Bảng điều khiển",
+    "actor_api_key": "Khóa API: {{name}}"
   },
   "ux36": {
     "beta_badge": "BETA",

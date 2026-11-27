@@ -385,6 +385,7 @@
     "display_name_placeholder": "Власне ім'я (замінює ім'я хоста)",
     "note_placeholder": "Примітки щодо цього пристрою",
     "tags": "Tags",
+    "tags_badge": "{count} тегів",
     "filter_by_tags": "Фільтрувати за тегами",
     "no_tags": "Немає тегів",
     "all_groups": "Всі групи",
@@ -4842,8 +4843,8 @@
     "switch_to_classic": "Перемкнути на класичний інтерфейс",
     "beta_badge": "БЕТА",
     "beta_tooltip": "Бета-макет консолі — необов’язково; класичний UI лишається типовим.",
-    "filter_menu": "Filter menu",
-    "filter_menu_placeholder": "Search menu…"
+    "filter_menu": "Пошук у консолі",
+    "filter_menu_placeholder": "Пошук сторінок, налаштувань…"
   },
   "help": {
     "panel": {
@@ -4972,7 +4973,9 @@
     "new_code": "Новий код",
     "client_address": "Адреса сервера для клієнта",
     "host_unknown": "Запитайте адміністратора",
-    "unavailable": "Немає доступного коду"
+    "unavailable": "Немає доступного коду",
+    "actor_console": "Консоль",
+    "actor_api_key": "API-ключ: {{name}}"
   },
   "ux36": {
     "beta_badge": "BETA",

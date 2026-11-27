@@ -238,7 +238,8 @@
         root.setProperty('--card-bg', palette.bgSecondary);
 
         root.setProperty('--ux35-bg', palette.bgPrimary);
-        root.setProperty('--ux35-sidebar-bg', palette.bgSecondary);
+        // Dark chrome matches the near-black topbar; light keeps secondary surface.
+        root.setProperty('--ux35-sidebar-bg', next === 'light' ? palette.bgSecondary : '#05070a');
         root.setProperty('--ux35-card-bg', palette.bgSecondary);
         root.setProperty('--ux35-border', palette.borderPrimary);
         root.setProperty('--ux35-border-light', palette.borderSecondary);
@@ -250,7 +251,7 @@
         root.setProperty('--ux35-glass-blur', '0px');
         root.setProperty('--ux35-glass-saturate', '1');
 
-        // Topbar follows theme (same as sidebar chrome)
+        // Topbar: light uses secondary surface; dark uses near-black chrome
         if (next === 'light') {
             root.setProperty('--ux35-topbar-bg', palette.bgSecondary);
             root.setProperty('--ux35-topbar-fg', palette.textPrimary);
@@ -258,10 +259,10 @@
             root.setProperty('--ux35-topbar-border', palette.borderPrimary);
             root.setProperty('--ux35-topbar-hover', 'rgba(0, 0, 0, 0.06)');
         } else {
-            root.setProperty('--ux35-topbar-bg', palette.bgSecondary);
+            root.setProperty('--ux35-topbar-bg', '#05070a');
             root.setProperty('--ux35-topbar-fg', palette.textPrimary);
             root.setProperty('--ux35-topbar-fg-muted', palette.textSecondary);
-            root.setProperty('--ux35-topbar-border', palette.borderPrimary);
+            root.setProperty('--ux35-topbar-border', '#1c2128');
             root.setProperty('--ux35-topbar-hover', 'rgba(255, 255, 255, 0.12)');
         }
 
@@ -617,8 +618,131 @@
 
         var filterInput = document.getElementById('ux35-sidebar-filter-input');
         if (!filterInput) return;
+        var jumpBox = document.getElementById('ux35-sidebar-search-results');
+        var jumpActive = -1;
+        var jumpResults = [];
+
+        function normSearch(s) {
+            return String(s == null ? '' : s).toLowerCase()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        }
+
+        function searchPagesIndex() {
+            return (window.BetterDesk && window.BetterDesk.searchPages) || [];
+        }
+
+        function pageMatches(page, words) {
+            var hay = normSearch([page.text, page.section, page.group, page.keywords].join(' '));
+            return words.every(function (w) { return hay.indexOf(w) !== -1; });
+        }
+
+        function hrefPath(href) {
+            if (!href) return '';
+            try {
+                return new URL(href, window.location.origin).pathname.replace(/\/$/, '') || '/';
+            } catch (e) {
+                return String(href).split('?')[0].replace(/\/$/, '') || '/';
+            }
+        }
+
+        function navItemMatches(item, words, matchedHrefs) {
+            if (!words.length) return true;
+            var label = normSearch(item.textContent || '');
+            if (words.every(function (w) { return label.indexOf(w) !== -1; })) return true;
+            var href = item.getAttribute('href');
+            if (!href || href === '#') return false;
+            var path = hrefPath(href);
+            return matchedHrefs.some(function (h) {
+                return hrefPath(h) === path || String(h).indexOf(href) === 0 || href.indexOf(h) === 0;
+            });
+        }
+
+        function renderJumpResults(words) {
+            if (!jumpBox) return;
+            jumpBox.textContent = '';
+            jumpActive = -1;
+            jumpResults = [];
+            if (!words.length) {
+                jumpBox.hidden = true;
+                filterInput.removeAttribute('aria-activedescendant');
+                return;
+            }
+            var pages = searchPagesIndex().filter(function (p) { return pageMatches(p, words); });
+            pages.sort(function (a, b) {
+                var aStarts = normSearch(a.text).indexOf(words[0]) === 0 ? 1 : 0;
+                var bStarts = normSearch(b.text).indexOf(words[0]) === 0 ? 1 : 0;
+                return bStarts - aStarts;
+            });
+            jumpResults = pages.slice(0, 8);
+            if (!jumpResults.length) {
+                jumpBox.hidden = true;
+                filterInput.removeAttribute('aria-activedescendant');
+                return;
+            }
+            jumpResults.forEach(function (page, i) {
+                var btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'ux35-sidebar-search-hit';
+                btn.id = 'ux35-sidebar-hit-' + i;
+                btn.setAttribute('role', 'option');
+                btn.setAttribute('aria-selected', 'false');
+                var icon = document.createElement('span');
+                icon.className = 'material-icons';
+                icon.setAttribute('aria-hidden', 'true');
+                icon.textContent = page.icon || 'arrow_forward';
+                var main = document.createElement('span');
+                main.className = 'ux35-sidebar-search-hit-main';
+                var title = document.createElement('span');
+                title.className = 'ux35-sidebar-search-hit-title';
+                title.textContent = page.text;
+                main.appendChild(title);
+                var subBits = [page.section, page.group].filter(Boolean);
+                if (subBits.length) {
+                    var sub = document.createElement('span');
+                    sub.className = 'ux35-sidebar-search-hit-sub';
+                    sub.textContent = subBits.join(' › ');
+                    main.appendChild(sub);
+                }
+                btn.appendChild(icon);
+                btn.appendChild(main);
+                btn.addEventListener('mousedown', function (e) {
+                    e.preventDefault();
+                    openJump(i);
+                });
+                jumpBox.appendChild(btn);
+            });
+            jumpBox.hidden = false;
+            setJumpActive(0);
+        }
+
+        function setJumpActive(i) {
+            if (!jumpBox || i < 0 || i >= jumpResults.length) return;
+            var prev = jumpBox.querySelector('[aria-selected="true"]');
+            if (prev) prev.setAttribute('aria-selected', 'false');
+            jumpActive = i;
+            var cur = document.getElementById('ux35-sidebar-hit-' + i);
+            if (cur) {
+                cur.setAttribute('aria-selected', 'true');
+                if (typeof cur.scrollIntoView === 'function') cur.scrollIntoView({ block: 'nearest' });
+            }
+            filterInput.setAttribute('aria-activedescendant', 'ux35-sidebar-hit-' + i);
+        }
+
+        function openJump(i) {
+            var page = jumpResults[i];
+            if (!page || !page.href) return;
+            if (page.external) window.open(page.href, '_blank', 'noopener');
+            else window.location.href = page.href;
+        }
+
         function applyFilter() {
-            var q = (filterInput.value || '').trim().toLowerCase();
+            var q = (filterInput.value || '').trim();
+            var words = normSearch(q).split(/\s+/).filter(Boolean);
+            var matchedPages = words.length
+                ? searchPagesIndex().filter(function (p) { return pageMatches(p, words); })
+                : [];
+            var matchedHrefs = matchedPages.map(function (p) { return p.href; });
+
             nav.querySelectorAll('.ux35-sidebar-section').forEach(function (section) {
                 var items = section.querySelectorAll('.ux35-sidebar-item');
                 var visible = 0;
@@ -626,8 +750,7 @@
                     // The "More" toggle is not a destination: it counts only when
                     // one of the links it reveals matched (handled below).
                     var isMoreToggle = item.classList.contains('nav-more-toggle');
-                    var label = (item.textContent || '').toLowerCase();
-                    var match = !q || label.indexOf(q) !== -1;
+                    var match = navItemMatches(item, words, matchedHrefs);
                     item.classList.toggle('is-filter-hidden', match ? false : true);
                     if (match && !isMoreToggle) visible++;
                 });
@@ -635,9 +758,9 @@
                 // opens so nothing found can hide behind it.
                 section.querySelectorAll('.nav-more').forEach(function (row) {
                     var matches = row.querySelectorAll('.ux35-sidebar-item:not(.nav-more-toggle):not(.is-filter-hidden)').length;
-                    var keep = !q || matches > 0;
+                    var keep = !words.length || matches > 0;
                     row.classList.toggle('is-filter-hidden', !keep);
-                    if (q && keep) {
+                    if (words.length && keep) {
                         var list = row.querySelector('.nav-more-list');
                         var button = row.querySelector('.nav-more-toggle');
                         if (list) list.hidden = false;
@@ -645,11 +768,47 @@
                         visible += matches;
                     }
                 });
-                section.classList.toggle('is-filter-empty', q !== '' && visible === 0);
-                if (q) section.classList.remove('is-collapsed');
+                section.classList.toggle('is-filter-empty', words.length > 0 && visible === 0);
+                if (words.length) section.classList.remove('is-collapsed');
             });
+            renderJumpResults(words);
         }
+
         filterInput.addEventListener('input', applyFilter);
+        filterInput.addEventListener('keydown', function (e) {
+            if (jumpBox && !jumpBox.hidden && jumpResults.length) {
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    setJumpActive(Math.min(jumpResults.length - 1, jumpActive + 1));
+                    return;
+                }
+                if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    setJumpActive(Math.max(0, jumpActive - 1));
+                    return;
+                }
+                if (e.key === 'Enter' && jumpActive >= 0) {
+                    e.preventDefault();
+                    openJump(jumpActive);
+                    return;
+                }
+            }
+            if (e.key === 'Escape' && (filterInput.value || (jumpBox && !jumpBox.hidden))) {
+                e.preventDefault();
+                filterInput.value = '';
+                applyFilter();
+            }
+        });
+        filterInput.addEventListener('blur', function () {
+            window.setTimeout(function () {
+                if (jumpBox && !jumpBox.contains(document.activeElement)) {
+                    jumpBox.hidden = true;
+                }
+            }, 120);
+        });
+        filterInput.addEventListener('focus', function () {
+            if ((filterInput.value || '').trim()) applyFilter();
+        });
     }
 
     function init() {

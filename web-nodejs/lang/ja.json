@@ -379,6 +379,7 @@
     "display_name_placeholder": "カスタム名 (ホスト名をオーバーライド)",
     "note_placeholder": "この装置に関する注意事項",
     "tags": "Tags",
+    "tags_badge": "{count} 件のタグ",
     "filter_by_tags": "タグでフィルタリングする",
     "no_tags": "No tags",
     "all_groups": "すべてのグループ",
@@ -4836,8 +4837,8 @@
     "switch_to_classic": "クラシック UI に切り替え",
     "beta_badge": "ベータ",
     "beta_tooltip": "ベータ版コンソールレイアウト — 任意。既定はクラシック UI のままです。",
-    "filter_menu": "Filter menu",
-    "filter_menu_placeholder": "Search menu…"
+    "filter_menu": "コンソールを検索",
+    "filter_menu_placeholder": "ページ・設定を検索…"
   },
   "help": {
     "panel": {
@@ -4966,7 +4967,9 @@
     "new_code": "新しいコード",
     "client_address": "クライアントに入力するサーバーアドレス",
     "host_unknown": "管理者に確認してください",
-    "unavailable": "利用できるコードがありません"
+    "unavailable": "利用できるコードがありません",
+    "actor_console": "コンソール",
+    "actor_api_key": "APIキー: {{name}}"
   },
   "ux36": {
     "beta_badge": "BETA",

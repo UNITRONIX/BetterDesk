@@ -379,6 +379,7 @@
     "display_name_placeholder": "Voer een weergavenaam in...",
     "note_placeholder": "Voer een notitie in...",
     "tags": "Tags",
+    "tags_badge": "{count} tags",
     "filter_by_tags": "Filteren op tags",
     "no_tags": "No tags",
     "all_groups": "Alle groepen",
@@ -4836,8 +4837,8 @@
     "switch_to_classic": "Overschakelen naar klassieke UI",
     "beta_badge": "BETA",
     "beta_tooltip": "Beta-consolelay-out — optioneel; de klassieke UI blijft de standaard.",
-    "filter_menu": "Filter menu",
-    "filter_menu_placeholder": "Search menu…"
+    "filter_menu": "Console doorzoeken",
+    "filter_menu_placeholder": "Zoek pagina’s, instellingen…"
   },
   "help": {
     "panel": {
@@ -4966,7 +4967,9 @@
     "new_code": "Nieuwe code",
     "client_address": "Serveradres voor de client",
     "host_unknown": "Vraag uw beheerder",
-    "unavailable": "Geen code beschikbaar"
+    "unavailable": "Geen code beschikbaar",
+    "actor_console": "Console",
+    "actor_api_key": "API-sleutel: {{name}}"
   },
   "ux36": {
     "beta_badge": "BETA",

@@ -2,10 +2,8 @@
 
 The BetterDesk Web Console is a Node.js (Express.js) management panel accessible at **http://your-server:5000**.
 
-The console ships with **UX 3.5** as its default layout (full-list sidebar + solid topbar — not glass).
-An optional **UX 3.6 beta** groups the sidebar into Devices / Support / People / Activity / Settings and
-adds the list-first Devices and per-topic Settings layouts; it is enabled per browser in
-**Settings → General → Console interface**. See [[UX 3.5|UX-3.5]].
+The console ships **UX 3.5** as its only layout (full-list sidebar + solid topbar — not glass).
+The former UX 3.6 beta switch is retired; see [[UX 3.5|UX-3.5]].
 
 ---
 
@@ -46,7 +44,7 @@ The source files are kept in [`screenshots/generated/`](../../screenshots/genera
 
 Overview cards: device counts, online status, server uptime, versions.
 
-OS-style **Desktop Mode** is not loaded anymore. Use UX 3.5 or [[UX 3.6 beta|UX-3.5]]. Old notes: [[Desktop Dashboard|Desktop-Dashboard]].
+OS-style **Desktop Mode** is not loaded anymore. Use [[UX 3.5|UX-3.5]]. Old notes: [[Desktop Dashboard|Desktop-Dashboard]].
 
 ---
 
@@ -165,7 +163,7 @@ Manage console users and roles. See [[User Management|User-Management]] and [[Or
 
 ## Login screen
 
-UX 3.5 and UX 3.6 use the standard panel login (username / password / optional TOTP). The old Windows 11-style desktop login is retired with Desktop Mode.
+UX 3.5 uses the standard panel login (username / password / optional TOTP). The old Windows 11-style desktop login is retired with Desktop Mode.
 
 ---
 

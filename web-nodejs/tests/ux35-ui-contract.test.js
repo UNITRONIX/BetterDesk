@@ -21,6 +21,8 @@ describe('UX 3.5 mobile and accessibility contracts', () => {
     const automation = read('public', 'js', 'automation.js');
     const appJs = read('public', 'js', 'app.js');
     const devicesJs = read('public', 'js', 'devices.js');
+    const devicesCss = read('public', 'css', 'devices.css');
+    const devicesView = read('views', 'devices.ejs');
     const registrationRoutes = read('routes', 'registration.routes.js');
     const notifCenter = read('public', 'js', 'notif-center.js');
     const uiShell = read('public', 'js', 'ui-shell.js');
@@ -78,7 +80,8 @@ describe('UX 3.5 mobile and accessibility contracts', () => {
     it('defers console scripts without changing their document order', () => {
         assert.match(layout, /<script defer src="\/js\/utils\.js/);
         assert.match(layout, /<script defer src="\/js\/ux35-shell\.js/);
-        assert.match(layout, /<script defer src="\/js\/ux36-shell\.js/);
+        assert.match(layout, /<script defer src="\/js\/ui-search\.js/);
+        assert.doesNotMatch(layout, /<script defer src="\/js\/ux36-shell\.js/);
         assert.match(layout, /<script defer src="\/js\/<%= script %>\.js/);
     });
 
@@ -108,19 +111,45 @@ describe('UX 3.5 mobile and accessibility contracts', () => {
         assert.match(registrationRoutes, /type: 'registration_changed'/);
     });
 
-    it('resolves the console shell in one place with UX 3.5 as the safe default', () => {
+    it('keeps Devices folders and groups in a left rail beside the table', () => {
+        assert.match(devicesView, /class="devices-page devices-layout"/);
+        assert.match(devicesView, /class="devices-chip-bars"/);
+        assert.match(devicesView, /class="devices-main"/);
+        assert.match(devicesCss, /\.devices-page\.devices-layout\s*\{[\s\S]*?grid-template-columns:\s*210px/);
+        assert.match(devicesCss, /\.devices-tile-bars\s*\{[\s\S]*?display:\s*contents/);
+        assert.match(devicesCss, /\.devices-chip-bars\s*\{[\s\S]*?position:\s*sticky/);
+        assert.match(devicesCss, /\.folders-chips,\s*\n\.groups-chips\s*\{[\s\S]*?flex-direction:\s*column/);
+        assert.doesNotMatch(devicesCss, /minmax\(176px/);
+        assert.match(devicesCss, /@media \(max-width: 899px\)[\s\S]*?\.devices-page\.devices-layout\s*\{[\s\S]*?grid-template-columns:\s*minmax\(0,\s*1fr\)/);
+    });
+
+    it('keeps the Devices sticky toolbar flush under the top bar', () => {
+        assert.match(
+            ux35Css,
+            /\.ux35-page \.ux35-content:has\(\.devices-page\)\s*\{[^}]*padding-top:\s*0/
+        );
+        assert.match(
+            ux35Css,
+            /\.ux35-page \.ux35-content:has\(\.devices-page\) > \.devices-page\s*\{[^}]*padding-top:\s*var\(--ux35-content-padding-lg\)/
+        );
+        assert.match(
+            ux35Css,
+            /\.ux35-page \.devices-page \.devices-toolbar\s*\{[\s\S]*?position:\s*sticky[\s\S]*?top:\s*0/
+        );
+    });
+
+    it('keeps the console on UX 3.5 only (UX 3.6 beta disconnected)', () => {
         const uiShellLib = read('lib', 'uiShell.js');
         const server = read('server.js');
-        // Layout defers to the server-resolved shell instead of hard-coding one.
-        assert.match(layout, /uiShell === 'ux36'\) \? 'ux36' : 'ux35'/);
+        assert.match(layout, /const shell = 'ux35'/);
+        assert.doesNotMatch(layout, /uiShell === 'ux36'/);
         assert.match(server, /res\.locals\.uiShell = resolveShell\(req\)/);
         assert.match(uiShellLib, /const DEFAULT_SHELL = SHELL_UX35/);
-        assert.match(uiShellLib, /SUPPORTED_SHELLS/);
-        // The client bridge mirrors the server resolver.
-        assert.match(uiShell, /var SUPPORTED = \['ux35', 'ux36'\]/);
-        assert.match(uiShell, /return normalize\(fromSsr\) \|\| DEFAULT_SHELL/);
-        assert.doesNotMatch(topbar, /ux35-beta-chip|data-ui-shell-switch/);
+        assert.match(uiShellLib, /SUPPORTED_SHELLS = Object\.freeze\(\[SHELL_UX35\]\)/);
+        assert.match(uiShell, /var SUPPORTED = \['ux35'\]/);
+        assert.doesNotMatch(topbar, /ui-shell-toggle|ux36-beta-chip|data-ui-shell-switch/);
         assert.doesNotMatch(classicNavbar, /navbar-btn--shell-beta|ui-shell-beta-badge|data-ui-shell-switch/);
+        assert.doesNotMatch(settingsView, /id="ux36-shell-panel"|name="ui-shell"/);
     });
 
     it('keeps Settings navigation sticky, horizontally scrollable, and compact on mobile shell widths', () => {

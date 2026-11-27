@@ -282,10 +282,9 @@ app.use((req, res, next) => {
     // names) must be escaped at the call site. Expose the same helper the API
     // layer uses instead of hand-rolling it per template.
     res.locals.escapeHtml = escapeHtml;
-    // Shell choice is resolved once (lib/uiShell.js) so SSR markup, CSS/JS
-    // includes and window.BetterDesk.uiShell cannot disagree. UX 3.5 is the
-    // default; UX 3.6 is an opt-in beta. Unknown values (including the removed
-    // `classic` shell) fall back to the default instead of erroring.
+    // Shell is resolved once (lib/uiShell.js) so SSR markup, CSS/JS includes
+    // and window.BetterDesk.uiShell cannot disagree. UX 3.5 is the only console
+    // shell; retired UX 3.6 cookies / ?ui= deep links resolve to UX 3.5.
     res.locals.uiShell = resolveShell(req);
     res.locals.uiShellBeta = isBetaShell(res.locals.uiShell);
     // Tab name for pages that split by tab (settings deep links, server mgmt,

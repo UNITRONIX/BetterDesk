@@ -330,6 +330,7 @@
     "no_selection": "未選擇任何設備",
     "device_type": "類型",
     "tags": "Tags",
+    "tags_badge": "{count} 個標籤",
     "filter_type_all": "所有類型",
     "filter_type_rustdesk": "RustDesk",
     "filter_type_desktop": "桌面",
@@ -4836,8 +4837,8 @@
     "switch_to_classic": "切換至經典介面",
     "beta_badge": "測試版",
     "beta_tooltip": "測試版主控台版面 — 可選；經典介面仍為預設。",
-    "filter_menu": "Filter menu",
-    "filter_menu_placeholder": "Search menu…"
+    "filter_menu": "搜尋主控台",
+    "filter_menu_placeholder": "搜尋頁面、設定…"
   },
   "help": {
     "panel": {
@@ -4966,7 +4967,9 @@
     "new_code": "新代碼",
     "client_address": "在用戶端輸入的伺服器位址",
     "host_unknown": "請詢問管理員",
-    "unavailable": "沒有可用代碼"
+    "unavailable": "沒有可用代碼",
+    "actor_console": "主控台",
+    "actor_api_key": "API 金鑰：{{name}}"
   },
   "ux36": {
     "beta_badge": "BETA",

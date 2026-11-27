@@ -342,6 +342,7 @@
     "no_selection": "No devices selected",
     "device_type": "Type",
     "tags": "Tags",
+    "tags_badge": "{count} tags",
     "filter_type_all": "All Types",
     "filter_type_rustdesk": "RustDesk",
     "filter_type_desktop": "Desktop",
@@ -3314,8 +3315,8 @@
     "switch_to_classic": "Switch to classic UI",
     "beta_badge": "BETA",
     "beta_tooltip": "Beta console layout — optional; classic UI remains the default.",
-    "filter_menu": "Filter menu",
-    "filter_menu_placeholder": "Search menu…"
+    "filter_menu": "Search console",
+    "filter_menu_placeholder": "Search pages, settings…"
   },
   "days": {
     "mon": "Mon",
@@ -4966,7 +4967,9 @@
     "new_code": "New code",
     "client_address": "Server address to enter in the client",
     "host_unknown": "Ask your administrator",
-    "unavailable": "No code available"
+    "unavailable": "No code available",
+    "actor_console": "Console",
+    "actor_api_key": "API key: {{name}}"
   },
   "ux36": {
     "beta_badge": "BETA",

@@ -385,6 +385,7 @@
     "display_name_placeholder": "ชื่อที่กำหนดเอง (แทนที่ชื่อโฮสต์)",
     "note_placeholder": "หมายเหตุเกี่ยวกับอุปกรณ์นี้",
     "tags": "Tags",
+    "tags_badge": "{count} แท็ก",
     "filter_by_tags": "กรองตามแท็ก",
     "no_tags": "No tags",
     "all_groups": "ทุกกลุ่ม",
@@ -4842,8 +4843,8 @@
     "switch_to_classic": "สลับไป UI คลาสสิก",
     "beta_badge": "เบต้า",
     "beta_tooltip": "เลย์เอาต์คอนโซลเบต้า — ไม่บังคับ UI คลาสสิกยังเป็นค่าเริ่มต้น",
-    "filter_menu": "Filter menu",
-    "filter_menu_placeholder": "Search menu…"
+    "filter_menu": "ค้นหาในคอนโซล",
+    "filter_menu_placeholder": "ค้นหาหน้า การตั้งค่า…"
   },
   "help": {
     "panel": {
@@ -4972,7 +4973,9 @@
     "new_code": "รหัสใหม่",
     "client_address": "ที่อยู่เซิร์ฟเวอร์สำหรับไคลเอนต์",
     "host_unknown": "สอบถามผู้ดูแลระบบ",
-    "unavailable": "ไม่มีรหัสที่ใช้ได้"
+    "unavailable": "ไม่มีรหัสที่ใช้ได้",
+    "actor_console": "คอนโซล",
+    "actor_api_key": "คีย์ API: {{name}}"
   },
   "ux36": {
     "beta_badge": "BETA",

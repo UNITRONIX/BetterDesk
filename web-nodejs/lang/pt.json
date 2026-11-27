@@ -379,6 +379,7 @@
     "display_name_placeholder": "Digite um nome exibido...",
     "note_placeholder": "Digite uma nota...",
     "tags": "Tags",
+    "tags_badge": "{count} etiquetas",
     "filter_by_tags": "Filtrar por tags",
     "no_tags": "No tags",
     "all_groups": "Todos os grupos",
@@ -4836,8 +4837,8 @@
     "switch_to_classic": "Mudar para a interface clássica",
     "beta_badge": "BETA",
     "beta_tooltip": "Layout da consola em beta — opcional; a UI clássica continua a ser a predefinida.",
-    "filter_menu": "Filter menu",
-    "filter_menu_placeholder": "Search menu…"
+    "filter_menu": "Pesquisar na consola",
+    "filter_menu_placeholder": "Pesquisar páginas, definições…"
   },
   "help": {
     "panel": {
@@ -4966,7 +4967,9 @@
     "new_code": "Novo código",
     "client_address": "Endereço do servidor para o cliente",
     "host_unknown": "Pergunte ao seu administrador",
-    "unavailable": "Nenhum código disponível"
+    "unavailable": "Nenhum código disponível",
+    "actor_console": "Consola",
+    "actor_api_key": "Chave de API: {{name}}"
   },
   "ux36": {
     "beta_badge": "BETA",

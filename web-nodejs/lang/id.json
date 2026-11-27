@@ -385,6 +385,7 @@
     "display_name_placeholder": "Nama khusus (menggantikan nama host)",
     "note_placeholder": "Catatan tentang perangkat ini",
     "tags": "Tags",
+    "tags_badge": "{count} tag",
     "filter_by_tags": "Filter berdasarkan tag",
     "no_tags": "No tags",
     "all_groups": "Semua kelompok",
@@ -4842,8 +4843,8 @@
     "switch_to_classic": "Beralih ke UI klasik",
     "beta_badge": "BETA",
     "beta_tooltip": "Tata letak konsol Beta — opsional; UI klasik tetap default.",
-    "filter_menu": "Filter menu",
-    "filter_menu_placeholder": "Search menu…"
+    "filter_menu": "Cari di konsol",
+    "filter_menu_placeholder": "Cari halaman, pengaturan…"
   },
   "help": {
     "panel": {
@@ -4972,7 +4973,9 @@
     "new_code": "Kode baru",
     "client_address": "Alamat server untuk klien",
     "host_unknown": "Tanyakan administrator",
-    "unavailable": "Tidak ada kode tersedia"
+    "unavailable": "Tidak ada kode tersedia",
+    "actor_console": "Konsol",
+    "actor_api_key": "Kunci API: {{name}}"
   },
   "ux36": {
     "beta_badge": "BETA",

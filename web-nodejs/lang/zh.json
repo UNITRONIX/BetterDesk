@@ -379,6 +379,7 @@
       "gpu": "显卡"
     },
     "tags": "Tags",
+    "tags_badge": "{count} 个标签",
     "filter_by_tags": "按标签筛选",
     "no_tags": "No tags",
     "all_groups": "所有分组",
@@ -4836,8 +4837,8 @@
     "switch_to_classic": "切换到经典界面",
     "beta_badge": "测试版",
     "beta_tooltip": "测试版控制台布局 — 可选；经典界面仍为默认。",
-    "filter_menu": "Filter menu",
-    "filter_menu_placeholder": "Search menu…"
+    "filter_menu": "搜索控制台",
+    "filter_menu_placeholder": "搜索页面、设置…"
   },
   "help": {
     "panel": {
@@ -4966,7 +4967,9 @@
     "new_code": "新代码",
     "client_address": "在客户端输入的服务器地址",
     "host_unknown": "请询问管理员",
-    "unavailable": "没有可用代码"
+    "unavailable": "没有可用代码",
+    "actor_console": "控制台",
+    "actor_api_key": "API 密钥：{{name}}"
   },
   "ux36": {
     "beta_badge": "BETA",

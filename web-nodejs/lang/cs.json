@@ -379,6 +379,7 @@
     "display_name_placeholder": "Vlastní název (přepíše hostname)",
     "note_placeholder": "Poznámky k tomuto zařízení",
     "tags": "Tags",
+    "tags_badge": "{count} štítků",
     "filter_by_tags": "Filtrovat podle štítků",
     "no_tags": "No tags",
     "all_groups": "Všechny skupiny",
@@ -4836,8 +4837,8 @@
     "switch_to_classic": "Přepnout na klasické rozhraní",
     "beta_badge": "BETA",
     "beta_tooltip": "Beta rozložení konzole — volitelné; výchozí zůstává klasické UI.",
-    "filter_menu": "Filter menu",
-    "filter_menu_placeholder": "Search menu…"
+    "filter_menu": "Hledat v konzoli",
+    "filter_menu_placeholder": "Hledat stránky, nastavení…"
   },
   "help": {
     "panel": {
@@ -4966,7 +4967,9 @@
     "new_code": "Nový kód",
     "client_address": "Adresa serveru pro klienta",
     "host_unknown": "Zeptejte se správce",
-    "unavailable": "Kód není k dispozici"
+    "unavailable": "Kód není k dispozici",
+    "actor_console": "Konzole",
+    "actor_api_key": "API klíč: {{name}}"
   },
   "ux36": {
     "beta_badge": "BETA",

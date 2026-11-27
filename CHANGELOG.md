@@ -1,7 +1,29 @@
 ## [Unreleased]
 
 ### Changed
-- _(none yet)_
+- **Console UX 3.6 beta retired:** the top-bar “science BETA” shell toggle and
+  Settings → General console-interface switcher are removed. The panel always
+  renders UX 3.5; stale `bd_ui_shell=ux36` cookies and `?ui=ux36` links resolve
+  to UX 3.5. UX 3.6 CSS/JS assets remain on disk for reference but are no longer
+  loaded by the console layout.
+- **Devices folders/groups rail:** folder and device-group filters sit in a
+  sticky left rail beside the table (list-first layout from the UX 3.6 Devices
+  page) instead of a card grid above it; narrow viewports keep a horizontal
+  strip.
+- **Devices table:** the trailing kebab (⋮) actions column is hidden for now;
+  device actions remain available via the row context menu.
+- **Devices tags column:** truncated tag pills are replaced by a compact tag
+  icon + count; hovering (or focusing) the badge opens a cloud with the full
+  tag list.
+- **UX 3.5 topbar + sidebar (dark):** chrome background is near-black
+  (`#05070a`) instead of the previous mid `#161b22` surface — top bar and
+  sidebar share the same dark chrome, without a hairline under the topbar.
+
+- **Sidebar search:** the menu filter also suggests destinations from the
+  console search index (settings tabs, users, folders/tags intents, etc.) and
+  Ctrl+K global search is available again on UX 3.5.
+- **Devices toolbar:** sticky search/filters sit flush under the top bar (scroll
+  padding moved onto the page, same pattern as Settings).
 
 ---
 

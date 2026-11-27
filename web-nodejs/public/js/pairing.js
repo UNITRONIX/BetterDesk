@@ -145,6 +145,42 @@
         }
     }
 
+    function formatPairingDate(value) {
+        if (!value) return '—';
+        if (window.Utils && typeof Utils.formatDate === 'function') {
+            const formatted = Utils.formatDate(value);
+            return formatted && formatted !== '-' ? formatted : '—';
+        }
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return '—';
+        try {
+            const lang = (window.BetterDesk && window.BetterDesk.lang) || undefined;
+            return date.toLocaleString(lang, {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+            });
+        } catch (_) {
+            return '—';
+        }
+    }
+
+    function formatCreatedBy(value) {
+        const raw = String(value || '').trim();
+        if (!raw) return '—';
+        if (raw === 'apikey:console-bridge') {
+            return t('pairing.actor_console', 'Console');
+        }
+        if (raw.toLowerCase().startsWith('apikey:')) {
+            const name = raw.slice('apikey:'.length).trim() || 'API';
+            const tpl = t('pairing.actor_api_key', 'API key: {{name}}');
+            return tpl.replace(/\{\{\s*name\s*\}\}/g, name);
+        }
+        return raw;
+    }
+
     async function loadCodes() {
         const tbody = $('pairing-tbody');
         if (!tbody) return;
@@ -160,9 +196,9 @@
                 const row = document.createElement('tr');
                 const cells = [
                     item.label || '—',
-                    item.created_at || '—',
-                    item.expires_at || '—',
-                    item.created_by || '—',
+                    formatPairingDate(item.created_at),
+                    formatPairingDate(item.expires_at),
+                    formatCreatedBy(item.created_by),
                 ];
                 for (const value of cells) {
                     const td = document.createElement('td');

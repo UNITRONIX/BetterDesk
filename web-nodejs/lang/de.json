@@ -379,6 +379,7 @@
       "gpu": "Graphics Card"
     },
     "tags": "Tags",
+    "tags_badge": "{count} Tags",
     "filter_by_tags": "Nach Tags filtern",
     "no_tags": "No tags",
     "all_groups": "Alle Gruppen",
@@ -4836,8 +4837,8 @@
     "switch_to_classic": "Zur klassischen Oberfläche wechseln",
     "beta_badge": "BETA",
     "beta_tooltip": "Beta-Konsolenlayout — optional; die klassische Oberfläche bleibt Standard.",
-    "filter_menu": "Filter menu",
-    "filter_menu_placeholder": "Search menu…"
+    "filter_menu": "Konsole durchsuchen",
+    "filter_menu_placeholder": "Seiten, Einstellungen suchen…"
   },
   "help": {
     "panel": {
@@ -4966,7 +4967,9 @@
     "new_code": "Neuer Code",
     "client_address": "Serveradresse für den Client",
     "host_unknown": "Fragen Sie Ihren Administrator",
-    "unavailable": "Kein Code verfügbar"
+    "unavailable": "Kein Code verfügbar",
+    "actor_console": "Konsole",
+    "actor_api_key": "API-Schlüssel: {{name}}"
   },
   "ux36": {
     "beta_badge": "BETA",

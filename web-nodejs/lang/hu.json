@@ -385,6 +385,7 @@
     "display_name_placeholder": "Egyéni név (felülbírálja a gazdagépnevet)",
     "note_placeholder": "Megjegyzések az eszközzel kapcsolatban",
     "tags": "Tags",
+    "tags_badge": "{count} címke",
     "filter_by_tags": "Szűrés címkék szerint",
     "no_tags": "Nincsenek címkék",
     "all_groups": "Minden csoport",
@@ -4842,8 +4843,8 @@
     "switch_to_classic": "Váltás klasszikus felületre",
     "beta_badge": "BÉTA",
     "beta_tooltip": "Béta konzol elrendezés — opcionális; az alapértelmezett a klasszikus felület marad.",
-    "filter_menu": "Filter menu",
-    "filter_menu_placeholder": "Search menu…"
+    "filter_menu": "Keresés a konzolon",
+    "filter_menu_placeholder": "Oldalak, beállítások keresése…"
   },
   "help": {
     "panel": {
@@ -4972,7 +4973,9 @@
     "new_code": "Új kód",
     "client_address": "Szervercím az ügyfélhez",
     "host_unknown": "Kérdezze a rendszergazdát",
-    "unavailable": "Nincs elérhető kód"
+    "unavailable": "Nincs elérhető kód",
+    "actor_console": "Konzol",
+    "actor_api_key": "API-kulcs: {{name}}"
   },
   "ux36": {
     "beta_badge": "BETA",

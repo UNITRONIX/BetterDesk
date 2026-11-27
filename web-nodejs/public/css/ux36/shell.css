@@ -763,7 +763,9 @@
 .ux35-sidebar-attribution {
     display: flex;
     flex-direction: column;
+    align-items: center;
     font-size: var(--text-xs);
+    text-align: center;
 }
 
 /* ── Account menu (views/partials/user-menu.ejs) ──

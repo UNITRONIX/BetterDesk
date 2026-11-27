@@ -169,8 +169,6 @@
     letter-spacing: 0.05em;
 }
 
-.registrations-table .col-platform,
-.registrations-table .col-version,
 .registrations-table .col-status,
 .registrations-table .col-requested,
 .registrations-table .col-actions {
@@ -378,7 +376,7 @@
 .platform-cell {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 6px;
 }
 

@@ -385,6 +385,7 @@
     "display_name_placeholder": "Anpassat namn (åsidosätter värdnamn)",
     "note_placeholder": "Anteckningar om den här enheten",
     "tags": "Tags",
+    "tags_badge": "{count} taggar",
     "filter_by_tags": "Filtrera efter taggar",
     "no_tags": "Inga taggar",
     "all_groups": "Alla grupper",
@@ -4842,8 +4843,8 @@
     "switch_to_classic": "Växla till klassiskt gränssnitt",
     "beta_badge": "BETA",
     "beta_tooltip": "Beta-konsollayout — valfritt; klassiskt UI förblir standard.",
-    "filter_menu": "Filter menu",
-    "filter_menu_placeholder": "Search menu…"
+    "filter_menu": "Sök i konsolen",
+    "filter_menu_placeholder": "Sök sidor, inställningar…"
   },
   "help": {
     "panel": {
@@ -4972,7 +4973,9 @@
     "new_code": "Ny kod",
     "client_address": "Serveradress för klienten",
     "host_unknown": "Fråga din administratör",
-    "unavailable": "Ingen kod tillgänglig"
+    "unavailable": "Ingen kod tillgänglig",
+    "actor_console": "Konsol",
+    "actor_api_key": "API-nyckel: {{name}}"
   },
   "ux36": {
     "beta_badge": "BETA",

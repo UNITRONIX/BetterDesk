@@ -886,7 +886,7 @@ function generateSemanticAliasCss(branding) {
         `    color-scheme: ${normalizeThemeMode(branding.themeMode) === 'light' ? 'light' : 'dark'};`,
         '    /* UX 3.5 chrome aliases — solid surfaces (no glass/blur in this shell) */',
         '    --ux35-bg: var(--bg-primary);',
-        '    --ux35-sidebar-bg: var(--bg-secondary);',
+        '    --ux35-sidebar-bg: #05070a;',
         '    --ux35-card-bg: var(--bg-secondary);',
         '    --ux35-border: var(--border-primary);',
         '    --ux35-border-light: var(--border-secondary);',
@@ -898,11 +898,11 @@ function generateSemanticAliasCss(branding) {
         '    --ux35-active-bg: var(--accent-blue-muted);',
         '    --ux35-glass-blur: 0px;',
         '    --ux35-glass-saturate: 1;',
-        '    /* UX 3.5 topbar chrome — theme-invariant (always dark) */',
-        '    --ux35-topbar-bg: #161b22;',
+        '    /* UX 3.5 topbar chrome — near-black in dark mode */',
+        '    --ux35-topbar-bg: #05070a;',
         '    --ux35-topbar-fg: #e6edf3;',
         '    --ux35-topbar-fg-muted: #8b949e;',
-        '    --ux35-topbar-border: #30363d;'
+        '    --ux35-topbar-border: #1c2128;'
     ];
     return `:root {\n${lines.join('\n')}\n}\n`;
 }

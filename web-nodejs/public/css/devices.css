@@ -1,9 +1,13 @@
 /**
  * BetterDesk Console - Devices Page Styles v2
- * Responsive: PC (>=1024px) > Tablet (600-1023px) > Phone (<600px)
+ * Responsive: desktop rail (>=900px) > horizontal strip (<900px) > phone (<=600px)
  */
 
 /* ==================== Page Layout ==================== */
+/*
+ * List-first Devices layout (ported from UX 3.6): folders + groups sit in a
+ * 210px sticky rail beside the table, not as a card grid above it.
+ */
 
 .devices-page {
     display: flex;
@@ -11,13 +15,31 @@
     gap: var(--space-sm, 0.5rem);
 }
 
+.devices-page.devices-layout {
+    display: grid;
+    grid-template-columns: 210px minmax(0, 1fr);
+    gap: 0 24px;
+    align-items: start;
+}
+
 /* ==================== Header ==================== */
 
 .devices-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: var(--space-md);
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    margin-bottom: var(--space-sm, 0.5rem);
+}
+
+.devices-page.devices-layout > .devices-header {
+    grid-column: 2;
+    grid-row: 1;
+}
+
+.devices-page.devices-layout > #address-book-alias-warning {
+    grid-column: 2;
 }
 
 .devices-title {
@@ -41,6 +63,13 @@
     font-weight: var(--font-weight-medium);
 }
 
+.devices-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
 .devices-actions .btn-sm {
     padding: 6px 12px;
     font-size: var(--font-size-sm);
@@ -53,148 +82,199 @@
     font-size: 18px;
 }
 
-/* ==================== Folder / group tile bars ==================== */
+/* ==================== Folder / group rail ==================== */
 
 .devices-tile-bars {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-md, 1rem);
-    background: var(--bg-primary);
-    padding: var(--space-sm) 0 var(--space-md);
-    margin-bottom: var(--space-md);
-    border-bottom: 1px solid var(--border-secondary);
+    display: contents;
+    background: none;
+    padding: 0;
+    margin: 0;
+    border: 0;
 }
 
-/* Folders + groups only (strategies stay outside so sticky never covers the device list) */
+/* Folders + groups only — sticky left rail beside the table */
 .devices-chip-bars {
     display: flex;
     flex-direction: column;
-    gap: var(--space-md, 1rem);
+    gap: 20px;
+    position: sticky;
+    top: var(--space-md, 1rem);
+    max-height: calc(100dvh - var(--ux35-topbar-height, 48px) - 2rem);
+    overflow-y: auto;
+    padding-bottom: 8px;
 }
 
-/* ==================== Folder Tiles ==================== */
+.devices-page.devices-layout > .devices-tile-bars .devices-chip-bars,
+.devices-page.devices-layout .devices-chip-bars {
+    grid-column: 1;
+    grid-row: 1 / span 6;
+}
 
-.folders-bar {
+.devices-main {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    min-width: 0;
+}
+
+.devices-page.devices-layout > .devices-main {
+    grid-column: 2;
+    grid-row: 2 / span 5;
+}
+
+/* Overlay / empty / float siblings stay out of the rail grid flow */
+.devices-page.devices-layout > .devices-context-menu,
+.devices-page.devices-layout > .devices-hscroll-float,
+.devices-page.devices-layout > .devices-empty,
+.devices-page.devices-layout > .kebab-overlay {
+    grid-column: 1 / -1;
+}
+
+/* ==================== Folder rows ==================== */
+
+.folders-bar,
+.groups-bar {
     display: block;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    padding: 0;
 }
 
-.folders-chips {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(176px, 1fr));
-    gap: 10px;
+.folders-chips,
+.groups-chips {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
     align-items: stretch;
-    padding: 2px 0;
+    padding: 0;
 }
 
-.folder-chip {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    grid-template-rows: auto 1fr auto;
-    align-items: start;
-    gap: 6px 8px;
-    min-height: 112px;
-    padding: 14px;
-    border: 1px solid var(--border-primary, #30363d);
-    border-radius: 8px;
-    background: var(--bg-secondary, #161b22);
+#custom-folders,
+#custom-device-groups {
+    display: contents;
+}
+
+.folder-chip,
+.group-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 36px;
+    min-width: 0;
+    padding: 4px 8px 4px 12px;
+    border: 0;
+    border-inline-start: 2px solid transparent;
+    border-radius: 0 var(--radius-md, 8px) var(--radius-md, 8px) 0;
+    background: transparent;
     color: var(--text-primary, #c9d1d9);
     font-size: var(--font-size-sm, 0.875rem);
+    text-align: start;
     cursor: pointer;
-    white-space: normal;
-    text-align: left;
-    transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+    white-space: nowrap;
+    overflow: visible;
+    transform: none;
+    box-shadow: none;
+    transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
     -webkit-appearance: none;
     appearance: none;
     position: relative;
     font-family: inherit;
-    overflow: visible;
 }
 
-.folder-chip:hover {
-    background: var(--bg-hover);
-    border-color: var(--border-hover, #484f58);
-    transform: translateY(-1px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+.folder-chip:hover,
+.group-chip:hover {
+    background: var(--bg-hover, rgba(255, 255, 255, 0.05));
+    border-color: transparent;
+    transform: none;
+    box-shadow: none;
 }
 
-.folder-chip.active {
-    background: linear-gradient(135deg, var(--accent-blue-muted, rgba(88, 166, 255, 0.18)), rgba(88, 166, 255, 0.08));
-    border-color: var(--accent-blue, #58a6ff);
+.folder-chip.active,
+.group-chip.active {
+    border-inline-start-color: var(--accent-blue, #58a6ff);
+    background: var(--accent-blue-muted, rgba(88, 166, 255, 0.12));
     color: var(--text-primary, #c9d1d9);
-    box-shadow: inset 0 0 0 1px rgba(88, 166, 255, 0.18);
+    font-weight: var(--font-weight-semibold, 600);
+    box-shadow: none;
+}
+
+.group-chip.active {
+    border-inline-start-color: var(--accent-purple, #a855f7);
+    background: var(--accent-purple-muted, rgba(168, 85, 247, 0.12));
 }
 
 .folder-chip.drag-over {
     background: var(--accent-green-muted);
-    border-color: var(--accent-green);
+    border-inline-start-color: var(--accent-green);
     color: var(--accent-green);
 }
 
+.group-chip.dynamic {
+    border-style: none;
+    border-inline-start-style: dashed;
+}
+
 .chip-icon {
-    grid-column: 1;
-    grid-row: 1;
-    font-size: 24px !important;
+    flex: none;
+    font-size: 20px !important;
     line-height: 1;
 }
 
 .chip-label {
-    grid-column: 1 / 4;
-    grid-row: 2;
-    align-self: center;
+    flex: 0 1 auto;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
-    word-break: break-word;
+    white-space: nowrap;
     font-weight: var(--font-weight-medium, 500);
     line-height: 1.25;
 }
 
-.chip-count {
-    grid-column: 1 / 3;
-    grid-row: 3;
-    align-self: end;
-    justify-self: start;
-    font-size: 28px;
-    font-weight: var(--font-weight-semibold, 600);
-    color: var(--text-primary, #c9d1d9);
-    background: transparent;
+.chip-count,
+.group-count {
+    flex: none;
+    margin-inline-start: 0;
+    align-self: center;
     padding: 0;
-    border-radius: 0;
+    color: var(--text-secondary, #8b949e);
+    font-size: var(--font-size-xs, 0.75rem);
+    font-weight: var(--font-weight-medium, 500);
+    font-variant-numeric: tabular-nums;
     line-height: 1;
+    background: transparent;
+    border-radius: 0;
 }
 
-.folder-chip.active .chip-count {
-    color: var(--accent-blue, #58a6ff);
+/* Built-in rows (All / Unassigned) — count on the trailing edge */
+.folder-chip:not(:has(.chip-actions)) .chip-count,
+.group-chip:not(:has(.chip-actions)) .chip-count {
+    margin-inline-start: auto;
 }
 
-/* Tile actions (edit/delete) */
-.folder-chip .chip-actions {
+.folder-chip.active .chip-count,
+.group-chip.active .chip-count {
+    color: var(--text-secondary, #8b949e);
+}
+
+.folder-chip .chip-actions,
+.group-chip .chip-actions {
     display: inline-flex;
     align-items: center;
     justify-content: flex-end;
-    gap: 4px;
+    gap: 2px;
     margin: 0;
+    margin-inline-start: auto;
     opacity: 1;
     visibility: visible;
     pointer-events: auto;
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    transition: opacity 0.15s ease, visibility 0.15s ease;
+    position: static;
+    top: auto;
+    right: auto;
     background: transparent;
     padding: 0;
     border-radius: var(--radius-sm);
-}
-
-.folder-chip:hover .chip-actions,
-.folder-chip:focus-within .chip-actions {
-    opacity: 1;
-    visibility: visible;
-    pointer-events: auto;
-}
-
-.folder-chip:hover .chip-count {
-    opacity: 1;
 }
 
 .chip-action {
@@ -204,7 +284,7 @@
     align-items: center;
     justify-content: center;
     border: 1px solid transparent;
-    background: rgba(255, 255, 255, 0.04);
+    background: transparent;
     font-size: 14px !important;
     cursor: pointer;
     padding: 0;
@@ -223,32 +303,43 @@
     color: var(--text-primary);
 }
 
-.chip-action.folder-delete:hover {
+.chip-action.folder-delete:hover,
+.group-chip .chip-action.group-delete:hover {
     color: var(--accent-red);
 }
 
-/* Add chip — quiet secondary row; matches folder/group chips, not a dashed CTA */
+/* Create / add actions — same rail row, muted secondary */
 .chip-add,
 .group-chip.chip-add,
 .folder-chip.chip-add {
-    display: inline-flex;
+    display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: flex-start;
     gap: 8px;
-    text-align: start;
-    color: var(--text-secondary, #8b949e);
-    border: 1px solid var(--border-primary, #30363d);
+    margin-top: 2px;
+    padding: 4px 8px 4px 12px;
+    border: 0;
+    border-inline-start: 2px solid transparent;
+    border-radius: 0 var(--radius-md, 8px) var(--radius-md, 8px) 0;
     background: transparent;
+    color: var(--text-secondary, #8b949e);
     font-weight: 500;
+    text-align: start;
+    box-shadow: none;
+    transform: none;
 }
 
 .chip-add:hover,
 .group-chip.chip-add:hover,
-.folder-chip.chip-add:hover {
-    border-color: var(--border-hover, #484f58);
-    color: var(--text-primary, #e6edf3);
+.folder-chip.chip-add:hover,
+.chip-add:focus-visible,
+.group-chip.chip-add:focus-visible,
+.folder-chip.chip-add:focus-visible {
     background: var(--bg-hover, rgba(255, 255, 255, 0.05));
+    border-inline-start-color: transparent;
+    color: var(--text-primary, #e6edf3);
+    outline: none;
     box-shadow: none;
     transform: none;
 }
@@ -261,8 +352,10 @@
     flex: none;
     width: 20px;
     height: 20px;
+    margin: 0;
     font-size: 20px !important;
     line-height: 1;
+    opacity: 0.85;
     color: inherit;
 }
 
@@ -278,101 +371,6 @@
     line-height: 20px;
     text-align: start;
     color: inherit;
-}
-
-/* ==================== Device Group Tiles ==================== */
-
-.groups-bar {
-    display: block;
-}
-
-.groups-chips {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(176px, 1fr));
-    gap: 10px;
-    align-items: stretch;
-    padding: 2px 0;
-}
-
-#custom-device-groups {
-    display: contents;
-}
-
-.group-chip {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    grid-template-rows: auto 1fr auto;
-    align-items: start;
-    gap: 6px 8px;
-    min-height: 112px;
-    padding: 14px;
-    border: 1px solid var(--border-primary, #30363d);
-    border-radius: 8px;
-    background: var(--bg-secondary, #161b22);
-    color: var(--text-primary, #c9d1d9);
-    font-size: var(--font-size-sm, 0.875rem);
-    cursor: pointer;
-    white-space: normal;
-    text-align: left;
-    transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
-    -webkit-appearance: none;
-    appearance: none;
-    position: relative;
-    font-family: inherit;
-}
-
-.group-chip:hover {
-    background: var(--bg-hover);
-    border-color: var(--border-hover, #484f58);
-    transform: translateY(-1px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
-}
-
-.group-chip.active {
-    background: linear-gradient(135deg, var(--accent-purple-muted, rgba(168, 85, 247, 0.18)), rgba(168, 85, 247, 0.08));
-    border-color: var(--accent-purple, #a855f7);
-    color: var(--text-primary, #c9d1d9);
-    box-shadow: inset 0 0 0 1px rgba(168, 85, 247, 0.18);
-}
-
-.group-chip.dynamic {
-    border-style: dashed;
-}
-
-.group-chip .chip-actions {
-    display: inline-flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 4px;
-    margin: 0;
-    opacity: 1;
-    visibility: visible;
-    pointer-events: auto;
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: transparent;
-    padding: 0;
-    transition: opacity 0.15s ease;
-}
-
-.group-chip:hover .chip-actions,
-.group-chip:focus-within .chip-actions {
-    opacity: 1;
-    pointer-events: auto;
-}
-
-/* Group chip actions now use unified .chip-action class (same as folders) */
-.group-chip .chip-action.group-delete:hover {
-    color: var(--accent-red);
-}
-
-.group-chip.active .chip-count {
-    color: var(--accent-purple, #a855f7);
-}
-
-#custom-folders {
-    display: contents;
 }
 
 /* ==================== Tag Filter Menu ==================== */
@@ -867,15 +865,46 @@ td.column-hidden {
 /* ==================== Table Cell: Platform / Type ==================== */
 
 .platform-icon {
-    display: inline-flex;
+    display: flex;
     align-items: center;
+    justify-content: flex-start;
     gap: 4px;
+    width: 100%;
+    max-width: 100%;
+    margin-inline: 0;
     color: var(--text-secondary);
     font-size: var(--font-size-sm);
 }
 
 .platform-icon .material-icons {
     font-size: 16px;
+    flex-shrink: 0;
+}
+
+.platform-icon .device-type-bd-icon {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+    border-radius: 3px;
+    filter: grayscale(1) brightness(1.15);
+    opacity: 0.85;
+    flex-shrink: 0;
+}
+
+/* Keep Type/Platform flush left like ID/hostname — table cells otherwise
+   shrink-wrap the icon row and optically center short labels. */
+.devices-table th[data-column="platform"],
+.devices-table td[data-column="platform"],
+.devices-table th[data-column="device_type"],
+.devices-table td[data-column="device_type"] {
+    text-align: left !important;
+}
+
+.devices-table td[data-column="platform"] > .platform-icon,
+.devices-table td[data-column="device_type"] > .platform-icon {
+    display: flex !important;
+    width: 100%;
+    justify-content: flex-start;
 }
 
 /* ==================== Table Cell: Last Seen ==================== */
@@ -939,11 +968,75 @@ td.column-hidden {
     overflow: hidden;
 }
 
+.device-tags-summary {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    outline: none;
+    cursor: default;
+}
+
+.device-tags-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 24px;
+    padding: 2px 8px 2px 6px;
+    border-radius: var(--radius-full);
+    background: var(--accent-blue-muted);
+    color: var(--accent-blue);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium, 500);
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.device-tags-summary:hover .device-tags-badge,
+.device-tags-summary:focus-visible .device-tags-badge {
+    background: color-mix(in srgb, var(--accent-blue) 22%, transparent);
+}
+
+.device-tags-summary:focus-visible {
+    border-radius: var(--radius-full);
+    box-shadow: 0 0 0 2px var(--accent-blue);
+}
+
+.device-tags-badge .material-icons {
+    font-size: 14px;
+    line-height: 1;
+}
+
+.device-tags-count {
+    min-width: 0.75em;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
+.device-tags-cloud {
+    display: none;
+    position: fixed;
+    z-index: var(--z-tooltip, 1300);
+    max-width: min(280px, calc(100vw - 16px));
+    padding: 8px;
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-md, 8px);
+    background: var(--bg-elevated, #2d333b);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    flex-wrap: wrap;
+    gap: 6px;
+    overflow-y: auto;
+    pointer-events: none;
+}
+
+.device-tags-cloud.is-open {
+    display: inline-flex;
+}
+
 .device-tag-pill,
 .device-tag-more {
     display: inline-flex;
     align-items: center;
-    max-width: 78px;
+    max-width: 100%;
     padding: 2px 7px;
     border-radius: var(--radius-full);
     background: var(--accent-blue-muted);
@@ -953,6 +1046,10 @@ td.column-hidden {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.device-tags-cloud .device-tag-pill {
+    max-width: 240px;
 }
 
 .device-tag-more {
@@ -965,11 +1062,23 @@ td.column-hidden {
     color: var(--text-tertiary);
 }
 
+.devices-table th[data-column="tags"],
+.devices-table td[data-column="tags"] {
+    width: 72px;
+    text-align: center;
+}
+
 /* ==================== Table Cell: Kebab Menu ==================== */
 
 .col-actions {
     width: 40px;
     text-align: center;
+}
+
+/* Row kebab column parked for now — actions stay on right-click context menu. */
+.devices-table th.col-actions,
+.devices-table td[data-column="actions"] {
+    display: none;
 }
 
 .kebab-wrapper {
@@ -1595,38 +1704,63 @@ td.column-hidden {
     display: none;
 }
 
-/* Desktop: tile block scrolls with the list (no sticky — avoids groups sliding under folders) */
-@media (min-width: 1025px) {
-    .devices-page .devices-tile-bars {
-        position: static;
-        z-index: auto;
-    }
-
+/* Desktop rail: folders stay sticky beside the scrolling table */
+@media (min-width: 900px) {
     .devices-page .folders-chips.mobile-tabs-scroll {
-        display: grid;
+        display: flex;
+        flex-direction: column;
         overflow: visible;
         padding-bottom: 0;
     }
 }
 
 /*
- * Tablet: sticky folders+groups only (not strategies / whole tile-bars).
+ * Narrow layout: collapse the rail above the table as a horizontal strip.
  * Phone (≤600): no sticky chips — toolbar is the single sticky level (#410).
  */
-@media (min-width: 601px) and (max-width: 1024px) {
+@media (max-width: 899px) {
+    .devices-page.devices-layout {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 12px;
+    }
+
+    .devices-page.devices-layout > .devices-header,
+    .devices-page.devices-layout > #address-book-alias-warning,
+    .devices-page.devices-layout .devices-chip-bars,
+    .devices-page.devices-layout > .devices-main {
+        grid-column: 1;
+        grid-row: auto;
+    }
+
+    .devices-chip-bars {
+        position: static;
+        max-height: none;
+        flex-direction: row;
+        gap: 12px;
+        overflow-x: auto;
+        padding-bottom: 4px;
+    }
+
+    .folders-chips,
+    .groups-chips {
+        flex-direction: row;
+        gap: 4px;
+    }
+
+    .folder-chip,
+    .group-chip {
+        width: auto;
+        white-space: nowrap;
+    }
+}
+
+@media (min-width: 601px) and (max-width: 899px) {
     body.is-mobile-shell .devices-page .devices-chip-bars {
         position: sticky;
         top: 0;
         z-index: 10;
         background: var(--bg-primary);
         padding-bottom: var(--space-sm);
-    }
-}
-
-@media (max-width: 1024px) {
-    body.is-mobile-shell .devices-page .devices-tile-bars {
-        position: static;
-        z-index: auto;
     }
 }
 
@@ -1710,7 +1844,7 @@ td.column-hidden {
 
     .devices-table tbody tr {
         display: grid;
-        grid-template-columns: 1fr auto;
+        grid-template-columns: 1fr;
         grid-template-rows: auto auto;
         gap: 2px 8px;
         padding: 10px 12px;
@@ -1724,23 +1858,19 @@ td.column-hidden {
         border-bottom: none;
     }
 
-    /* Row 1, Col 1: ID with status dot */
+    /* Row 1: ID with status dot */
     .devices-table td[data-column="id"] {
         grid-column: 1;
         grid-row: 1;
         font-weight: var(--font-weight-semibold);
     }
 
-    /* Row 1-2, Col 2: Kebab menu (spans both rows) */
+    /* Kebab column stays hidden on mobile too (actions via context menu). */
     .devices-table td[data-column="actions"] {
-        grid-column: 2;
-        grid-row: 1 / 3;
-        display: flex !important;
-        align-items: center;
-        justify-content: center;
+        display: none !important;
     }
 
-    /* Row 2, Col 1: Hostname */
+    /* Row 2: Hostname */
     .devices-table td[data-column="hostname"] {
         grid-column: 1;
         grid-row: 2;
@@ -1826,31 +1956,22 @@ td.column-hidden {
 
     .folders-chips,
     .groups-chips {
-        grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+        flex-direction: row;
+        gap: 4px;
     }
 
     .folder-chip,
     .group-chip {
-        min-height: 104px;
-        padding: 12px;
+        min-height: 36px;
+        padding: 4px 8px 4px 10px;
     }
 }
 
 /* ==================== RESPONSIVE: Small Phone (<=400px) ==================== */
 
 @media (max-width: 400px) {
-    .folders-chips,
-    .groups-chips {
-        grid-template-columns: 1fr 1fr;
-    }
-
-    .folder-chip,
-    .group-chip {
-        min-height: 96px;
-    }
-
     .chip-count {
-        font-size: 24px;
+        font-size: var(--font-size-xs, 0.75rem);
     }
 
     .filter-btn {

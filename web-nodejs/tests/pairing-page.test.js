@@ -50,7 +50,7 @@ function renderPage() {
         hasPermission: () => true,
         hasSectionAccess: () => true,
         buildConsoleNav: () => nav,
-        uiShell: 'ux36',
+        uiShell: 'ux35',
         currentPage: 'pairing',
         activePage: 'pairing',
         consoleTab: '',

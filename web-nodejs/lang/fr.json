@@ -330,6 +330,7 @@
     "no_selection": "No devices selected",
     "device_type": "Type d'appareil",
     "tags": "Tags",
+    "tags_badge": "{count} balises",
     "filter_type_all": "All Types",
     "filter_type_rustdesk": "RustDesk",
     "filter_type_desktop": "Desktop",
@@ -4836,8 +4837,8 @@
     "switch_to_classic": "Passer à l’interface classique",
     "beta_badge": "BÊTA",
     "beta_tooltip": "Disposition console en bêta — optionnelle ; l’interface classique reste la valeur par défaut.",
-    "filter_menu": "Filter menu",
-    "filter_menu_placeholder": "Search menu…"
+    "filter_menu": "Rechercher dans la console",
+    "filter_menu_placeholder": "Rechercher pages, réglages…"
   },
   "help": {
     "panel": {
@@ -4966,7 +4967,9 @@
     "new_code": "Nouveau code",
     "client_address": "Adresse serveur à saisir dans le client",
     "host_unknown": "Demandez à votre administrateur",
-    "unavailable": "Aucun code disponible"
+    "unavailable": "Aucun code disponible",
+    "actor_console": "Console",
+    "actor_api_key": "Clé API : {{name}}"
   },
   "ux36": {
     "beta_badge": "BETA",

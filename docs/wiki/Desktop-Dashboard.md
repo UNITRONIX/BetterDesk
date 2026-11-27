@@ -2,10 +2,7 @@
 
 The old OS-style **Desktop Mode** / widget dashboard is **not loaded** by the current console layout. Scripts and docs for `?desktop=1` are historical only.
 
-Use:
-
-- **Classic** rail / flyout (default), or
-- Optional [[UX 3.5|UX-3.5]] shell (`bd_ui_shell` cookie / shell switch in the UI)
+Use the [[UX 3.5|UX-3.5]] console shell (the only layout; shell switch retired).
 
 For day-to-day work: [[Web Console|Web-Console]].
 

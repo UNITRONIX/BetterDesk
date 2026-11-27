@@ -1352,10 +1352,13 @@ async function clearEnrollmentRejection(deviceId) {
 /**
  * Mint a one-time pairing code (operator). The plaintext code is returned once and never
  * stored; the server keeps only its sha256.
+ * When `req` is provided and panel trust is configured, Go attributes CreatedBy to the
+ * signed-in operator instead of apikey:console-bridge.
  */
-async function createPairingCode(label) {
+async function createPairingCode(label, req) {
     try {
-        const { data } = await apiClient.post('/pairing/codes', { label: label || '' });
+        const config = panelCallConfig('POST', '/api/pairing/codes', req);
+        const { data } = await apiClient.post('/pairing/codes', { label: label || '' }, config);
         return { success: true, data };
     } catch (e) {
         return { success: false, error: e.message, status: e.response && e.response.status };

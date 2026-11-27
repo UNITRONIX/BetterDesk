@@ -61,7 +61,7 @@ router.post(
     jsonBody,
     async (req, res) => {
         const label = String((req.body && req.body.label) || '').trim().slice(0, 64);
-        const result = await betterdeskApi.createPairingCode(label);
+        const result = await betterdeskApi.createPairingCode(label, req);
         if (!result.success) {
             return res.status(502).json({ success: false, error: result.error || 'upstream_error' });
         }

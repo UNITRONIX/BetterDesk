@@ -115,7 +115,7 @@ router.use('/', generatorRoutes);
 router.use('/', require('./client-branding.routes'));
 router.use('/', usersRoutes);
 router.use('/', panelAccessRoutes);
-router.use('/', require('./ui-shell.routes'));      // admin-facing: /api/ui-shell (UX 3.5 / 3.6 beta toggle)
+router.use('/', require('./ui-shell.routes'));      // admin-facing: /api/ui-shell (UX 3.5 only; clears stale beta cookie)
 router.use('/', foldersRoutes);
 router.use('/', remoteRoutes);
 router.use('/', require('./guest.routes'));

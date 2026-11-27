@@ -385,6 +385,7 @@
     "display_name_placeholder": "Egendefinert navn (overstyrer vertsnavn)",
     "note_placeholder": "Merknader om denne enheten",
     "tags": "Tags",
+    "tags_badge": "{count} tagger",
     "filter_by_tags": "Filtrer etter tagger",
     "no_tags": "Ingen tagger",
     "all_groups": "Alle grupper",
@@ -4842,8 +4843,8 @@
     "switch_to_classic": "Bytt til klassisk UI",
     "beta_badge": "BETA",
     "beta_tooltip": "Beta-konsollayout — valgfritt; klassisk UI forblir standard.",
-    "filter_menu": "Filter menu",
-    "filter_menu_placeholder": "Search menu…"
+    "filter_menu": "Søk i konsollen",
+    "filter_menu_placeholder": "Søk sider, innstillinger…"
   },
   "help": {
     "panel": {
@@ -4972,7 +4973,9 @@
     "new_code": "Ny kode",
     "client_address": "Serveradresse for klienten",
     "host_unknown": "Spør administratoren din",
-    "unavailable": "Ingen kode tilgjengelig"
+    "unavailable": "Ingen kode tilgjengelig",
+    "actor_console": "Konsoll",
+    "actor_api_key": "API-nøkkel: {{name}}"
   },
   "ux36": {
     "beta_badge": "BETA",

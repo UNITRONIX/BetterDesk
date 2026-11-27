@@ -1,22 +1,21 @@
 /**
- * BetterDesk Console — UI shell resolution (UX 3.5 default, UX 3.6 beta).
+ * BetterDesk Console — UI shell resolution.
  *
- * The shell choice is a per-browser preference. It is resolved in exactly one
- * place so SSR markup, CSS/JS includes and `window.BetterDesk.uiShell` cannot
- * disagree, and every unknown or malformed value falls back to `ux35`.
- *
- * UX 3.5 remains the safe default; UX 3.6 is opt-in beta.
+ * UX 3.5 is the only console shell. UX 3.6 beta assets remain in the tree for
+ * reference / possible future reuse, but are not selectable: cookies, `?ui=`
+ * deep links and the preference API all resolve to `ux35`.
  */
 
 'use strict';
 
 const SHELL_UX35 = 'ux35';
+/** Retired console beta — kept as a named constant for tests/docs only. */
 const SHELL_UX36 = 'ux36';
 
-const SUPPORTED_SHELLS = Object.freeze([SHELL_UX35, SHELL_UX36]);
+const SUPPORTED_SHELLS = Object.freeze([SHELL_UX35]);
 const DEFAULT_SHELL = SHELL_UX35;
 
-/** Cookie name — same key used by the legacy bridge so stale values stay valid. */
+/** Cookie name — same key as before so stale `ux36` values can be cleared. */
 const SHELL_COOKIE = 'bd_ui_shell';
 const SHELL_COOKIE_MAX_AGE_MS = 365 * 24 * 60 * 60 * 1000;
 
@@ -25,23 +24,16 @@ function normalizeShell(value) {
     return SUPPORTED_SHELLS.includes(raw) ? raw : null;
 }
 
-function isBetaShell(shell) {
-    return normalizeShell(shell) === SHELL_UX36;
+function isBetaShell(_shell) {
+    return false;
 }
 
 /**
- * Resolve the shell for a request.
- *
- * Priority: explicit `?ui=` query (operator deep link / support), then the
- * browser cookie, then the default. Unknown values are ignored rather than
- * throwing, so old `?ui=classic` links keep working — they simply land on the
- * default shell.
+ * Resolve the shell for a request. Always UX 3.5 — query/cookie values other
+ * than `ux35` (including retired `ux36` / `classic`) are ignored.
  */
 function resolveShell(req) {
-    const fromQuery = normalizeShell(req?.query?.ui);
-    if (fromQuery) return fromQuery;
-    const fromCookie = normalizeShell(req?.cookies?.[SHELL_COOKIE]);
-    if (fromCookie) return fromCookie;
+    void req;
     return DEFAULT_SHELL;
 }
 

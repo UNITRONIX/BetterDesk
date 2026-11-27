@@ -385,6 +385,7 @@
     "display_name_placeholder": "Özel ad (ana bilgisayar adını geçersiz kılar)",
     "note_placeholder": "Bu cihazla ilgili notlar",
     "tags": "Tags",
+    "tags_badge": "{count} etiket",
     "filter_by_tags": "Etiketlere göre filtrele",
     "no_tags": "No tags",
     "all_groups": "Tüm gruplar",
@@ -4842,8 +4843,8 @@
     "switch_to_classic": "Klasik arayüze geç",
     "beta_badge": "BETA",
     "beta_tooltip": "Beta konsol düzeni — isteğe bağlı; klasik arayüz varsayılan kalır.",
-    "filter_menu": "Filter menu",
-    "filter_menu_placeholder": "Search menu…"
+    "filter_menu": "Konsolda ara",
+    "filter_menu_placeholder": "Sayfa, ayar ara…"
   },
   "help": {
     "panel": {
@@ -4972,7 +4973,9 @@
     "new_code": "Yeni kod",
     "client_address": "İstemciye girilecek sunucu adresi",
     "host_unknown": "Yöneticinize sorun",
-    "unavailable": "Kullanılabilir kod yok"
+    "unavailable": "Kullanılabilir kod yok",
+    "actor_console": "Konsol",
+    "actor_api_key": "API anahtarı: {{name}}"
   },
   "ux36": {
     "beta_badge": "BETA",

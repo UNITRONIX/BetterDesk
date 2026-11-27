@@ -128,22 +128,19 @@ describe('UX 3.6 beta — every main-layout page', () => {
                 assert.match(html, /data-ui-shell="ux35"/);
                 assert.doesNotMatch(html, /ux36-sidebar/);
                 assert.doesNotMatch(html, /\/css\/ux36\/(tokens|base|components|palette|shell|pages)\.css/);
-                assert.doesNotMatch(html, /\/js\/ui-search\.js/);
                 assert.doesNotMatch(html, /nav-more-toggle/);
-            });
-
-            it('renders under UX 3.6 with the grouped shell', () => {
-                const html = render(file, 'ux36');
-                assert.match(html, /data-ui-shell="ux36"/);
-                assert.match(html, /class="ux35-shell ux36-shell" id="app"/);
-                assert.match(html, /class="ux35-sidebar ux36-sidebar"/);
-                assert.match(html, /\/css\/ux36\/pages\.css/);
-                // Search and its server-built index load only in the beta.
-                assert.match(html, /\/js\/ui-search\.js/);
-                assert.match(html, /searchPages:/);
-                // UX 3.5 assets stay shared, never forked.
                 assert.match(html, /\/css\/ux35\.css/);
                 assert.match(html, /\/js\/ux35-shell\.js/);
+                assert.match(html, /\/js\/ui-search\.js/);
+            });
+
+            it('stays on UX 3.5 even when a retired ux36 local is passed', () => {
+                const html = render(file, 'ux36');
+                assert.match(html, /data-ui-shell="ux35"/);
+                assert.doesNotMatch(html, /class="ux35-shell ux36-shell"/);
+                assert.doesNotMatch(html, /ux36-sidebar/);
+                assert.doesNotMatch(html, /\/css\/ux36\/pages\.css/);
+                assert.match(html, /\/js\/ui-search\.js/);
             });
         });
     });

@@ -40,9 +40,14 @@ body.app-page.ux35-page {
     padding: 0 var(--ux35-space-4);
     gap: var(--ux35-space-3);
     z-index: 40;
-    border-bottom: 1px solid var(--ux35-topbar-border, #30363d);
+    /* Dark chrome blends into the sidebar — no hairline under the topbar.
+       Light theme keeps a subtle rule below. Resize handle stays intact. */
+    border-bottom: none;
     font-family: var(--ux35-font-chrome);
     flex-shrink: 0;
+}
+[data-theme="light"] .ux35-topbar {
+    border-bottom: 1px solid var(--ux35-topbar-border, #d0d7de);
 }
 
 .ux35-beta-chip {
@@ -229,7 +234,8 @@ body.app-page.ux35-page {
     min-width: var(--ux35-sidebar-width);
     max-width: var(--ux35-sidebar-width-max);
     background: var(--ux35-sidebar-bg);
-    border-right: 1px solid var(--ux35-border);
+    /* No hairline against the content pane; resize handle stays interactive. */
+    border-right: none;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -241,6 +247,9 @@ body.app-page.ux35-page {
     font-weight: 400;
     letter-spacing: normal;
     transition: transform var(--ux35-motion) ease;
+}
+[data-theme="light"] .ux35-sidebar {
+    border-right: 1px solid var(--ux35-border);
 }
 .ux35-sidebar-item,
 .ux35-sidebar-heading,
@@ -274,7 +283,7 @@ body.app-page.ux35-page {
     flex-shrink: 0;
     padding: 8px 12px 4px;
     position: relative;
-    z-index: 1;
+    z-index: 5;
     background: var(--ux35-sidebar-bg);
     isolation: isolate;
 }
@@ -287,6 +296,162 @@ body.app-page.ux35-page {
     background: var(--bg-secondary, var(--ux35-sidebar-bg));
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
+}
+.ux35-sidebar-search-results {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    top: calc(100% - 2px);
+    z-index: 20;
+    max-height: min(320px, 50vh);
+    overflow-y: auto;
+    padding: 4px;
+    border: 1px solid var(--ux35-border, var(--border-primary));
+    border-radius: var(--ux35-radius-sm, 6px);
+    background: var(--bg-elevated, var(--ux35-sidebar-bg));
+    box-shadow: var(--shadow-lg, 0 8px 24px rgba(0, 0, 0, 0.35));
+}
+.ux35-sidebar-search-results[hidden] {
+    display: none !important;
+}
+.ux35-sidebar-search-hit {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    width: 100%;
+    margin: 0;
+    padding: 6px 8px;
+    border: 0;
+    border-radius: var(--ux35-radius-sm, 6px);
+    background: transparent;
+    color: var(--ux35-text, var(--text-primary));
+    text-align: left;
+    cursor: pointer;
+    font: inherit;
+}
+.ux35-sidebar-search-hit .material-icons {
+    flex-shrink: 0;
+    margin-top: 1px;
+    font-size: 16px;
+    color: var(--ux35-muted, var(--text-secondary));
+}
+.ux35-sidebar-search-hit[aria-selected="true"],
+.ux35-sidebar-search-hit:hover {
+    background: var(--ux35-hover, var(--bg-hover));
+}
+.ux35-sidebar-search-hit-main {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: 1px;
+}
+.ux35-sidebar-search-hit-title {
+    font-size: 12px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+.ux35-sidebar-search-hit-sub {
+    font-size: 11px;
+    color: var(--ux35-muted, var(--text-secondary));
+}
+
+/* Global search (Ctrl+K) — shared with ui-search.js */
+.search-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1400;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 10vh 16px 16px;
+    background: rgba(0, 0, 0, 0.45);
+}
+.search-overlay[hidden] {
+    display: none;
+}
+.search-dialog {
+    display: flex;
+    flex-direction: column;
+    width: min(640px, 100%);
+    max-height: 70vh;
+    border: 1px solid var(--ux35-border, var(--border-primary));
+    border-radius: var(--ux35-radius, 8px);
+    background: var(--bg-elevated, var(--bg-secondary));
+    box-shadow: var(--shadow-lg, 0 12px 32px rgba(0, 0, 0, 0.4));
+    color: var(--ux35-text, var(--text-primary));
+}
+.search-field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    border-bottom: 1px solid var(--ux35-border, var(--border-primary));
+}
+.search-field .material-icons {
+    color: var(--ux35-muted, var(--text-secondary));
+}
+.search-field .form-input {
+    flex: 1;
+    min-height: 40px;
+    font-size: 15px;
+}
+.search-results {
+    flex: 1;
+    min-height: 0;
+    margin: 0;
+    padding: 4px 0;
+    overflow-y: auto;
+    list-style: none;
+}
+.search-group {
+    padding: 8px 12px 4px;
+    color: var(--ux35-muted, var(--text-secondary));
+    font-size: 12px;
+}
+.search-result {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 40px;
+    padding: 6px 12px;
+    cursor: pointer;
+}
+.search-result .material-icons {
+    color: var(--ux35-muted, var(--text-secondary));
+}
+.search-result[aria-selected="true"] {
+    background: var(--ux35-active-bg, var(--accent-blue-muted));
+}
+.search-result-main {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+.search-result-title {
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+.search-result-sub {
+    color: var(--ux35-muted, var(--text-secondary));
+    font-size: 12px;
+}
+.search-status,
+.search-keys {
+    margin: 0;
+    padding: 8px 12px;
+    color: var(--ux35-muted, var(--text-secondary));
+    font-size: 12px;
+}
+.search-status {
+    border-top: 1px solid var(--ux35-border, var(--border-primary));
+}
+.search-keys {
+    padding-top: 0;
+}
+@media (pointer: coarse) {
+    .search-keys {
+        display: none;
+    }
 }
 .ux35-sidebar-heading-toggle {
     display: flex;
@@ -430,6 +595,7 @@ body.app-page.ux35-page {
     font-size: 10px;
     color: var(--ux35-muted);
     line-height: 1.4;
+    text-align: center;
 }
 
 /* Resize handle */
@@ -616,6 +782,28 @@ body.app-page.ux35-page {
     gap: var(--ux35-space-3);
 }
 
+/* Devices: same sticky flush as Settings — Chromium will not let position:sticky
+ * enter the scrollport padding box, so rows paint into the gap above the stuck
+ * toolbar. Zero content padding-top and keep spacing on the page instead. */
+.ux35-page .ux35-content:has(.devices-page) {
+    padding-top: 0;
+}
+.ux35-page .ux35-content:has(.devices-page) > .devices-page {
+    padding-top: var(--ux35-content-padding-lg);
+}
+.ux35-page .devices-page .devices-toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    margin: 0 calc(-1 * var(--ux35-content-padding-lg));
+    padding: var(--space-sm, 0.5rem) var(--ux35-content-padding-lg);
+    border-bottom: none;
+    background: var(--ux35-bg, var(--bg-primary));
+}
+[data-theme="light"] .ux35-page .devices-page .devices-toolbar {
+    border-bottom: 1px solid var(--ux35-border, var(--border-secondary));
+}
+
 /* Solid content surfaces — defeat main.css glass on cards/forms inside UX 3.5 */
 .ux35-page .ux35-content :is(
     .card, .stat-card, .modal, .toast, .settings-section,
@@ -781,6 +969,18 @@ body.ux35-is-resizing {
         padding-top: 0;
         padding-inline: 0;
         padding-bottom: calc(var(--ux35-content-padding) + 72px);
+    }
+    /* Devices sticky toolbar: keep flush under topbar on compact shells too */
+    .ux35-page .ux35-content:has(.devices-page) {
+        padding-top: 0;
+        padding-bottom: calc(var(--ux35-content-padding) + 72px);
+    }
+    .ux35-page .ux35-content:has(.devices-page) > .devices-page {
+        padding-top: var(--ux35-content-padding);
+    }
+    .ux35-page .devices-page .devices-toolbar {
+        margin-inline: calc(-1 * var(--ux35-content-padding));
+        padding-inline: var(--ux35-content-padding);
     }
     .ux35-page .ux35-content:has(.settings-shell) > .page-header,
     .ux35-page .ux35-content:has(.settings-shell) > .settings-header {

@@ -655,9 +655,7 @@
     justify-content: space-between;
     gap: var(--space-lg);
     padding: var(--space-lg);
-    background:
-        radial-gradient(circle at top left, rgba(88, 166, 255, 0.16), transparent 34rem),
-        var(--surface-glass-bg-secondary, var(--bg-secondary));
+    background: var(--surface-glass-bg-secondary, var(--bg-secondary));
     border: 1px solid var(--surface-glass-border, var(--border-primary));
     border-radius: var(--radius-xl);
 }
@@ -693,7 +691,7 @@
     align-items: center;
     gap: var(--space-sm);
     padding: var(--space-sm) var(--space-md);
-    background: var(--accent-blue-muted);
+    background: var(--surface-glass-bg-secondary, var(--bg-secondary));
     border: none;
     border-radius: var(--radius-lg);
     color: var(--text-primary);
@@ -781,9 +779,7 @@
     position: relative;
     padding: var(--space-lg);
     border: none;
-    background:
-        linear-gradient(135deg, rgba(88, 166, 255, 0.12), transparent 42%),
-        var(--surface-glass-bg-secondary, var(--bg-secondary));
+    background: var(--surface-glass-bg-secondary, var(--bg-secondary));
 }
 
 .client-config-body {

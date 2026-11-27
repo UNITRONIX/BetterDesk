@@ -36,13 +36,15 @@
 
     /* Solid surfaces (performance: no glass aliases) */
     --ux35-bg: var(--bg-primary);
-    /* Topbar follows theme (dark defaults; light overrides below) */
-    --ux35-topbar-bg: #161b22;
+    /* Topbar follows theme (dark defaults; light overrides below).
+       Dark chrome is near-black so it sits below the page surface (#0d1117). */
+    --ux35-topbar-bg: #05070a;
     --ux35-topbar-fg: #e6edf3;
     --ux35-topbar-fg-muted: #8b949e;
-    --ux35-topbar-border: #30363d;
+    --ux35-topbar-border: #1c2128;
     --ux35-topbar-hover: rgba(255, 255, 255, 0.12);
-    --ux35-sidebar-bg: var(--bg-secondary);
+    /* Dark sidebar matches topbar chrome (near-black). */
+    --ux35-sidebar-bg: #05070a;
     --ux35-card-bg: var(--bg-secondary);
     --ux35-border: var(--border-primary);
     --ux35-border-light: var(--border-secondary);

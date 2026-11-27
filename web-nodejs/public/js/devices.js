@@ -37,33 +37,48 @@
         return { className: 'offline', label: _('status.offline'), title: '' };
     }
 
-    // Map device_type to Material Icons
-    function getDeviceTypeIcon(type) {
-        switch ((type || '').toLowerCase()) {
-            case 'betterdesk': return 'desktop_windows';
-            case 'betterdesk-support': return 'support_agent';
-            case 'desktop':  return 'desktop_windows';
-            case 'scada':    return 'precision_manufacturing';
-            case 'iot':      return 'sensors';
-            case 'os_agent': return 'terminal';
-            case 'mesh_agent': return 'hub';
-            case 'rdp':      return 'desktop_windows';
-            case 'vnc':      return 'computer';
-            case 'mobile':   return 'phone_android';
-            case 'rustdesk': return 'connected_tv';
-            default:         return 'devices';
+    /** Normalize device_type for the Type column (BetterDesk vs RustDesk vs agents). */
+    function resolveDeviceTypeDisplay(type) {
+        const t = String(type || '').trim().toLowerCase();
+        if (t === 'betterdesk' || t === 'betterdesk-desktop' || t === 'betterdesk_desktop') {
+            return { kind: 'betterdesk', label: 'BetterDesk', icon: null };
         }
+        if (t === 'betterdesk-support') {
+            return { kind: 'betterdesk-support', label: 'BetterDesk Support', icon: null };
+        }
+        if (t === 'mesh_agent') {
+            return { kind: 'mesh_agent', label: 'Mesh', icon: 'hub' };
+        }
+        if (t === 'os_agent') {
+            return { kind: 'os_agent', label: 'OS Agent', icon: 'terminal' };
+        }
+        if (t === 'rdp') {
+            return { kind: 'rdp', label: 'RDP', icon: 'desktop_windows' };
+        }
+        if (t === 'vnc') {
+            return { kind: 'vnc', label: 'VNC', icon: 'computer' };
+        }
+        return { kind: 'rustdesk', label: 'RustDesk', icon: 'connected_tv' };
+    }
+
+    function getDeviceTypeIcon(type) {
+        return resolveDeviceTypeDisplay(type).icon || 'connected_tv';
     }
 
     function getDeviceTypeLabel(type) {
-        switch ((type || '').toLowerCase()) {
-            case 'betterdesk': return 'BetterDesk';
-            case 'betterdesk-support': return 'BetterDesk Support';
-            case 'rustdesk': return 'RustDesk';
-            case 'rdp': return 'RDP';
-            case 'vnc': return 'VNC';
-            default: return type || '-';
-        }
+        return resolveDeviceTypeDisplay(type).label;
+    }
+
+    function renderDeviceTypeCell(type, linkedPeerId) {
+        const display = resolveDeviceTypeDisplay(type);
+        const isBetterDesk = display.kind === 'betterdesk' || display.kind === 'betterdesk-support';
+        const iconHtml = isBetterDesk
+            ? '<img src="/img/betterdesk_icon.png" alt="" class="device-type-bd-icon">'
+            : `<span class="material-icons">${display.icon}</span>`;
+        const linked = linkedPeerId
+            ? `<span class="mesh-linked-badge" title="${Utils.escapeHtml(_('mesh.linked_peer') || 'Linked device')}">↔ ${Utils.escapeHtml(linkedPeerId)}</span>`
+            : '';
+        return `<div class="platform-icon">${iconHtml}<span>${Utils.escapeHtml(display.label)}</span>${linked}</div>`;
     }
     
     document.addEventListener('DOMContentLoaded', init);
@@ -78,7 +93,7 @@
     let availableTags = [];
     let selectedTags = new Set();
     let selectedIds = new Set();
-    let currentFilter = 'all';
+    let currentFilter = 'online';
     let currentFolder = 'all';
     let currentGroup = 'all';
     let currentSort = { field: 'last_online', order: 'desc' };
@@ -317,16 +332,19 @@
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 closeAllKebabMenus();
+                closeAllTagClouds();
                 closeContextMenu();
             }
         });
 
         document.addEventListener('scroll', () => {
             closeAllKebabMenus();
+            closeAllTagClouds();
             closeContextMenu();
         }, true);
         window.addEventListener('resize', () => {
             closeAllKebabMenus();
+            closeAllTagClouds();
             closeContextMenu();
             updateTableHScroll();
         });
@@ -940,13 +958,81 @@
             return `<span class="device-tags-empty">-</span>`;
         }
 
-        const visible = tags.slice(0, 2);
-        const rest = tags.length - visible.length;
+        const label = _('devices.tags_badge', { count: tags.length });
+        const listLabel = `${_('devices.tags')}: ${tags.join(', ')}`;
         return `
-            <div class="device-tags" title="${Utils.escapeHtml(tags.join(', '))}">
-                ${visible.map(tag => `<span class="device-tag-pill">${Utils.escapeHtml(tag)}</span>`).join('')}
-                ${rest > 0 ? `<span class="device-tag-more">+${rest}</span>` : ''}
+            <div class="device-tags-summary" tabindex="0" aria-label="${Utils.escapeHtml(listLabel)}" title="${Utils.escapeHtml(label)}">
+                <span class="device-tags-badge" aria-hidden="true">
+                    <span class="material-icons">sell</span>
+                    <span class="device-tags-count">${tags.length}</span>
+                </span>
+                <div class="device-tags-cloud" role="tooltip">
+                    ${tags.map(tag => `<span class="device-tag-pill">${Utils.escapeHtml(tag)}</span>`).join('')}
+                </div>
             </div>`;
+    }
+
+    function closeAllTagClouds() {
+        document.querySelectorAll('.device-tags-cloud.is-open').forEach((cloud) => {
+            cloud.classList.remove('is-open');
+            cloud.style.top = '';
+            cloud.style.left = '';
+            cloud.style.maxHeight = '';
+        });
+    }
+
+    function positionTagCloud(anchor, cloud) {
+        cloud.style.visibility = 'hidden';
+        cloud.classList.add('is-open');
+        const cloudHeight = cloud.offsetHeight;
+        const cloudWidth = cloud.offsetWidth || 220;
+        cloud.style.visibility = '';
+
+        const rect = anchor.getBoundingClientRect();
+        const spaceBelow = window.innerHeight - rect.bottom;
+        let top = spaceBelow >= cloudHeight + 8
+            ? rect.bottom + 6
+            : rect.top - cloudHeight - 6;
+        if (top < 8) top = 8;
+        if (top + cloudHeight > window.innerHeight - 8) {
+            top = Math.max(8, window.innerHeight - cloudHeight - 8);
+        }
+
+        let left = rect.left + (rect.width / 2) - (cloudWidth / 2);
+        if (left < 8) left = 8;
+        if (left + cloudWidth > window.innerWidth - 8) {
+            left = window.innerWidth - cloudWidth - 8;
+        }
+
+        const availableHeight = window.innerHeight - top - 8;
+        cloud.style.maxHeight = cloudHeight > availableHeight ? `${availableHeight}px` : '';
+        cloud.style.top = `${top}px`;
+        cloud.style.left = `${left}px`;
+    }
+
+    function attachTagCloudListeners() {
+        tableBody.querySelectorAll('.device-tags-summary').forEach((summary) => {
+            const cloud = summary.querySelector('.device-tags-cloud');
+            if (!cloud) return;
+
+            const open = () => {
+                closeAllTagClouds();
+                positionTagCloud(summary, cloud);
+            };
+            const close = () => {
+                cloud.classList.remove('is-open');
+                cloud.style.top = '';
+                cloud.style.left = '';
+                cloud.style.maxHeight = '';
+            };
+
+            summary.addEventListener('mouseenter', open);
+            summary.addEventListener('mouseleave', close);
+            summary.addEventListener('focusin', open);
+            summary.addEventListener('focusout', (e) => {
+                if (!summary.contains(e.relatedTarget)) close();
+            });
+        });
     }
     
     /**
@@ -1075,11 +1161,7 @@
                 <td data-column="hostname">${Utils.escapeHtml(device.display_name || device.hostname || device.note || '-')}</td>
                 <td data-column="address_book_alias">${Utils.escapeHtml(device.address_book_alias || '-')}</td>
                 <td data-column="device_type">
-                    <div class="platform-icon">
-                        <span class="material-icons">${getDeviceTypeIcon(device.device_type)}</span>
-                        <span>${Utils.escapeHtml(getDeviceTypeLabel(device.device_type))}</span>
-                        ${device.linked_peer_id ? `<span class="mesh-linked-badge" title="${Utils.escapeHtml(_('mesh.linked_peer') || 'Linked device')}">↔ ${Utils.escapeHtml(device.linked_peer_id)}</span>` : ''}
-                    </div>
+                    ${renderDeviceTypeCell(device.device_type, device.linked_peer_id)}
                 </td>
                 <td data-column="platform">
                     <div class="platform-icon">
@@ -1110,6 +1192,7 @@
         
         // Attach event listeners
         attachRowEventListeners();
+        attachTagCloudListeners();
         attachDeviceRowContextMenu();
         requestAnimationFrame(updateTableHScroll);
     }

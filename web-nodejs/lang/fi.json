@@ -385,6 +385,7 @@
     "display_name_placeholder": "Muokattu nimi (ohittaa isäntänimen)",
     "note_placeholder": "Huomautuksia tästä laitteesta",
     "tags": "Tags",
+    "tags_badge": "{count} tunnistetta",
     "filter_by_tags": "Suodata tunnisteiden mukaan",
     "no_tags": "Ei tunnisteita",
     "all_groups": "Kaikki ryhmät",
@@ -4842,8 +4843,8 @@
     "switch_to_classic": "Vaihda klassiseen käyttöliittymään",
     "beta_badge": "BETA",
     "beta_tooltip": "Beta-konsolin asettelu — valinnainen; klassinen käyttöliittymä pysyy oletuksena.",
-    "filter_menu": "Filter menu",
-    "filter_menu_placeholder": "Search menu…"
+    "filter_menu": "Hae konsolista",
+    "filter_menu_placeholder": "Hae sivuja, asetuksia…"
   },
   "help": {
     "panel": {
@@ -4972,7 +4973,9 @@
     "new_code": "Uusi koodi",
     "client_address": "Palvelimen osoite asiakkaalle",
     "host_unknown": "Kysy järjestelmänvalvojalta",
-    "unavailable": "Koodia ei saatavilla"
+    "unavailable": "Koodia ei saatavilla",
+    "actor_console": "Konsoli",
+    "actor_api_key": "API-avain: {{name}}"
   },
   "ux36": {
     "beta_badge": "BETA",

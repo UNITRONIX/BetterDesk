@@ -386,6 +386,7 @@
     "display_name_placeholder": "الاسم المخصص (يتجاوز اسم المضيف)",
     "note_placeholder": "ملاحظات حول هذا الجهاز",
     "tags": "Tags",
+    "tags_badge": "{count} وسوم",
     "filter_by_tags": "التصفية حسب العلامات",
     "no_tags": "No tags",
     "all_groups": "جميع المجموعات",
@@ -4843,8 +4844,8 @@
     "switch_to_classic": "التبديل إلى الواجهة الكلاسيكية",
     "beta_badge": "تجريبي",
     "beta_tooltip": "تخطيط لوحة تجريبي — اختياري؛ تبقى الواجهة الكلاسيكية الافتراضية.",
-    "filter_menu": "Filter menu",
-    "filter_menu_placeholder": "Search menu…"
+    "filter_menu": "البحث في لوحة التحكم",
+    "filter_menu_placeholder": "ابحث في الصفحات والإعدادات…"
   },
   "help": {
     "panel": {
@@ -4973,7 +4974,9 @@
     "new_code": "رمز جديد",
     "client_address": "عنوان الخادم للعميل",
     "host_unknown": "اسأل المسؤول",
-    "unavailable": "لا يوجد رمز متاح"
+    "unavailable": "لا يوجد رمز متاح",
+    "actor_console": "وحدة التحكم",
+    "actor_api_key": "مفتاح API: {{name}}"
   },
   "ux36": {
     "beta_badge": "BETA",
