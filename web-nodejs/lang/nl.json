@@ -820,7 +820,7 @@
     "public_endpoints_server_id": "Openbare ID-server",
     "public_endpoints_server_id_placeholder": "bijv. remote.example.com",
     "public_endpoints_relay": "Openbare relay-server",
-    "public_endpoints_relay_placeholder": "bijv. remote.example.com (standaard: ID)",
+    "public_endpoints_relay_placeholder": "bijv. remote.example.com of remote.example.com:21117",
     "public_endpoints_api_url": "Openbare API-URL",
     "public_endpoints_api_url_placeholder": "bijv. https://api.example.com",
     "public_endpoints_api_url_hint": "Volledige URL voor RustDesk-login en API (standaard poort 21114).",
@@ -912,7 +912,8 @@
     "device_scope_confirm_restricted": "Beperkte modus: niet-beheerders zonder map-, groeps- of apparaattoegang zien een lege lijst. Doorgaan en opslaan?",
     "device_scope_restart_title": "Services herstarten?",
     "device_scope_restart_message": "De zichtbaarheid is opgeslagen. Herstart BetterDesk-services nu zodat elk onderdeel ze opnieuw laadt, of ga later verder zonder herstart.",
-    "device_scope_restart_later": "Later"
+    "device_scope_restart_later": "Later",
+    "public_endpoints_relay_hint": "Alleen hostnaam, of host:port. Een kale hostnaam wordt als host:21117 getoond op het Dashboard en in deploy-strings (nodig voor RustDesk 1.4.8/1.4.9). Een expliciete poort blijft behouden."
   },
   "audit": {
     "time": "Tijd",

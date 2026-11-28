@@ -826,7 +826,7 @@
     "public_endpoints_server_id": "Nyilvános ID szerver",
     "public_endpoints_server_id_placeholder": "pl. remote.example.com",
     "public_endpoints_relay": "Nyilvános relay szerver",
-    "public_endpoints_relay_placeholder": "pl. remote.example.com (alapértelmezett: ID)",
+    "public_endpoints_relay_placeholder": "pl. remote.example.com vagy remote.example.com:21117",
     "public_endpoints_api_url": "Nyilvános API URL",
     "public_endpoints_api_url_placeholder": "pl. https://api.example.com",
     "public_endpoints_api_url_hint": "Teljes URL RustDesk bejelentkezéshez és API-hoz (alap port 21114).",
@@ -918,7 +918,8 @@
     "device_scope_confirm_restricted": "Korlátozott mód: a nem admin felhasználók mappa-, csoport- vagy eszközjogosultság nélkül üres listát látnak. Folytatja és menti?",
     "device_scope_restart_title": "Újraindítsa a szolgáltatásokat?",
     "device_scope_restart_message": "Az alapértelmezett láthatóság elmentve. Indítsa újra most a BetterDesk szolgáltatásokat, hogy minden komponens újratöltse, vagy folytassa később újraindítás nélkül.",
-    "device_scope_restart_later": "Később"
+    "device_scope_restart_later": "Később",
+    "public_endpoints_relay_hint": "Csak hostname, vagy host:port. A port nélküli hostname a Dashboardon és a deploy stringben host:21117-ként jelenik meg (RustDesk 1.4.8/1.4.9). Az explicit port megmarad."
   },
   "audit": {
     "time": "Time",

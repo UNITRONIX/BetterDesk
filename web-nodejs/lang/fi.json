@@ -826,7 +826,7 @@
     "public_endpoints_server_id": "Julkinen ID-palvelin",
     "public_endpoints_server_id_placeholder": "esim. remote.example.com",
     "public_endpoints_relay": "Julkinen relay-palvelin",
-    "public_endpoints_relay_placeholder": "esim. remote.example.com (oletus: ID-palvelin)",
+    "public_endpoints_relay_placeholder": "esim. remote.example.com tai remote.example.com:21117",
     "public_endpoints_api_url": "Julkinen API-URL",
     "public_endpoints_api_url_placeholder": "esim. https://api.example.com",
     "public_endpoints_api_url_hint": "Täysi URL RustDesk-kirjautumiseen ja API-kutsuihin (oletusportti 21114).",
@@ -918,7 +918,8 @@
     "device_scope_confirm_restricted": "Rajoitettu tila: ei-ylläpitäjät ilman kansio-, ryhmä- tai laiteoikeuksia näkevät tyhjän listan. Jatka ja tallenna?",
     "device_scope_restart_title": "Käynnistetäänkö palvelut uudelleen?",
     "device_scope_restart_message": "Oletusnäkyvyys on tallennettu. Käynnistä BetterDesk-palvelut uudelleen, jotta kaikki komponentit lataavat sen, tai jatka myöhemmin ilman uudelleenkäynnistystä.",
-    "device_scope_restart_later": "Myöhemmin"
+    "device_scope_restart_later": "Myöhemmin",
+    "public_endpoints_relay_hint": "Vain isäntänimi tai host:port. Pelkkä isäntänimi mainostetaan Dashboardissa ja deploy-merkkijonoissa muodossa host:21117 (tarvitaan RustDesk 1.4.8/1.4.9). Explicit-portti säilytetään."
   },
   "audit": {
     "time": "Time",

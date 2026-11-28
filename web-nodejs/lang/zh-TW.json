@@ -820,7 +820,7 @@
     "public_endpoints_server_id": "公共 ID 伺服器",
     "public_endpoints_server_id_placeholder": "例如 remote.example.com",
     "public_endpoints_relay": "公共中繼伺服器",
-    "public_endpoints_relay_placeholder": "例如 remote.example.com（預設：ID 伺服器）",
+    "public_endpoints_relay_placeholder": "例如 remote.example.com 或 remote.example.com:21117",
     "public_endpoints_api_url": "公共 API URL",
     "public_endpoints_api_url_placeholder": "例如 https://api.example.com",
     "public_endpoints_api_url_hint": "RustDesk 登入/API 的完整 URL（預設連接埠 21114）。",
@@ -912,7 +912,8 @@
     "device_scope_confirm_restricted": "受限模式：沒有資料夾、群組或裝置授權的非管理員使用者會看到空白清單。是否繼續並儲存？",
     "device_scope_restart_title": "重新啟動服務？",
     "device_scope_restart_message": "預設可見性已儲存。立即重新啟動 BetterDesk 服務，讓所有元件重新載入，或稍後不重新啟動繼續。",
-    "device_scope_restart_later": "稍後"
+    "device_scope_restart_later": "稍後",
+    "public_endpoints_relay_hint": "僅主機名，或 host:port。無連接埠的主機名在 Dashboard 與部署字串中顯示為 host:21117（RustDesk 1.4.8/1.4.9 需要）。明確連接埠會保留。"
   },
   "audit": {
     "time": "時間",

@@ -826,7 +826,7 @@
     "public_endpoints_server_id": "Offentlig ID-server",
     "public_endpoints_server_id_placeholder": "f.eks. remote.example.com",
     "public_endpoints_relay": "Offentlig relay-server",
-    "public_endpoints_relay_placeholder": "f.eks. remote.example.com (standard: ID-server)",
+    "public_endpoints_relay_placeholder": "f.eks. remote.example.com eller remote.example.com:21117",
     "public_endpoints_api_url": "Offentlig API-URL",
     "public_endpoints_api_url_placeholder": "f.eks. https://api.example.com",
     "public_endpoints_api_url_hint": "Fuld URL til RustDesk-login og API-kald (standard port 21114).",
@@ -918,7 +918,8 @@
     "device_scope_confirm_restricted": "Begrænset tilstand: ikke-admin-brugere uden mappe-, gruppe- eller enhedsrettigheder vil se en tom liste. Fortsæt og gem?",
     "device_scope_restart_title": "Genstart tjenester?",
     "device_scope_restart_message": "Standardsynligheden er gemt. Genstart BetterDesk-tjenester nu, så alle komponenter indlæser den, eller fortsæt senere uden genstart.",
-    "device_scope_restart_later": "Senere"
+    "device_scope_restart_later": "Senere",
+    "public_endpoints_relay_hint": "Kun værtsnavn, eller host:port. Et bart værtsnavn annonceres som host:21117 på Dashboard og i deploy-strenge (nødvendigt for RustDesk 1.4.8/1.4.9). En eksplicit port bevares."
   },
   "audit": {
     "time": "Time",

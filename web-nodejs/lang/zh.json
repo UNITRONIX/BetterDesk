@@ -820,7 +820,7 @@
     "public_endpoints_server_id": "公共 ID 服务器",
     "public_endpoints_server_id_placeholder": "例如 remote.example.com",
     "public_endpoints_relay": "公共中继服务器",
-    "public_endpoints_relay_placeholder": "例如 remote.example.com（默认：ID 服务器）",
+    "public_endpoints_relay_placeholder": "例如 remote.example.com 或 remote.example.com:21117",
     "public_endpoints_api_url": "公共 API URL",
     "public_endpoints_api_url_placeholder": "例如 https://api.example.com",
     "public_endpoints_api_url_hint": "RustDesk 登录/API 的完整 URL（默认端口 21114）。",
@@ -912,7 +912,8 @@
     "device_scope_confirm_restricted": "受限模式：没有文件夹、组或设备授权的非管理员用户将看到空列表。是否继续并保存？",
     "device_scope_restart_title": "重启服务？",
     "device_scope_restart_message": "默认可见性已保存。立即重启 BetterDesk 服务以使所有组件重新加载，或稍后不重启继续。",
-    "device_scope_restart_later": "稍后"
+    "device_scope_restart_later": "稍后",
+    "public_endpoints_relay_hint": "仅主机名，或 host:port。无端口的主机名在 Dashboard 和部署字符串中显示为 host:21117（RustDesk 1.4.8/1.4.9 需要）。显式端口会保留。"
   },
   "audit": {
     "time": "时间",

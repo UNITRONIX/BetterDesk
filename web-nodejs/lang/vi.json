@@ -826,7 +826,7 @@
     "public_endpoints_server_id": "Máy chủ ID công khai",
     "public_endpoints_server_id_placeholder": "vd. remote.example.com",
     "public_endpoints_relay": "Máy chủ relay công khai",
-    "public_endpoints_relay_placeholder": "vd. remote.example.com (mặc định: ID)",
+    "public_endpoints_relay_placeholder": "vd. remote.example.com hoặc remote.example.com:21117",
     "public_endpoints_api_url": "URL API công khai",
     "public_endpoints_api_url_placeholder": "vd. https://api.example.com",
     "public_endpoints_api_url_hint": "URL đầy đủ cho đăng nhập và API RustDesk (cổng mặc định 21114).",
@@ -918,7 +918,8 @@
     "device_scope_confirm_restricted": "Chế độ hạn chế: người dùng không phải admin nếu không có quyền thư mục, nhóm hoặc thiết bị sẽ thấy danh sách trống. Tiếp tục và lưu?",
     "device_scope_restart_title": "Khởi động lại dịch vụ?",
     "device_scope_restart_message": "Chế độ hiển thị mặc định đã được lưu. Khởi động lại dịch vụ BetterDesk ngay để mọi thành phần tải lại, hoặc tiếp tục sau mà không khởi động lại.",
-    "device_scope_restart_later": "Để sau"
+    "device_scope_restart_later": "Để sau",
+    "public_endpoints_relay_hint": "Chỉ hostname, hoặc host:port. Hostname không port được quảng cáo là host:21117 trên Dashboard và chuỗi deploy (cần cho RustDesk 1.4.8/1.4.9). Port tường minh được giữ."
   },
   "audit": {
     "time": "Time",

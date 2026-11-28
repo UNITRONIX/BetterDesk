@@ -826,7 +826,7 @@
     "public_endpoints_server_id": "Публічний ID-сервер",
     "public_endpoints_server_id_placeholder": "напр. remote.example.com",
     "public_endpoints_relay": "Публічний relay-сервер",
-    "public_endpoints_relay_placeholder": "напр. remote.example.com (за замовч.: ID)",
+    "public_endpoints_relay_placeholder": "напр. remote.example.com або remote.example.com:21117",
     "public_endpoints_api_url": "Публічний URL API",
     "public_endpoints_api_url_placeholder": "напр. https://api.example.com",
     "public_endpoints_api_url_hint": "Повний URL для входу та API RustDesk (порт за замовч. 21114).",
@@ -918,7 +918,8 @@
     "device_scope_confirm_restricted": "Обмежений режим: користувачі без ролі admin і без прав на папки, групи чи пристрої бачитимуть порожній список. Продовжити і зберегти?",
     "device_scope_restart_title": "Перезапустити служби?",
     "device_scope_restart_message": "Типову видимість збережено. Перезапустіть служби BetterDesk зараз, щоб усі компоненти її перезавантажили, або продовжте пізніше без перезапуску.",
-    "device_scope_restart_later": "Пізніше"
+    "device_scope_restart_later": "Пізніше",
+    "public_endpoints_relay_hint": "Лише hostname або host:port. Голий hostname рекламується як host:21117 на Dashboard і в deploy string (потрібно для RustDesk 1.4.8/1.4.9). Явний порт зберігається."
   },
   "audit": {
     "time": "Time",

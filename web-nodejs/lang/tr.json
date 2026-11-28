@@ -826,7 +826,7 @@
     "public_endpoints_server_id": "Genel ID sunucusu",
     "public_endpoints_server_id_placeholder": "örn. remote.example.com",
     "public_endpoints_relay": "Genel relay sunucusu",
-    "public_endpoints_relay_placeholder": "örn. remote.example.com (varsayılan: ID)",
+    "public_endpoints_relay_placeholder": "örn. remote.example.com veya remote.example.com:21117",
     "public_endpoints_api_url": "Genel API URL",
     "public_endpoints_api_url_placeholder": "örn. https://api.example.com",
     "public_endpoints_api_url_hint": "RustDesk giriş/API için tam URL (varsayılan port 21114).",
@@ -918,7 +918,8 @@
     "device_scope_confirm_restricted": "Kısıtlı mod: klasör, grup veya cihaz yetkisi olmayan yönetici olmayan kullanıcılar boş liste görür. Devam edip kaydedilsin mi?",
     "device_scope_restart_title": "Hizmetler yeniden başlatılsın mı?",
     "device_scope_restart_message": "Varsayılan görünürlük kaydedildi. Tüm bileşenlerin yeniden yüklemesi için BetterDesk hizmetlerini şimdi yeniden başlatın veya yeniden başlatmadan sonra devam edin.",
-    "device_scope_restart_later": "Sonra"
+    "device_scope_restart_later": "Sonra",
+    "public_endpoints_relay_hint": "Yalnızca hostname veya host:port. Port olmadan hostname Dashboard ve deploy dizelerinde host:21117 olarak duyurulur (RustDesk 1.4.8/1.4.9 için gerekli). Açık port korunur."
   },
   "audit": {
     "time": "Time",

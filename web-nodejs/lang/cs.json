@@ -820,7 +820,7 @@
     "public_endpoints_server_id": "Veřejný ID server",
     "public_endpoints_server_id_placeholder": "např. remote.example.com",
     "public_endpoints_relay": "Veřejný relay server",
-    "public_endpoints_relay_placeholder": "např. remote.example.com (výchozí: ID server)",
+    "public_endpoints_relay_placeholder": "např. remote.example.com nebo remote.example.com:21117",
     "public_endpoints_api_url": "Veřejná API URL",
     "public_endpoints_api_url_placeholder": "např. https://api.example.com",
     "public_endpoints_api_url_hint": "Plná URL pro přihlášení a API volání RustDesk klientů (výchozí port 21114).",
@@ -912,7 +912,8 @@
     "device_scope_confirm_restricted": "Omezený režim: neadmin uživatelé bez grantů složek, skupin nebo zařízení uvidí prázdný seznam. Pokračovat a uložit?",
     "device_scope_restart_title": "Restartovat služby?",
     "device_scope_restart_message": "Výchozí viditelnost je uložena. Restartujte nyní služby BetterDesk, aby ji všechny komponenty znovu načetly, nebo pokračujte později bez restartu.",
-    "device_scope_restart_later": "Později"
+    "device_scope_restart_later": "Později",
+    "public_endpoints_relay_hint": "Pouze hostname, nebo host:port. Holý hostname se na Dashboardu a v deploy stringu inzeruje jako host:21117 (potřeba pro RustDesk 1.4.8/1.4.9). Explicitní port se zachová."
   },
   "audit": {
     "time": "Čas",

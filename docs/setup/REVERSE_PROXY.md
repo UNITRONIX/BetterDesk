@@ -375,10 +375,10 @@ When the panel, ID server, relay, and Client API use different public names:
 |--------------|---------|---------|
 | `PANEL_PUBLIC_HOST` | `console.example.com` | Dashboard client-config hostname |
 | `PUBLIC_SERVER_ID` | `desk.example.com` | RustDesk ID server in client settings |
-| `PUBLIC_RELAY_SERVER` | `desk.example.com` | Relay hostname (defaults to ID server) |
+| `PUBLIC_RELAY_SERVER` | `desk.example.com` | Relay hostname (defaults to ID server). Optional `host:port` (e.g. `desk.example.com:21119`) is kept as-is. A bare hostname is advertised to clients as `host:21117` in Dashboard / deploy strings / QR so RustDesk 1.4.8/1.4.9 does not fall back to the API port. |
 | `PUBLIC_API_URL` | `https://api.example.com` | Full Client API URL for deploy strings / QR |
 
-You can also edit these in **Settings → Public client endpoints** (no console restart required for display values).
+You can also edit these in **Settings → Public client endpoints** (no console restart required for display values). Native clients still need direct `21116`/`21117` (or WebSocket Mode on 443) — HTTPS reverse proxy alone does not replace those ports.
 
 **Docker:** panel saves to `/app/data/public-endpoints.env` on the `console-data` volume (survives container recreate). Non-empty Compose `environment:` values for these keys take precedence over the file. Do not set empty `PUBLIC_*=` keys in compose. On first read after upgrade, values are migrated from console `.env` if the durable file is empty.
 

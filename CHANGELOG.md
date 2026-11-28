@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+### Fixed
+- **Public relay port in Settings (#534):** saving `host:port` in Public relay no
+  longer strips the port (ID server still hostname-only). Bare relay hostnames
+  still advertise as `host:21117` in Dashboard / deploy strings / QR. Hint text
+  and reverse-proxy docs clarify the stored vs advertised shape.
+
 ### Changed
 - _(none yet)_
 

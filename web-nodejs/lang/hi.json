@@ -826,7 +826,7 @@
     "public_endpoints_server_id": "सार्वजनिक ID सर्वर",
     "public_endpoints_server_id_placeholder": "जैसे remote.example.com",
     "public_endpoints_relay": "सार्वजनिक relay सर्वर",
-    "public_endpoints_relay_placeholder": "जैसे remote.example.com (डिफ़ॉल्ट: ID)",
+    "public_endpoints_relay_placeholder": "उदा. remote.example.com या remote.example.com:21117",
     "public_endpoints_api_url": "सार्वजनिक API URL",
     "public_endpoints_api_url_placeholder": "जैसे https://api.example.com",
     "public_endpoints_api_url_hint": "RustDesk लॉगिन/API के लिए पूर्ण URL (डिफ़ॉल्ट पोर्ट 21114)।",
@@ -918,7 +918,8 @@
     "device_scope_confirm_restricted": "प्रतिबंधित मोड: फ़ोल्डर, समूह या डिवाइस अनुदान के बिना गैर-एडमिन उपयोगकर्ता खाली सूची देखेंगे। जारी रखें और सहेजें?",
     "device_scope_restart_title": "सेवाएँ पुनः आरंभ करें?",
     "device_scope_restart_message": "डिफ़ॉल्ट दृश्यता सहेज ली गई है। सभी घटकों के पुनः लोड के लिए अभी BetterDesk सेवाएँ पुनः आरंभ करें, या बाद में बिना पुनः आरंभ जारी रखें।",
-    "device_scope_restart_later": "बाद में"
+    "device_scope_restart_later": "बाद में",
+    "public_endpoints_relay_hint": "केवल hostname, या host:port। बिना पोर्ट वाला hostname Dashboard और deploy string में host:21117 के रूप में दिखाया जाता है (RustDesk 1.4.8/1.4.9 के लिए)। स्पष्ट पोर्ट बना रहता है।"
   },
   "audit": {
     "time": "Time",

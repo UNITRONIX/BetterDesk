@@ -826,7 +826,7 @@
     "public_endpoints_server_id": "เซิร์ฟเวอร์ ID สาธารณะ",
     "public_endpoints_server_id_placeholder": "เช่น remote.example.com",
     "public_endpoints_relay": "เซิร์ฟเวอร์ relay สาธารณะ",
-    "public_endpoints_relay_placeholder": "เช่น remote.example.com (ค่าเริ่มต้น: ID)",
+    "public_endpoints_relay_placeholder": "เช่น remote.example.com หรือ remote.example.com:21117",
     "public_endpoints_api_url": "URL API สาธารณะ",
     "public_endpoints_api_url_placeholder": "เช่น https://api.example.com",
     "public_endpoints_api_url_hint": "URL เต็มสำหรับล็อกอินและ API ของ RustDesk (พอร์ตเริ่มต้น 21114)",
@@ -918,7 +918,8 @@
     "device_scope_confirm_restricted": "โหมดจำกัด: ผู้ใช้ที่ไม่ใช่ผู้ดูแลระบบและไม่มีสิทธิ์โฟลเดอร์ กลุ่ม หรืออุปกรณ์ จะเห็นรายการว่าง ดำเนินการและบันทึกหรือไม่?",
     "device_scope_restart_title": "รีสตาร์ทบริการหรือไม่?",
     "device_scope_restart_message": "บันทึกการแสดงผลเริ่มต้นแล้ว รีสตาร์ทบริการ BetterDesk ทันทีเพื่อให้ทุกส่วนโหลดใหม่ หรือดำเนินการภายหลังโดยไม่รีสตาร์ท",
-    "device_scope_restart_later": "ภายหลัง"
+    "device_scope_restart_later": "ภายหลัง",
+    "public_endpoints_relay_hint": "เฉพาะ hostname หรือ host:port hostname เปล่าจะแสดงเป็น host:21117 บน Dashboard และ deploy string (จำเป็นสำหรับ RustDesk 1.4.8/1.4.9) พอร์ตที่ระบุไว้จะถูกเก็บไว้"
   },
   "audit": {
     "time": "Time",

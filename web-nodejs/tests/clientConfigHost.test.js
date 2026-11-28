@@ -56,6 +56,19 @@ describe('clientConfigHost', () => {
         expect(endpoints.sources.host).toBe('env');
     });
 
+    it('resolveRustDeskEndpoints preserves explicit PUBLIC_RELAY_SERVER port (#534)', () => {
+        process.env.PUBLIC_SERVER_ID = 'remote.example.com';
+        process.env.PUBLIC_RELAY_SERVER = 'relay.example.com:21119';
+        process.env.PUBLIC_API_URL = 'https://api.example.com';
+
+        const endpoints = clientConfigHost.resolveRustDeskEndpoints(
+            { headers: { host: 'console.example.com' } },
+            ''
+        );
+
+        expect(endpoints.relay).toBe('relay.example.com:21119');
+    });
+
     it('resolveRustDeskEndpoints ignores query host when PUBLIC_SERVER_ID is set', () => {
         process.env.PUBLIC_SERVER_ID = 'remote.example.com';
         const endpoints = clientConfigHost.resolveRustDeskEndpoints(

@@ -570,7 +570,7 @@
     "public_endpoints_server_id": "Public ID server",
     "public_endpoints_server_id_placeholder": "e.g. remote.example.com",
     "public_endpoints_relay": "Public relay server",
-    "public_endpoints_relay_placeholder": "e.g. remote.example.com (defaults to ID server)",
+    "public_endpoints_relay_placeholder": "e.g. remote.example.com or remote.example.com:21117",
     "public_endpoints_api_url": "Public API URL",
     "public_endpoints_api_url_placeholder": "e.g. https://api.example.com or http://203.0.113.10:21114",
     "public_endpoints_api_url_hint": "Full URL RustDesk clients use for login and API calls (Go server on port 21114 by default).",
@@ -920,7 +920,8 @@
     "device_scope_confirm_restricted": "Restricted mode: non-admin users without folder, group, or device grants will see an empty device list. Continue and save?",
     "device_scope_restart_title": "Restart services?",
     "device_scope_restart_message": "The visibility default is saved. Restart BetterDesk services now so every component reloads it, or continue later without restarting.",
-    "device_scope_restart_later": "Later"
+    "device_scope_restart_later": "Later",
+    "public_endpoints_relay_hint": "Hostname only, or host:port. A bare hostname is advertised as host:21117 on the Dashboard and in deploy strings (needed for RustDesk 1.4.8/1.4.9). An explicit port is kept as entered."
   },
   "audit": {
     "time": "Time",

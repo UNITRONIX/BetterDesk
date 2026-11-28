@@ -827,7 +827,7 @@
     "public_endpoints_server_id": "خادم ID العام",
     "public_endpoints_server_id_placeholder": "مثال remote.example.com",
     "public_endpoints_relay": "خادم الترحيل العام",
-    "public_endpoints_relay_placeholder": "مثال remote.example.com (افتراضي: خادم ID)",
+    "public_endpoints_relay_placeholder": "مثال remote.example.com أو remote.example.com:21117",
     "public_endpoints_api_url": "URL API العام",
     "public_endpoints_api_url_placeholder": "مثال https://api.example.com",
     "public_endpoints_api_url_hint": "URL كامل لعملاء RustDesk لتسجيل الدخول واستدعاءات API (المنفذ 21114 افتراضياً).",
@@ -919,7 +919,8 @@
     "device_scope_confirm_restricted": "الوضع المقيد: سيرى المستخدمون غير المسؤولين بدون صلاحيات مجلدات أو مجموعات أو أجهزة قائمة فارغة. المتابعة والحفظ؟",
     "device_scope_restart_title": "إعادة تشغيل الخدمات؟",
     "device_scope_restart_message": "تم حفظ إعداد الظهور. أعد تشغيل خدمات BetterDesk الآن ليُحمّلها كل مكوّن، أو تابع لاحقًا دون إعادة التشغيل.",
-    "device_scope_restart_later": "لاحقًا"
+    "device_scope_restart_later": "لاحقًا",
+    "public_endpoints_relay_hint": "اسم المضيف فقط، أو host:port. الاسم بلا منفذ يُعلن كـ host:21117 في لوحة التحكم وسلاسل النشر (مطلوب لـ RustDesk 1.4.8/1.4.9). المنفذ الصريح يُحفظ."
   },
   "audit": {
     "time": "Time",

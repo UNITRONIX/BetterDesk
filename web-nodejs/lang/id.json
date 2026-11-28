@@ -826,7 +826,7 @@
     "public_endpoints_server_id": "Server ID publik",
     "public_endpoints_server_id_placeholder": "mis. remote.example.com",
     "public_endpoints_relay": "Server relay publik",
-    "public_endpoints_relay_placeholder": "mis. remote.example.com (default: ID)",
+    "public_endpoints_relay_placeholder": "mis. remote.example.com atau remote.example.com:21117",
     "public_endpoints_api_url": "URL API publik",
     "public_endpoints_api_url_placeholder": "mis. https://api.example.com",
     "public_endpoints_api_url_hint": "URL lengkap untuk login dan API RustDesk (port default 21114).",
@@ -918,7 +918,8 @@
     "device_scope_confirm_restricted": "Mode terbatas: pengguna non-admin tanpa hak folder, grup, atau perangkat akan melihat daftar kosong. Lanjutkan dan simpan?",
     "device_scope_restart_title": "Mulai ulang layanan?",
     "device_scope_restart_message": "Visibilitas default telah disimpan. Mulai ulang layanan BetterDesk sekarang agar semua komponen memuatnya ulang, atau lanjutkan nanti tanpa mulai ulang.",
-    "device_scope_restart_later": "Nanti"
+    "device_scope_restart_later": "Nanti",
+    "public_endpoints_relay_hint": "Hanya hostname, atau host:port. Hostname tanpa port diiklankan sebagai host:21117 di Dashboard dan string deploy (diperlukan untuk RustDesk 1.4.8/1.4.9). Port eksplisit dipertahankan."
   },
   "audit": {
     "time": "Time",

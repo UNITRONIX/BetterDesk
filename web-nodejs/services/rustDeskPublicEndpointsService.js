@@ -104,6 +104,46 @@ function normalizeHostField(value) {
     return normalized.host;
 }
 
+/**
+ * Persist Public relay as hostname, or host:port when the operator sets a port.
+ * Unlike normalizeHostField (ID server), do not strip an explicit port — so
+ * reverse-proxy / non-default RELAY_PORT fleets can save host:21119 etc.
+ * Bare host stays bare; resolveRustDeskEndpoints still appends :21117 for deploy.
+ */
+function normalizeRelayEndpointField(value) {
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+    assertNoEnvInjection(raw);
+
+    const input = raw.replace(/^https?:\/\//i, '').split('/')[0].trim();
+    if (!input) throw new Error('invalid_host');
+
+    let hostPart = input;
+    let portPart = '';
+    const withPort = input.match(/^([^:/\s]+):(\d{1,5})$/);
+    if (withPort) {
+        hostPart = withPort[1];
+        portPart = withPort[2];
+    }
+
+    const hostNorm = conn.normalizeServerHost(hostPart);
+    if (!hostNorm.valid) {
+        throw new Error('invalid_host');
+    }
+
+    let out = hostNorm.host;
+    if (portPart !== '') {
+        const n = parseInt(portPart, 10);
+        if (!Number.isFinite(n) || n < 1 || n > 65535 || String(n) !== portPart) {
+            throw new Error('invalid_host');
+        }
+        out = `${hostNorm.host}:${n}`;
+    }
+
+    assertNoEnvInjection(out);
+    return out;
+}
+
 function normalizeApiUrl(value) {
     const raw = String(value || '').trim();
     if (!raw) return '';
@@ -131,7 +171,7 @@ function normalizeApiUrl(value) {
 function normalizeSettings(raw = {}) {
     return {
         public_server_id: normalizeHostField(raw.public_server_id),
-        public_relay_server: normalizeHostField(raw.public_relay_server),
+        public_relay_server: normalizeRelayEndpointField(raw.public_relay_server),
         public_api_url: normalizeApiUrl(raw.public_api_url),
     };
 }
@@ -291,6 +331,8 @@ module.exports = {
     parseEnvFile,
     readPublicEndpointEnv,
     readPanelPublicHostValue,
+    normalizeHostField,
+    normalizeRelayEndpointField,
     normalizeSettings,
     validateSettings,
     syncProcessEnv,

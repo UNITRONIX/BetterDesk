@@ -826,7 +826,7 @@
     "public_endpoints_server_id": "Server ID public",
     "public_endpoints_server_id_placeholder": "ex. remote.example.com",
     "public_endpoints_relay": "Server relay public",
-    "public_endpoints_relay_placeholder": "ex. remote.example.com (implicit: ID)",
+    "public_endpoints_relay_placeholder": "ex. remote.example.com sau remote.example.com:21117",
     "public_endpoints_api_url": "URL API public",
     "public_endpoints_api_url_placeholder": "ex. https://api.example.com",
     "public_endpoints_api_url_hint": "URL complet pentru login și API RustDesk (port implicit 21114).",
@@ -918,7 +918,8 @@
     "device_scope_confirm_restricted": "Mod restricționat: utilizatorii non-admin fără drepturi pe foldere, grupuri sau dispozitive vor vedea o listă goală. Continuați și salvați?",
     "device_scope_restart_title": "Reporniți serviciile?",
     "device_scope_restart_message": "Vizibilitatea implicită este salvată. Reporniți acum serviciile BetterDesk pentru ca toate componentele să o reîncarce, sau continuați mai târziu fără repornire.",
-    "device_scope_restart_later": "Mai târziu"
+    "device_scope_restart_later": "Mai târziu",
+    "public_endpoints_relay_hint": "Doar hostname, sau host:port. Un hostname fără port este anunțat ca host:21117 pe Dashboard și în șirurile de deploy (necesar pentru RustDesk 1.4.8/1.4.9). Portul explicit este păstrat."
   },
   "audit": {
     "time": "Time",

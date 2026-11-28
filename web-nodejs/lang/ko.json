@@ -820,7 +820,7 @@
     "public_endpoints_server_id": "공개 ID 서버",
     "public_endpoints_server_id_placeholder": "예: remote.example.com",
     "public_endpoints_relay": "공개 relay 서버",
-    "public_endpoints_relay_placeholder": "예: remote.example.com(기본: ID 서버)",
+    "public_endpoints_relay_placeholder": "예: remote.example.com 또는 remote.example.com:21117",
     "public_endpoints_api_url": "공개 API URL",
     "public_endpoints_api_url_placeholder": "예: https://api.example.com",
     "public_endpoints_api_url_hint": "RustDesk 로그인/API용 전체 URL(기본 포트 21114).",
@@ -912,7 +912,8 @@
     "device_scope_confirm_restricted": "제한 모드: 폴더·그룹·장치 권한이 없는 비관리자 사용자는 빈 목록을 봅니다. 계속하고 저장할까요?",
     "device_scope_restart_title": "서비스를 다시 시작할까요?",
     "device_scope_restart_message": "기본 가시성이 저장되었습니다. 모든 구성 요소가 다시 로드되도록 BetterDesk 서비스를 지금 다시 시작하거나, 다시 시작 없이 나중에 계속하세요.",
-    "device_scope_restart_later": "나중에"
+    "device_scope_restart_later": "나중에",
+    "public_endpoints_relay_hint": "호스트명만, 또는 host:port. 포트 없는 호스트명은 Dashboard와 deploy 문자열에서 host:21117로 표시됩니다(RustDesk 1.4.8/1.4.9에 필요). 명시적 포트는 유지됩니다."
   },
   "audit": {
     "time": "Time",

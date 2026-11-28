@@ -820,7 +820,7 @@
     "public_endpoints_server_id": "公開 ID サーバー",
     "public_endpoints_server_id_placeholder": "例 remote.example.com",
     "public_endpoints_relay": "公開リレーサーバー",
-    "public_endpoints_relay_placeholder": "例 remote.example.com（既定: ID サーバー）",
+    "public_endpoints_relay_placeholder": "例 remote.example.com または remote.example.com:21117",
     "public_endpoints_api_url": "公開 API URL",
     "public_endpoints_api_url_placeholder": "例 https://api.example.com",
     "public_endpoints_api_url_hint": "RustDesk ログイン/API 用の完全 URL（既定ポート 21114）。",
@@ -912,7 +912,8 @@
     "device_scope_confirm_restricted": "制限モード: フォルダー・グループ・デバイスの権限がない非管理者ユーザーには空の一覧が表示されます。続行して保存しますか？",
     "device_scope_restart_title": "サービスを再起動しますか？",
     "device_scope_restart_message": "デフォルト表示は保存済みです。すべてのコンポーネントが再読み込みするよう BetterDesk サービスを今すぐ再起動するか、再起動せずに後で続行できます。",
-    "device_scope_restart_later": "後で"
+    "device_scope_restart_later": "後で",
+    "public_endpoints_relay_hint": "ホスト名のみ、または host:port。ポートなしのホスト名は Dashboard / デプロイ文字列で host:21117 として通知されます（RustDesk 1.4.8/1.4.9 で必要）。明示的なポートはそのまま保持されます。"
   },
   "audit": {
     "time": "Time",

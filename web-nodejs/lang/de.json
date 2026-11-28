@@ -820,7 +820,7 @@
     "public_endpoints_server_id": "Öffentlicher ID-Server",
     "public_endpoints_server_id_placeholder": "z. B. remote.example.com",
     "public_endpoints_relay": "Öffentlicher Relay-Server",
-    "public_endpoints_relay_placeholder": "z. B. remote.example.com (Standard: ID-Server)",
+    "public_endpoints_relay_placeholder": "z. B. remote.example.com oder remote.example.com:21117",
     "public_endpoints_api_url": "Öffentliche API-URL",
     "public_endpoints_api_url_placeholder": "z. B. https://api.example.com",
     "public_endpoints_api_url_hint": "Vollständige URL für RustDesk-Login und API (Standardport 21114).",
@@ -912,7 +912,8 @@
     "device_scope_confirm_restricted": "Eingeschränkter Modus: Nicht-Admin-Benutzer ohne Ordner-, Gruppen- oder Gerätefreigaben sehen eine leere Geräteliste. Fortfahren und speichern?",
     "device_scope_restart_title": "Dienste neu starten?",
     "device_scope_restart_message": "Die Sichtbarkeit wurde gespeichert. BetterDesk-Dienste jetzt neu starten, damit alle Komponenten sie laden, oder später ohne Neustart fortfahren.",
-    "device_scope_restart_later": "Später"
+    "device_scope_restart_later": "Später",
+    "public_endpoints_relay_hint": "Nur Hostname oder host:port. Ein nackter Hostname wird auf dem Dashboard und in Deploy-Strings als host:21117 angegeben (nötig für RustDesk 1.4.8/1.4.9). Ein expliziter Port bleibt erhalten."
   },
   "audit": {
     "time": "Zeit",

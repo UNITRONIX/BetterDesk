@@ -820,7 +820,7 @@
     "public_endpoints_server_id": "Server ID pubblico",
     "public_endpoints_server_id_placeholder": "es. remote.example.com",
     "public_endpoints_relay": "Server relay pubblico",
-    "public_endpoints_relay_placeholder": "es. remote.example.com (predefinito: ID)",
+    "public_endpoints_relay_placeholder": "es. remote.example.com oppure remote.example.com:21117",
     "public_endpoints_api_url": "URL API pubblica",
     "public_endpoints_api_url_placeholder": "es. https://api.example.com",
     "public_endpoints_api_url_hint": "URL completa per login e API RustDesk (porta 21114 predefinita).",
@@ -912,7 +912,8 @@
     "device_scope_confirm_restricted": "Modalità limitata: gli utenti non admin senza concessioni di cartelle, gruppi o dispositivi vedranno un elenco vuoto. Continuare e salvare?",
     "device_scope_restart_title": "Riavviare i servizi?",
     "device_scope_restart_message": "La visibilità predefinita è stata salvata. Riavvia ora i servizi BetterDesk affinché ogni componente la ricarichi, oppure continua più tardi senza riavvio.",
-    "device_scope_restart_later": "Più tardi"
+    "device_scope_restart_later": "Più tardi",
+    "public_endpoints_relay_hint": "Solo hostname, oppure host:port. Un hostname nudo è annunciato come host:21117 nella Dashboard e nelle stringhe di deploy (necessario per RustDesk 1.4.8/1.4.9). Una porta esplicita viene mantenuta."
   },
   "audit": {
     "time": "Ora",

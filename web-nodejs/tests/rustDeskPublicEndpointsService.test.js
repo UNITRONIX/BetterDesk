@@ -68,6 +68,31 @@ describe('rustDeskPublicEndpointsService', () => {
         expect(normalized.public_api_url).toBe('https://api.example.com');
     });
 
+    it('validateSettings keeps an explicit relay port (#534)', () => {
+        const normalized = validateSettings({
+            public_server_id: 'remote.example.com',
+            public_relay_server: 'relay.example.com:21119',
+            public_api_url: '',
+        });
+        expect(normalized.public_relay_server).toBe('relay.example.com:21119');
+    });
+
+    it('validateSettings still strips port from ID server only', () => {
+        const normalized = validateSettings({
+            public_server_id: 'remote.example.com:21116',
+            public_relay_server: 'relay.example.com:21117',
+            public_api_url: '',
+        });
+        expect(normalized.public_server_id).toBe('remote.example.com');
+        expect(normalized.public_relay_server).toBe('relay.example.com:21117');
+    });
+
+    it('validateSettings rejects invalid relay port', () => {
+        expect(() => validateSettings({
+            public_relay_server: 'relay.example.com:99999',
+        })).toThrow('invalid_public_host');
+    });
+
     it('validateSettings allows clearing all fields', () => {
         expect(validateSettings({
             public_server_id: '',
