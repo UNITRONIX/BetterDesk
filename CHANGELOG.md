@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.290] — 2026-11-28
+
 ### Fixed
 - **Public relay port in Settings (#534):** saving `host:port` in Public relay no
   longer strips the port (ID server still hostname-only). Bare relay hostnames
@@ -5610,3 +5617,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.287]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.286...v3.5.287
 [3.5.288]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.287...v3.5.288
 [3.5.289]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.288...v3.5.289
+[3.5.290]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.289...v3.5.290
