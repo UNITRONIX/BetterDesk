@@ -122,6 +122,8 @@ See [[TLS / SSL Certificates|TLS-SSL]] for details.
 
 Yes. See [External Reverse Proxy Guide](../setup/REVERSE_PROXY.md) and [[Configuration]] for Nginx/Caddy examples. Set **`TRUST_PROXY=Y`** (or `1`) in `.env` and `HOST=127.0.0.1` when TLS terminates at the proxy.
 
+Use a **hostname root** or **separate subdomains** (for example `console.example.com` + `api.example.com`). A directory-based URL such as `https://example.com/betterdesk` is **not supported** — RustDesk ID/relay are host:port (and TCP/UDP), and the console assumes absolute root paths. Details: [Directory / path-based reverse proxy](../setup/REVERSE_PROXY.md#directory--path-based-reverse-proxy-not-supported) and [#533](https://github.com/UNITRONIX/BetterDesk/issues/533).
+
 ---
 
 ## Devices

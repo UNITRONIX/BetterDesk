@@ -8,6 +8,32 @@ See also: [HTTPS Setup](HTTPS_SETUP.md) (native panel TLS vs proxy), [Configurat
 
 ---
 
+## Directory / path-based reverse proxy (not supported)
+
+BetterDesk expects the public HTTP/HTTPS surface at the **hostname root** (or on **separate subdomains**). A single shared host with a directory prefix is **not supported**, for example:
+
+```text
+https://example.com/betterdesk   ← not supported
+```
+
+Use one of these instead:
+
+| Layout | Example | Notes |
+|--------|---------|--------|
+| Root vhost | `https://desk.example.com/` | Panel at `/`, Client API preferably on another host (see below) |
+| Split subdomains | `console.` / `api.` / optional WSS host | Recommended production layout |
+
+**Why path prefixes fail for a full stack**
+
+- **RustDesk native ID/relay** are configured as **host:port**, not as an HTTP path. Signal/relay traffic on `21116` (TCP+UDP) and `21117` (TCP) is not HTTP and cannot sit under `/betterdesk`.
+- Optional native WSS uses fixed root paths (`/ws/id`, `/ws/relay`) on the hostname.
+- Agents and Mesh paths are root-relative (`/api`, `/cdap`, `/agent.ashx`, …).
+- The web console currently emits absolute root URLs (`/api/...`, `/ws/...`, `/css/...`, `/js/...`); there is no configurable application base path.
+
+Tracking: [#533](https://github.com/UNITRONIX/BetterDesk/issues/533) (possible future **panel-only** path prefix — not a supported full-stack deployment model).
+
+---
+
 ## Short-code pairing over a proxy
 
 Pairing needs the Client API reachable on one URL. With this guide's layout that means `/api`
